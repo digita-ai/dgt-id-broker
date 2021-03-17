@@ -1,0 +1,5 @@
+name: dgt-id-broker
+title: Identity Broker
+version: 0.0.1
+nav:
+  - modules/ROOT/nav.adoc
