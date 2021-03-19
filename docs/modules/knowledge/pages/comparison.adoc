@@ -1,35 +1,58 @@
 :hardbreaks:
+
 = Classic OIDC vs Solid OIDC
 
-==== [gray]*A close comparison of flows between classic Open ID Connect and Solid Open ID Connect*
+This document provides a close comparison of classic OpenID Connect (OIDC) and Solid OIDC. We will demonstrate the differences between the classic OIDC flow and the Solid OIDC flow, as the latter requires some crucial additions to the former.
 
-First we will demonstrate the difference in flow between classic OIDC and Solid OIDC. As Solid OIDC requires some crucial extra layers on top of the classic OIDC flow.
 
-===== *Actors & Definitions*
+== Concepts
 
-* *Resource Owner* _(Alice or Bob)_ : An entity capable of granting access to a protected resource.
-* *Client* or *Relying Party (RP)* _(Daily Picture)_ : The application that wants to access data or perform actions on behalf of the *Resource Owner*.
-* *Authorization server* or *OpenID provider (OP)*  _(Alice's mail service)_ : The application that the *Resource Owner* already has an account with. This will act as the *Identity Provider* that has OpenID Connect implemented. 
-* *Resource Server* _(RS)_ : The service the *Client* wants to use on behalf of the *Resource Owner*.
-* *Redirect URI* : The *Authorization Server* will redirect the *Resource Owner* to this URL after granting permission to the *Client*. Also known as the _"Callback URL"_.
-* *Response type* : The type of response data the *Client* expects to receive. The most commonly the *Client* expects an *Authorization Code* as a response.
-* *Scope* : these are the permissions the *Client* wants, in Alice's case this is access to her social feed and the ability to post pictures.
-* *Consent* : The verification process with the *Resource Owner* of the provided permissions to the *Client*. The *Resource Owner* can grant or deny these permissions. 
-* *Client ID* : The ID used to identify the *Client* with the *Authorization Server*.
-* *Client secret* : A secret password only the *Client* and the *Authorization Server* know.
-* *Authorization code* : A temporary code the *Client* hands over to the *Authorization Server* 
-* *Access Token* : This key will be used by the *Client* to communicate with the *Resource Server*, in our case that is Alice's social media account. You can compare it to a badge that grants permissions to the *Client* to perform actions on the server on your behalf. It does not only provide authorization, but also authentication.
-* *ID Token* : This key comes in the form of a JSON Web Token. The *Client* can extract information from this token (this data is also known as *Claims*) such as your ID, Name, when you logged in, the token expiration date and most importantly it can tell if anyone has tried to alter the JWT.
-* *Solid Data Pod* : A Solid compliant *Resource Server* that holds data about the owner.
+Resource Server (RS) :: A server hosting resources, possibly protected by access control policies.
+      
+Solid Pod :: A (virtual) root container on a Solid-compliant *Resource Server*.
 
-=== [gray]*Classic OIDC Example*
+Resource Owner :: An entity capable of granting other entities permissions (e.g. access rights) to protected resources.
+
+End-User :: Originally meant as a synonym for human *Resource Owners*, here used to refer to the entity to which the permission is granted.
+
+OAuth 2.0 :: An authorization framework enabling applications to obtain permissions for certain resources on behalf of an *End-User*.
+
+OpenID Connect :: An authentication framework on top of the *OAuth 2.0* protocol, enabling applications to verify the identity of the *End-User*.
+
+Authorization Server (AS) :: A system implementing the authoritative part of an _authorization_ framework (in casu *OAuth 2.0*).
+
+Identity Provider (IdP) :: A system implementing the authoritative part of an _authentication_ framework (in casu *OpenID Connect*).
+
+Claim :: An authoratitive piece of information the *Identity Provider* can provide about the *End-User*.
+
+Client | Relying Party (RP) :: An application relying on the authoratitive *Claims* in order to access data or perform actions on behalf of the *End-User*.
+
+Client ID :: An identifier used to register the *Client* with the *Identity Provider*.
+
+Client secret :: A credential for the *Client* registered with the *Identity Provider*.
+
+Redirect URL | Callback URL :: A URL to which the *Identity Provider* will redirect the user agent during the authentication flow.
+
+Scope :: An indication of the *Claims* the *Client* would like the *Identity Provider* to provide.
+
+Consent :: An affirmative action of the *Resource Owner* granting requested *Claims* to be provided to the *Client*. 
+
+Response Type :: The way in which the *Client* expects to receive the *Claims* from the *Identity Provider*. 
+
+Authorization Code :: A secure *Response Type* in the form of a temporary code, which the *Client* can exchange for the *Claims*. 
+
+Access Token :: A JSON Web Token (JWT) the *Client* obtains from an *Authorization Server*, containing *Claims* that grant permissions to access data or perform actions on a *Resource Server* on behalf of the *End-User*.
+
+ID Token :: A JWT the *Client* obtains from an *Identity Provider*, containing *Claims* that prove the identity of the *End-User*.
+
+
+== Classic OIDC 
+
+=== Example
 
 Imagine Alice wants to use a web service called Daily Pictures that posts a beautiful picture every day to her social feed on her behalf. Alice wants to provide this service access to her social feed and grant permissions to create posts on her behalf. 
 
-// voeg actor & definitions van beide flows samen en kies 1 term doorheen het document
-
-
-==== *Flow*
+==== Flow
 
 . Alice is logged on to the *Client* and selects her choice of *Identity Provider*, for example, this could be a mail service like Gmail.
 . The *Client* redirects Alice's her browser to the *Authorization Server*. This request contains the *Client ID*, *Redirect URI*, *Response type* and the *Scopes* that are needed. 
@@ -41,9 +64,12 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 . The *Authorization server* verifies this data and responds with an *Access Token* along side an *ID Token*.
 . The *Client* can now use these tokens to send requests to the *Resource Server* in order to post pictures daily on Alice's social feed.
 +
+
 //add a sequence diagram here 
 
-=== [gray]*Solid OIDC Example*
+== Solid OIDC
+
+=== Example
 
 Imagine Alice wants to use Daily Pictures to let it post a beautiful picture every day to her social feed. 
 Alice's friend Bob is an amazing photographer who also uses Daily Pictures. 
@@ -51,8 +77,7 @@ Bob's photo collection is stored in his personal Solid Data Pod.
 Bob has previously given consent to Daily Pictures to let Alice use his pictures if she wanted to. 
 Alice would like Daily Pictures to access Bob's photo collection and use his photos. 
 
-==== *Flow*
-
+==== Flow
 
 . Alice browses to the *Client* _(Daily Pictures)_ web page.
 +
@@ -509,24 +534,24 @@ CAUTION: Make sure to save this token into a persistent store.
 * *"refresh_token"* : This token will be used to retrieve a new *access token* when the previous one expired.
 * *"scope"* : The scopes that were used. Or in other words, the permissions that were granted to the *Client*.
 
-//add sequence diagram here
 Finally the *Client* can start making requests to Bob's *Solid Data Pod* to retrieve pictures and post one daily on Alice's social feed.
 
+//add sequence diagram here
 
-=== [gray]*Summary*
+== Summary
 
-Solid-OIDC adds the following requirements to classic OIDC:
+Solid OIDC adds the following requirements to classic OIDC.
 
-*For Users:*
+For users ::
 
 * Should provide a webID that is a valid RDF profile. This webID will be a part of the OIDC ID Token that is provided by the IdP for authentication.
 
-*For Clients (the application or browser):*
+For clients ::
 
 * Clients SHOULD use a webID as their client ID. If they do, it MUST resolve to a valid RDF document. This document MUST include a single `solid:oidcRegistration` property, which in turn MUST be a JSON serialization of an OIDC client registration.
 * When requesting a DPoP-bound Access Token from an Identity Provider, the client must send a valid DPoP proof JWT.
 
-*For Identity Providers:*
+For Identity Providers ::
 
 * An IdP MUST dereference the client’s WebID document and match any client-supplied parameters, with the values in the client’s WebID document.
 * IdPs MUST provide a DPoP-bound Access Token to the client. This token must meet the following requirements:
@@ -542,11 +567,12 @@ Solid-OIDC adds the following requirements to classic OIDC:
 * IdPs MUST also provide the user with an OIDC ID token. In Solid OIDC the user's webID MUST be present in this token as the `webid` claim.
 * An IdP that conforms to the Solid-OIDC specification MUST advertise this in the OpenID Connect Discovery 1.0 resource. An Identity Provider would indicate this support by using the `solid_oidc_supported` metadata property, referencing the Solid-OIDC specification URL.
 
-*For Resource Servers:*
+For Resource Servers ::
 
 * A Resource Server must inform the Client that a DPoP-bound Access Token is required upon request of a non-public resource.
 * A Resource Server must get the public key from an IdP and use it to validate the signature on the DPoP-bound Access Token that was sent by the client upon every request.
 
-==== Sources: 
+== Sources: 
+
 https://solid.github.io/authentication-panel/solid-oidc/
 https://solid.github.io/authentication-panel/solid-oidc-primer/
