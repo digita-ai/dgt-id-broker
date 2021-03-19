@@ -69,7 +69,7 @@ GET https://alice.digipod.example/profile/card#me
 
 The responses body will look somewhat like this: 
 +
-
+[source, json]
 ----
 @prefix : <#>.
 @prefix solid: <http://www.w3.org/ns/solid/terms#>.
@@ -237,7 +237,7 @@ The response contains a JSON representation of the OIDC Client Registration.
 . The *OP* will now generate a cryptographic random string. It will be stored in a keystore and act as the key for the Client ID, WebId, the clients code challenge and the expected response types and scopes.
 
 +
-
+[source, json]
 ----
 {
   "h-DnHRAfTsn9V_m4I1A3Cw": {
@@ -254,6 +254,7 @@ The response contains a JSON representation of the OIDC Client Registration.
 
 . The *OP* redirects Alice back to the *Client* after successfully logging in. It uses the provided URI in the initial request to do so. 
 +
+[source, json]
  ----
  302 redirect to: https://dailypictures.example/callback?code=h-DnHRAfTsn9V_m4I1A3Cw
  ----
