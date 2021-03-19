@@ -217,6 +217,47 @@ The response will look somewhat like this:
         }""" .
 
 The response contains a JSON representation of the OIDC Client Registration.
-    
+
+
+
+
+
+
+=== [gray]*Summary*
+
+Solid-OIDC adds the following requirements to classic OIDC:
+
+*For Users:*
+
+* Should provide a webID that is a valid RDF profile. This webID will be a part of the OIDC ID Token that is provided by the IdP for authentication.
+
+*For Clients (the application or browser):*
+
+* Clients SHOULD use a webID as their client ID. If they do, it MUST resolve to a valid RDF document. This document MUST include a single `solid:oidcRegistration` property, which in turn MUST be a JSON serialization of an OIDC client registration.
+* When requesting a DPoP-bound Acces Token from an Identity Provider, the client must send a valid DPoP proof JWT.
+
+*For Identity Providers:*
+
+* An IdP MUST dereference the client’s WebID document and match any client-supplied parameters, with the values in the client’s WebID document.
+* IdPs MUST provide a DPoP-bound Access Token to the client. This token must meet the following requirements:
+** Must be a valid JWT token.
+** The token MUST contain:
+*** `webid` — must provide the user's webID.
+*** `iss` — must be a valid URL of the IdP instantiating this token.
+*** `aud` — must either be the string `solid` or be an array of values, one of which is the string `solid`.
+*** `iat` — the time at which the DPoP-bound Access Token was issued as a UNIX timestamp.
+*** `exp` — the time at which the DPoP-bound Access Token becomes invalid as a UNIX timestamp.
+*** `cnf` — the confirmation claim is used to identify the DPoP Public Key bound to the Access Token.
+*** `client_id` — The ClientID claim is used to identify the client.
+* IdPs MUST also provide the user with an OIDC ID token. In Solid OIDC the user's webID MUST be present in this token as the `webid` claim.
+* An IdP that conforms to the Solid-OIDC specification MUST advertise this in the OpenID Connect Discovery 1.0 resource. An Identity Provider would indicate this support by using the `solid_oidc_supported` metadata property, referencing the Solid-OIDC specification URL.
+
+*For Resource Servers:*
+
+* A Resource Server must inform the Client that a DPoP-bound Access Token is required upon request of a non-public resource.
+* A Resource Server must get the public key from an IdP and use it to validate the signature on the DPoP-bound Access Token that was sent by the client upon every request.
+
+==== Sources: 
+https://solid.github.io/authentication-panel/solid-oidc/
         
     
