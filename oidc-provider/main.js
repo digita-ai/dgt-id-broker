@@ -1,5 +1,6 @@
 const express = require('express');
 const Provider = require('oidc-provider');
+require('dotenv').config();
 
 const app = new express();
 
@@ -9,7 +10,7 @@ const configuration = {
         client_secret: 'super_secret',
         grant_types: ['authorization_code'],
         response_types: ['code'],
-        redirect_uris: ['http://192.168.0.10:3001/requests.html']
+        redirect_uris: [`http://192.168.0.10:${VITE_PORT}/requests.html`]
     }],
     claims: {
         email: ['email', 'email_verified'],
@@ -28,11 +29,11 @@ const configuration = {
     
 }
 
-const oidc = new Provider('http://localhost:3000', configuration);
+const oidc = new Provider(`http://localhost:${PORT}`, configuration);
 
 app.use('/', oidc.callback());
 
-oidc.listen(3000, () => {
-    console.log('oidc-provider listening on port 3000, check http://localhost:3000/.well-known/openid-configuration');
+oidc.listen(PORT, () => {
+    console.log(`oidc-provider listening on port ${PORT}, check http://localhost:${PORT}/.well-known/openid-configuration`);
   });
 

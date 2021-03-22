@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/JasperVandenberghen/oidc-provider#readme",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "koa": "^2.13.1",
     "oidc-provider": "^7.1.2",
