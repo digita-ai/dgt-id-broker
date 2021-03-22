@@ -1,0 +1,26 @@
+{
+  "name": "oidc-provider",
+  "version": "1.0.0",
+  "description": "oidc-demo-app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "JasperVandenberghen",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JasperVandenberghen/oidc-provider.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JasperVandenberghen/oidc-provider/issues"
+  },
+  "homepage": "https://github.com/JasperVandenberghen/oidc-provider#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "koa": "^2.13.1",
+    "oidc-provider": "^7.1.2",
+    "openid-client": "^4.5.1"
+  }
+}

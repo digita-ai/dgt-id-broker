@@ -1,0 +1,40 @@
+@port=3010
+
+###
+GET http://localhost:3000/auth?response_type=code&scope=openid&client_id=test_app&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html HTTP/1.1
+
+
+###
+POST http://localhost:3000/token HTTP/1.1
+content-type: application/x-www-form-urlencoded
+authorization: Basic dGVzdF9vYXV0aF9hcHA6c3VwZXJfc2VjcmV0
+body: 
+
+grant_type=client_credentials&scopes=api1
+
+
+###
+POST http://localhost:3000/token
+content-type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=bm9DT3F7qu9Q81ox2L8y1wIaIAbip_iqM2hrL_-RFTd&client_id=test_app&client_secret=super_secret&redirect_uri=http%3A%2F%2F192.168.0.10:3001%2Frequests.html
+
+###
+POST http://localhost:3000/token/introspection HTTP/1.1
+content-type: application/x-www-form-urlencoded
+authorization: Basic dGVzdF9vYXV0aF9hcHA6c3VwZXJfc2VjcmV0
+body:
+
+token=HcJ83daSN-s-VlneeUTKJ1WmGCbvr1sdvYMKGb_UK1X
+
+### @name createPod
+POST http://localhost:{{port}}/pods HTTP/1.1
+Content-Type: application/json
+
+{
+  "login": "jaspervandenberghen",
+  "webId": "http://localhost:3000/jaspervandenberghen/profile/card#me",
+  "name": "Jasper Vandenberghen",
+  "email": "jasper.vandenberghen@digita.ai",
+  "oidcIssuer": "http://localhost:3000"
+}
