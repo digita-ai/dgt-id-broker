@@ -1,0 +1,25 @@
+{
+  "folders": [
+    {
+      "name": "Digita Identity Broker (root)",
+      "path": "."
+    },
+    {
+      "name": "Docs",
+      "path": "docs"
+    }
+  ],
+  "settings": {
+    "cSpell.words": [
+      "semcom"
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "editorconfig.editorconfig",
+      "dbaeumer.vscode-eslint",
+      "folke.vscode-monorepo-workspace",
+      "humao.rest-client",
+    ]
+  }
+}
