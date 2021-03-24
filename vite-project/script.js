@@ -1,7 +1,7 @@
 const env = import.meta.env
 
-const client = "test_app"
-const client_secret = "super_secret"
+const client = `${env.VITE_CLIENT_ID}`
+const client_secret = `${env.VITE_CLIENT_SECRET}`
 const redirect_uri = `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
@@ -45,12 +45,8 @@ formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
 formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
-// formDataForAccessToken.append('resource', 'http://example.com');
-// console.log(localStorage.getItem("pkce_code_verifier"))
-// formDataForAccessToken.append('code_verifier', localStorage.getItem("pkce_code_verifier"));
 
 const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
-
 
 postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken)
     .then(data => {

@@ -71,8 +71,6 @@ const configuration = {
     
 }
 
-
-
 const oidc = new Provider(`http://localhost:${process.env.OIDC_PORT}`, configuration);
 oidc.proxy = true;
 
