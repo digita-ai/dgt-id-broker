@@ -10,7 +10,7 @@ const Account = require('./account');
 const jwks = require('./jwks.json');
 
 const configuration = {
-    
+
     clients: [{
         client_id: 'test_app',
         client_secret: 'super_secret',
@@ -18,16 +18,7 @@ const configuration = {
         response_types: ['code'],
         redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
     }],
-    claims: {
-        email: ['email', 'email_verified'],
-        phone: ['phone_number', 'phone_number_verified'],
-        profile: ['birthdate', 'family_name', 'gender', 'given_name', 'locale', 'middle_name', 'name', 'nickname', 'picture', 'preferred_username', 'profile', 'updated_at', 'website', 'zoneinfo']
-    },
-    scopes: ['api1'],
-    features: {
-        clientCredentials: { enabled: true },
-        introspection: { enabled: true }
-    },
+    conformIdTokenClaims: false,
     pkce: {
         required: () => false
     },
@@ -36,13 +27,39 @@ const configuration = {
             return `/interaction/${interaction.uid}`;
         },
     },
-    clientBasedCORS: function(ctx, origin, client){
-        return true;
+    clientBasedCORS: function (ctx, origin, client) {
+        return origin === `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`
     },
     findAccount: Account.findAccount,
+    extraTokenClaims: async function(ctx, token){
+        const account = await Account.findAccount(ctx, token.accountId)
+        const claims = await account.claims()
+        return ({
+            'webid': claims.webid
+        })
+        
+    },
     features: {
         // disable the packaged interactions
         devInteractions: { enabled: false },
+        userinfo: {enabled:false},
+        resourceIndicators: {
+            defaultResource: (ctx, client, oneOf) => {
+                return 'http://example.com'
+            },
+            enabled: true,
+            getResourceServerInfo: (ctx, resourceIndicator, client) => {
+                console.log("resource indicator: ", resourceIndicator, client)
+                return ({
+                    audience: 'solid',
+                    accessTokenTTL: 2 * 60 * 60, // 2 hours
+                    accessTokenFormat: 'jwt',
+                    jwt: {
+                        sign: { alg: 'ES256' },
+                    },
+                });
+            }
+        }
     },
     jwks,
 }
