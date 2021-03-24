@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const assert = require('assert');
 require('dotenv').config();
+const cors = require('cors');
 
 const Account = require('./account');
 //const RedisAdapter = require('./redis');
@@ -12,8 +13,8 @@ const jwks = require('./jwks.json');
 const configuration = {
 
     clients: [{
-        client_id: 'test_app',
-        client_secret: 'super_secret',
+        client_id: `${process.env.CLIENT_ID}`,
+        client_secret: `${process.env.CLIENT_SECRET}`,
         grant_types: ['authorization_code'],
         response_types: ['code'],
         redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
@@ -40,7 +41,6 @@ const configuration = {
         
     },
     features: {
-        // disable the packaged interactions
         devInteractions: { enabled: false },
         userinfo: {enabled:false},
         resourceIndicators: {
@@ -59,9 +59,16 @@ const configuration = {
                     },
                 });
             }
-        }
+        },
+        registration: {
+            enabled: true,
+            initialAccessToken: false,
+            issueRegistrationAccessToken: true,
+            policies: undefined
+          }
     },
     jwks,
+    
 }
 
 
@@ -69,7 +76,26 @@ const configuration = {
 const oidc = new Provider(`http://localhost:${process.env.OIDC_PORT}`, configuration);
 oidc.proxy = true;
 
-const expressApp = express();
+const  expressApp = express();
+
+let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
+`http://localhost:${process.env.VITE_PORT}`, 
+`http://${process.env.VITE_IP}:${process.env.VITE_PORT}`]
+
+
+expressApp.use(cors({
+  origin: function(origin, callback){
+    //allow requests with no origin, needed for http.requests file
+    if(!origin) return callback(null, true);
+    if(!whitelist.includes(origin)){
+        console.log(origin)
+      var message = "The CORS policy for this origin doesn't allow access from this particular origin.";
+      return callback(new Error(message), false);
+    }
+    return callback(null, true);
+  }
+}));
+ 
 expressApp.set('trust proxy', true);
 expressApp.set('view engine', 'ejs');
 expressApp.set('views', path.resolve(__dirname, 'views'));

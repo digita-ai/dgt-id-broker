@@ -12,6 +12,8 @@ body:
 
 grant_type=client_credentials&scopes=api1
 
+###
+GET http://localhost:3000/.well-known/openid-configuration
 
 ###
 POST http://localhost:3000/token
