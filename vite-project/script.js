@@ -6,8 +6,6 @@ const redirect_uri = `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
-console.log(code)
-
 async function postDataToGetAccessToken(url, data) {
     const response = await fetch(url, {
         method: 'POST',
@@ -45,16 +43,16 @@ formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
 formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
+const code_verifier = sessionStorage.getItem("pkce_code_verifier")
+formDataForAccessToken.append('code_verifier', code_verifier);
 
 const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
 
+
 postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken)
     .then(data => {
-        console.log(data)
-        console.log("----- access_token:" + data.access_token, "-----------", "id_token:" + data.id_token); // JSON data parsed by `data.json()` call
         getResource("http://localhost:3002/jaspervandenberghen/profile/", data.access_token)
             .then(data => {
-                console.log(data)
                 data = data.replace(/</g, "&lt;")
                 data = data.replace(/>/g, "&gt;")
                 const div = document.getElementById("app");
@@ -65,5 +63,6 @@ postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDat
                 p.innerHTML = data;
                 div.appendChild(h1);
                 div.appendChild(p);
+                sessionStorage.clear();
             })
     });
