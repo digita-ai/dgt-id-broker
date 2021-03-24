@@ -12,6 +12,8 @@ body:
 
 grant_type=client_credentials&scopes=api1
 
+###
+GET http://localhost:3000/.well-known/openid-configuration
 
 ###
 POST http://localhost:3000/token
@@ -36,13 +38,36 @@ POST http://localhost:3003/pods HTTP/1.1
 Content-Type: application/json
 
 {
-  "login": "jaspervandenberghen",
-  "webId": "http://localhost:3000/jaspervandenberghen/profile/card#me",
+  "login": "way2pin",
+  "webId": "http://localhost:3000/way2pin/profile/card#me",
   "name": "Jasper Vandenberghen",
   "email": "jasper.vandenberghen@digita.ai",
   "oidcIssuer": "http://localhost:3000"
 }
 
 ###
-GET http://localhost:3003/jaspervandenberghen/profile/
+GET http://localhost:3003/jaspervandenberghen/profile/ HTTP/1.1
 authorizatiom: Bearer I3PAMMxcmCsTCeHwgMcXTKpB3l2K9arS9cG07mowevq
+
+### Register client dynamically
+POST http://localhost:3000/reg HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "client_name": "My Panva Application",
+  "client_id": "test_app",
+  "client_secret": "super_secret",
+  "redirect_uris": [
+    "http://192.168.0.10:3001/requests.html",
+    "http://192.168.0.10:3001/register.html"
+  ],
+  "client_secret_expires_at": 0 
+}
+
+### Get current configuration of the registered client
+//use registration_client_uri 
+GET http://localhost:3000/reg/FfEXbbUog4F3VgQBF4XYG HTTP/1.1
+Accept: application/json
+Authorization: Bearer YGfYDiogRV8719oFez2tAITVMBGmidxC9w_XA64mnfg
+//add the registration access token as bearer
