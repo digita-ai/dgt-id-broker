@@ -1,0 +1,34 @@
+= Setup
+:hardbreaks:
+
+To run the demo::
+* Git clone the repository and run `npm install` in both the `oidc-provider` and `vite-project` folder.
+* Create a `.env` file in both folders as well.
+** Include the following variables: 
+*** `OIDC_PORT=<PORT>`
+*** `VITE_PORT=<PORT>`
+*** `VITE_IP=<IP>`
++
+** Replace `<PORT>` with the ports you would like to run each project on. 
+When you'll run your Vite project it will try running on port 3000. 
+If that port is already taken because you're already running the OIDC-provider on it it will just use the next available port, 3001 probably.
+** Replace `<IP>` with your IP address.
+
+* Switch to the `oidc-provider` folder and run: `npm run start`.
+** Your terminal should show something like this:
++
+`oidc-provider listening on port 3000, check \http://localhost:3000/.well-known/openid-configuration`
+* Now switch to the `vite-project` folder and run: `npm run dev`.
+** Your terminal should show something like this:
++
+`vite v2.1.2 dev server running at:
+
+  > Network:  http://192.168.0.10:3001/
+  > Network:  http://192.168.56.1:3001/
+  > Network:  http://192.168.45.1:3001/
+  > Network:  http://192.168.91.1:3001/
+  > Local:    http://localhost:3001/   
++
+
+Note that naturally your IP and chosen ports could be different.
+
