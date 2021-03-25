@@ -16,7 +16,6 @@ async function postRegisterClient(url, data) {
     mode: "cors",
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": `http://localhost:${env.VITE_PORT}`,
     },
     body: JSON.stringify(data),
   });

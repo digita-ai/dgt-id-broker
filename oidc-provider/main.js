@@ -7,7 +7,6 @@ require('dotenv').config();
 const cors = require('cors');
 
 const Account = require('./account');
-//const RedisAdapter = require('./redis');
 const jwks = require('./jwks.json');
 
 const configuration = {
@@ -21,7 +20,7 @@ const configuration = {
     }],
     conformIdTokenClaims: false,
     pkce: {
-        required: () => false
+        required: () => true
     },
     interactions: {
         url(ctx, interaction) {
@@ -32,24 +31,23 @@ const configuration = {
         return origin === `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`
     },
     findAccount: Account.findAccount,
-    extraTokenClaims: async function(ctx, token){
+    extraTokenClaims: async function (ctx, token) {
         const account = await Account.findAccount(ctx, token.accountId)
         const claims = await account.claims()
         return ({
             'webid': claims.webid
         })
-        
+
     },
     features: {
         devInteractions: { enabled: false },
-        userinfo: {enabled:false},
+        userinfo: { enabled: false },
         resourceIndicators: {
             defaultResource: (ctx, client, oneOf) => {
                 return 'http://example.com'
             },
             enabled: true,
             getResourceServerInfo: (ctx, resourceIndicator, client) => {
-                console.log("resource indicator: ", resourceIndicator, client)
                 return ({
                     audience: 'solid',
                     accessTokenTTL: 2 * 60 * 60, // 2 hours
@@ -65,35 +63,37 @@ const configuration = {
             initialAccessToken: false,
             issueRegistrationAccessToken: true,
             policies: undefined
-          }
+        },
+        dPoP: {
+            enabled: true
+        }
     },
     jwks,
-    
+
 }
 
 const oidc = new Provider(`http://localhost:${process.env.OIDC_PORT}`, configuration);
 oidc.proxy = true;
 
-const  expressApp = express();
+const expressApp = express();
 
 let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
-`http://localhost:${process.env.VITE_PORT}`, 
+`http://localhost:${process.env.VITE_PORT}`,
 `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`]
 
 
 expressApp.use(cors({
-  origin: function(origin, callback){
-    //allow requests with no origin, needed for http.requests file
-    if(!origin) return callback(null, true);
-    if(!whitelist.includes(origin)){
-        console.log(origin)
-      var message = "The CORS policy for this origin doesn't allow access from this particular origin.";
-      return callback(new Error(message), false);
+    origin: function (origin, callback) {
+        //allow requests with no origin, needed for http.requests file
+        if (!origin) return callback(null, true);
+        if (!whitelist.includes(origin)) {
+            var message = "The CORS policy for this origin doesn't allow access from this particular origin.";
+            return callback(new Error(message), false);
+        }
+        return callback(null, true);
     }
-    return callback(null, true);
-  }
 }));
- 
+
 expressApp.set('trust proxy', true);
 expressApp.set('view engine', 'ejs');
 expressApp.set('views', path.resolve(__dirname, 'views'));
