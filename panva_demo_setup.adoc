@@ -3,32 +3,52 @@
 
 To run the demo::
 * Git clone the repository and run `npm install` in both the `oidc-provider` and `vite-project` folder.
-* Create a `.env` file in both folders as well.
-** Include the following variables: 
-*** `OIDC_PORT=<PORT>`
+* Create a `.env` file in both folders.
+** In the `oidc-provider` folder include the following variables:
 *** `VITE_PORT=<PORT>`
-*** `VITE_IP=<IP>`
+*** `OIDC_PORT=<PORT>`
+*** `VITE_IP=localhost`
+*** `CLIENT_ID=<ID>`
+*** `ClIENT_SECRET=<SECRET>`
+
+** In the `vite-project` folder include the following variables: 
+*** `VITE_OIDC_PORT=<PORT>`
+*** `VITE_PORT=<PORT>`
+*** `VITE_IP=localhost`
+*** `VITE_CLIENT_ID=<ID>`
+*** `VITE_CLIENT_SECRET=<SECRET>`
 +
 ** Replace `<PORT>` with the ports you would like to run each project on. 
-When you'll run your Vite project it will try running on port 3000. 
-If that port is already taken because you're already running the OIDC-provider on it it will just use the next available port, 3001 probably.
-** Replace `<IP>` with your IP address.
+When you run your Vite project it will try running on port 3000. 
+If that port is already taken because you're already running the OIDC-provider on it, it will use the next available port.
+** Replace `<ID>` with any string, e.g. `my_client_id`
+** Replace `<SECRET>` with any string, e.g. `my_secret`
 
 * Switch to the `oidc-provider` folder and run: `npm run start`.
 ** Your terminal should show something like this:
 +
-`oidc-provider listening on port 3000, check \http://localhost:3000/.well-known/openid-configuration`
+```
+> oidc-provider@1.0.0 start C:\Users\Abel\Documents\Digita\repos\dgt-id-broker\oidc-provider
+> nodemon main.js
+
+[nodemon] 2.0.7
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: js,mjs,json
+[nodemon] starting `node main.js`
+```
 * Now switch to the `vite-project` folder and run: `npm run dev`.
 ** Your terminal should show something like this:
 +
-`vite v2.1.2 dev server running at:
+```
+vite v2.1.2 dev server running at:
 
   > Network:  http://192.168.0.10:3001/
   > Network:  http://192.168.56.1:3001/
   > Network:  http://192.168.45.1:3001/
   > Network:  http://192.168.91.1:3001/
-  > Local:    http://localhost:3001/   
+  > Local:    http://localhost:3001/
+```
 +
-
 Note that naturally your IP and chosen ports could be different.
 
