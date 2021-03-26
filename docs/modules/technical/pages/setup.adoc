@@ -1,4 +1,5 @@
 :toc:
+:toclevels: 3
 
 
 = Initial project setup
@@ -230,7 +231,7 @@ as development dependency.
 // - When using a testing library, it can be useful to create an additional `tsconfig.app.json`and `tsconfig.spec.json` configuration that `extends` from `./tsconfig.json`, with a different `outDir` in `compilerOptions`; the first with `lib/index.ts` in the `files` list and `lib/\**/\*.d.ts` in the `include` list; the second with `lib/test.ts` in the `files` list and both `lib/\**/\*.d.ts` and `lib/**/*.spec.ts` in the `include` list.
 
 
-=== Jest
+==== Jest
 
 -  Install `jest`, `ts-jest` and `@types/jest` as development dependencies.
 
@@ -260,7 +261,7 @@ globals: {
 ----
 
 
-=== Components.js
+==== Components.js
 
 - Install `componentsjs` as a dependency and `componentsjs-generator` as a development dependency.
 
