@@ -1,0 +1,294 @@
+:toc:
+
+
+= Initial project setup
+
+
+== Author(s)
+
+* Stijn Taelemans
+* Wouter Termont
+* Wouter Janssens
+
+
+== References
+
+* Project: https://github.com/digita-ai/dgt-id-broker[@digita-ai/dgt-id-broker]
+//* Branch: `feature/658432185-initial-setup-docs`
+
+
+== Overview of the proposed solution
+
+In this specification we'll set up the repository organization of the Identity Broker project. This analysis covers the basic steps, but you might have to do some extra configuration that is not included here. Assess the correct working of every step, and do not hesitate to contact one of the authors when in doubt.
+
+
+== Detailed analysis of the suggested implementation
+
+
+=== Repository setup
+
+
+==== Repository root
+
+- Make sure the project has a relevant `README.md` file, and an initially empty `CHANGELOG.md`. 
+
+- Create a skeleton `package.json` file in the root of the repository, declaring it to be a `private` project named `root`. 
+
+- Force the overall Node.js version with `.nvmrc` file containing `14`.
+
+
+==== Lerna monorepo
+
+- Install `lerna` as development dependency.
+- Add a `lerna.json` file with initial `version` number `0.1.0` and a `packages` list containing `packages/*`. 
+- Create the `packages` directory and any add any pre-existing or planned packages as subdirectories.
+
+
+==== Visual Studio Code
+
+Add a `.code-workspace` file with the name of the repo, containing:
+
+- a `folders` list containing the root directory as well as any package added in the previous step (name them aptly in _Title Case_);
+- an `extensions` object containing a sensible `recommendations` list for the project, e.g. `dbaeumer.vscode-eslint` and `humao.rest-client`;
+- an empty `settings` object.
+
+Also add a `.vscode` directory with an empty `snippets.code-snippets` file. 
+
+> Snippets are defined under a snippet name and have a scope (comma separated list of applicable languages), a prefix (trigger), body (expansion) and description; the body can contain variables like `$1` or `${2:label}` for tab stops with optional placeholders, and `$0` for the final cursor position.
+
+
+=== Coding standards
+
+
+==== Editorconfig
+
+Force the editor's character encoding with a `.editorconfig` file containing 
+
+[source,editorconfig]
+----
+root = true
+ ​
+[*]
+charset = utf-8
+----
+
+
+==== ESLint
+
+- Install `eslint` as well as the plugins `eslint-import-resolver-typescript`, `eslint-plugin-import`, `eslint-plugin-jasmine`, `eslint-plugin-jsdoc`, `eslint-plugin-prefer-arrow`, `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser`, as development dependencies.
+
+- Copy Digita's default `.eslintrc,json` file, e.g. from `dgt-platform`.
+
+- Add the following settings to the `.code-workspace` file's `settings` object:
++
+[source,json]
+----
+"eslint.format.enable": true,
+"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+"editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+}
+----
+
+
+====  Scripts
+
+Add the following `scripts` to the `package.json`:
+
+[source,json]
+----
+"bootstrap": "npm ci && lerna bootstrap --ignore-prepublish",
+"bootstrap:no-ci": "npm i && lerna bootstrap --no-ci --ignore-prepublish",
+"build": "lerna run build",
+"lint": "lerna run lint --parallel",
+"lint:fix": "lerna run lint:fix --parallel",
+"postinstall": "husky install",
+"release": "lerna version --exact --conventional-commits -m 'chore: release %s' --force-publish --tag-version-prefix='' --no-granular-pathspec",
+"start": "lerna run start --parallel",
+"test": "lerna run test --parallel",
+"test:ci": "lerna run test:ci"
+----
+
+
+=== Documentation
+
+Add a `docs` directory under the root, containing a skeleton Antora file structure with at least a `ROOT` module with a `nav.adoc` and an `index.adoc` page, and an relevant `antora.yml` configuration.
+
+=== Versioning
+
+
+==== Gitignore
+
+Create a `.gitignore` file containing sensible globs for the project. Examples can be found in other repositories, e.g. `dgt-platform`.
+
+
+==== Commitlint
+
+- Install `@commitlint/cli` as well as the plugins `@commitlint/config-conventional` and `@commitlint/config-lerna-scopes`, as development dependencies.
+
+- Add a `commitlint.config.js` module file exporting a configuration object with an `extends` list containing `@commitlint/config-lerna-scopes`.
+
+
+==== Husky
+
+Install `husky` as a development dependency, and create a `.husky` directory in the root, containing: 
+
+- a `.gitignore` file with only `_` as contents;
+
+- a `commit-msg` hook file containing 
++
+[source,bash]
+----
+#!/bin/sh
+. "$(dirname $0)/_/husky.sh"
+./node_modules/.bin/commitlint --edit $1 
+----
+
+- a `pre-commit` hook file containing 
++
+[source,bash]
+----
+#!/bin/sh
+. "$(dirname $0)/_/husky.sh"
+npm run lint && npm run bootstrap 
+----
+
+
+==== Github workflows
+
+Create a `.github/workflows` directory structure containing a `ci.yml` file for continuous integration. Examples can be found in other repositories, e.g. `dgt-platform`. Be sure to update all references to specific packages and (sub)repos!
+
+
+=== Subrepo packages
+
+
+While each package is different, and care should be taken to tailor each project to its specific case, there are some general steps that take part in almost every setup.
+
+
+==== Basic project
+
+Initialize a Node.js project with the following `package.json` settings:
+
+- a relevant package `name` within the `@digita-ai` scope;
+- initial `version` number `0.1.0`;
+- a sensible `description`;
+
+// - `Digita`as the `author`;
+// - `ISC` as `license`;
+
+- the `main` entry point set to `./dist/index.js`;
+- the `types` entry point set to `./dist/index.d.ts`;
+
+- a `directories` object containing `"lib": "lib"`;
+- a `files` list containing `dist`;
+
+- a `repository` information object with `type` set to `git`, containing the SSH `url` of the monorepo of which this package is part, and the `directory` of this package relative to the root.
+
+Install `rimraf` as a first development dependency.
+
+
+==== Typescript
+
+- Install `typescript` 
+// as well as the plugins `ts-node`, `tsc-watch` and `tsconfig-paths`
+as development dependency.
+
+- Add the following scripts to `package.json`:
++
+[source,json]
+----
+"build": "rimraf ./dist && npm run build:ts",
+"build:ts": "tsc",
+----
+
+- Create a `tsconfig.json` file setting `compileOnSave` to `false`, with `lib` in the `include` list, `node_modules` and `dist` in the `exclude` list, and containing the following `compilerOptions`:
++
+[source,json]
+----
+"baseUrl": "./",
+"outDir": "./dist",
+"typeRoots": ["node_modules/@types"],
+"strict": true,
+"sourceMap": true,
+"declaration": false,
+"downlevelIteration": true,
+"experimentalDecorators": true,
+"moduleResolution": "node",
+"esModuleInterop": true,
+"importHelpers": true,
+"noImplicitReturns": true,
+"noFallthroughCasesInSwitch": true,
+"forceConsistentCasingInFileNames": true,
+"target": "es2020",
+"module": "es2020",
+"lib": [
+  "es2018",
+  "dom"
+]
+----
+
+// - When using a testing library, it can be useful to create an additional `tsconfig.app.json`and `tsconfig.spec.json` configuration that `extends` from `./tsconfig.json`, with a different `outDir` in `compilerOptions`; the first with `lib/index.ts` in the `files` list and `lib/\**/\*.d.ts` in the `include` list; the second with `lib/test.ts` in the `files` list and both `lib/\**/\*.d.ts` and `lib/**/*.spec.ts` in the `include` list.
+
+
+=== Jest
+
+-  Install `jest`, `ts-jest` and `@types/jest` as development dependencies.
+
+- Create a `jest.config.ts` module file importing the `Config` type from `@jest/types`, and exporting as a default a `Config.InitialOptions` object containing the following options: 
++
+[source,javascript]
+----
+testTimeout: 300000,
+verbose: true,
+preset: 'ts-jest',
+testEnvironment: 'node',
+globals: {
+  'ts-jest': {
+    babelConfig: true,
+    tsconfig: 'tsconfig.json',
+  },
+}
+----
+
+- Add the following scripts to `package.json`:
++
+[source,json]
+----
+"test": "jest --silent",
+"test:ci": "jest --runInBand",
+"test:e2e": "jest --config ./test/jest-e2e.json",
+----
+
+
+=== Components.js
+
+- Install `componentsjs` as a dependency and `componentsjs-generator` as a development dependency.
+
+- Create an initially empty `config` directory and an equally empty `.componentsignore` file.
+
+- Add both the `config` directory and the `.componentsignore` file to the `files` list of `package.json`.
+
+- Also add the following to `package.json`, substituting `aiv-actueel-inkomen` by the relevant package name: 
++
+[source, json]
+----
+"lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen",
+"lsd:components": "dist/components/components.jsonld",
+"lsd:contexts": {
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/components/context.jsonld": "dist/components/context.jsonld"
+},
+"lsd:importPaths": {
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/components/": "dist/components/",
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/config/": "config/",
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/dist/": "dist/"
+}
+----
+
+- Finally, also add and change the following scripts in `package.json`:
++
+[source,json]
+----
+"build": "rimraf ./dist && npm run build:ts && npm run build:components",
+"build:ts": "tsc",
+"build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore"
+----
