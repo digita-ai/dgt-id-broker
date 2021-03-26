@@ -27,7 +27,7 @@ In this specification we'll set up the repository organization in the root of a 
 
 - Install `lerna` as development dependency.
 - Add a `lerna.json` file with initial `version` number `0.1.0` and a `packages` list containing `packages/*`. 
-- Create the `packages` directory and any add any pre-existing or planned packages as subdirectories.
+- Create the `packages` directory and add any pre-existing or planned packages as subdirectories.
 
 
 === Visual Studio Code
