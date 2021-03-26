@@ -1,0 +1,140 @@
+:toc:
+:toclevels: 3
+
+
+= Initial project setup
+Wouter Janssens, Stijn Taelemans & Wouter Termont
+
+
+== Overview of the proposed solution
+
+In this specification we'll set up the repository organization in the root of a monorepo. This analysis covers the basic steps, but you might have to do some extra configuration that is not included here. Assess the correct working of every step, and do not hesitate to contact one of the authors when in doubt.
+
+
+== Detailed analysis of the suggested implementation
+
+
+=== Basic setup
+
+- Make sure the project has a relevant `README.md` file, and an initially empty `CHANGELOG.md`. 
+
+- Create a skeleton `package.json` file in the root of the repository, declaring it to be a `private` project named `root`. 
+
+- Force the overall Node.js version with `.nvmrc` file containing `14`.
+
+
+=== Lerna monorepo
+
+- Install `lerna` as development dependency.
+- Add a `lerna.json` file with initial `version` number `0.1.0` and a `packages` list containing `packages/*`. 
+- Create the `packages` directory and any add any pre-existing or planned packages as subdirectories.
+
+
+=== Visual Studio Code
+
+Add a `.code-workspace` file with the name of the repo, containing:
+
+- a `folders` list containing the root directory as well as any package added in the previous step (name them aptly in _Title Case_);
+- an `extensions` object containing a sensible `recommendations` list for the project, e.g. `dbaeumer.vscode-eslint` and `humao.rest-client`;
+- an empty `settings` object.
+
+Also add a `.vscode` directory with an empty `snippets.code-snippets` file. 
+
+> Snippets are defined under a snippet name and have a scope (comma separated list of applicable languages), a prefix (trigger), body (expansion) and description; the body can contain variables like `$1` or `${2:label}` for tab stops with optional placeholders, and `$0` for the final cursor position.
+
+
+=== Editorconfig
+
+Force the editor's character encoding with a `.editorconfig` file containing 
+
+[source,editorconfig]
+----
+root = true
+ ​
+[*]
+charset = utf-8
+----
+
+
+=== ESLint
+
+- Install `eslint` as well as the plugins `eslint-import-resolver-typescript`, `eslint-plugin-import`, `eslint-plugin-jasmine`, `eslint-plugin-jsdoc`, `eslint-plugin-prefer-arrow`, `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser`, as development dependencies.
+
+- Copy Digita's default `.eslintrc,json` file, e.g. from `dgt-platform`.
+
+- Add the following settings to the `.code-workspace` file's `settings` object:
++
+[source,json]
+----
+"eslint.format.enable": true,
+"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+"editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+}
+----
+
+
+===  Scripts
+
+Add the following `scripts` to the `package.json`:
+
+[source,json]
+----
+"bootstrap": "npm ci && lerna bootstrap --ignore-prepublish",
+"bootstrap:no-ci": "npm i && lerna bootstrap --no-ci --ignore-prepublish",
+"build": "lerna run build",
+"lint": "lerna run lint --parallel",
+"lint:fix": "lerna run lint:fix --parallel",
+"postinstall": "husky install",
+"release": "lerna version --exact --conventional-commits -m 'chore: release %s' --force-publish --tag-version-prefix='' --no-granular-pathspec",
+"start": "lerna run start --parallel",
+"test": "lerna run test --parallel",
+"test:ci": "lerna run test:ci"
+----
+
+
+=== Documentation
+
+Add a `docs` directory under the root, containing a skeleton Antora file structure with at least a `ROOT` module with a `nav.adoc` and an `index.adoc` page, and an relevant `antora.yml` configuration.
+
+
+=== Gitignore
+
+Create a `.gitignore` file containing sensible globs for the project. Examples can be found in other repositories, e.g. `dgt-platform`.
+
+
+=== Commitlint
+
+- Install `@commitlint/cli` as well as the plugins `@commitlint/config-conventional` and `@commitlint/config-lerna-scopes`, as development dependencies.
+
+- Add a `commitlint.config.js` module file exporting a configuration object with an `extends` list containing `@commitlint/config-lerna-scopes`.
+
+
+=== Husky
+
+Install `husky` as a development dependency, and create a `.husky` directory in the root, containing: 
+
+- a `.gitignore` file with only `_` as contents;
+
+- a `commit-msg` hook file containing 
++
+[source,bash]
+----
+#!/bin/sh
+. "$(dirname $0)/_/husky.sh"
+./node_modules/.bin/commitlint --edit $1 
+----
+
+- a `pre-commit` hook file containing 
++
+[source,bash]
+----
+#!/bin/sh
+. "$(dirname $0)/_/husky.sh"
+npm run lint && npm run bootstrap 
+----
+
+
+=== Github workflows
+
+Create a `.github/workflows` directory structure containing a `ci.yml` file for continuous integration. Examples can be found in other repositories, e.g. `dgt-platform`. Be sure to update all references to specific packages and (sub)repos!

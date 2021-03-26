@@ -1,0 +1,25 @@
+:toc:
+:toclevels: 3
+
+
+= Initial setup of the Identity Proxy server and the Identity Demo client
+Wouter Termont
+
+
+== Overview of the proposed solution
+
+In this specification we'll set up the package organization of the Compliance Proxy in the Identity Broker repo. This analysis covers the basic steps, but you might have to do some extra configuration that is not included here. Assess the correct working of every step, and do not hesitate to contact one of the authors when in doubt.
+
+
+== Detailed analysis of the suggested implementation
+
+
+=== Identity Proxy server
+
+Start by following the xref:setup-package.adoc[general package setup], using the package name `dgt-id-proxy`.
+
+
+=== Identity Demo client
+
+Do the same for a second package names `dgt-id-demo`, but skip the Components.js step for now.
+
