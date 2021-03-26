@@ -1,0 +1,31 @@
+{
+    "name": "root",
+    "private": true,
+    "scripts": {
+        "bootstrap": "npm ci && lerna bootstrap --ignore-prepublish",
+        "bootstrap:no-ci": "npm i && lerna bootstrap --no-ci --ignore-prepublish",
+        "build": "lerna run build",
+        "lint": "lerna run lint --parallel",
+        "lint:fix": "lerna run lint:fix --parallel",
+        "postinstall": "husky install",
+        "release": "lerna version --exact --conventional-commits -m 'chore: release %s' --force-publish --tag-version-prefix='' --no-granular-pathspec",
+        "start": "lerna run start --parallel",
+        "test": "lerna run test --parallel",
+        "test:ci": "lerna run test:ci"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^12.0.1",
+        "@commitlint/config-conventional": "^12.0.1",
+        "@commitlint/config-lerna-scopes": "^12.0.1",
+        "@typescript-eslint/eslint-plugin": "^4.19.0",
+        "@typescript-eslint/parser": "^4.19.0",
+        "eslint": "^7.22.0",
+        "eslint-import-resolver-typescript": "^2.4.0",
+        "eslint-plugin-import": "^2.22.1",
+        "eslint-plugin-jasmine": "^4.1.2",
+        "eslint-plugin-jsdoc": "^32.3.0",
+        "eslint-plugin-prefer-arrow": "^1.2.3",
+        "husky": "^5.2.0",
+        "lerna": "^3.22.1"
+    }
+}
