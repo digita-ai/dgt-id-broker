@@ -16,7 +16,7 @@ In this specification we'll set up the repository organization in the root of a 
 
 === Basic setup
 
-- Make sure the project has a relevant `README.md` file, and an initially empty `CHANGELOG.md`. 
+- Make sure the project has a relevant `README.md` file. 
 
 - Create a skeleton `package.json` file in the root of the repository, declaring it to be a `private` project named `root`. 
 
