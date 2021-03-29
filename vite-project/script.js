@@ -48,7 +48,7 @@ formDataForAccessToken.append('code_verifier', code_verifier);
 
 const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
 
-
+if(code !== null){
 postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken)
     .then(data => {
         getResource("http://localhost:3002/jaspervandenberghen/profile/", data.access_token)
@@ -65,4 +65,4 @@ postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDat
                 div.appendChild(p);
                 sessionStorage.clear();
             })
-    });
+    });}
