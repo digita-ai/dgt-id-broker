@@ -27,10 +27,12 @@ const clients = [{
     redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
 }];
 
+// Defines the initial configuration of the Identity Provider. The most important ones are highlighted with a comment.
 const configuration = {
 
     clients: clients,
     conformIdTokenClaims: false,
+    // Require PKCE as it is a must for Solid-OIDC
     pkce: {
         required: () => true
     },
@@ -43,6 +45,7 @@ const configuration = {
         return origin === `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`
     },
     findAccount: Account.findAccount,
+    // Lets us define a function to add claims to the JWT access token the IdP sends back to the client. In this case, we have to add the webid of the user who logs in.
     extraTokenClaims: async function (ctx, token) {
         const account = await Account.findAccount(ctx, token.accountId)
         const claims = await account.claims()
@@ -54,6 +57,8 @@ const configuration = {
     features: {
         devInteractions: { enabled: false },
         userinfo: { enabled: false },
+        // The only way v7 of the node-oidc-provider library allows us to get a JWT access-token is by going through the resource indicator.
+        // See https://github.com/panva/node-oidc-provider/discussions/959#discussioncomment-524757 for information as to why.
         resourceIndicators: {
             defaultResource: (ctx, client, oneOf) => {
                 return 'http://example.com'
@@ -70,17 +75,22 @@ const configuration = {
                 });
             }
         },
+        // Defines config for the registration endpoint used for Dynamic Registration.
         registration: {
             enabled: true,
-            idFactory: (ctx) =>  {
+            // Function that defines how client_ids are generated during Dynamic Registration.
+            idFactory: (ctx) => {
                 return nanoid();
             },
             initialAccessToken: false,
             issueRegistrationAccessToken: true,
+            // Function that defines how secrets are generated during Dynamic Registration.
             secretFactory: (ctx) => {
                 return generateSecret(process.env.CLIENT_SECRET);
             }
         },
+        // Enable DPoP. This cannot be required, so if DPoP headers are not included, a user might still be able to get an Access Token. 
+        // However, since the token won't be DPoP bound, it won't be valid to access a solid resource server, and should be rejected.S
         dPoP: {
             enabled: true
         }
@@ -89,29 +99,32 @@ const configuration = {
 
 }
 
-
+// Function to generate the secret used in secretFactory of registration config.
 function generateSecret(secret) {
-  return base64URL(CryptoJS.SHA256(secret));
+    return base64URL(CryptoJS.SHA256(secret));
 }
 
 function base64URL(string) {
-  return string
-    .toString(CryptoJS.enc.Base64)
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
+    return string
+        .toString(CryptoJS.enc.Base64)
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
 }
 
+// create the oidc provider on a specific url, and with our configuration.
 const oidc = new Provider(`http://localhost:${process.env.OIDC_PORT}`, configuration);
 oidc.proxy = true;
 
+// create an express app.
 const expressApp = express();
 
 oidc.use(koaBody());
 
+// lets us define middleware which runs either before or after a request is processed by the oidc.
 oidc.use(async (ctx, next) => {
     console.log("pre middleware", ctx.method, ctx.path);
-    console.log(`Request Body: ${JSON.stringify(ctx.request.body)}`);
+    //console.log(`Request Body: ${JSON.stringify(ctx.request.body)}`);
     //console.log(`http://localhost:${process.env.OIDC_PORT}`, ctx.req.url)
 
     let clientID = "";
@@ -142,34 +155,35 @@ oidc.use(async (ctx, next) => {
             clientID !== undefined &&
             redirectURI !== undefined
         ) {
-            async function getPod(url) {
-                const response = await fetch(url, {
-                    method: "GET",
-                    headers: {
-                        Accept: "text/turtle",
-                    },
-                });
-                return response;
+            let known_client = false;
+
+            for (const x of clients) {
+                if (x["client_id"] === clientID) {
+                    known_client = true;
+                }
             }
-            getPod(clientID)
-                .then(async (data) => {
-                    let known_client = false;
-    
-                    for (const x of clients) {
-                        if (x["client_id"] === clientID) {
-                            known_client = true;
-                        }
-                    }
-    
-                    if (!known_client) {
-                        try {
-                            const url = new URL(clientID);
-                        } catch (error) {
-                            throw new Error(error);
-                        }
+
+            if (!known_client) {
+                try {
+                    console.log("test")
+                    const url = new URL(clientID);
+                } catch (error) {
+                    throw new Error(error);
+                }
+                async function getPod(url) {
+                    const response = await fetch(url, {
+                        method: "GET",
+                        headers: {
+                            Accept: "text/turtle",
+                        },
+                    });
+                    return response;
+                }
+                getPod(clientID)
+                    .then(async (data) => {
                         const text = await data.text();
     
-                        if (isValidWebID(clientID, redirectURI,data, text)) {
+                        if (isValidWebID(clientID, redirectURI, data, text)) {
                             clients.push(client)
                             console.log("Client registered successfully!")
                         } else {
@@ -177,16 +191,12 @@ oidc.use(async (ctx, next) => {
                                 "This is not a valid WebID, please register dynamically"
                             );
                         }
-                    } else {
-                        throw new Error(
-                            "This client is already registered!"
-                        );
-                    }
-                })
-                .catch((error) => {
-                    throw new Error(error)
-                })
-        }        
+                    })
+                    .catch((error) => {
+                        throw new Error(error)
+                    })
+            }
+        }
     }
     await next();
 });
@@ -200,7 +210,7 @@ function isValidWebID(clientID, redirectURI, data, text) {
             typeFound = true;
         }
     }
-
+    
     if (typeFound) {
         store.addQuads(parser.parse(text));
         const quads = store.getQuads();
@@ -214,7 +224,7 @@ function isValidWebID(clientID, redirectURI, data, text) {
                 const object = quad["_object"]
                 const objectSub = object.id.substring(1, object.id.length - 1);
                 let JSONObject = JSON.parse(objectSub);
-
+                
                 if (clientID === JSONObject.client_id
                     && JSONObject.redirect_uris.includes(redirectURI)) {
                     valid = true;
@@ -222,11 +232,12 @@ function isValidWebID(clientID, redirectURI, data, text) {
                 return valid;
             }
         }
-    } 
+    }
     return valid;
 }
 
 
+// Set our Cors policy.
 let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
 `http://localhost:${process.env.VITE_PORT}`,
 `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`]
@@ -244,6 +255,12 @@ expressApp.use(cors({
     }
 }));
 
+
+
+// The following functions were created by Panva as part of an example, and used by us to get the demo up and running quickly.
+// This includes the 2 files in the "views" folder.
+// All credit to Panva
+// Link: https://github.com/panva/node-oidc-provider-example/tree/main/03-oidc-views-accounts
 expressApp.set('trust proxy', true);
 expressApp.set('view engine', 'ejs');
 expressApp.set('views', path.resolve(__dirname, 'views'));
@@ -385,8 +402,8 @@ expressApp.get('/interaction/:uid/abort', setNoCache, async (req, res, next) => 
     }
 });
 
-// leave the rest of the requests to be handled by oidc-provider, there's a catch all 404 there
+// Leave the rest of the requests to be handled by oidc-provider, there's a catch all 404 there
 expressApp.use(oidc.callback());
 
-// express listen
+// Tell the express app to listen on our specified port.
 expressApp.listen(process.env.OIDC_PORT);

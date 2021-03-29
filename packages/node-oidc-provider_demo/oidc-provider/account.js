@@ -1,3 +1,4 @@
+// This file comes from https://github.com/panva/node-oidc-provider-example/tree/main/03-oidc-views-accounts - all credit to Panva.
 const low = require('lowdb');
 const Memory = require('lowdb/adapters/Memory');
 
@@ -6,17 +7,14 @@ const db = low(new Memory());
 const assert = require('assert');
 
 db.defaults({
+  // We only have one user. Note that this user does not have a password, so when prompted you can simply fill in anything to log in.
+  // Change the webid here for the solid pod you want to access. For the purposes of the demo this is hardcoded.
   users: [
     {
       id: '23121d3c-84df-44ac-b458-3d63a9a05497',
       email: 'foo@example.com',
       email_verified: true,
       webid: 'http://localhost:3002/jaspervandenberghen/profile/card#me'
-    },
-    {
-      id: 'c2ac2b4a-2262-4e2f-847a-a40dd3c4dcd5',
-      email: 'bar@example.com',
-      email_verified: false,
     },
   ],
 }).write();
