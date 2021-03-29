@@ -5,19 +5,31 @@ const path = require('path');
 const assert = require('assert');
 require('dotenv').config();
 const cors = require('cors');
+const { nanoid } = require('nanoid')
+const CryptoJS = require("crypto-js");
+const koaBody = require('koa-body');
+const fetch = require("node-fetch");
+const N3 = require('n3');
+const parser = new N3.Parser();
+const { DataFactory } = N3;
+const { namedNode, literal, defaultGraph, quad } = DataFactory;
+const store = new N3.Store();
 
 const Account = require('./account');
 const jwks = require('./jwks.json');
+const { write } = require('lowdb/adapters/memory');
+const { unwatchFile } = require('fs');
+const clients = [{
+    client_id: `${process.env.CLIENT_ID}`,
+    client_secret: `${process.env.CLIENT_SECRET}`,
+    grant_types: ['authorization_code'],
+    response_types: ['code'],
+    redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
+}];
 
 const configuration = {
 
-    clients: [{
-        client_id: `${process.env.CLIENT_ID}`,
-        client_secret: `${process.env.CLIENT_SECRET}`,
-        grant_types: ['authorization_code'],
-        response_types: ['code'],
-        redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
-    }],
+    clients: clients,
     conformIdTokenClaims: false,
     pkce: {
         required: () => true
@@ -60,9 +72,14 @@ const configuration = {
         },
         registration: {
             enabled: true,
+            idFactory: (ctx) =>  {
+                return nanoid();
+            },
             initialAccessToken: false,
             issueRegistrationAccessToken: true,
-            policies: undefined
+            secretFactory: (ctx) => {
+                return generateSecret(process.env.CLIENT_SECRET);
+            }
         },
         dPoP: {
             enabled: true
@@ -72,10 +89,143 @@ const configuration = {
 
 }
 
+
+function generateSecret(secret) {
+  return base64URL(CryptoJS.SHA256(secret));
+}
+
+function base64URL(string) {
+  return string
+    .toString(CryptoJS.enc.Base64)
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
 const oidc = new Provider(`http://localhost:${process.env.OIDC_PORT}`, configuration);
 oidc.proxy = true;
 
 const expressApp = express();
+
+oidc.use(koaBody());
+
+oidc.use(async (ctx, next) => {
+    console.log("pre middleware", ctx.method, ctx.path);
+    console.log(`Request Body: ${JSON.stringify(ctx.request.body)}`);
+    //console.log(`http://localhost:${process.env.OIDC_PORT}`, ctx.req.url)
+
+    let clientID = "";
+    let redirectURI = "";
+    let client = "";
+
+    if ((ctx.path === "/auth" || ctx.path === "/token") && (ctx.method === "GET" || ctx.method === "POST")) {
+        if (ctx.method === "GET") {
+            const params = new URLSearchParams(ctx.req.url);
+            clientID = params.get("client_id");
+            redirectURI = params.get("redirect_uri");
+
+            client = {
+                client_id: clientID,
+                redirect_uri: redirectURI,
+            }
+
+        } else if (ctx.method === "POST") {
+            clientID = ctx.request.body["client_id"];
+            redirectURI = ctx.request.body["redirect_uri"];
+
+            client = {
+                client_id: clientID,
+                redirect_uri: redirectURI,
+            };
+        }
+        if (
+            clientID !== undefined &&
+            redirectURI !== undefined
+        ) {
+            async function getPod(url) {
+                const response = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        Accept: "text/turtle",
+                    },
+                });
+                return response;
+            }
+            getPod(clientID)
+                .then(async (data) => {
+                    let known_client = false;
+    
+                    for (const x of clients) {
+                        if (x["client_id"] === clientID) {
+                            known_client = true;
+                        }
+                    }
+    
+                    if (!known_client) {
+                        try {
+                            const url = new URL(clientID);
+                        } catch (error) {
+                            throw new Error(error);
+                        }
+                        const text = await data.text();
+    
+                        if (isValidWebID(clientID, redirectURI,data, text)) {
+                            clients.push(client)
+                            console.log("Client registered successfully!")
+                        } else {
+                            throw new Error(
+                                "This is not a valid WebID, please register dynamically"
+                            );
+                        }
+                    } else {
+                        throw new Error(
+                            "This client is already registered!"
+                        );
+                    }
+                })
+                .catch((error) => {
+                    throw new Error(error)
+                })
+        }        
+    }
+    await next();
+});
+
+function isValidWebID(clientID, redirectURI, data, text) {
+    let valid = false;
+
+    let typeFound = false;
+    for (let pair of data.headers.entries()) {
+        if (pair[0] === "content-type" && pair[1] === "text/turtle") {
+            typeFound = true;
+        }
+    }
+
+    if (typeFound) {
+        store.addQuads(parser.parse(text));
+        const quads = store.getQuads();
+
+        for (const quad of quads) {
+            if (
+                quad["_predicate"].id ===
+                "http://www.w3.org/ns/solid/terms#oidcRegistration"
+            ) {
+
+                const object = quad["_object"]
+                const objectSub = object.id.substring(1, object.id.length - 1);
+                let JSONObject = JSON.parse(objectSub);
+
+                if (clientID === JSONObject.client_id
+                    && JSONObject.redirect_uris.includes(redirectURI)) {
+                    valid = true;
+                }
+                return valid;
+            }
+        }
+    } 
+    return valid;
+}
+
 
 let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
 `http://localhost:${process.env.VITE_PORT}`,

@@ -53,25 +53,25 @@ formDataForAccessToken.append('code_verifier', code_verifier);
 const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
 
 instantiateJWTsForDPoP()
-.then(() => {
-    postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken, dpopJwtForToken)
-    .then(data => {
-        getResource("http://localhost:3002/jaspervandenberghen/profile/", data.access_token, dpopJwtForResource)
+    .then(() => {
+        postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken, dpopJwtForToken)
             .then(data => {
-                data = data.replace(/</g, "&lt;")
-                data = data.replace(/>/g, "&gt;")
-                const div = document.getElementById("app");
-                div.textContent = ""
-                const h1 = document.createElement("h1")
-                h1.innerHTML = "Your profile:";
-                const p = document.createElement("pre");
-                p.innerHTML = data;
-                div.appendChild(h1);
-                div.appendChild(p);
-                sessionStorage.clear();
+                getResource("http://localhost:3002/jaspervandenberghen/profile/", data.access_token, dpopJwtForResource)
+                    .then(data => {
+                        data = data.replace(/</g, "&lt;")
+                        data = data.replace(/>/g, "&gt;")
+                        const div = document.getElementById("app");
+                        div.textContent = ""
+                        const h1 = document.createElement("h1")
+                        h1.innerHTML = "Your profile:";
+                        const p = document.createElement("pre");
+                        p.innerHTML = data;
+                        div.appendChild(h1);
+                        div.appendChild(p);
+                        sessionStorage.clear();
+                    })
             })
-    })
-});
+    });
 
 // The lines in this function used to be on the top-level, however Vite does not allow top-level usage of "await", so this function was created to fix that.
 async function instantiateJWTsForDPoP() {
@@ -103,8 +103,8 @@ async function instantiateJWTsForDPoP() {
             alg: 'ES256',
             typ: 'dpop+jwt',
             jwk: publicJwk
+                .setJti(uuid())
+                .setIssuedAt()
+                .sign(privateKey)
         })
-        .setJti(uuid())
-        .setIssuedAt()
-        .sign(privateKey)
 }

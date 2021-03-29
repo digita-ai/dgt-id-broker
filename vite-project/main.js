@@ -21,6 +21,7 @@ async function postRegisterClient(url, data) {
   });
   return response.json();
 }
+
 let requestData = {
   "client_name": "My Panva Application",
   "redirect_uris": [
