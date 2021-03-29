@@ -1,5 +1,5 @@
 {
-  "name": "vite-project",
+  "name": "oidc-client",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",

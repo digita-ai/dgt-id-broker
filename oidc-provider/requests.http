@@ -1,21 +1,12 @@
-@port=3010
+#note: replace ports with the relevant ports for you.
+### @name getOpenidConfig
 
-###
-GET http://localhost:3000/auth?response_type=code&scope=openid&client_id=test_app&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html HTTP/1.1
-
-
-###
-POST http://localhost:3000/token HTTP/1.1
-content-type: application/x-www-form-urlencoded
-authorization: Basic dGVzdF9vYXV0aF9hcHA6c3VwZXJfc2VjcmV0
-body: 
-
-grant_type=client_credentials&scopes=api1
-
-###
+# Shows the relevant openid configuration for the identity provider.
 GET http://localhost:3000/.well-known/openid-configuration
 
-###
+### @name getToken
+
+# A valid request for a token. Be sure to change the code. If DPoP is used a valid DPoP proof needs to be provided aswell.
 POST http://localhost:3000/token
 content-type: application/x-www-form-urlencoded
 #DPoP: eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0IiwiandrIjp7ImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoiemxnbGptSG5Dd3JGeFBvNHZ6c0hnU3NKSW5NRkpkM3liN1JUQVRfakZFZyIsInkiOiIwWFNGS0hmT2xRYmFSOWFFaUNmc2g5M2NQeHdIRVQ0RHVLN25LbVExTElNIn19.eyJodG0iOiJQT1NUIiwiaHR1IjoiaHR0cDovL2xvY2FsaG9zdDozMDAwL3Rva2VuIiwianRpIjoiNzhmMWFlNTQtMGYwZi00YzhmLWE3YmUtZDQ5Yzg5NWFjYTU1IiwiaWF0IjoxNjE2Njc3NjAwfQ.JXjyEDcSJscDj3IgW_sYdiYhXWHsQyp2hg5ANFhTuArmAs6Gs1lRZ2Gr2hHMfdUwIkDWSNSUi1748pLcwhvJTA
@@ -27,15 +18,9 @@ grant_type=authorization_code
 &redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html
 &code_verifier=adfasfadfagwewadfaefadrga1d5fafd1adsf4a84ewawef5af
 
-###
-POST http://localhost:3000/token/introspection HTTP/1.1
-content-type: application/x-www-form-urlencoded
-authorization: Basic dGVzdF9vYXV0aF9hcHA6c3VwZXJfc2VjcmV0
-body:
-
-token=e-_1qieDVsRLK0qNOWG0XM1TdwP-lanQ9SGO9v2dfFj
-
 ### @name createPod
+
+#creates a solid pod with the oidcIssuer field, which is necessary for the Solid-OIDC flow.
 POST http://localhost:3002/pods HTTP/1.1
 Content-Type: application/json
 
@@ -46,7 +31,3 @@ Content-Type: application/json
   "email": "jasper.vandenberghen@digita.ai",
   "oidcIssuer": "http://localhost:3000/"
 }
-
-###
-GET http://localhost:3002/jaspervandenberghen/profile/
-authorization: Bearer eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6IkRhRml4Z3hGTUgwQnY3amhPRWVyTlAyTm1LUHUtSk5VVV9DeENkcXVDNEEifQ.eyJ3ZWJpZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMi9qYXNwZXJ2YW5kZW5iZXJnaGVuL3Byb2ZpbGUvY2FyZCNtZSIsImp0aSI6Ijh4WFc3N04zOGFwV2w3d2JDWkd3ZyIsInN1YiI6IjIzMTIxZDNjLTg0ZGYtNDRhYy1iNDU4LTNkNjNhOWEwNTQ5NyIsImlhdCI6MTYxNjU4NTIyOCwiZXhwIjoxNjE2NTkyNDI4LCJzY29wZSI6IiIsImNsaWVudF9pZCI6InRlc3RfYXBwIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDozMDAwIiwiYXVkIjoic29saWQifQ.D_ZyfsfuT8Yyoyv6FjxbNsMS214Nm7Ps5lbAhLqIgw_IuQl6Tlrmn1qHCbyYjK5a6DnqYqP8LjZF0z938BBsCg

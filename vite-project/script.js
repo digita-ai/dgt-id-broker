@@ -11,6 +11,13 @@ const redirect_uri = `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
+//global variables that are instantiated in instantiateJWTsForDPoP()
+let publicKey = ""
+let privateKey = ""
+let dpopJwtForToken = ""
+let dpopJwtForResource = ""
+
+
 async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
     const response = await fetch(url, {
         method: 'POST',
@@ -45,37 +52,9 @@ formDataForAccessToken.append('code_verifier', code_verifier);
 
 const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
 
-const { publicKey, privateKey } = await generateKeyPair('ES256')
-const publicJwk = await fromKeyLike(publicKey)
-
-const dpopJwtForToken = await new SignJWT({
-    'htm': 'POST',
-    'htu': 'http://localhost:3000/token',
-})
-    .setProtectedHeader({
-        alg: 'ES256',
-        typ: 'dpop+jwt',
-        jwk: publicJwk
-    })
-    .setJti(uuid())
-    .setIssuedAt()
-    .sign(privateKey)
-
-const dpopJwtForResource = await new SignJWT({
-    'htm': 'GET',
-    'htu': 'http://localhost:3002/jaspervandenberghen/profile/',
-})
-    .setProtectedHeader({
-        alg: 'ES256',
-        typ: 'dpop+jwt',
-        jwk: publicJwk
-    })
-    .setJti(uuid())
-    .setIssuedAt()
-    .sign(privateKey)
-
-
-postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken, dpopJwtForToken)
+instantiateJWTsForDPoP()
+.then(() => {
+    postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken, dpopJwtForToken)
     .then(data => {
         getResource("http://localhost:3002/jaspervandenberghen/profile/", data.access_token, dpopJwtForResource)
             .then(data => {
@@ -91,4 +70,41 @@ postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDat
                 div.appendChild(p);
                 sessionStorage.clear();
             })
-    });
+    })
+});
+
+// The lines in this function used to be on the top-level, however Vite does not allow top-level usage of "await", so this function was created to fix that.
+async function instantiateJWTsForDPoP() {
+    const keys = await generateKeyPair('ES256');
+    publicKey = keys.publicKey
+    console.log("test", publicKey)
+    privateKey = keys.privateKey
+    const publicJwk = await fromKeyLike(publicKey)
+
+    dpopJwtForToken = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3000/token',
+    })
+        .setProtectedHeader({
+            alg: 'ES256',
+            typ: 'dpop+jwt',
+            jwk: publicJwk
+        })
+        .setJti(uuid())
+        .setIssuedAt()
+        .sign(privateKey)
+
+    console.log(dpopJwtForToken)
+    dpopJwtForResource = await new SignJWT({
+        'htm': 'GET',
+        'htu': 'http://localhost:3002/jaspervandenberghen/profile/',
+    })
+        .setProtectedHeader({
+            alg: 'ES256',
+            typ: 'dpop+jwt',
+            jwk: publicJwk
+        })
+        .setJti(uuid())
+        .setIssuedAt()
+        .sign(privateKey)
+}

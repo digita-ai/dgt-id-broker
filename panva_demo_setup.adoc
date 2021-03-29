@@ -2,7 +2,7 @@
 :hardbreaks:
 
 To run the demo::
-* Git clone the repository and run `npm install` in both the `oidc-provider` and `vite-project` folder.
+* Git clone the repository and run `npm install` in both the `oidc-provider` and `oidc_client` folder.
 * Create a `.env` file in both folders.
 ** In the `oidc-provider` folder include the following variables:
 *** `VITE_PORT=<PORT>`
@@ -11,7 +11,7 @@ To run the demo::
 *** `CLIENT_ID=<ID>`
 *** `ClIENT_SECRET=<SECRET>`
 
-** In the `vite-project` folder include the following variables: 
+** In the `oidc-client` folder include the following variables: 
 *** `VITE_OIDC_PORT=<PORT>`
 *** `VITE_PORT=<PORT>`
 *** `VITE_IP=localhost`
@@ -37,7 +37,7 @@ If that port is already taken because you're already running the OIDC-provider o
 [nodemon] watching extensions: js,mjs,json
 [nodemon] starting `node main.js`
 ```
-* Now switch to the `vite-project` folder and run: `npm run dev`.
+* Now switch to the `oidc_client` folder and run: `npm run dev`.
 ** Your terminal should show something like this:
 +
 ```
