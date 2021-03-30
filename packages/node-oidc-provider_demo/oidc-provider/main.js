@@ -1,3 +1,4 @@
+
 const express = require('express');
 const Provider = require('oidc-provider');
 const bodyParser = require('body-parser');
@@ -5,7 +6,7 @@ const path = require('path');
 const assert = require('assert');
 require('dotenv').config();
 const cors = require('cors');
-const { nanoid } = require('nanoid')
+const { nanoid } = require('nanoid');
 const CryptoJS = require("crypto-js");
 const koaBody = require('koa-body');
 const fetch = require("node-fetch");
@@ -14,6 +15,11 @@ const parser = new N3.Parser();
 const { DataFactory } = N3;
 const { namedNode, literal, defaultGraph, quad } = DataFactory;
 const store = new N3.Store();
+const FormData = require('form-data');
+
+
+
+
 
 const Account = require('./account');
 const jwks = require('./jwks.json');
@@ -21,11 +27,13 @@ const { write } = require('lowdb/adapters/memory');
 const { unwatchFile } = require('fs');
 const clients = [{
     client_id: `${process.env.CLIENT_ID}`,
-    client_secret: `${process.env.CLIENT_SECRET}`,
+    //client_secret: `${process.env.CLIENT_SECRET}`,
     grant_types: ['authorization_code'],
     response_types: ['code'],
-    redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
+    redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`],
+    token_endpoint_auth_method: 'none'
 }];
+
 
 const configuration = {
 
@@ -72,8 +80,22 @@ const configuration = {
         },
         registration: {
             enabled: true,
-            idFactory: (ctx) =>  {
-                return nanoid();
+            idFactory: (ctx) => {
+                return "abc";
+                // console.log("BODEEY", ctx.request.body);
+                // const clientID = ctx.request.body.client_id;
+
+                //    const result = await getOIDCRegistrationFromWebID(clientID).then((data) => {
+                //             if (data !== undefined) {
+                //                 return clientID;
+                //             } else {
+                //                 throw Error("Data is undefined");
+                //             }
+                //         }).catch((error) => nanoid())
+                    
+                //         console.log(result);
+                    
+                // return result;
             },
             initialAccessToken: false,
             issueRegistrationAccessToken: true,
@@ -109,9 +131,19 @@ const expressApp = express();
 
 oidc.use(koaBody());
 
+async function getPod(url) {
+    const response = await fetch(url, {
+        method: "GET",
+        headers: {
+            Accept: "text/turtle",
+        },
+    });
+    return response;
+}
+
 oidc.use(async (ctx, next) => {
     console.log("pre middleware", ctx.method, ctx.path);
-    console.log(`Request Body: ${JSON.stringify(ctx.request.body)}`);
+    //console.log(`Request Body: ${JSON.stringify(ctx.request.body)}`);
     //console.log(`http://localhost:${process.env.OIDC_PORT}`, ctx.req.url)
 
     let clientID = "";
@@ -132,6 +164,7 @@ oidc.use(async (ctx, next) => {
         } else if (ctx.method === "POST") {
             clientID = ctx.request.body["client_id"];
             redirectURI = ctx.request.body["redirect_uri"];
+            clientName = ctx.request.body["client_name"];
 
             client = {
                 client_id: clientID,
@@ -142,34 +175,46 @@ oidc.use(async (ctx, next) => {
             clientID !== undefined &&
             redirectURI !== undefined
         ) {
-            async function getPod(url) {
-                const response = await fetch(url, {
-                    method: "GET",
-                    headers: {
-                        Accept: "text/turtle",
-                    },
-                });
-                return response;
+            let known_client = false;
+
+            for (const x of clients) {
+                if (x["client_id"] === clientID) {
+                    known_client = true;
+                }
             }
-            getPod(clientID)
-                .then(async (data) => {
-                    let known_client = false;
-    
-                    for (const x of clients) {
-                        if (x["client_id"] === clientID) {
-                            known_client = true;
-                        }
-                    }
-    
-                    if (!known_client) {
-                        try {
-                            const url = new URL(clientID);
-                        } catch (error) {
-                            throw new Error(error);
-                        }
-                        const text = await data.text();
-    
-                        if (isValidWebID(clientID, redirectURI,data, text)) {
+
+            if (!known_client) {
+                try {
+                    const url = new URL(clientID);
+                } catch (error) {
+                    throw new Error(error);
+                }
+
+
+                getOIDCRegistrationFromWebID(clientID)
+                    .then((data) => {
+                        if (data !== undefined) {
+                            async function postDynamicClientRegister(url, data) {
+                                const response = await fetch(url, {
+                                    method: 'POST',
+                                    mode: 'cors',
+                                    headers: {
+                                        "Content-Type": "application/json"
+                                    },
+                                    body: JSON.stringify(data)
+                                });
+                                return response.json();
+                            }
+                            
+                            
+                            
+                            data.token_endpoint_auth_method = "none"
+
+                            postDynamicClientRegister(`http://localhost:${process.env.OIDC_PORT}/reg`, data)
+                                .then(data => {
+                                    console.log("DATAAAA", data)
+                                })
+
                             clients.push(client)
                             console.log("Client registered successfully!")
                         } else {
@@ -177,53 +222,57 @@ oidc.use(async (ctx, next) => {
                                 "This is not a valid WebID, please register dynamically"
                             );
                         }
-                    } else {
-                        throw new Error(
-                            "This client is already registered!"
-                        );
-                    }
-                })
-                .catch((error) => {
-                    throw new Error(error)
-                })
-        }        
+                    })
+            }
+        }
+
     }
     await next();
 });
 
-function isValidWebID(clientID, redirectURI, data, text) {
-    let valid = false;
-
-    let typeFound = false;
-    for (let pair of data.headers.entries()) {
-        if (pair[0] === "content-type" && pair[1] === "text/turtle") {
-            typeFound = true;
-        }
+async function getOIDCRegistrationFromWebID(clientID) {
+    async function getPod(url) {
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                Accept: "text/turtle",
+            },
+        });
+        return response;
     }
+    let data = await getPod(clientID)
 
-    if (typeFound) {
-        store.addQuads(parser.parse(text));
-        const quads = store.getQuads();
+            const text = await data.text();
 
-        for (const quad of quads) {
-            if (
-                quad["_predicate"].id ===
-                "http://www.w3.org/ns/solid/terms#oidcRegistration"
-            ) {
-
-                const object = quad["_object"]
-                const objectSub = object.id.substring(1, object.id.length - 1);
-                let JSONObject = JSON.parse(objectSub);
-
-                if (clientID === JSONObject.client_id
-                    && JSONObject.redirect_uris.includes(redirectURI)) {
-                    valid = true;
+            let typeFound = false;
+            for (let pair of data.headers.entries()) {
+                if (pair[0] === "content-type" && pair[1] === "text/turtle") {
+                    typeFound = true;
                 }
-                return valid;
             }
-        }
-    } 
-    return valid;
+
+            if (typeFound) {
+                store.addQuads(parser.parse(text));
+                const quads = store.getQuads();
+
+                for (const quad of quads) {
+                    if (
+                        quad["_predicate"].id ===
+                        "http://www.w3.org/ns/solid/terms#oidcRegistration"
+                    ) {
+
+                        const object = quad["_object"]
+                        const objectSub = object.id.substring(1, object.id.length - 1);
+                        let JSONObject = JSON.parse(objectSub);
+
+                        if (clientID === JSONObject.client_id) {
+                            valid = true;
+                        }
+                        return JSONObject;
+                    }
+                }
+            }
+            return undefined;
 }
 
 
@@ -244,6 +293,7 @@ expressApp.use(cors({
     }
 }));
 
+
 expressApp.set('trust proxy', true);
 expressApp.set('view engine', 'ejs');
 expressApp.set('views', path.resolve(__dirname, 'views'));
@@ -259,7 +309,7 @@ function setNoCache(req, res, next) {
 expressApp.get('/interaction/:uid', setNoCache, async (req, res, next) => {
     try {
         const details = await oidc.interactionDetails(req, res);
-        console.log('see what else is available to you for interaction views', details);
+        //console.log('see what else is available to you for interaction views', details);
         const {
             uid, prompt, params,
         } = details;

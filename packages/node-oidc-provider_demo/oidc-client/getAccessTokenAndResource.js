@@ -38,7 +38,7 @@ const formDataForAccessToken = new FormData();
 formDataForAccessToken.append('grant_type', 'authorization_code');
 formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
-formDataForAccessToken.append('client_secret', client_secret);
+//formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
 const code_verifier = sessionStorage.getItem("pkce_code_verifier")
 formDataForAccessToken.append('code_verifier', code_verifier);

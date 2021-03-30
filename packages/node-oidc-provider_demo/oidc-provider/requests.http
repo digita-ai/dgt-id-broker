@@ -116,7 +116,8 @@ Accept: application/json
   "redirect_uris": [
     "http://192.168.0.10:3001/requests.html"
   ],
-  "client_secret_expires_at": 0 
+  "client_secret_expires_at": 0 ,
+  "token_endpoint_auth_method" : "none"
 }
 
 ### Get current configuration of the registered client

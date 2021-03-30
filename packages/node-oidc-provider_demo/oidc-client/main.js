@@ -24,6 +24,7 @@ async function postRegisterClient(url, data) {
 
 let requestData = {
   "client_name": "My Panva Application",
+  "client_id": "bla",
   "redirect_uris": [
     `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`,
   ],
@@ -40,7 +41,7 @@ postRegisterClient(`http://localhost:${env.VITE_OIDC_PORT}/reg`, requestData)
   });
 
 //render login
-window.location = `http://localhost:${env.VITE_OIDC_PORT}/auth?response_type=code&code_challenge=${code_challenge}&code_challenge_method=S256&scope=openid&client_id=test_app&redirect_uri=http%3A%2F%2F${env.VITE_IP}:${env.VITE_PORT}%2Frequests.html`
+//window.location = `http://localhost:${env.VITE_OIDC_PORT}/auth?response_type=code&code_challenge=${code_challenge}&code_challenge_method=S256&scope=openid&client_id=test_app&redirect_uri=http%3A%2F%2F${env.VITE_IP}:${env.VITE_PORT}%2Frequests.html`
 
 // PKCE HELPER FUNCTIONS
 
