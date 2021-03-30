@@ -1,0 +1,25 @@
+= Setup
+
+To run the demo::
+* Make sure you have an instance of keycloak running. I recommend running keycloak in a docker container. More info link:https://www.keycloak.org/getting-started/getting-started-docker[here.]
+* Have a solid pod profile with: `"oidcIssuer": "http://localhost:8080/auth/realms/master"`. (localhost:8080 being the default on which keycloak runs. Change this if the port is different for you.) 
+** If you run an instance of the link:https://github.com/solid/community-server[Solid Community Server], you can run the post request in the file `requests.http` using the link:https://marketplace.visualstudio.com/items?itemName=humao.rest-client[Rest Client] extension for VSCode to create a Solid POD locally.
+* Open a terminal in the folder `keycloak_demo`
+* Run the command `$ npm run dev` to start the server.
+* In `main.js` and `callbackToGetAccessTokenAndResource.js` set the variable `vite_port` to the port your vite is running on.
+* Navigate to `localhost:<vite_port>`. If everything was configured correctly, you should see the contents of your profile from your Solid POD.
+
+Keycloak settings::
+
+* under clients -> account
+** under Settings:
+*** set Valid Redirect URIs to `http://localhost:<vite_port>/callback.html`
+**** when running `npm run dev` in vite.js, it will show under which IP this application  can be found.
+*** set Web Origins to `*`
+** under Mappers
+*** create a mapper with Name: Audience, Mapper Type: Audience, Included Custom Audience: solid, add to ID token: On, add to access token: on
+*** create a mapper with Name: webid, Mapper Type: User Attribute, User Attribute: webid, Token Claim Name: webid, claim JSON type: string, add to ID token: On, add to access token: on, add to userinfo: on
+* under users
+** select the user admin
+** go to the Attributes tab
+*** add an attribute with key: webid, value: profile of your pod (ex: http://example.org/username/profile/card#me)
