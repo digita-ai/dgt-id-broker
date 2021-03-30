@@ -72,6 +72,9 @@ Token Endpoint :: The API endpoint which the *Identity Provider* provides to gra
 * `code_verifier` : The provided *Code Verifier* is included in the request and generated into a *Code Challenge* with the same *Code Challenge Method* that was provided in the authentication request. If the result of the *Code Challenge* is not equal access is denied.
  
 
+// TODO: add auth endpoint, token endpoint, pkce, pop, dpop, webid, audience, solid, dynamic registration ...
+
+
 == Classic OIDC 
 
 === Example
@@ -89,9 +92,10 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 . The *Client* directly contacts the *Authorization Server* and securely sends it's *Client ID*, *Client secret* and the *Authorization code*.
 . The *Authorization server* verifies this data and responds with an *Access Token* along side an *ID Token*.
 . The *Client* can now use these tokens to send requests to the *Resource Server* in order to post pictures daily on Alice's social feed.
-+
 
-//add a sequence diagram here 
+
+// TODO: add a sequence diagram 
+
 
 == Solid OIDC
 
@@ -143,8 +147,6 @@ The *OP*'s URL we are looking for is located here: me -> solid:oidcIssuer
 
 +
 //Ephemeral Clients MAY use the identifier http://www.w3.org/ns/solid/terms#PublicOidcClient. If the Client uses this identifier then the IdP MAY accept any redirect_uri as valid. Since it is public, the Client is effectively anonymous to the RS. ADD THIS? BUT REWRITE FIRST
-
-
 
 . Now that we have Alice's *OP*'s URL, the *Client* must retrieve the *OP*'s configuration.
 This configuration describes everything the *Client* needs to know to authorize Alice's specific *OP*.
@@ -562,7 +564,7 @@ CAUTION: Make sure to save this token into a persistent store.
 
 Finally the *Client* can start making requests to Bob's *Solid Data Pod* to retrieve pictures and post one daily on Alice's social feed.
 
-//add sequence diagram here
+// TODO: add sequence diagram here
 
 == Summary
 
@@ -598,7 +600,8 @@ For Resource Servers ::
 * A Resource Server must inform the Client that a DPoP-bound Access Token is required upon request of a non-public resource.
 * A Resource Server must get the public key from an IdP and use it to validate the signature on the DPoP-bound Access Token that was sent by the client upon every request.
 
-== Sources: 
+
+== Sources 
 
 https://solid.github.io/authentication-panel/solid-oidc/
 https://solid.github.io/authentication-panel/solid-oidc-primer/
