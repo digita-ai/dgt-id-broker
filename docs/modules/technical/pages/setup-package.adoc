@@ -27,15 +27,17 @@ Initialize a Node.js project with the following `package.json` settings:
 // - `Digita`as the `author`;
 // - `ISC` as `license`;
 
-- the `main` entry point set to `./dist/index.js`;
-- the `types` entry point set to `./dist/index.d.ts`;
+- the `main` entry point set to `./dist/public-api.js`;
+- the `types` entry point set to `./dist/public-api.d.ts`;
 
 - a `directories` object containing `"lib": "lib"`;
 - a `files` list containing `dist`;
 
 - a `repository` information object with `type` set to `git`, containing the SSH `url` of the monorepo of which this package is part, and the `directory` of this package relative to the root.
 
-Install `rimraf` as a first development dependency.
+Install `rimraf` as a first development dependency. 
+
+Also create the `lib` directory with an empty `lib/public-api.ts`.
 
 
 === Typescript
