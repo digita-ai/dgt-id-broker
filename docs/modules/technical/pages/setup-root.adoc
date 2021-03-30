@@ -60,7 +60,7 @@ charset = utf-8
 
 - Install `eslint` as well as the plugins `eslint-import-resolver-typescript`, `eslint-plugin-import`, `eslint-plugin-jasmine`, `eslint-plugin-jsdoc`, `eslint-plugin-prefer-arrow`, `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser`, as development dependencies.
 
-- Copy Digita's default `.eslintrc,json` file, e.g. from `dgt-platform`.
+- Copy Digita's default `.eslintrc.json` file, e.g. from `dgt-platform`.
 
 - Add the following settings to the `.code-workspace` file's `settings` object:
 +
