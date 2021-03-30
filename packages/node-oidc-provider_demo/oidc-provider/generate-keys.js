@@ -1,3 +1,5 @@
+// This file comes from https://github.com/panva/node-oidc-provider-example/tree/main/01-oidc-configured - all credit to Panva.
+// This generates keys which we are used to sign the JWT Access and ID Tokens that the identity provider sends.
 const fs = require('fs');
 const path = require('path');
 const jose = require('jose2');

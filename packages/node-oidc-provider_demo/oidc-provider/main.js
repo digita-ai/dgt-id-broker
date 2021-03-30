@@ -27,18 +27,18 @@ const { write } = require('lowdb/adapters/memory');
 const { unwatchFile } = require('fs');
 const clients = [{
     client_id: `${process.env.CLIENT_ID}`,
-    //client_secret: `${process.env.CLIENT_SECRET}`,
+    client_secret: `${process.env.CLIENT_SECRET}`,
     grant_types: ['authorization_code'],
     response_types: ['code'],
-    redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`],
-    token_endpoint_auth_method: 'none'
+    redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
 }];
 
-
+// Defines the initial configuration of the Identity Provider. The most important ones are highlighted with a comment.
 const configuration = {
 
     clients: clients,
     conformIdTokenClaims: false,
+    // Require PKCE as it is a must for Solid-OIDC
     pkce: {
         required: () => true
     },
@@ -51,6 +51,7 @@ const configuration = {
         return origin === `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`
     },
     findAccount: Account.findAccount,
+    // Lets us define a function to add claims to the JWT access token the IdP sends back to the client. In this case, we have to add the webid of the user who logs in.
     extraTokenClaims: async function (ctx, token) {
         const account = await Account.findAccount(ctx, token.accountId)
         const claims = await account.claims()
@@ -62,6 +63,8 @@ const configuration = {
     features: {
         devInteractions: { enabled: false },
         userinfo: { enabled: false },
+        // The only way v7 of the node-oidc-provider library allows us to get a JWT access-token is by going through the resource indicator.
+        // See https://github.com/panva/node-oidc-provider/discussions/959#discussioncomment-524757 for information as to why.
         resourceIndicators: {
             defaultResource: (ctx, client, oneOf) => {
                 return 'http://example.com'
@@ -78,6 +81,7 @@ const configuration = {
                 });
             }
         },
+        // Defines config for the registration endpoint used for Dynamic Registration.
         registration: {
             enabled: true,
             idFactory: (ctx) => {
@@ -99,10 +103,13 @@ const configuration = {
             },
             initialAccessToken: false,
             issueRegistrationAccessToken: true,
+            // Function that defines how secrets are generated during Dynamic Registration.
             secretFactory: (ctx) => {
                 return generateSecret(process.env.CLIENT_SECRET);
             }
         },
+        // Enable DPoP. This cannot be required, so if DPoP headers are not included, a user might still be able to get an Access Token. 
+        // However, since the token won't be DPoP bound, it won't be valid to access a solid resource server, and should be rejected.S
         dPoP: {
             enabled: true
         }
@@ -111,22 +118,24 @@ const configuration = {
 
 }
 
-
+// Function to generate the secret used in secretFactory of registration config.
 function generateSecret(secret) {
-  return base64URL(CryptoJS.SHA256(secret));
+    return base64URL(CryptoJS.SHA256(secret));
 }
 
 function base64URL(string) {
-  return string
-    .toString(CryptoJS.enc.Base64)
-    .replace(/=/g, "")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_");
+    return string
+        .toString(CryptoJS.enc.Base64)
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
 }
 
+// create the oidc provider on a specific url, and with our configuration.
 const oidc = new Provider(`http://localhost:${process.env.OIDC_PORT}`, configuration);
 oidc.proxy = true;
 
+// create an express app.
 const expressApp = express();
 
 oidc.use(koaBody());
@@ -276,6 +285,7 @@ async function getOIDCRegistrationFromWebID(clientID) {
 }
 
 
+// Set our Cors policy.
 let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
 `http://localhost:${process.env.VITE_PORT}`,
 `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`]
@@ -294,6 +304,11 @@ expressApp.use(cors({
 }));
 
 
+
+// The following functions were created by Panva as part of an example, and used by us to get the demo up and running quickly.
+// This includes the 2 files in the "views" folder.
+// All credit to Panva
+// Link: https://github.com/panva/node-oidc-provider-example/tree/main/03-oidc-views-accounts
 expressApp.set('trust proxy', true);
 expressApp.set('view engine', 'ejs');
 expressApp.set('views', path.resolve(__dirname, 'views'));
@@ -435,8 +450,8 @@ expressApp.get('/interaction/:uid/abort', setNoCache, async (req, res, next) => 
     }
 });
 
-// leave the rest of the requests to be handled by oidc-provider, there's a catch all 404 there
+// Leave the rest of the requests to be handled by oidc-provider, there's a catch all 404 there
 expressApp.use(oidc.callback());
 
-// express listen
+// Tell the express app to listen on our specified port.
 expressApp.listen(process.env.OIDC_PORT);
