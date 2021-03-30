@@ -12,7 +12,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/digita-ai/dgt-id-broker.git"
+    "url": "https://github.com/digita-ai/dgt-id-broker"
   },
   "bugs": {
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
