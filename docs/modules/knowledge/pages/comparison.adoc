@@ -23,9 +23,9 @@ Authorization Server (AS) :: A system implementing the authoritative part of an 
 
 Identity Provider (IdP) :: A system implementing the authoritative part of an _authentication_ framework (in casu *OpenID Connect*).
 
-Claim :: An authoratitive piece of information the *Identity Provider* can provide about the *End-User*.
+Claim :: An authoritative piece of information the *Identity Provider* can provide about the *End-User*.
 
-Client | Relying Party (RP) :: An application relying on the authoratitive *Claims* in order to access data or perform actions on behalf of the *End-User*.
+Client | Relying Party (RP) :: An application relying on the authoritative *Claims* in order to access data or perform actions on behalf of the *End-User*.
 
 Client ID :: An identifier used to register the *Client* with the *Identity Provider*.
 
@@ -45,6 +45,32 @@ Access Token :: A JSON Web Token (JWT) the *Client* obtains from an *Authorizati
 
 ID Token :: A JWT the *Client* obtains from an *Identity Provider*, containing *Claims* that prove the identity of the *End-User*.
 
+WebID :: A *WebID* is an HTTP URI which refers to an Agent (Person, Organization, Group, Device, etc.) as defined in the link:https://dvcs.w3.org/hg/WebID/raw-file/tip/spec/identity-respec.html#introduction[WebID 1.0 specification].
+
+*PKCE* :: Short for Proof Key for Code Exchange, is a key for preventing malicious attacks and securely performing code authorization flow. It is used to add an additional security layer to the authorization flow in *OpenID Connect*.
+*PKCE* is used by the *Client* to replace the static secret used in the authorization flow to prevent Man-In-The-Middle attacks. The *PKCE* process works with two parameters. The *Code Verifier* and the *Code Challenge*.
+
+Code Verifier ::  A cryptographically random string, used in the *PKCE* process, that is used to link the authorization request to the token request. It should have a minimum length of 43 characters and a maximum length of 128 to make it impractical enough to guess the value. 
+
+Code Challenge ::  A challenge, used in the *PKCE* process, that is generated from the *Code Verifier* which is sent in the authorization request, to be verified against later. The given *Code Challenge* parameter is compared to the *Code Challenge* that was generated from base64URL encoding a SHA256 hashed *Code Verifier*. 
+
+Code Challenge Method :: The method that was used to generate *Code Challenge*. _(e.g. SHA256)_
+
+Authentication Endpoint :: The API endpoint which the *Identity Provider* provides to authenticate users. A request is sent to this endpoint with the correct credentials to authenticate the user with the following parameters: 
+* `response_type` : The type of response the *Client* accepts on an authentication request.
+* `code_challenge` : The *Code Challenge* generated in the *PKCE* process.
+* `code_challenge_method` : The method used to generate the *Code Challenge*.
+* `scope` : The scope the *Client* has access to. `openid` is a scope that is needed to verify Alice’s identity. `profile` is required by the *Solid OIDC* specification to denote a *WebID* login. `offline_access` is required to get a refresh token.
+* `client_id` : An identifier used to register the *Client* with the *Identity Provider*. In *SOLID OIDC* this is usually the a *WebID*.
+* `redirect_uri`: The callback URI that is redirected to after finishing the authentication request.
+
+Token Endpoint :: The API endpoint which the *Identity Provider* provides to grant an access tokens to users that were successfully authenticated. A request is sent to this endpoint with the following parameters: 
+* `grant_type` :  Grant types are methods through which the *Client* can gain *Access Tokens* and by which you grant limited access to your resources to another entity without exposing credentials.
+* `code` : Upon successfully registering a *Client* the *Identity Provider* will return a code as an URL parameter string. This code will be used to request an access token.
+* `client_id` : The *Client ID* provided, in *SOLID OIDC* this could be a *WebID*.
+* `redirect_uri` : The callback URI that is redirected to after finishing the token request.
+* `code_verifier` : The provided *Code Verifier* is included in the request and generated into a *Code Challenge* with the same *Code Challenge Method* that was provided in the authentication request. If the result of the *Code Challenge* is not equal access is denied.
+ 
 
 == Classic OIDC 
 
