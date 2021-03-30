@@ -1,0 +1,4 @@
+
+= Technical documentation
+
+This module contains technical documentation and analyses for the development of the Identity Broker.

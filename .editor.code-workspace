@@ -1,0 +1,27 @@
+{
+  "folders": [
+    {
+      "name": "Digita Identity Broker (root)",
+      "path": "."
+    },
+    {
+      "name": "Docs",
+      "path": "docs"
+    }
+  ],
+  "settings": {
+    "eslint.format.enable": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "editorconfig.editorconfig",
+      "dbaeumer.vscode-eslint",
+      "folke.vscode-monorepo-workspace",
+      "humao.rest-client",
+    ]
+  }
+}
