@@ -1,0 +1,147 @@
+:toc:
+:toclevels: 3
+
+
+= Initial package setup
+Wouter Janssens, Stijn Taelemans & Wouter Termont
+
+
+== Overview of the proposed solution
+
+In this specification we'll set up the package organization in a subrepo of a project. This analysis covers the basic steps, but you might have to do some extra configuration that is not included here. Assess the correct working of every step, and do not hesitate to contact one of the authors when in doubt.
+
+
+== Detailed analysis of the suggested implementation
+
+While each package is different, and care should be taken to tailor each project to its specific case, there are some general steps that take part in almost every setup.
+
+
+=== Basic setup
+
+Initialize a Node.js project with the following `package.json` settings:
+
+- a relevant package `name` within the `@digita-ai` scope;
+- initial `version` number `0.1.0`;
+- a sensible `description`;
+
+// - `Digita`as the `author`;
+// - `ISC` as `license`;
+
+- the `main` entry point set to `./dist/public-api.js`;
+- the `types` entry point set to `./dist/public-api.d.ts`;
+
+- a `directories` object containing `"lib": "lib"`;
+- a `files` list containing `dist`;
+
+- a `repository` information object with `type` set to `git`, containing the SSH `url` of the monorepo of which this package is part, and the `directory` of this package relative to the root.
+
+Install `rimraf` as a first development dependency. 
+
+Also create the `lib` directory with an empty `lib/public-api.ts`.
+
+
+=== Typescript
+
+- Install `typescript` 
+// as well as the plugins `ts-node`, `tsc-watch` and `tsconfig-paths`
+as development dependency.
+
+- Add the following scripts to `package.json`:
++
+[source,json]
+----
+"build": "rimraf ./dist && npm run build:ts",
+"build:ts": "tsc",
+----
+
+- Create a `tsconfig.json` file setting `compileOnSave` to `false`, with `lib` in the `include` list, `node_modules` and `dist` in the `exclude` list, and containing the following `compilerOptions`:
++
+[source,json]
+----
+"baseUrl": "./",
+"outDir": "./dist",
+"typeRoots": ["node_modules/@types"],
+"strict": true,
+"sourceMap": true,
+"declaration": false,
+"downlevelIteration": true,
+"experimentalDecorators": true,
+"moduleResolution": "node",
+"esModuleInterop": true,
+"importHelpers": true,
+"noImplicitReturns": true,
+"noFallthroughCasesInSwitch": true,
+"forceConsistentCasingInFileNames": true,
+"target": "es2020",
+"module": "es2020",
+"lib": [
+  "es2018",
+  "dom"
+]
+----
+
+// - When using a testing library, it can be useful to create an additional `tsconfig.app.json`and `tsconfig.spec.json` configuration that `extends` from `./tsconfig.json`, with a different `outDir` in `compilerOptions`; the first with `lib/index.ts` in the `files` list and `lib/\**/\*.d.ts` in the `include` list; the second with `lib/test.ts` in the `files` list and both `lib/\**/\*.d.ts` and `lib/**/*.spec.ts` in the `include` list.
+
+
+=== Jest
+
+-  Install `jest`, `ts-jest` and `@types/jest` as development dependencies.
+
+- Create a `jest.config.ts` module file importing the `Config` type from `@jest/types`, and exporting as a default a `Config.InitialOptions` object containing the following options: 
++
+[source,javascript]
+----
+testTimeout: 300000,
+verbose: true,
+preset: 'ts-jest',
+testEnvironment: 'node',
+globals: {
+  'ts-jest': {
+    babelConfig: true,
+    tsconfig: 'tsconfig.json',
+  },
+}
+----
+
+- Add the following scripts to `package.json`:
++
+[source,json]
+----
+"test": "jest --silent",
+"test:ci": "jest --runInBand",
+"test:e2e": "jest --config ./test/jest-e2e.json",
+----
+
+
+=== Components.js
+
+- Install `componentsjs` as a dependency and `componentsjs-generator` as a development dependency.
+
+- Create an initially empty `config` directory and an equally empty `.componentsignore` file.
+
+- Add both the `config` directory and the `.componentsignore` file to the `files` list of `package.json`.
+
+- Also add the following to `package.json`, substituting `aiv-actueel-inkomen` by the relevant package name: 
++
+[source, json]
+----
+"lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen",
+"lsd:components": "dist/components/components.jsonld",
+"lsd:contexts": {
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/components/context.jsonld": "dist/components/context.jsonld"
+},
+"lsd:importPaths": {
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/components/": "dist/components/",
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/config/": "config/",
+  "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/aiv-actueel-inkomen/^0.0.0/dist/": "dist/"
+}
+----
+
+- Finally, also add and change the following scripts in `package.json`:
++
+[source,json]
+----
+"build": "rimraf ./dist && npm run build:ts && npm run build:components",
+"build:ts": "tsc",
+"build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore"
+----
