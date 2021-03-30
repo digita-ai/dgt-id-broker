@@ -48,14 +48,14 @@ async function getResource(url, access_token, dpopJwtForResource) {
         }
     });
     return response.text();
-}
+} 
 
 // Build our form data with all the necessary parameters, which we will send in our post request.
 const formDataForAccessToken = new FormData();
 formDataForAccessToken.append('grant_type', 'authorization_code');
 formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
-formDataForAccessToken.append('client_secret', client_secret);
+//formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
 // Get our code verifier from session storage, because we need to send it again for PKCE validation.
 const code_verifier = sessionStorage.getItem("pkce_code_verifier")

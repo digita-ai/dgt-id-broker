@@ -16,6 +16,8 @@ const { DataFactory } = N3;
 const { namedNode, literal, defaultGraph, quad } = DataFactory;
 const store = new N3.Store();
 const FormData = require('form-data');
+const { generateSecret } = require('jose/util/generate_secret')
+
 
 
 
@@ -25,6 +27,7 @@ const Account = require('./account');
 const jwks = require('./jwks.json');
 const { write } = require('lowdb/adapters/memory');
 const { unwatchFile } = require('fs');
+const { errorMonitor } = require('events');
 const clients = [{
     client_id: `${process.env.CLIENT_ID}`,
     client_secret: `${process.env.CLIENT_SECRET}`,
@@ -48,7 +51,8 @@ const configuration = {
         },
     },
     clientBasedCORS: function (ctx, origin, client) {
-        return origin === `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`
+
+        return true // origin === `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`
     },
     findAccount: Account.findAccount,
     // Lets us define a function to add claims to the JWT access token the IdP sends back to the client. In this case, we have to add the webid of the user who logs in.
@@ -85,27 +89,26 @@ const configuration = {
         registration: {
             enabled: true,
             idFactory: (ctx) => {
-                return "abc";
-                // console.log("BODEEY", ctx.request.body);
-                // const clientID = ctx.request.body.client_id;
+                const clientID = ctx.request.body.client_id;
+                
+                if(clientID){
+                    if(ctx.request.body.client_identification_159357){
+                        const decryptionClientID = decryptSecret(ctx.request.body.client_identification_159357)
+                        if(clientID === decryptionClientID){
+                            console.log("MATCHED")
+                            return decryptionClientID;
+                        }                     
+                    } 
+                }
+                return nanoid();
+            
 
-                //    const result = await getOIDCRegistrationFromWebID(clientID).then((data) => {
-                //             if (data !== undefined) {
-                //                 return clientID;
-                //             } else {
-                //                 throw Error("Data is undefined");
-                //             }
-                //         }).catch((error) => nanoid())
-                    
-                //         console.log(result);
-                    
-                // return result;
             },
             initialAccessToken: false,
             issueRegistrationAccessToken: true,
             // Function that defines how secrets are generated during Dynamic Registration.
             secretFactory: (ctx) => {
-                return generateSecret(process.env.CLIENT_SECRET);
+                return generateSecretForRegistration(process.env.CLIENT_SECRET);
             }
         },
         // Enable DPoP. This cannot be required, so if DPoP headers are not included, a user might still be able to get an Access Token. 
@@ -118,8 +121,25 @@ const configuration = {
 
 }
 
+async function generateSecretForClientID() {
+    const secret = await generateSecret('HS256')
+    process.env["CLIENT_IDENTIFICATION_159357"] = secret
+}
+
+generateSecretForClientID()
+    .then(async (data) => {
+    })
+
+
+function decryptSecret(client_identification_159357){
+    const bytes = CryptoJS.AES.decrypt(client_identification_159357, process.env.CLIENT_IDENTIFICATION_159357);
+    const originalText = bytes.toString(CryptoJS.enc.Utf8);
+
+    return originalText
+}
+
 // Function to generate the secret used in secretFactory of registration config.
-function generateSecret(secret) {
+function generateSecretForRegistration(secret) {
     return base64URL(CryptoJS.SHA256(secret));
 }
 
@@ -150,10 +170,11 @@ async function getPod(url) {
     return response;
 }
 
+
+
+
 oidc.use(async (ctx, next) => {
     console.log("pre middleware", ctx.method, ctx.path);
-    //console.log(`Request Body: ${JSON.stringify(ctx.request.body)}`);
-    //console.log(`http://localhost:${process.env.OIDC_PORT}`, ctx.req.url)
 
     let clientID = "";
     let redirectURI = "";
@@ -191,47 +212,46 @@ oidc.use(async (ctx, next) => {
                     known_client = true;
                 }
             }
-
             if (!known_client) {
+                let url = undefined
                 try {
-                    const url = new URL(clientID);
+                    url = new URL(clientID);
                 } catch (error) {
-                    throw new Error(error);
+                    console.error(error)
                 }
 
+                if (url) {
+                    await getOIDCRegistrationFromWebID(clientID)
+                        .then(async (data) => {
+                            if (data !== undefined) {
+                                async function postDynamicClientRegister(url, data) {
+                                    const response = await fetch(url, {
+                                        method: 'POST',
+                                        mode: 'cors',
+                                        headers: {
+                                            "Content-Type": "application/json"
+                                        },
+                                        body: JSON.stringify(data)
+                                    });
+                                    return response.json();
+                                }
 
-                getOIDCRegistrationFromWebID(clientID)
-                    .then((data) => {
-                        if (data !== undefined) {
-                            async function postDynamicClientRegister(url, data) {
-                                const response = await fetch(url, {
-                                    method: 'POST',
-                                    mode: 'cors',
-                                    headers: {
-                                        "Content-Type": "application/json"
-                                    },
-                                    body: JSON.stringify(data)
-                                });
-                                return response.json();
+                                let secretID = CryptoJS.AES.encrypt(data.client_id, process.env.CLIENT_IDENTIFICATION_159357).toString();
+                                data.client_identification_159357 = secretID
+                                data.token_endpoint_auth_method = "none"
+
+                                await postDynamicClientRegister(`http://localhost:${process.env.OIDC_PORT}/reg`, data)
+                                    .then(data => { console.log(data) })
+
+                                clients.push(client)
+
+                            } else {
+                                throw new Error(
+                                    "This is not a valid WebID, please register dynamically"
+                                );
                             }
-                            
-                            
-                            
-                            data.token_endpoint_auth_method = "none"
-
-                            postDynamicClientRegister(`http://localhost:${process.env.OIDC_PORT}/reg`, data)
-                                .then(data => {
-                                    console.log("DATAAAA", data)
-                                })
-
-                            clients.push(client)
-                            console.log("Client registered successfully!")
-                        } else {
-                            throw new Error(
-                                "This is not a valid WebID, please register dynamically"
-                            );
-                        }
-                    })
+                        })
+                }
             }
         }
 
@@ -259,7 +279,6 @@ async function getOIDCRegistrationFromWebID(clientID) {
                     typeFound = true;
                 }
             }
-
             if (typeFound) {
                 store.addQuads(parser.parse(text));
                 const quads = store.getQuads();
@@ -324,7 +343,6 @@ function setNoCache(req, res, next) {
 expressApp.get('/interaction/:uid', setNoCache, async (req, res, next) => {
     try {
         const details = await oidc.interactionDetails(req, res);
-        //console.log('see what else is available to you for interaction views', details);
         const {
             uid, prompt, params,
         } = details;

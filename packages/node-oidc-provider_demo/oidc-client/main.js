@@ -41,11 +41,11 @@ postRegisterClient(`http://localhost:${env.VITE_OIDC_PORT}/reg`, requestData)
   })
   .catch((error) => {
     console.error("Error:", error);
-  });
+  }); 
 
 // Redirect the user to the /auth endpoint of the identity provider to get an authentication code which will later be used to get an access token.
 // The necessary parameters are set in the url.
-window.location = `http://localhost:${env.VITE_OIDC_PORT}/auth?response_type=code&code_challenge=${code_challenge}&code_challenge_method=S256&scope=openid&client_id=test_app&redirect_uri=http%3A%2F%2F${env.VITE_IP}:${env.VITE_PORT}%2Frequests.html`
+window.location = `http://localhost:${env.VITE_OIDC_PORT}/auth?response_type=code&code_challenge=${code_challenge}&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2F${env.VITE_IP}:${env.VITE_PORT}%2Frequests.html`
 
 
 // PKCE HELPER FUNCTIONS
