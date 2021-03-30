@@ -85,11 +85,12 @@ as development dependency.
 "noImplicitReturns": true,
 "noFallthroughCasesInSwitch": true,
 "forceConsistentCasingInFileNames": true,
-"target": "es2020",
-"module": "es2020",
+"target": "es2015",   // set this to a well-supported ES version for client packages, or the latest ES version for Node packages
+"module": "commonjs", // set this to the same ES version as target for client packages, or "commonjs" for Node packages
 "lib": [
-  "es2018",
-  "dom"
+  "es2020",   // set this to the latest ES version, but not "esnext"
+  "webworker" // remove for Node packages
+  "dom"       // remove for Node packages
 ]
 ----
 
