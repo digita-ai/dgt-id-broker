@@ -8,6 +8,8 @@ const env = import.meta.env
 
 // Instantiating variables we will need later on.
 const client = `${env.VITE_CLIENT_ID}`
+// Note that the WebID flow of Solid-OIDC does not require a client secret. However, if you wish to use a different flow that uses a client secret,
+// this will need to be defined and sent along.
 const client_secret = `${env.VITE_CLIENT_SECRET}`
 const redirect_uri = `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`
 
@@ -55,6 +57,7 @@ const formDataForAccessToken = new FormData();
 formDataForAccessToken.append('grant_type', 'authorization_code');
 formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
+// Client secret is not set for the WebID flow. Uncomment this if you need it.
 //formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
 // Get our code verifier from session storage, because we need to send it again for PKCE validation.
