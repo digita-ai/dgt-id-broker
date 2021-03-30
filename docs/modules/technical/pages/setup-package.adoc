@@ -37,6 +37,17 @@ Initialize a Node.js project with the following `package.json` settings:
 
 Install `rimraf` as a first development dependency. 
 
+Create a `.npmrc` file with the following content:
+
+[source,bash]
+----
+registry=https://registry.npmjs.org/
+
+@digita-ai:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+always-auth=true
+----
+
 Also create the `lib` directory with an empty `lib/public-api.ts`.
 
 
