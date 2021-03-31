@@ -22,6 +22,8 @@ In this specification we'll set up the repository organization in the root of a 
 
 - Force the overall Node.js version with `.nvmrc` file containing `14`.
 
+- Install `typescript` as a first development dependency.
+
 
 === Lerna monorepo
 
@@ -58,7 +60,7 @@ charset = utf-8
 
 === ESLint
 
-- Install `eslint` as well as the plugins `eslint-import-resolver-typescript`, `eslint-plugin-import`, `eslint-plugin-jasmine`, `eslint-plugin-jsdoc`, `eslint-plugin-prefer-arrow`, `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser`, as development dependencies.
+- Install `eslint`, as well as the plugins `eslint-import-resolver-typescript`, `eslint-plugin-import`, `eslint-plugin-jasmine`, `eslint-plugin-jsdoc`, `eslint-plugin-prefer-arrow`, `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser`, as development dependencies.
 
 - Copy Digita's default `.eslintrc.json` file, e.g. from `dgt-platform`.
 
@@ -66,6 +68,7 @@ charset = utf-8
 +
 [source,json]
 ----
+"files.eol": "/n",
 "eslint.format.enable": true,
 "editor.defaultFormatter": "dbaeumer.vscode-eslint",
 "editor.codeActionsOnSave": {
