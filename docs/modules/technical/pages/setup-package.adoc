@@ -35,8 +35,6 @@ Initialize a Node.js project with the following `package.json` settings:
 
 - a `repository` information object with `type` set to `git`, containing the SSH `url` of the monorepo of which this package is part, and the `directory` of this package relative to the root.
 
-- an `eslintConfig` object with an `extends` list that contains `../../.eslintrc.json`.
-
 Install `rimraf` as a first development dependency. 
 
 Create a `.npmrc` file with the following content:
@@ -51,6 +49,8 @@ always-auth=true
 ----
 
 Also create the `lib` directory with an empty `lib/public-api.ts`.
+
+Finally, add the package to the `.editor.code-workspace` file in the monorepo's root.
 
 
 === Typescript
@@ -88,13 +88,20 @@ as development dependency.
 "target": "es2015",   // set this to a well-supported ES version for client packages, or the latest ES version for Node packages
 "module": "commonjs", // set this to the same ES version as target for client packages, or "commonjs" for Node packages
 "lib": [
-  "es2020",   // set this to the latest ES version, but not "esnext"
-  "webworker" // remove for Node packages
-  "dom"       // remove for Node packages
+  "es2020",    // set this to the latest ES version, but not "esnext"
+  "webworker", // remove for Node packages
+  "dom"        // remove for Node packages
 ]
 ----
 
 // - When using a testing library, it can be useful to create an additional `tsconfig.app.json`and `tsconfig.spec.json` configuration that `extends` from `./tsconfig.json`, with a different `outDir` in `compilerOptions`; the first with `lib/index.ts` in the `files` list and `lib/\**/\*.d.ts` in the `include` list; the second with `lib/test.ts` in the `files` list and both `lib/\**/\*.d.ts` and `lib/**/*.spec.ts` in the `include` list.
+
+
+=== ESLint
+
+In the `package.json`, add an `eslintConfig` object with an `extends` list that contains `../../.eslintrc.json`.
+
+Also add the scripts `"lint": "eslint ."` and `"lint:fix": "eslint --fix ."`.
 
 
 === Jest
