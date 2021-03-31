@@ -116,6 +116,7 @@ testTimeout: 300000,
 verbose: true,
 preset: 'ts-jest',
 testEnvironment: 'node',
+rootDir: 'lib',
 globals: {
   'ts-jest': {
     babelConfig: true,
