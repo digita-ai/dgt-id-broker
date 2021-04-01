@@ -24,7 +24,7 @@ export class NodeHttpServer extends Server {
    */
   constructor(private nodeHttpStreamsHandler: NodeHttpStreamsHandler, protected port: number, protected host: string){
     super(port, host);
-    this.server = createServer(this.serverHelper);
+    this.server = createServer((req, res) => this.serverHelper(req, res));
   }
 
   /**
@@ -55,9 +55,7 @@ export class NodeHttpServer extends Server {
       requestStream: req,
       responseStream: res,
     };
-    // eslint-disable-next-line no-console
-    console.log(this.nodeHttpStreamsHandler);
-    this.nodeHttpStreamsHandler.handle(nodeHttpStreams);
+    this.nodeHttpStreamsHandler.handle(nodeHttpStreams).subscribe();
   }
 
 }
