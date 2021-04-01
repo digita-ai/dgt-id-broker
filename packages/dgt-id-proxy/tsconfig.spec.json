@@ -1,0 +1,19 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "module": "commonjs",
+      "declaration": false,
+      "inlineSources": false,
+      "strict": false,
+      "target": "es5",
+      "types": ["jest", "node"],
+      "allowJs": true,
+    },
+    "files": [
+      "./jest.config.ts"
+    ],
+    "exclude": [
+      "node_modules", 
+      "dist"
+    ]
+  }

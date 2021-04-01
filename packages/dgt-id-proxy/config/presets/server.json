@@ -1,0 +1,44 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-broker/^0.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-core/^0.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-http/^0.0.0/components/context.jsonld"
+  ],
+  "@graph": [
+    {
+      "@id": "urn:dgt-id-broker:default:NodeHttpServer",
+      "@type": "NodeHttpServer",
+      "NodeHttpServer_port": "3000",
+      "NodeHttpRequestResponseHandler": {
+        "@type": "RoutedHttpRequestHandler",
+        "RoutedHttpRequestHandler:_handlerControllerList": [
+          {
+            "@type": "HttpHandlerController",
+            "@HttpHandlerControllel_label": "ControllerList",
+            "HttpHandlerController:_routes": [
+              {
+                "@id": "urn:dgt-platform-api:default:MockRoute"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "@id": "urn:dgt-platform-api:default:MockRoute",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-broker:default:",
+        "@type": "MockHttpHandler"
+      },
+      "HttpHandlerRoute:_path": "/mock/:uri?"
+    }
+  ]
+}

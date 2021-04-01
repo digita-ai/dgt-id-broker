@@ -4,8 +4,16 @@
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
+  "bin": {
+    "dgt-id-proxy": "./dist/main.js"
+  },
   "directories": {
     "lib": "lib"
+  },
+  "eslintConfig": {
+    "extends": [
+      "../../.eslintrc.json"
+    ]
   },
   "files": [
     "dist",
@@ -22,14 +30,19 @@
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
     "test": "jest --silent",
     "test:ci": "jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "devDependencies": {
+    "@digita-ai/handlersjs-core": "^0.0.6",
+    "@digita-ai/handlersjs-http": "^0.0.6",
     "@types/jest": "^26.0.22",
     "componentsjs-generator": "^2.1.0",
     "jest": "^26.6.3",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
+    "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   },
   "dependencies": {
