@@ -1,15 +1,18 @@
+import { IncomingMessage, ServerResponse } from 'http';
 import { Observable } from 'rxjs';
-import { HttpHandler } from '@digita-ai/handlersjs-http';
+import { mock, MockProxy } from 'jest-mock-extended';
+import { HttpHandler, HttpHandlerContext, HttpHandlerRequest } from '@digita-ai/handlersjs-http';
 import { NodeHttpRequestResponseHandler } from './node-http-request-response.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
 describe('NodeHttpRequestResponseHandler', () => {
   let handler: NodeHttpRequestResponseHandler;
   let httpHandler: HttpHandler;
-  let streams: NodeHttpStreams;
+  let streamMock: MockProxy<NodeHttpStreams>;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     handler = new NodeHttpRequestResponseHandler(httpHandler);
+    streamMock = mock<NodeHttpStreams>();
   });
 
   it('should be correctly instantiated', () => {
@@ -18,7 +21,6 @@ describe('NodeHttpRequestResponseHandler', () => {
 
   it('handle() should return a void Observable', () => {
     const observable = new Observable<void>();
-    expect(handler.handle(streams)).toBeInstanceOf(observable);
+    expect(handler.handle(streamMock)).toBeInstanceOf(observable);
   });
-
 });
