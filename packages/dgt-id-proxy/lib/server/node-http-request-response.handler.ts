@@ -1,5 +1,6 @@
 import { HttpHandler, HttpHandlerRequest, HttpHandlerResponse, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
+import { map }from 'rxjs/operators';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
@@ -28,13 +29,33 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    * @returns {Observable<void>}
    */
   handle(nodeHttpStreams: NodeHttpStreams): Observable<void> {
-    const httpHandlerRequest: HttpHandlerRequest = nodeHttpStreams.requestStream.read();
+    let httpHandlerRequest: HttpHandlerRequest;
+    if (!nodeHttpStreams.requestStream.url){
+      return throwError('url of the request cannot be null or undefined.');
+    }else if (!nodeHttpStreams.requestStream.method){
+      return throwError('method of the request cannot be null or undefined.');
+    }else if (!nodeHttpStreams.requestStream.headers){
+      return throwError('headers of the request cannot be null or undefined.');
+    }else {
+      httpHandlerRequest = {
+        path: nodeHttpStreams.requestStream.url,
+        method: nodeHttpStreams.requestStream.method,
+        headers: nodeHttpStreams.requestStream.headers as { [key: string]: string },
+      };
+    }
     const httpHandlerContext: HttpHandlerContext = {
       request: httpHandlerRequest,
       route: undefined,
     };
-    nodeHttpStreams.responseStream.write(this.httpHandler.handle(httpHandlerContext));
-    return of();
+
+    return this.httpHandler.handle(httpHandlerContext).pipe(
+      map((response) => {
+        nodeHttpStreams.responseStream.writeHead(response.status, response.headers);
+        nodeHttpStreams.responseStream.write(response.body);
+        nodeHttpStreams.responseStream.end();
+      }),
+    );
+
   }
 
   /**

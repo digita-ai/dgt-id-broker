@@ -41,11 +41,13 @@ export class RoutedHttpRequestHandler extends HttpHandler {
       .filter(({ route, methods, handler }) => methods.includes(request.method))
       .pop();
 
-    if(matchedRequestRoute){
+    if(matchedRequestRoute) {
       const httpHandlerContext: HttpHandlerContext = { request, route: matchedRequestRoute.route };
-      matchedRequestRoute.handler.handle(httpHandlerContext);
+      return matchedRequestRoute.handler.handle(httpHandlerContext);
+    } else {
+      const httpHandlerResponse: HttpHandlerResponse = { body: '', headers: {}, status: 404 };
+      return of(httpHandlerResponse);
     }
-    return of();
   }
 
   /**

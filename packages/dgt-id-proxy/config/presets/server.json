@@ -11,11 +11,14 @@
       "NodeHttpServer:_port": "3000",
       "NodeHttpServer:_host": "localhost",
       "NodeHttpServer:_nodeHttpStreamsHandler": {
+        "@id": "urn:dgt-id-proxy:default:NodeHttpRequestResponseHandler",
         "@type": "NodeHttpRequestResponseHandler",
         "NodeHttpRequestResponseHandler:_httpHandler":{
+          "@id": "urn:dgt-id-proxy:default:RoutedHttpRequestHandler",
           "@type": "RoutedHttpRequestHandler",
           "RoutedHttpRequestHandler:_handlerControllerList": [
             {
+              "@id": "urn:dgt-id-proxy:default:HttpHandlerController",
               "@type": "HttpHandlerController",
               "HttpHandlerController:_label": "ControllerList",
               "HttpHandlerController:_routes": [
