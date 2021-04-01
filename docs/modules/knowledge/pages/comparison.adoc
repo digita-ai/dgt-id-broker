@@ -1,0 +1,612 @@
+:hardbreaks:
+
+= Classic OIDC vs Solid OIDC
+
+This document provides a close comparison of classic OpenID Connect (OIDC) and Solid OIDC. We will demonstrate the differences between the classic OIDC flow and the Solid OIDC flow, as the latter requires some crucial additions to the former.
+
+
+== Concepts
+
+Resource Server (RS) :: A server hosting resources, possibly protected by access control policies.
+      
+Solid Pod :: A (virtual) root container on a Solid-compliant *Resource Server*.
+
+Resource Owner :: An entity capable of granting other entities permissions (e.g. access rights) to protected resources.
+
+End-User :: Originally meant as a synonym for human *Resource Owners*, here used to refer to the entity to which the permission is granted.
+
+OAuth 2.0 :: An authorization framework enabling applications to obtain permissions for certain resources on behalf of an *End-User*.
+
+OpenID Connect :: An authentication framework on top of the *OAuth 2.0* protocol, enabling applications to verify the identity of the *End-User*.
+
+Authorization Server (AS) :: A system implementing the authoritative part of an _authorization_ framework (in casu *OAuth 2.0*).
+
+Identity Provider (IdP) :: A system implementing the authoritative part of an _authentication_ framework (in casu *OpenID Connect*).
+
+Claim :: An authoritative piece of information the *Identity Provider* can provide about the *End-User*.
+
+Client | Relying Party (RP) :: An application relying on the authoritative *Claims* in order to access data or perform actions on behalf of the *End-User*.
+
+Client ID :: An identifier used to register the *Client* with the *Identity Provider*.
+
+Client secret :: A credential for the *Client* registered with the *Identity Provider*.
+
+Redirect URL | Callback URL :: A URL to which the *Identity Provider* will redirect the user agent during the authentication flow.
+
+Scope :: An indication of the *Claims* the *Client* would like the *Identity Provider* to provide.
+
+Consent :: An affirmative action of the *Resource Owner* granting requested *Claims* to be provided to the *Client*. 
+
+Response Type :: The way in which the *Client* expects to receive the *Claims* from the *Identity Provider*. 
+
+Authorization Code :: A secure *Response Type* in the form of a temporary code, which the *Client* can exchange for the *Claims*. 
+
+Access Token :: A JSON Web Token (JWT) the *Client* obtains from an *Authorization Server*, containing *Claims* that grant permissions to access data or perform actions on a *Resource Server* on behalf of the *End-User*.
+
+ID Token :: A JWT the *Client* obtains from an *Identity Provider*, containing *Claims* that prove the identity of the *End-User*.
+
+WebID :: A *WebID* is an HTTP URI which refers to an Agent (Person, Organization, Group, Device, etc.) as defined in the link:https://dvcs.w3.org/hg/WebID/raw-file/tip/spec/identity-respec.html#introduction[WebID 1.0 specification].
+
+*PKCE* :: Short for Proof Key for Code Exchange, is a key for preventing malicious attacks and securely performing code authorization flow. It is used to add an additional security layer to the authorization flow in *OpenID Connect*.
+*PKCE* is used by the *Client* to replace the static secret used in the authorization flow to prevent Man-In-The-Middle attacks. The *PKCE* process works with two parameters. The *Code Verifier* and the *Code Challenge*.
+
+Code Verifier ::  A cryptographically random string, used in the *PKCE* process, that is used to link the authorization request to the token request. It should have a minimum length of 43 characters and a maximum length of 128 to make it impractical enough to guess the value. 
+
+Code Challenge ::  A challenge, used in the *PKCE* process, that is generated from the *Code Verifier* which is sent in the authorization request, to be verified against later. The given *Code Challenge* parameter is compared to the *Code Challenge* that was generated from base64URL encoding a SHA256 hashed *Code Verifier*. 
+
+Code Challenge Method :: The method that was used to generate *Code Challenge*. _(e.g. SHA256)_
+
+Authentication Endpoint :: The API endpoint which the *Identity Provider* provides to authenticate users. A request is sent to this endpoint with the correct credentials to authenticate the user with the following parameters: 
+* `response_type` : The type of response the *Client* accepts on an authentication request.
+* `code_challenge` : The *Code Challenge* generated in the *PKCE* process.
+* `code_challenge_method` : The method used to generate the *Code Challenge*.
+* `scope` : The scope the *Client* has access to. `openid` is a scope that is needed to verify Alice’s identity. `profile` is required by the *Solid OIDC* specification to denote a *WebID* login. `offline_access` is required to get a refresh token.
+* `client_id` : An identifier used to register the *Client* with the *Identity Provider*. In *SOLID OIDC* this is usually the a *WebID*.
+* `redirect_uri`: The callback URI that is redirected to after finishing the authentication request.
+
+Token Endpoint :: The API endpoint which the *Identity Provider* provides to grant an access tokens to users that were successfully authenticated. A request is sent to this endpoint with the following parameters: 
+* `grant_type` :  Grant types are methods through which the *Client* can gain *Access Tokens* and by which you grant limited access to your resources to another entity without exposing credentials.
+* `code` : Upon successfully registering a *Client* the *Identity Provider* will return a code as an URL parameter string. This code will be used to request an access token.
+* `client_id` : The *Client ID* provided, in *SOLID OIDC* this could be a *WebID*.
+* `redirect_uri` : The callback URI that is redirected to after finishing the token request.
+* `code_verifier` : The provided *Code Verifier* is included in the request and generated into a *Code Challenge* with the same *Code Challenge Method* that was provided in the authentication request. If the result of the *Code Challenge* is not equal access is denied.
+
+
+DPoP :: Demonstration of Proof-of-Possession, a relatively simple application-level mechanism for sender-constraining OAuth access and refresh tokens. It enables a client to demonstrate proof-of-possession of a public/private key pair by including the "DPoP" header in an HTTP request. Using that header, an authorization server is able to bind issued tokens to the public part of the client's key pair.  Recipients of such tokens are then able to verify the binding of the token to the key pair that the client has demonstrated that it holds via the "DPoP" header, thereby providing some assurance that the client presenting the token also possesses the private key.
+
+Dynamic Client Registration :: A mechanism for the *Client* to register and present the *Authorization Server* with a set of metadata, such as a set of valid redirection URIs.
+Traditionally, registration of a client with an *Authorization Server* is performed manually. It can be used either for a *Client* to dynamically register itself with authorization servers or for a client developer to programmatically register the *Client* with authorization servers.
+
+
+== Classic OIDC 
+
+=== Example
+
+Imagine Alice wants to use a web service called Daily Pictures that posts a beautiful picture every day to her social feed on her behalf. Alice wants to provide this service access to her social feed and grant permissions to create posts on her behalf. 
+
+==== Flow
+
+. Alice is logged on to the *Client* and selects her choice of *Identity Provider*, for example, this could be a mail service like Gmail.
+. The *Client* redirects Alice's her browser to the *Authorization Server*. This request contains the *Client ID*, *Redirect URI*, *Response type* and the *Scopes* that are needed. 
+Among these there is a specific  OpenID *Scope* that lets the *Authorization Server* know this will be a an OIDC exchange.
+. The *Authorization Server* verifies Alice's identity, and if necessary prompts for a login.
+. The *Authorization Server* presents Alice with a *Consent* form that is based on the *Scopes* the *Client* requested in the previous request. Alice can grant or deny any of these permissions.
+. The *Authorization Server* redirects the browser back to the *Client* using the *Redirect URI* that was included in the initial request along with an *Authorization code*.
+. The *Client* directly contacts the *Authorization Server* and securely sends it's *Client ID*, *Client secret* and the *Authorization code*.
+. The *Authorization server* verifies this data and responds with an *Access Token* along side an *ID Token*.
+. The *Client* can now use these tokens to send requests to the *Resource Server* in order to post pictures daily on Alice's social feed.
+
+
+// TODO: add a sequence diagram 
+
+
+== Solid OIDC
+
+=== Example
+
+Imagine Alice wants to use Daily Pictures to let it post a beautiful picture every day to her social feed. 
+Alice's photo collection is stored in his personal Solid Data Pod. 
+Alice has previously given consent to Daily Pictures to let it use her pictures if it wanted to. 
+Alice would now like Daily Pictures to access her photo collection and her photos. 
+
+==== Flow
+
+. Alice browses to the *Client* _(Daily Pictures)_ web page.
++
+. Before the *Client* can start retrieving pictures from Alice's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
+This *OP* could be hosted at the same domain as Alice's *Solid Data Pod* but does not necessarily have to.
+
+. Retrieve Alice's WebID : If Alice chose to provide her *WebID* URl instead of her *OP*'s URL, a request should be made to Alice's *WebID* in order to determine her *OP*. 
++
+
+----
+GET https://alice.digipod.example/profile/card#me	
+----
++
+
+The responses body will look somewhat like this: 
++
+[source, json]
+----
+@prefix : <#>.
+@prefix solid: <http://www.w3.org/ns/solid/terms#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix schema: <http://schema.org/>.
+
+<>
+    a foaf:PersonalProfileDocument ;
+    foaf:maker <https://localhost:8443/profile/card#me> ;
+    foaf:primaryTopic <https://localhost:8443/profile/card#me> .
+
+:me a foaf:Person ;
+    a schema:Person ;
+    foaf:name "Alice" ;
+    solid:oidcIssuer <https://secureauth.example> ;
+----
++
+
+The *OP*'s URL we are looking for is located here: me -> solid:oidcIssuer
+
++
+//Ephemeral Clients MAY use the identifier http://www.w3.org/ns/solid/terms#PublicOidcClient. If the Client uses this identifier then the IdP MAY accept any redirect_uri as valid. Since it is public, the Client is effectively anonymous to the RS. ADD THIS? BUT REWRITE FIRST
+
+. Now that we have Alice's *OP*'s URL, the *Client* must retrieve the *OP*'s configuration.
+This configuration describes everything the *Client* needs to know to authorize Alice's specific *OP*.
++
+
+The responses body will look somewhat like this: 
++
+[source, json]
+----
+{
+    "issuer": "https://secureauth.example",
+    "authorization_endpoint": "https://secureauth.example/authorize",
+    "token_endpoint": "https://secureauth.example/token",
+    "userinfo_endpoint": "https://secureauth.example/userinfo",
+    "registration_endpoint": "https://secureauth.example/register",
+    "end_session_endpoint": "https://secureauth.example/endsession",
+    "jwks_uri": "https://secureauth.example/jwks",
+    "solid_oidc_supported": "https://solidproject.org/TR/solid-oidc",
+    "response_types_supported": [
+        "code"
+    ],
+    "grant_types_supported": [
+        "authorization_code",
+        "refresh_token"
+    ],
+    "subject_types_supported": [
+        "public"
+    ],
+    "claims_supported": [
+        "sub",
+        "webid"
+    ],
+    "scopes_supported": [
+        "openid",
+        "profile",
+        "email",
+        "offline_access"
+    ],
+    "token_endpoint_auth_methods_supported": [
+        "client_secret_basic"
+    ],
+    "token_endpoint_auth_signing_alg_values_supported": [
+        "ES256"
+    ],
+    "request_object_signing_alg_values_supported": [
+        "ES256"
+    ],
+    "id_token_signing_alg_values_supported": [
+        "ES256"
+    ],
+    "code_challenge_methods_supported": [
+        "plain",
+        "S256"
+    ],
+    "claims_parameter_supported": false,
+    "request_parameter_supported": true,
+    "request_uri_parameter_supported": false,
+    "require_request_uri_registration": false
+}
+----
++
+
+Notice the `authorization_endpoint` field. This URL will be used to send an authorization request to the *OP*.
+
+. We want to follow the link:url[PKCE code flow, https://oauth.net/2/pkce/]. 
++
+
+First we need to generate a *code verifier*. This can be a cryptographic random string (e.g. `*_LDKoTiFC6_*`). 
+By encoding this code verifier into a SHA-256 encoded string we can create our *code challenge* (e.g. `BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))`).
+Resulting in the following code challenge: `*_92d5a871f52a513951e3260cd42b04f29b0f4a8bfea1740a0780e3db667_*`
+. The *Client*'s code verifier is saved into the session storage and will later be used to prove to the *OP* that Daily Pictures is the *Client* that has sent the request. 
++
+WARNING: Do not save the code verifier anywhere else!
+
+
+. Our *Client* is now registered and we can start making a request to authorize it.
++
+[source, json]
+----
+GET https://secureauth.example/authorize?response_type=code&
+redirect_uri=https%3A%2F%2Fdailypictures.example%2Fcallback&
+scope=openid%20profile%20offline_access&
+client_id=https%3A%2F%2Fdailypictures.example%2Fwebid%23this&
+code_challenge_method=S256&
+code_challenge=92d5a871f52a513951e3260cd42b04f29b0f4a8bfea1740a0780e3db667
+----
++
+
++
+A request is made to \https://secureauth.example/authorize with the following parameters:
++
+* *response_type* : The expected type of response data.
+* *redirect_uri* : This is the URL where the *OP* will redirect to when Alice has successfully logged in.
+* *scope* : The list of OIDC scopes
+** *open_id* : is used to verify Alice's identity.
+** *profile* : is required by the Solid OIDC specification to denote a WebID login.
+** *offline_access* : is required to get a refresh token.
+* *client_id* : This could be the *Client*'s WebID or if no WebID was provided then it is required to present a client identifier registered with the IdP through either OIDC dynamic or static registration.
+* *code_challenge_method* : Will inform our *OP* that the *code challenge* was created using SHA-256.
+* *code_challenge* : This is the code challenge we created before, using our code verifier.
++
+
+. If the *client_id* consists of a WebID, we must fetch it to check it's validity.
+We can achieve this with the following request:
++
+[source, json]
+----
+GET https://dailypictures.example/webid
+----
++
+The response will look somewhat like this:
++
+[source, json]
+----
+@prefix solid:  .
+
+<#this> solid:oidcRegistration """{
+    "client_id": "https://dailypictures.example/webid#this",
+    "redirect_uris": [ "https://dailypictures.example/callback" ],
+    "client_name": "DailyPictures",
+    "client_uri": "https://dailypictures.example/",
+    "logo_uri": "https://dailypictures.example/logo.png",
+    "tos_uri": "https://dailypictures.example/tos.html",
+    "scope": "openid profile offline_access",
+    "grant_types": [ "refresh_token", "authorization_code" ],
+    "response_types": [ "code" ],
+    "default_max_age": 60000,
+    "require_auth_time": true
+    }""" .
+----
++
+
+The response contains a JSON representation of the OIDC Client Registration.
+
+. The _redirect_uris_ array must contain the _redirect_uri_ that was provided in the authentication request. If this is not the case the *OP* is required to reject the request and send a 403 response.
++
+
+. Finally Alice is prompted to login by the *OP*. This can be done by a number of authentication methods like a password for instance. The session is now under control of the *OP* instead of the *Client* since Alice was redirected there.
++
+
+. The *OP* will now generate a cryptographic random string. It will be stored in a keystore and act as the key for the Client ID, WebId, the clients code challenge and the expected response types and scopes.
+
++
+[source, json]
+----
+{
+  "h-DnHRAfTsn9V_m4I1A3Cw": {
+    "client_id": "https://dailypictures.example/webid#this",
+    "code_challenge": "92d5a871f52a513951e3260cd42b04f29b0f4a8bfea1740a0780e3db667",
+    "webid": "https://alice.digipod.example/profile/card#me",
+    "response_types": [ "code" ],
+    "scope": [ "openid", "profile", "offline_access" ]
+  }
+}
+----
+
++
+
+. The *OP* redirects Alice back to the *Client* after successfully logging in. It uses the provided URI in the initial request to do so. 
++
+[source, json]
+ ----
+ 302 redirect to: https://dailypictures.example/callback?code=h-DnHRAfTsn9V_m4I1A3Cw
+ ----
++
+
+As you can see it passes the key it created in the previous step as a parameter string. We will use this key in exchange for an *Access Token*.
+
+. The *Client* will now generate a DPoP token. This DPoP token will make it possible for third party web applications to send requests to multiple *Pods* in addition to making sure malicious *Pods* are not able to get a hold of Alice's token.
+.. The first step to achieve this is is for the *Client* to generate both a public key and a private key. 
++
+[source, json]
+----
+Private key:
+{
+    "kty": "EC",
+    "kid": "2i00gHnREsMhD5WqsABPSaqEjLC5MS-E98ykd-qtF1I",
+    "use": "sig",
+    "alg": "EC",
+    "crv": "P-256",
+    "x": "N6VsICiPA1ciAA82Jhv7ykkPL9B0ippUjmla8Snr4HY",
+    "y": "ay9qDOrFGdGe_3hAivW5HnqHYdnYUkXJJevHOBU4z5s",
+    "d": "RrM4Ou_7PzjP24B4k06B9ZML16HbfzNPKFN11Z8c9_s"
+}
+
+Public key:
+{
+    "kty": "EC",
+    "kid": "2i00gHnREsMhD5WqsABPSaqEjLC5MS-E98ykd-qtF1I",
+    "use": "sig",
+    "alg": "EC",
+    "crv": "P-256",
+    "x": "N6VsICiPA1ciAA82Jhv7ykkPL9B0ippUjmla8Snr4HY",
+    "y": "ay9qDOrFGdGe_3hAivW5HnqHYdnYUkXJJevHOBU4z5s"
+}
+
+----
+
+. Next we need to generate our DPoP header. We can achieve this by creating a *JSON Web Token* and singing it with the key we just generated. 
+This JWT will look somewhat like this: 
++
+
+----
+eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0IiwiandrIjp7Imt0eSI6IkVDIiwia2lkIjoiZkJ1STExTkdGbTQ4Vlp6RzNGMjVDOVJmMXYtaGdEakVnV2pEQ1BrdV9pVSIsInVzZSI6InNpZyIsImFsZyI6IkVDIiwiY3J2IjoiUC0yNTYiLCJ4IjoiOWxlT2gxeF9IWkhzVkNScDcyQzVpR01jek1nUnpDUFBjNjBoWldfSFlLMCIsInkiOiJqOVVYcnRjUzRLVzBIYmVteW1vRWlMXzZ1cko0TFFHZXJQZXVNaFNEaV80In19 
+----
++
+When decoded the *Token Header* will look like this:
++
+[source, json]
+----
+{
+    "alg": "ES256",
+    "typ": "dpop+jwt",
+    "jwk": {
+        "kty": "EC",
+        "kid": "2i00gHnREsMhD5WqsABPSaqEjLC5MS-E98ykd-qtF1I",
+        "use": "sig",
+        "alg": "EC",
+        "crv": "P-256",
+        "x": "N6VsICiPA1ciAA82Jhv7ykkPL9B0ippUjmla8Snr4HY",
+        "y": "ay9qDOrFGdGe_3hAivW5HnqHYdnYUkXJJevHOBU4z5s"
+    }
+}
+----
++
+
+* *"alg"* : This tells us the token was signed using the ES256 algorithm.
+* *"typ": "dpop+jwt"* : This is the type of the token. Every DPoP Token should have the type `"dpop+jwt"`.
+* *"jwk"* : The value for this key is the actual *Client*'s public key.
++
+
+//dit indent een laag te ver
+The *Token Body* contains the following:
++
+[source, json]
+----
+{
+    "htu": "https://secureauth.example/token",
+    "htm": "POST",
+    "jti": "4ba3e9ef-e98d-4644-9878-7160fa7d3eb8",
+    "iat": 1603306128
+}
+----
++
+
+* *"htu"*: The token will only be able to be used for the given URL.
+
+* *"htm"*: This indicates that only POST requests can be made with this.
+
+* *"jti"*: This is a unique identifier for the DPoP token that can be used by the server to defend against replay attacks.
+
+* *"iat"*: A UNIX timestamp of the date the token was issued.
++
+
+. Finally the *Client* can create an authentication request. This can be done by sending an AJAX request to the token endpoint which was defined in the *OP*'s open-id configuration we retrieved earlier.
++
+[source, json]
+----
+POST https://secureauth.example/token
+Headers: {
+  "DPoP": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImRwb3Arand0IiwiandrIjp7Imt0eSI6IkVDIiwia2lkIjoiZkJ1STExTkdGbTQ4Vlp6RzNGMjVDOVJmMXYtaGdEakVnV2pEQ1BrdV9pVSIsInVzZSI6InNpZyIsImFsZyI6IkVDIiwiY3J2IjoiUC0yNTYiLCJ4IjoiOWxlT2gxeF9IWkhzVkNScDcyQzVpR01jek1nUnpDUFBjNjBoWldfSFlLMCIsInkiOiJqOVVYcnRjUzRLVzBIYmVteW1vRWlMXzZ1cko0TFFHZXJQZXVNaFNEaV80In19.eyJodHUiOiJodHRwczovL3NlY3VyZWF1dGguZXhhbXBsZS90b2tlbiIsImh0bSI6InBvc3QiLCJqdGkiOiI0YmEzZTllZi1lOThkLTQ2NDQtOTg3OC03MTYwZmE3ZDNlYjgiLCJpYXQiOjE2MDMzMDYxMjgsImV4cCI6MTYwMzMwOTcyOH0.2lbgLoRCkj0MsDc9BpquoaYuq0-XwRf_URdXru2JKrVzaWUqQfyKRK76_sQ0aJyVwavM3pPswLlHq2r9032O7Q",
+  "content-type": "application/x-www-form-urlencoded"
+}
+Body:
+  grant_type=authorization_code&
+  code_verifier=LDKoTiFC6
+  code=h-DnHRAfTsn9V_m4I1A3Cw
+  redirect_uri=https%3A%2F%2Fdailypictures.example%2Fcallback&
+  client_id=https%3A%2F%2Fdailypictures.example%2Fwebid%23this
+---- 
++
+* *headers.DPoP*: This is the JSON Web Token we created earlier, when decoded it contains the the *Client*'s public key.
+
+* *headers.content-type* : This sets the headers content type. Usually this will be _application/x-www-form-urlencoded_ but some *OP*'s will also accept _application/json_. Do note that they all must access urlencoded content types. That is why this is preferred.
+
+* *body.grant_type* : This informs the *OP* this is part of an authorization flow.
+* *body.code_verifier*: This is the *code verifier* that was stashed in our session storage earlier.
+
+* *body.code* : This contains the code we received earlier as a parameter string upon redirect. 
+
+* *body.redirect_uri* : The *Client*'s redirect url. Because this is an AJAX request.
+
+* *body.client_id* : The *Client*'s client id.
+
+. The *OP* will now compare the code that was store in the keystore with 
+the `client_id` in the request. If these do not match it is required to send a 403 response.
+
+. The *OP* will get the *Client*'s public key (a JSON Web Key) from the DPoP header, stored in the JWT, and checks if the DPoP token contains a valid signature. If not it is required to send a 403 response.
+
+ . Now the JWK public key must be places inside the access token. Before we can do so it needs to be converted into a JWK thumbprint (`9XmwK8mQ3H5-PnzAt3lFHzWBW_v5QhYynezbbit4kC8`). 
+
+. An access token can now be generated by the *OP*. It will create a JWT and sign it using it's own keys. 
++
+When decoded it will look somewhat like this:
++
+[source, json]
+---- 
+Token Header:
+
+{
+    "alg": "ES256",
+    "typ": "JWT"
+}
+"alg": "ES256": indicates the token was signed using eliptic curve
+
+"typ": "JWT": indicates that this is a JSON web token
+
+Token Body:
+
+{
+    "webid": "https://alice.digipod.example/profile/card#me",
+    "iss": "https://secureauth.example",
+    "aud": "solid",
+    "cnf": {
+        "jkt": "9XmwK8mQ3H5-PnzAt3lFHzWBW_v5QhYynezbbit4kC8"
+    },
+    "client_id": "https://dailypictures.example/webid#this",
+    "jti": "fd0a1353-25f3-4c7e-8f8b-c14264f1c12e",
+    "iat": 1603385261,
+    "exp": 1603385861
+}
+---- 
++
+
+* *"webid"* : This contains Alice's WebID.
+* *"iss"* : The *OP* used to create this token.
+* *"aud"* : The token’s audience. The audience for a solid token is simply: "solid".
+* *"cnf"* : The JWT thumbprint we created earlier stored with the "jkt" key.
+* *"client_id"* : This contains the client id of the *Client*.
+* *"iat": 1603370641* : A UNIX timestamp of the date the token was issued.
+* *"exp": 1603371241* : A UNIX timestamp of the expiration date.
+
+. The *OP* generates an *ID Token* since the `openid` scope was included in the authorization request. This will only be used to communicate with the *Client*. It consists of a JWT. 
++
+When decoded it will look somewhat like this:
++
+[source, json]
+---- 
+Token Header:
+
+{
+    "alg": "ES256",
+    "typ": "JWT"
+}
+"alg": "ES256": This indicates the token was signed using the ES256 algorithm.
+
+"typ": "JWT": This indicates that this is a JSON web token.
+
+Token Body:
+
+{
+    "sub": "https://alice.digipod.example/profile/card#me",
+    "aud": "https://dailypictures.example/webid#this",
+    "webid": "https://alice.digipod.example/profile/card#me",
+    "iss": "https://secureauth.example",
+    "jti": "844a095c-9cdb-47e5-9510-1dba987c0a5f",
+    "iat": 1603370641,
+    "exp": 1603371241
+}
+---- 
++
+
+* *"sub"* :  The subject claim. This must be the same as the WebID of the user that was authenticated.
+* *"aud"* :  The token’s audience. Because an id_token is required for the *Client*, its audience is the client id.
+* *"webid"* : This contains Alice's WebID.
+* *"iss"* :   The *OP* used to create this token.
+* *"jti"* :  This is a unique identifier for the DPoP token that can be used by the server to defend against replay attacks.
+* *"iat"* :  A UNIX timestamp of the date the token was issued.
+* *"exp"* : A UNIX timestamp of the expiration date.
+
+. In case _offline_access_ was added as a scope the *OP* will create a refresh token.
+This could be a JWT but does not necessarily have to.
++
+
+The example token would decrypt as:
++
+[source, json]
+---- 
+Token Header:
+
+{
+    "alg": "none"
+}
+Token Body:
+
+{
+    "jti": "a78b49ef-71c5-4985-a50c-5ef3aef0fd8f"
+}
+---- 
++
+
+CAUTION: Make sure to save this token into a persistent store.
++
+
+. If everything checks out the *OP* will reply with a response that contains all generated tokens in the body.
++
+[source, json]
+---- 
+{
+    "access_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJodHRwczovL2FsaWNlLmNvb2xwb2QuZXhhbXBsZS9wcm9maWxlL2NhcmQjbWUiLCJ3ZWJpZCI6Imh0dHBzOi8vYWxpY2UuY29vbHBvZC5leGFtcGxlL3Byb2ZpbGUvY2FyZCNtZSIsImlzcyI6Imh0dHBzOi8vc2VjdXJlYXV0aC5leGFtcGxlIiwiYXVkIjoic29saWQiLCJjbmYiOnsiamt0IjoiOVhtd0s4bVEzSDUtUG56QXQzbEZIeldCV192NVFoWXluZXpiYml0NGtDOCJ9LCJjbGllbnRfaWQiOiJodHRwczovL2RlY2VudHBob3Rvcy5leGFtcGxlL3dlYmlkI3RoaXMiLCJqdGkiOiJmZDBhMTM1My0yNWYzLTRjN2UtOGY4Yi1jMTQyNjRmMWMxMmUiLCJpYXQiOjE2MDMzODUyNjEsImV4cCI6MTYwMzM4NTg2MX0.HIIYiovILPvsdkD3s3xomR1MkA_Ir8Mx_C-eHxbWEnw9Z2rv2rOWbvMPZ--BqH3qVSupgYTZZsTDbZXA8giCLA",
+    "expires_in": 300,
+    "token_type": "DPoP",
+    "id_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJodHRwczovL2FsaWNlLmNvb2xwb2QuZXhhbXBsZS9wcm9maWxlL2NhcmQjbWUiLCJhdWQiOiJodHRwczovL2RlY2VudHBob3Rvcy5leGFtcGxlL3dlYmlkI3RoaXMiLCJ3ZWJpZCI6Imh0dHBzOi8vYWxpY2UuY29vbHBvZC5leGFtcGxlL3Byb2ZpbGUvY2FyZCNtZSIsImlzcyI6Imh0dHBzOi8vc2VjdXJlYXV0aC5leGFtcGxlIiwianRpIjoiODQ0YTA5NWMtOWNkYi00N2U1LTk1MTAtMWRiYTk4N2MwYTVmIiwiaWF0IjoxNjAzMzg2NDQ4LCJleHAiOjE2MDMzODcwNDh9.T306vT8dmn9gQIMEdG92AM4WRnrhqWZTfDpovwqZ6Zn0mK9yxj0iOVGqXD4CW8-tzDTitNwEGorAo85atL0Oeg",
+    "refresh_token": "eyJhbGciOiJub25lIn0.eyJqdGkiOiJhNzhiNDllZi03MWM1LTQ5ODUtYTUwYy01ZWYzYWVmMGZkOGYifQ.",
+    "scope": "openid profile offline_access"
+}
+----
++
+* *"access_token"* : The generated *access token*, the *Client* will use to authenticate with the server.
+* *"expires_in"* : This tell us that this access token will be valid for 5 minutes (300 seconds).
+* *"token_type"* : The type of token that was granted (DPoP). 
+* *"id_token"* : The generated id token. The *OP* will use to retrieve data from Alice's WebId.
+* *"refresh_token"* : This token will be used to retrieve a new *access token* when the previous one expired.
+* *"scope"* : The scopes that were used. Or in other words, the permissions that were granted to the *Client*.
+
+Finally the *Client* can start making requests to Alice's *Solid Data Pod* to retrieve pictures and post one daily on her social feed.
+
+// TODO: add sequence diagram here
+
+== Summary
+
+Solid OIDC adds the following requirements to classic OIDC.
+
+For users ::
+
+* Should provide a webID that is a valid RDF profile. This webID will be a part of the OIDC ID Token that is provided by the IdP for authentication.
+
+For clients ::
+
+* Clients SHOULD use a webID as their client ID. If they do, it MUST resolve to a valid RDF document. This document MUST include a single `solid:oidcRegistration` property, which in turn MUST be a JSON serialization of an OIDC client registration.
+* When requesting a DPoP-bound Access Token from an Identity Provider, the client must send a valid DPoP proof JWT.
+
+For Identity Providers ::
+
+* An IdP MUST dereference the client’s WebID document and match any client-supplied parameters, with the values in the client’s WebID document.
+* IdPs MUST provide a DPoP-bound Access Token to the client. This token must meet the following requirements:
+** Must be a valid JWT token.
+** The token MUST contain:
+*** `webid` — must provide the user's webID.
+*** `iss` — must be a valid URL of the IdP instantiating this token.
+*** `aud` — must either be the string `solid` or be an array of values, one of which is the string `solid`.
+*** `iat` — the time at which the DPoP-bound Access Token was issued as a UNIX timestamp.
+*** `exp` — the time at which the DPoP-bound Access Token becomes invalid as a UNIX timestamp.
+*** `cnf` — the confirmation claim is used to identify the DPoP Public Key bound to the Access Token.
+*** `client_id` — The ClientID claim is used to identify the client.
+* IdPs MUST also provide the user with an OIDC ID token. In Solid OIDC the user's webID MUST be present in this token as the `webid` claim.
+* An IdP that conforms to the Solid-OIDC specification MUST advertise this in the OpenID Connect Discovery 1.0 resource. An Identity Provider would indicate this support by using the `solid_oidc_supported` metadata property, referencing the Solid-OIDC specification URL.
+
+For Resource Servers ::
+
+* A Resource Server must inform the Client that a DPoP-bound Access Token is required upon request of a non-public resource.
+* A Resource Server must get the public key from an IdP and use it to validate the signature on the DPoP-bound Access Token that was sent by the client upon every request.
+
+
+== Sources 
+
+https://solid.github.io/authentication-panel/solid-oidc/
+https://solid.github.io/authentication-panel/solid-oidc-primer/
+https://tools.ietf.org/html/draft-ietf-oauth-dpop-01
+https://tools.ietf.org/html/rfc7636
+https://tools.ietf.org/html/rfc7591
