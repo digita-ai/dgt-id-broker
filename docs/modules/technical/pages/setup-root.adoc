@@ -40,7 +40,7 @@ Add a `.code-workspace` file with the name of the repo, containing:
 - an `extensions` object containing a sensible `recommendations` list for the project, e.g. `dbaeumer.vscode-eslint` and `humao.rest-client`;
 - an empty `settings` object.
 
-Also add a `.vscode` directory with an empty `snippets.code-snippets` file. 
+Also add a `.vscode` directory with a `snippets.code-snippets` file. Reuse the snippets from `dgt-platform`. 
 
 > Snippets are defined under a snippet name and have a scope (comma separated list of applicable languages), a prefix (trigger), body (expansion) and description; the body can contain variables like `$1` or `${2:label}` for tab stops with optional placeholders, and `$0` for the final cursor position.
 
