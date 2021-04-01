@@ -26,4 +26,8 @@ export const start: (variables: Record<string, any>) => Promise<void> = async (v
 
   const launch: NodeHttpServer = await manager.instantiate('urn:dgt-id-proxy:default:NodeHttpServer', { variables });
   launch.start();
+  // eslint-disable-next-line no-console
+  console.log('starting server');
 };
+
+start({});

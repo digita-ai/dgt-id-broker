@@ -5,7 +5,8 @@
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "**/*.spec.ts"
     ],
     "compilerOptions": {
         "baseUrl": "./",
@@ -15,7 +16,7 @@
         ],
         "strict": true,
         "sourceMap": true,
-        "declaration": false,
+        "declaration": true,
         "downlevelIteration": true,
         "experimentalDecorators": true,
         "moduleResolution": "node",
@@ -25,7 +26,7 @@
         "noFallthroughCasesInSwitch": true,
         "forceConsistentCasingInFileNames": true,
         "target": "es2020",
-        "module": "es2020",
+        "module": "commonjs",
         "lib": [
             "es2020",
             "dom"

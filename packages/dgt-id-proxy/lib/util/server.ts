@@ -13,8 +13,9 @@ export abstract class Server extends Daemon {
    *
    * @constructor
    * @param port - the port the server needs to run on
+   * @param host - the host or ip the server needs to run on
    */
-  constructor (port: number){
+  constructor (protected port: number, protected host: string){
     super();
   }
 

@@ -1,31 +1,35 @@
 {
   "@context": [
-    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-broker/^0.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-core/^0.0.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-http/^0.0.0/components/context.jsonld"
   ],
   "@graph": [
     {
-      "@id": "urn:dgt-id-broker:default:NodeHttpServer",
+      "@id": "urn:dgt-id-proxy:default:NodeHttpServer",
       "@type": "NodeHttpServer",
-      "NodeHttpServer_port": "3000",
-      "NodeHttpRequestResponseHandler": {
-        "@type": "RoutedHttpRequestHandler",
-        "RoutedHttpRequestHandler:_handlerControllerList": [
-          {
-            "@type": "HttpHandlerController",
-            "@HttpHandlerControllel_label": "ControllerList",
-            "HttpHandlerController:_routes": [
-              {
-                "@id": "urn:dgt-platform-api:default:MockRoute"
-              }
-            ]
-          }
-        ]
+      "NodeHttpServer:_port": "3000",
+      "NodeHttpServer:_host": "localhost",
+      "NodeHttpServer:_nodeHttpStreamsHandler": {
+        "@type": "NodeHttpRequestResponseHandler",
+        "NodeHttpRequestResponseHandler:_httpHandler":{
+          "@type": "RoutedHttpRequestHandler",
+          "RoutedHttpRequestHandler:_handlerControllerList": [
+            {
+              "@type": "HttpHandlerController",
+              "HttpHandlerController:_label": "ControllerList",
+              "HttpHandlerController:_routes": [
+                {
+                  "@id": "urn:dgt-id-proxy:default:MockRoute"
+                }
+              ]
+            }
+          ]
+        }
       }
     },
     {
-      "@id": "urn:dgt-platform-api:default:MockRoute",
+      "@id": "urn:dgt-id-proxy:default:MockRoute",
       "@type": "HttpHandlerRoute",
       "HttpHandlerRoute:_operations": [
         {
@@ -35,10 +39,10 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@id": "urn:dgt-id-broker:default:",
+        "@id": "urn:dgt-id-proxy:default:",
         "@type": "MockHttpHandler"
       },
-      "HttpHandlerRoute:_path": "/mock/:uri?"
+      "HttpHandlerRoute:_path": "/mock"
     }
   ]
 }

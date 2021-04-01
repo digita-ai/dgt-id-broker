@@ -9,7 +9,7 @@ import { NodeHttpStreamsHandler } from './node-http-streams.handler';
  *
  * @class
  */
-export class NodeHttpServer extends Server{
+export class NodeHttpServer extends Server {
 
   private server;
 
@@ -19,10 +19,11 @@ export class NodeHttpServer extends Server{
    *
    * @param {NodeHttpStreamsHandler} nodeHttpStreamsHandler
    * @param {number} port
+   * @param {string} host
    * @constructor
    */
-  constructor(private nodeHttpStreamsHandler: NodeHttpStreamsHandler, private port: number){
-    super(port);
+  constructor(private nodeHttpStreamsHandler: NodeHttpStreamsHandler, protected port: number, protected host: string){
+    super(port, host);
     this.server = createServer(this.serverHelper);
   }
 
@@ -30,7 +31,7 @@ export class NodeHttpServer extends Server{
    * start simply tells the server to start listening on the port provided in the constructor.
    */
   start(){
-    this.server.listen(this.port);
+    this.server.listen(this.port, this.host);
   }
 
   /**
@@ -54,6 +55,8 @@ export class NodeHttpServer extends Server{
       requestStream: req,
       responseStream: res,
     };
+    // eslint-disable-next-line no-console
+    console.log(this.nodeHttpStreamsHandler);
     this.nodeHttpStreamsHandler.handle(nodeHttpStreams);
   }
 

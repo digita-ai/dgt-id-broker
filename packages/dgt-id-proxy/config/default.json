@@ -3,9 +3,9 @@
 
     ],
     "@context": [
-        "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-broker/^0.0.0/components/context.jsonld"
+        "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/context.jsonld"
     ],
     "import": [
-        "files-dadpa:config/presets/server.json"
+        "./presets/server.json"
     ]
 }
