@@ -116,7 +116,7 @@ Alice would now like Daily Pictures to access her photo collection and her photo
 . Before the *Client* can start retrieving pictures from Alice's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
 This *OP* could be hosted at the same domain as Alice's *Solid Data Pod* but does not necessarily have to.
 
-.. Retrieve Alice's WebID : If Alice chose to provide her *WebID* URl instead of her *OP*'s URL, a request should be made to Alice's *WebID* in order to determine her *OP*. 
+. Retrieve Alice's WebID : If Alice chose to provide her *WebID* URl instead of her *OP*'s URL, a request should be made to Alice's *WebID* in order to determine her *OP*. 
 +
 
 ----
