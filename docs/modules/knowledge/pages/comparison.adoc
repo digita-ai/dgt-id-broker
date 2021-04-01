@@ -70,9 +70,12 @@ Token Endpoint :: The API endpoint which the *Identity Provider* provides to gra
 * `client_id` : The *Client ID* provided, in *SOLID OIDC* this could be a *WebID*.
 * `redirect_uri` : The callback URI that is redirected to after finishing the token request.
 * `code_verifier` : The provided *Code Verifier* is included in the request and generated into a *Code Challenge* with the same *Code Challenge Method* that was provided in the authentication request. If the result of the *Code Challenge* is not equal access is denied.
- 
 
-// TODO: add auth endpoint, token endpoint, pkce, pop, dpop, webid, audience, solid, dynamic registration ...
+
+DPoP :: Demonstration of Proof-of-Possession, a relatively simple application-level mechanism for sender-constraining OAuth access and refresh tokens. It enables a client to demonstrate proof-of-possession of a public/private key pair by including the "DPoP" header in an HTTP request. Using that header, an authorization server is able to bind issued tokens to the public part of the client's key pair.  Recipients of such tokens are then able to verify the binding of the token to the key pair that the client has demonstrated that it holds via the "DPoP" header, thereby providing some assurance that the client presenting the token also possesses the private key.
+
+Dynamic Client Registration :: A mechanism for the *Client* to register and present the *Authorization Server* with a set of metadata, such as a set of valid redirection URIs.
+Traditionally, registration of a client with an *Authorization Server* is performed manually. It can be used either for a *Client* to dynamically register itself with authorization servers or for a client developer to programmatically register the *Client* with authorization servers.
 
 
 == Classic OIDC 
@@ -102,16 +105,15 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 === Example
 
 Imagine Alice wants to use Daily Pictures to let it post a beautiful picture every day to her social feed. 
-Alice's friend Bob is an amazing photographer who also uses Daily Pictures. 
-Bob's photo collection is stored in his personal Solid Data Pod. 
-Bob has previously given consent to Daily Pictures to let Alice use his pictures if she wanted to. 
-Alice would like Daily Pictures to access Bob's photo collection and use his photos. 
+Alice's photo collection is stored in his personal Solid Data Pod. 
+Alice has previously given consent to Daily Pictures to let it use her pictures if it wanted to. 
+Alice would now like Daily Pictures to access her photo collection and her photos. 
 
 ==== Flow
 
 . Alice browses to the *Client* _(Daily Pictures)_ web page.
 +
-. Before the *Client* can start retrieving pictures from Bob's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
+. Before the *Client* can start retrieving pictures from Alice's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
 This *OP* could be hosted at the same domain as Alice's *Solid Data Pod* but does not necessarily have to.
 
 .. Retrieve Alice's WebID : If Alice chose to provide her *WebID* URl instead of her *OP*'s URL, a request should be made to Alice's *WebID* in order to determine her *OP*. 
@@ -562,7 +564,7 @@ CAUTION: Make sure to save this token into a persistent store.
 * *"refresh_token"* : This token will be used to retrieve a new *access token* when the previous one expired.
 * *"scope"* : The scopes that were used. Or in other words, the permissions that were granted to the *Client*.
 
-Finally the *Client* can start making requests to Bob's *Solid Data Pod* to retrieve pictures and post one daily on Alice's social feed.
+Finally the *Client* can start making requests to Alice's *Solid Data Pod* to retrieve pictures and post one daily on her social feed.
 
 // TODO: add sequence diagram here
 
@@ -605,3 +607,6 @@ For Resource Servers ::
 
 https://solid.github.io/authentication-panel/solid-oidc/
 https://solid.github.io/authentication-panel/solid-oidc-primer/
+https://tools.ietf.org/html/draft-ietf-oauth-dpop-01
+https://tools.ietf.org/html/rfc7636
+https://tools.ietf.org/html/rfc7591
