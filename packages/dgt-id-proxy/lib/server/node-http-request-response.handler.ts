@@ -6,13 +6,13 @@ import { NodeHttpStreams } from './node-http-streams.model';
 /**
  * A class that extends NodeHttpStreamsHandler and receives a HttpHandler as
  * a dependency.
- * 
+ *
  * @class
  */
 export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
   /**
    * @constructor
-   * @param {HttpHandler} httpHandler 
+   * @param {HttpHandler} httpHandler
    */
   constructor(private httpHandler: HttpHandler){
     super();
@@ -23,23 +23,23 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    * It then creates a HttpHandlerContext using that request, passes it on to the
    * HttpHandler that was passed in as a dependency. Finally it writes the result to the
    * responseStream.
-   * 
+   *
    * @param {NodeHttpStreams} noteHttpStreams
    * @returns {Observable<void>}
    */
-  handle(noteHttpStreams: NodeHttpStreams): Observable<void> {
-    const httpHandlerRequest: HttpHandlerRequest = noteHttpStreams.requestStream.read();
+  handle(nodeHttpStreams: NodeHttpStreams): Observable<void> {
+    const httpHandlerRequest: HttpHandlerRequest = nodeHttpStreams.requestStream.read();
     const httpHandlerContext: HttpHandlerContext = {
       request: httpHandlerRequest,
       route: undefined,
     };
-    noteHttpStreams.responseStream.write(this.httpHandler.handle(httpHandlerContext));
+    nodeHttpStreams.responseStream.write(this.httpHandler.handle(httpHandlerContext));
     return of();
   }
 
   /**
    * canHandle always returns an Observable of true.
-   * 
+   *
    * @param {NodeHttpStreams} input
    * @returns {Observable<boolean>}
    */

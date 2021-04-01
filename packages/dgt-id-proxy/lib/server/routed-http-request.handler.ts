@@ -32,7 +32,7 @@ export class RoutedHttpRequestHandler extends HttpHandler {
 
     const matchedRequestRoute = this.handlerControllerList
       .flatMap((controller) => controller.routes)
-      .filter(/* filter op path request vs route*/)
+      .filter((route) => route.path === request.path)
       .flatMap((route) => ({
         route,
         methods: route.operations.flatMap((operation) => operation.method),
@@ -43,6 +43,7 @@ export class RoutedHttpRequestHandler extends HttpHandler {
 
     if(matchedRequestRoute){
       const httpHandlerContext: HttpHandlerContext = { request, route: matchedRequestRoute.route };
+      matchedRequestRoute.handler.handle(httpHandlerContext);
     }
     return of();
   }
