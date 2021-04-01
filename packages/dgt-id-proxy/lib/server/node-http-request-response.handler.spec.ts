@@ -3,22 +3,21 @@ import { NodeHttpRequestResponseHandler } from './node-http-request-response.han
 import { NodeHttpStreams } from './node-http-streams.model';
 
 describe('NodeHttpRequestResponseHandler', () => {
-    let handler : NodeHttpRequestResponseHandler;
-    let httpHandler : HttpHandler
-    let streams : NodeHttpStreams
+  let handler: NodeHttpRequestResponseHandler;
+  let httpHandler: HttpHandler;
+  let streams: NodeHttpStreams;
 
-    beforeAll(() => {
-        handler = new NodeHttpRequestResponseHandler(httpHandler);
-    });
+  beforeAll(() => {
+    handler = new NodeHttpRequestResponseHandler(httpHandler);
+  });
 
-    it('should be correctly instantiated', () => {
-        expect(handler).toBeTruthy();
-    });
+  it('should be correctly instantiated', () => {
+    expect(handler).toBeTruthy();
+  });
 
-    it('handle() should return a void Oberservable', () =>{
-        expect(handler.handle(streams))
-    });
+  it('handle() should return a void Oberservable', () =>{
+    expect(handler.handle(streams));
+  });
 
-
-    //WIP
+  // WIP
 });

@@ -7,7 +7,7 @@ describe('MockHttpHandler', () => {
 
   beforeAll(() => {
     handler = new MockHttpHandler();
-    context = { request: { headers: {}, method: '' } };
+    context = { request: { headers: {}, method: '', path: '' } };
   });
 
   it('should be correctly instantiated', () => {

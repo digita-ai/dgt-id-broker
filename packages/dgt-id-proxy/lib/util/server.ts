@@ -1,7 +1,7 @@
 import { Daemon } from './daemon';
 
 /**
- * Abstract class Server extending the abstract Daemon class so it can implement 
+ * Abstract class Server extending the abstract Daemon class so it can implement
  *
  * @class
  */
