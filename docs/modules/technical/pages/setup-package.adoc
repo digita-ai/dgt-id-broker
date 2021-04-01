@@ -92,7 +92,19 @@ Finally, add the package to the `.editor.code-workspace` file in the monorepo's 
 ]
 ----
 
-- Also create an additional `tsconfig.spec.json` configuration extending `tsconfig.json`, which adds `./jest.config.ts` to the `files` list and `**/*.spec.ts` to the `include`, then adds a `type` list containing `node` and `jest`, sets `module` to `commonjs`, `target` to `esnext` and `allowJs` `true`, and sets `sourceMap`, `inlineSourceMap`, `declaration` and `strict` to false.
+- Also create an additional `tsconfig.spec.json` configuration, extending `tsconfig.json`, which has `./jest.config.ts` in the `files` list, `**/*.spec.ts` in the `include` list, and `node_modules` and `dist` in the `exclude` list, containing the following `compilerOptions`:
++
+[source,json]
+----
+"type": ["node", "jest"], 
+"module": "commonjs", 
+"target": "esnext",
+"allowJs": true,
+"sourceMap": false, 
+"inlineSourceMap": false,
+"declaration": false,
+"strict": false
+----
 
 
 === ESLint
