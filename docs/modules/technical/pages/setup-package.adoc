@@ -48,16 +48,14 @@ registry=https://registry.npmjs.org/
 always-auth=true
 ----
 
-Also create the `lib` directory with an empty `lib/public-api.ts`.
+Also create the `lib` directory with an empty `lib/public-api.ts`. In this file, you'll have to re-export everything you want available in your package.
 
 Finally, add the package to the `.editor.code-workspace` file in the monorepo's root.
 
 
 === Typescript
 
-- Install `typescript` 
-// as well as the plugins `ts-node`, `tsc-watch` and `tsconfig-paths`
-as development dependency.
+- Install `typescript`,`ts-node` and `@types/node` as development dependencies.
 
 - Add the following scripts to `package.json`:
 +
@@ -67,7 +65,7 @@ as development dependency.
 "build:ts": "tsc",
 ----
 
-- Create a `tsconfig.json` file setting `compileOnSave` to `false`, with `lib` in the `include` list, `node_modules` and `dist` in the `exclude` list, and containing the following `compilerOptions`:
+- Create a `tsconfig.json` file setting `compileOnSave` to `false`, with `lib` in the `include` list, `node_modules`, `dist`, and `**/*.spec.ts` in the `exclude` list, and containing the following `compilerOptions`:
 +
 [source,json]
 ----
@@ -76,7 +74,7 @@ as development dependency.
 "typeRoots": ["node_modules/@types"],
 "strict": true,
 "sourceMap": true,
-"declaration": false,
+"declaration": true,
 "downlevelIteration": true,
 "experimentalDecorators": true,
 "moduleResolution": "node",
@@ -94,7 +92,7 @@ as development dependency.
 ]
 ----
 
-// - When using a testing library, it can be useful to create an additional `tsconfig.app.json`and `tsconfig.spec.json` configuration that `extends` from `./tsconfig.json`, with a different `outDir` in `compilerOptions`; the first with `lib/index.ts` in the `files` list and `lib/\**/\*.d.ts` in the `include` list; the second with `lib/test.ts` in the `files` list and both `lib/\**/\*.d.ts` and `lib/**/*.spec.ts` in the `include` list.
+- Also create an additional `tsconfig.spec.json` configuration extending `tsconfig.json`, which adds `./jest.config.ts` to the `files` list and `**/*.spec.ts` to the `include`, then adds a `type` list containing `node` and `jest`, sets `module` to `commonjs`, `target` to `esnext` and `allowJs` `true`, and sets `sourceMap`, `inlineSourceMap`, `declaration` and `strict` to false.
 
 
 === ESLint
@@ -139,7 +137,9 @@ globals: {
 
 - Install `componentsjs` as a dependency and `componentsjs-generator` as a development dependency.
 
-- Create an initially empty `config` directory and an equally empty `.componentsignore` file.
+- Create a `.componentsignore` file with an empty list in it.
+
+- Also create an empty `config` directory.
 
 - Add both the `config` directory and the `.componentsignore` file to the `files` list of `package.json`.
 
