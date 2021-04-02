@@ -16,7 +16,7 @@ In this specification we'll set up the package organization of the compliance pr
 Start by following the xref:setup-package.adoc[general package setup], using the package name `dgt-id-proxy`.
 
 
-=== A basic server
+=== A basic server &#10004;&#65039;
 
 _Take any unknown interfaces or classes in the next paragraphs to come from `@digita-ai/handlersjs-http` unless otherwise specified._
 
@@ -26,9 +26,7 @@ Next, in `lib/util`, create an abstract class `Daemon` with nullary `start` and 
 
 Also create a `NodeHttpRequestResponseHandler` extending `NodeHttpStreamsHandler`, taking a `HttpHandler` as dependency. Implement its `handle` method so that the `IncomingMessage` is read entirely into a `HttpHandlerRequest`, wrapped in a `HttpHandlerContext` with an undefined `route` field, and passed through the dependency handler's `handle` method (with no `intermediateResponse`); then write the resulting `HttpHandlerResponse` into the `ServerResponse` stream.
 
-Now create a `RoutedHttpRequestHandler` extending `HttpHandler` and taking a list of `HttpHandlerController` as dependency. Implement its `handle` method so that it checks the `HttpHandlerRequest` of the `HttpHandlerContext`, picks a `HttpHandlerRoute` from one of the `HttpHandlerController` (based on the path, method, etc. of the request), and puts a new `HttpHandlerContext` containing the original `HttpHandlerRequest` plus the `HttpHandlerRoute` itself through the `HttpHandler` specified in it.
-
-When all the above is implemented, quickly prototype one or two mock `HttpHandler`, which accepts everything and simply write some mock output to the response stream. Create a `presets` folder in the `config` directory, containing a `server.json` configuration referring to the `dgt-id-broker`, `handlersjs-core` and `handlersjs-http` contexts. Define a configuration for a `NodeHttpServer` with id `urn:dgt-id-broker:default:NodeHttpServer`, passing it a port number and a `NodeHttpRequestResponseHandler` wrapping a `RoutedHttpRequestHandler`. Give this router some mock routes with the mock handlers. Also create a `default.json` configuration in the `config` directory, importing the `presets/server.json` file.
+When all the above is implemented, quickly prototype a `MockHttpHandler`, which accepts everything and simply writes some mock output to the response stream. Create a `presets` folder in the `config` directory, containing a `server.json` configuration referring to the `dgt-id-broker`, `handlersjs-core` and `handlersjs-http` contexts. Define a configuration for a `NodeHttpServer` with id `urn:dgt-id-broker:default:NodeHttpServer`, passing it a port number and a `NodeHttpRequestResponseHandler` wrapping the `MockHttpHandler`. Also create a `default.json` configuration in the `config` directory, importing the `presets/server.json` file.
 
 Finally, in `lib` itself, create the main `main.ts` module and add `"dgt-id-proxy": "./dist/main.js"` to the `bin` object of `package.json`. Let the module create a new `ComponentsManager` with the package root as `mainModulePath`; then `register` the default config with the manager's `configRegistry`, let the manager `instantiate` the configured server from its URI, and `start` it. Also create an `index.ts`, simply re-exporting everything from the created modules. Keep this index up to date as you create new ones.
 
@@ -37,11 +35,46 @@ Try to build and run the package. If something is not working as expected, first
 If the basic server seems to work, write functional tests for each of the created modules, then run them to check if they indeed do what you'd expect. Also make sure that every aspect of your code is commented thoroughly, so both your partner and others can understand your code without asking you.
 
 
-//=== Adding observables
+=== Adding routing &#10004;&#65039;
+
+Create a `RoutedHttpRequestHandler` extending `HttpHandler` and taking a list of `HttpHandlerController` as dependency. Implement its `handle` method so that it checks the `HttpHandlerRequest` of the `HttpHandlerContext`, picks a `HttpHandlerRoute` from one of the `HttpHandlerController` (based on the path, method etc. of the request), and puts the a new `HttpHandlerContext` containing the original `HttpHandlerRequest` plus the `HttpHandlerRoute` itself through the `HttpHandler` specified in it.
+
+Replace the `MockHttpHandler` in the configuration by a `RoutedHttpRequestHandler`, and give this router a controller with a route to the `MockHttpHandler`.
+
+
+=== The null-operation: passing through
+
+On a new branch, create a `PassThroughHttpRequestHandler` that takes a URL as dependency and performs the request on the URL, then parses the response and returns it.
+
+Try if this works as intended by writing tests. Then add as many routes to the existing configuration as there are OIDC endpoints, and pass all of them through a configuration of the `PassThroughHttpRequestHandler` pointing to a (local or hosted) classic OIDC provider. Perform some OIDC requests on the proxy and check if the response is what we would expect from the proxied provider. Try the same with our Solid-compliant provider.
+
+
+=== Preface: a storage solution
+
+For the next steps, we will need a way to store some data that the proxied OIDC provider might not support itself.
+
+NOTE: This will be analysed separately.
+
+=== Fixing DPoP
+
+Suppose a provider has everything set for Solid-compliance except DPoP. Create a `DpopTokenRequestHandler` that takes another `HttpRequestHandler` as dependency, and watches for a `DPoP` header in the request. It rejects the request if such a header is absent. Otherwise, it performs all the necessary checks and acts accordingly (look back to your notes and the specs). If all is well, the handler creates a DPoP-less request, lets its dependency handler handle it, and then adds and changes all necessary information on the returned response, before returning a valid DPoP response itself.
+
+Note that for some of the checks, such as checking the uniqueness of the `jti`, you will have to keep track of these identifiers. For now, simply store these in memory; we will work out a storage solution later.
+
+For good measure, we might also create a `DpopResourceRequestHandler` implementing the second step of DPoP security: checking the DPoP-bound token and, if valid, passes the request to the dependency handler.
+
+
+=== Fixing PKCE
+
+In the same fashion as the `DpopRequestHandler`, create two handlers adding missing PKCE support: a `PkceAuthRequestHandler` and a `PkceTokenRequestHandler`. 
+
+The first one watches for the `code_challenge` and `code_challenge_method` parameters. It rejects the request if one of these is absent. Otherwise, passes a PKCE-less request through its dependency handler, stores the parameters with the authorization code of the response, and returns the response itself.
+
+The second one watches for the `code_verifier` parameter. It rejects the request if this parameter is absent. Otherwise, it performs the check of the verifier with the stored data and, if valid, passes a PKCE-less request through its dependency handler and returns the response.
 
 
 
 
-//=== Adding routing
+//=== Refactor: adding observables
 
 
