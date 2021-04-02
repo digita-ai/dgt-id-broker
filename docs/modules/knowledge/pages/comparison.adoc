@@ -23,9 +23,9 @@ Authorization Server (AS) :: A system implementing the authoritative part of an 
 
 Identity Provider (IdP) :: A system implementing the authoritative part of an _authentication_ framework (in casu *OpenID Connect*).
 
-Claim :: An authoritative piece of information the *Identity Provider* can provide about the *End-User*.
+Claim :: An authoratitive piece of information the *Identity Provider* can provide about the *End-User*.
 
-Client | Relying Party (RP) :: An application relying on the authoritative *Claims* in order to access data or perform actions on behalf of the *End-User*.
+Client | Relying Party (RP) :: An application relying on the authoratitive *Claims* in order to access data or perform actions on behalf of the *End-User*.
 
 Client ID :: An identifier used to register the *Client* with the *Identity Provider*.
 
@@ -96,7 +96,6 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 . The *Authorization server* verifies this data and responds with an *Access Token* along side an *ID Token*.
 . The *Client* can now use these tokens to send requests to the *Resource Server* in order to post pictures daily on Alice's social feed.
 
-
 // TODO: add a sequence diagram 
 
 
@@ -104,15 +103,16 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 
 === Example
 
-Imagine Alice wants to use Daily Pictures to let it post a beautiful picture every day to her social feed. 
 Alice's photo collection is stored in his personal Solid Data Pod. 
 Alice has previously given consent to Daily Pictures to let it use her pictures if it wanted to. 
 Alice would now like Daily Pictures to access her photo collection and her photos. 
+
 
 ==== Flow
 
 . Alice browses to the *Client* _(Daily Pictures)_ web page.
 +
+
 . Before the *Client* can start retrieving pictures from Alice's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
 This *OP* could be hosted at the same domain as Alice's *Solid Data Pod* but does not necessarily have to.
 
@@ -149,6 +149,7 @@ The *OP*'s URL we are looking for is located here: me -> solid:oidcIssuer
 
 +
 //Ephemeral Clients MAY use the identifier http://www.w3.org/ns/solid/terms#PublicOidcClient. If the Client uses this identifier then the IdP MAY accept any redirect_uri as valid. Since it is public, the Client is effectively anonymous to the RS. ADD THIS? BUT REWRITE FIRST
+
 
 . Now that we have Alice's *OP*'s URL, the *Client* must retrieve the *OP*'s configuration.
 This configuration describes everything the *Client* needs to know to authorize Alice's specific *OP*.
@@ -564,9 +565,12 @@ CAUTION: Make sure to save this token into a persistent store.
 * *"refresh_token"* : This token will be used to retrieve a new *access token* when the previous one expired.
 * *"scope"* : The scopes that were used. Or in other words, the permissions that were granted to the *Client*.
 
+
 Finally the *Client* can start making requests to Alice's *Solid Data Pod* to retrieve pictures and post one daily on her social feed.
 
 // TODO: add sequence diagram here
+
+
 
 == Summary
 
@@ -601,6 +605,7 @@ For Resource Servers ::
 
 * A Resource Server must inform the Client that a DPoP-bound Access Token is required upon request of a non-public resource.
 * A Resource Server must get the public key from an IdP and use it to validate the signature on the DPoP-bound Access Token that was sent by the client upon every request.
+
 
 
 == Sources 
