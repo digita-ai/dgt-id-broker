@@ -45,6 +45,38 @@ Access Token :: A JSON Web Token (JWT) the *Client* obtains from an *Authorizati
 
 ID Token :: A JWT the *Client* obtains from an *Identity Provider*, containing *Claims* that prove the identity of the *End-User*.
 
+WebID :: A *WebID* is an HTTP URI which refers to an Agent (Person, Organization, Group, Device, etc.) as defined in the link:https://dvcs.w3.org/hg/WebID/raw-file/tip/spec/identity-respec.html#introduction[WebID 1.0 specification].
+
+*PKCE* :: Short for Proof Key for Code Exchange, is a key for preventing malicious attacks and securely performing code authorization flow. It is used to add an additional security layer to the authorization flow in *OpenID Connect*.
+*PKCE* is used by the *Client* to replace the static secret used in the authorization flow to prevent Man-In-The-Middle attacks. The *PKCE* process works with two parameters. The *Code Verifier* and the *Code Challenge*.
+
+Code Verifier ::  A cryptographically random string, used in the *PKCE* process, that is used to link the authorization request to the token request. It should have a minimum length of 43 characters and a maximum length of 128 to make it impractical enough to guess the value. 
+
+Code Challenge ::  A challenge, used in the *PKCE* process, that is generated from the *Code Verifier* which is sent in the authorization request, to be verified against later. The given *Code Challenge* parameter is compared to the *Code Challenge* that was generated from base64URL encoding a SHA256 hashed *Code Verifier*. 
+
+Code Challenge Method :: The method that was used to generate *Code Challenge*. _(e.g. SHA256)_
+
+Authentication Endpoint :: The API endpoint which the *Identity Provider* provides to authenticate users. A request is sent to this endpoint with the correct credentials to authenticate the user with the following parameters: 
+* `response_type` : The type of response the *Client* accepts on an authentication request.
+* `code_challenge` : The *Code Challenge* generated in the *PKCE* process.
+* `code_challenge_method` : The method used to generate the *Code Challenge*.
+* `scope` : The scope the *Client* has access to. `openid` is a scope that is needed to verify Alice’s identity. `profile` is required by the *Solid OIDC* specification to denote a *WebID* login. `offline_access` is required to get a refresh token.
+* `client_id` : An identifier used to register the *Client* with the *Identity Provider*. In *SOLID OIDC* this is usually the a *WebID*.
+* `redirect_uri`: The callback URI that is redirected to after finishing the authentication request.
+
+Token Endpoint :: The API endpoint which the *Identity Provider* provides to grant an access tokens to users that were successfully authenticated. A request is sent to this endpoint with the following parameters: 
+* `grant_type` :  Grant types are methods through which the *Client* can gain *Access Tokens* and by which you grant limited access to your resources to another entity without exposing credentials.
+* `code` : Upon successfully registering a *Client* the *Identity Provider* will return a code as an URL parameter string. This code will be used to request an access token.
+* `client_id` : The *Client ID* provided, in *SOLID OIDC* this could be a *WebID*.
+* `redirect_uri` : The callback URI that is redirected to after finishing the token request.
+* `code_verifier` : The provided *Code Verifier* is included in the request and generated into a *Code Challenge* with the same *Code Challenge Method* that was provided in the authentication request. If the result of the *Code Challenge* is not equal access is denied.
+
+
+DPoP :: Demonstration of Proof-of-Possession, a relatively simple application-level mechanism for sender-constraining OAuth access and refresh tokens. It enables a client to demonstrate proof-of-possession of a public/private key pair by including the "DPoP" header in an HTTP request. Using that header, an authorization server is able to bind issued tokens to the public part of the client's key pair.  Recipients of such tokens are then able to verify the binding of the token to the key pair that the client has demonstrated that it holds via the "DPoP" header, thereby providing some assurance that the client presenting the token also possesses the private key.
+
+Dynamic Client Registration :: A mechanism for the *Client* to register and present the *Authorization Server* with a set of metadata, such as a set of valid redirection URIs.
+Traditionally, registration of a client with an *Authorization Server* is performed manually. It can be used either for a *Client* to dynamically register itself with authorization servers or for a client developer to programmatically register the *Client* with authorization servers.
+
 
 == Classic OIDC 
 
@@ -63,28 +95,28 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 . The *Client* directly contacts the *Authorization Server* and securely sends it's *Client ID*, *Client secret* and the *Authorization code*.
 . The *Authorization server* verifies this data and responds with an *Access Token* along side an *ID Token*.
 . The *Client* can now use these tokens to send requests to the *Resource Server* in order to post pictures daily on Alice's social feed.
-+
 
-//add a sequence diagram here 
+// TODO: add a sequence diagram 
+
 
 == Solid OIDC
 
 === Example
 
-Imagine Alice wants to use Daily Pictures to let it post a beautiful picture every day to her social feed. 
-Alice's friend Bob is an amazing photographer who also uses Daily Pictures. 
-Bob's photo collection is stored in his personal Solid Data Pod. 
-Bob has previously given consent to Daily Pictures to let Alice use his pictures if she wanted to. 
-Alice would like Daily Pictures to access Bob's photo collection and use his photos. 
+Alice's photo collection is stored in his personal Solid Data Pod. 
+Alice has previously given consent to Daily Pictures to let it use her pictures if it wanted to. 
+Alice would now like Daily Pictures to access her photo collection and her photos. 
+
 
 ==== Flow
 
 . Alice browses to the *Client* _(Daily Pictures)_ web page.
 +
-. Before the *Client* can start retrieving pictures from Bob's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
+
+. Before the *Client* can start retrieving pictures from Alice's *Solid Data Pod* Alice needs to give her *Consent* to allow the *Client* to post pictures on her behalf. To do so she provides either her *WebID* or the URL of her *OP*. 
 This *OP* could be hosted at the same domain as Alice's *Solid Data Pod* but does not necessarily have to.
 
-.. Retrieve Alice's WebID : If Alice chose to provide her *WebID* URl instead of her *OP*'s URL, a request should be made to Alice's *WebID* in order to determine her *OP*. 
+. Retrieve Alice's WebID : If Alice chose to provide her *WebID* URl instead of her *OP*'s URL, a request should be made to Alice's *WebID* in order to determine her *OP*. 
 +
 
 ----
@@ -117,7 +149,6 @@ The *OP*'s URL we are looking for is located here: me -> solid:oidcIssuer
 
 +
 //Ephemeral Clients MAY use the identifier http://www.w3.org/ns/solid/terms#PublicOidcClient. If the Client uses this identifier then the IdP MAY accept any redirect_uri as valid. Since it is public, the Client is effectively anonymous to the RS. ADD THIS? BUT REWRITE FIRST
-
 
 
 . Now that we have Alice's *OP*'s URL, the *Client* must retrieve the *OP*'s configuration.
@@ -534,9 +565,12 @@ CAUTION: Make sure to save this token into a persistent store.
 * *"refresh_token"* : This token will be used to retrieve a new *access token* when the previous one expired.
 * *"scope"* : The scopes that were used. Or in other words, the permissions that were granted to the *Client*.
 
-Finally the *Client* can start making requests to Bob's *Solid Data Pod* to retrieve pictures and post one daily on Alice's social feed.
 
-//add sequence diagram here
+Finally the *Client* can start making requests to Alice's *Solid Data Pod* to retrieve pictures and post one daily on her social feed.
+
+// TODO: add sequence diagram here
+
+
 
 == Summary
 
@@ -572,7 +606,12 @@ For Resource Servers ::
 * A Resource Server must inform the Client that a DPoP-bound Access Token is required upon request of a non-public resource.
 * A Resource Server must get the public key from an IdP and use it to validate the signature on the DPoP-bound Access Token that was sent by the client upon every request.
 
-== Sources: 
+
+
+== Sources 
 
 https://solid.github.io/authentication-panel/solid-oidc/
 https://solid.github.io/authentication-panel/solid-oidc-primer/
+https://tools.ietf.org/html/draft-ietf-oauth-dpop-01
+https://tools.ietf.org/html/rfc7636
+https://tools.ietf.org/html/rfc7591

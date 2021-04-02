@@ -48,14 +48,14 @@ registry=https://registry.npmjs.org/
 always-auth=true
 ----
 
-Also create the `lib` directory with an empty `lib/public-api.ts`.
+Also create the `lib` directory with an empty `lib/public-api.ts`. In this file, you'll have to re-export everything you want available in your package.
+
+Finally, add the package to the `.editor.code-workspace` file in the monorepo's root.
 
 
 === Typescript
 
-- Install `typescript` 
-// as well as the plugins `ts-node`, `tsc-watch` and `tsconfig-paths`
-as development dependency.
+- Install `typescript`,`ts-node` and `@types/node` as development dependencies.
 
 - Add the following scripts to `package.json`:
 +
@@ -65,7 +65,7 @@ as development dependency.
 "build:ts": "tsc",
 ----
 
-- Create a `tsconfig.json` file setting `compileOnSave` to `false`, with `lib` in the `include` list, `node_modules` and `dist` in the `exclude` list, and containing the following `compilerOptions`:
+- Create a `tsconfig.json` file setting `compileOnSave` to `false`, with `lib` in the `include` list, `node_modules`, `dist`, and `**/*.spec.ts` in the `exclude` list, and containing the following `compilerOptions`:
 +
 [source,json]
 ----
@@ -74,7 +74,7 @@ as development dependency.
 "typeRoots": ["node_modules/@types"],
 "strict": true,
 "sourceMap": true,
-"declaration": false,
+"declaration": true,
 "downlevelIteration": true,
 "experimentalDecorators": true,
 "moduleResolution": "node",
@@ -83,15 +83,35 @@ as development dependency.
 "noImplicitReturns": true,
 "noFallthroughCasesInSwitch": true,
 "forceConsistentCasingInFileNames": true,
-"target": "es2020",
-"module": "es2020",
+"target": "es2015",   // set this to a well-supported ES version for client packages, or the latest ES version for Node packages
+"module": "commonjs", // set this to the same ES version as target for client packages, or "commonjs" for Node packages
 "lib": [
-  "es2018",
-  "dom"
+  "es2020",    // set this to the latest ES version, but not "esnext"
+  "webworker", // remove for Node packages
+  "dom"        // remove for Node packages
 ]
 ----
 
-// - When using a testing library, it can be useful to create an additional `tsconfig.app.json`and `tsconfig.spec.json` configuration that `extends` from `./tsconfig.json`, with a different `outDir` in `compilerOptions`; the first with `lib/index.ts` in the `files` list and `lib/\**/\*.d.ts` in the `include` list; the second with `lib/test.ts` in the `files` list and both `lib/\**/\*.d.ts` and `lib/**/*.spec.ts` in the `include` list.
+- Also create an additional `tsconfig.spec.json` configuration, extending `tsconfig.json`, which has `./jest.config.ts` in the `files` list, `**/*.spec.ts` in the `include` list, and `node_modules` and `dist` in the `exclude` list, containing the following `compilerOptions`:
++
+[source,json]
+----
+"type": ["node", "jest"], 
+"module": "commonjs", 
+"target": "esnext",
+"allowJs": true,
+"sourceMap": false, 
+"inlineSourceMap": false,
+"declaration": false,
+"strict": false
+----
+
+
+=== ESLint
+
+In the `package.json`, add an `eslintConfig` object with an `extends` list that contains `../../.eslintrc.json`.
+
+Also add the scripts `"lint": "eslint ."` and `"lint:fix": "eslint --fix ."`.
 
 
 === Jest
@@ -106,6 +126,7 @@ testTimeout: 300000,
 verbose: true,
 preset: 'ts-jest',
 testEnvironment: 'node',
+rootDir: 'lib',
 globals: {
   'ts-jest': {
     babelConfig: true,
@@ -128,7 +149,9 @@ globals: {
 
 - Install `componentsjs` as a dependency and `componentsjs-generator` as a development dependency.
 
-- Create an initially empty `config` directory and an equally empty `.componentsignore` file.
+- Create a `.componentsignore` file with an empty list in it.
+
+- Also create an empty `config` directory.
 
 - Add both the `config` directory and the `.componentsignore` file to the `files` list of `package.json`.
 
