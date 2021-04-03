@@ -35,6 +35,8 @@ Initialize a Node.js project with the following `package.json` settings:
 
 - a `repository` information object with `type` set to `git`, containing the SSH `url` of the monorepo of which this package is part, and the `directory` of this package relative to the root.
 
+- a 'start' script relevant for the package (e.g. `node ./dist/main.js` for an application run with Node)
+
 Install `rimraf` as a first development dependency. 
 
 Create a `.npmrc` file with the following content:
@@ -55,7 +57,7 @@ Finally, add the package to the `.editor.code-workspace` file in the monorepo's 
 
 === Typescript
 
-- Install `typescript`,`ts-node` and `@types/node` as development dependencies.
+- Install `typescript`, `tslib`, `ts-node` and `@types/node` as development dependencies.
 
 - Add the following scripts to `package.json`:
 +
@@ -92,7 +94,19 @@ Finally, add the package to the `.editor.code-workspace` file in the monorepo's 
 ]
 ----
 
-- Also create an additional `tsconfig.spec.json` configuration, extending `tsconfig.json`, which has `./jest.config.ts` in the `files` list, `**/*.spec.ts` in the `include` list, and `node_modules` and `dist` in the `exclude` list, containing the following `compilerOptions`:
+
+=== ESLint
+
+In the `package.json`, add an `eslintConfig` object with an `extends` list that contains `../../.eslintrc.json`, and an `ignorePatterns` list that contains `coverage`.
+
+Also add the scripts `"lint": "eslint ."` and `"lint:fix": "eslint --fix ."`.
+
+
+=== Jest
+
+- Install `jest`, `ts-jest` and `@types/jest` as development dependencies.
+
+- Create an additional `tsconfig.spec.json` configuration, extending `tsconfig.json`, which has `./jest.config.ts` in the `files` list, `**/*.spec.ts` in the `include` list, and `node_modules` and `dist` in the `exclude` list, containing the following `compilerOptions`:
 +
 [source,json]
 ----
@@ -106,19 +120,7 @@ Finally, add the package to the `.editor.code-workspace` file in the monorepo's 
 "strict": false
 ----
 
-
-=== ESLint
-
-In the `package.json`, add an `eslintConfig` object with an `extends` list that contains `../../.eslintrc.json`.
-
-Also add the scripts `"lint": "eslint ."` and `"lint:fix": "eslint --fix ."`.
-
-
-=== Jest
-
--  Install `jest`, `ts-jest` and `@types/jest` as development dependencies.
-
-- Create a `jest.config.ts` module file importing the `Config` type from `@jest/types`, and exporting as a default a `Config.InitialOptions` object containing the following options: 
+- Then create a `jest.config.ts` module file importing the `Config` type from `@jest/types`, and exporting as a default a `Config.InitialOptions` object containing the following options: 
 +
 [source,javascript]
 ----
@@ -129,11 +131,11 @@ testEnvironment: 'node',
 rootDir: 'lib',
 globals: {
   'ts-jest': {
-    babelConfig: true,
-    tsconfig: 'tsconfig.json',
+    tsconfig: 'tsconfig.spec.json',
   },
 }
 ----
+
 
 - Add the following scripts to `package.json`:
 +
