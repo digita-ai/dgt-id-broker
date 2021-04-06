@@ -5,52 +5,50 @@ import { NodeHttpStreams } from './node-http-streams.model';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 
 /**
- * NodeHttpServer class that extends the Server class. The Server class is our own.
- *
- * @class
+ * A {Server} implemented with [Node.js HTTP]{@link https://nodejs.org/api/http.html}, handling requests through a {NodeHttpStreamsHandler}.
  */
 export class NodeHttpServer extends Server {
 
   private server;
 
   /**
-   * The constructor takes two dependencies. In the constructor we initialise a Server from the
-   * Node http package.
+   * Creates a {NodeHttpServer} listening on `http://``host``:``port`, passing requests through the given {NodeHttpStreamsHandler}.
    *
-   * @param {NodeHttpStreamsHandler} nodeHttpStreamsHandler
-   * @param {number} port
-   * @param {string} host
+   * @param {string} host- the host name on which to listen
+   * @param {number} port - the port number on which to listen
+   * @param {NodeHttpStreamsHandler} nodeHttpStreamsHandler - the handler handling incoming requests
    * @constructor
    */
-  constructor(private nodeHttpStreamsHandler: NodeHttpStreamsHandler, protected port: number, protected host: string){
-    super(port, host);
+  constructor(protected host: string, protected port: number, private nodeHttpStreamsHandler: NodeHttpStreamsHandler){
+    super(`http`, host, port);
     this.server = createServer((req, res) => this.serverHelper(req, res));
   }
 
   /**
-   * start simply tells the server to start listening on the port provided in the constructor.
+   * @override
+   * {@inheritDoc Server.start}
    */
   start(){
     this.server.listen(this.port, this.host);
   }
 
   /**
-   * stop closes the server.
+   * @override
+   * {@inheritDoc Server.start}
    */
   stop(){
     this.server.close();
   }
 
   /**
-   * serverHelper is a helper function that provides a callback through which the Node http server
-   * can send requests. serverHelper transforms the IncomingMessage and ServerResponse object into
-   * the type we need which is NodeHttpStreams and passes it on to the handler that was given to this
-   * class as a dependency.
+   * Helper function that provides a callback through which the Node.js HTTP server
+   * can send requests. It combines the IncomingMessage and ServerResponse into
+   * a NodeHttpStreams and passes it through the handler.
    *
-   * @param {IncomingMessage} req
-   * @param {ServerResponse} res
+   * @param {IncomingMessage} req - the Node.js HTTP callback's request stream
+   * @param {ServerResponse} res - the Node.js HTTP callback's response stream
    */
-  serverHelper(req: IncomingMessage, res: ServerResponse): void{
+  serverHelper(req: IncomingMessage, res: ServerResponse): void {
     const nodeHttpStreams: NodeHttpStreams = {
       requestStream: req,
       responseStream: res,
@@ -59,4 +57,3 @@ export class NodeHttpServer extends Server {
   }
 
 }
-

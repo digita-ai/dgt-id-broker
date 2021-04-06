@@ -1,42 +1,38 @@
 import { HttpHandler, HttpHandlerRequest, HttpHandlerResponse, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
-import { map }from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
 /**
- * A class that extends NodeHttpStreamsHandler and receives a HttpHandler as
- * a dependency.
- *
- * @class
+ * A {NodeHttpStreamsHandler} reading the request stream into a {HttpHandlerRequest}, passing it through a {HttpHandler} and writing the resulting {HttpHandlerResponse} to the response stream.
  */
 export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
   /**
-   * @constructor
-   * @param {HttpHandler} httpHandler
+   * Creates a {NodeHttpRequestResponseHandler} passing requests through the given handler.
+   * @param {HttpHandler} httpHandler - the handler through which to pass incoming requests.
    */
   constructor(private httpHandler: HttpHandler){
     super();
   }
 
   /**
-   * handle reads the requestStream of its NodeHttpStream and saves it as a HttpHandlerRequest.
-   * It then creates a HttpHandlerContext using that request, passes it on to the
-   * HttpHandler that was passed in as a dependency. Finally it writes the result to the
-   * responseStream.
+   * Reads the requestStream of its NodeHttpStreams pair into a HttpHandlerRequest,  
+   * creates a HttpHandlerContext from it, passes it through the {HttpHandler},
+   * and writes the result to the responseStream.
    *
-   * @param {NodeHttpStreams} noteHttpStreams
-   * @returns {Observable<void>}
+   * @param {NodeHttpStreams} noteHttpStreams - the incoming set of Node.js HTTP read and write streams
+   * @returns an {Observable<void>} for completion detection
    */
   handle(nodeHttpStreams: NodeHttpStreams): Observable<void> {
     let httpHandlerRequest: HttpHandlerRequest;
     if (!nodeHttpStreams.requestStream.url){
       return throwError('url of the request cannot be null or undefined.');
-    }else if (!nodeHttpStreams.requestStream.method){
+    } else if (!nodeHttpStreams.requestStream.method) {
       return throwError('method of the request cannot be null or undefined.');
-    }else if (!nodeHttpStreams.requestStream.headers){
+    } else if (!nodeHttpStreams.requestStream.headers) {
       return throwError('headers of the request cannot be null or undefined.');
-    }else {
+    } else {
       httpHandlerRequest = {
         path: nodeHttpStreams.requestStream.url,
         method: nodeHttpStreams.requestStream.method,
@@ -45,7 +41,6 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
     }
     const httpHandlerContext: HttpHandlerContext = {
       request: httpHandlerRequest,
-      route: undefined,
     };
 
     return this.httpHandler.handle(httpHandlerContext).pipe(
@@ -59,10 +54,10 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
   }
 
   /**
-   * canHandle always returns an Observable of true.
+   * Indicates this handler accepts every NodeHttpStreams pair as input.
    *
-   * @param {NodeHttpStreams} input
-   * @returns {Observable<boolean>}
+   * @param {NodeHttpStreams} input - the incoming streams
+   * @returns always `of(true)`
    */
   canHandle(input: NodeHttpStreams): Observable<boolean> {
     return of(true);

@@ -3,18 +3,20 @@ import { of, throwError } from 'rxjs';
 
 /**
  * A mock of an HttpHandler used for tests
- *
- * @class
  */
 export class MockHttpHandler extends HttpHandler {
 
   /**
-   * handle returns a type Observable<HttpHandlerResponse>. This HttpHandlerResponse always
-   * has a body of 'some mock output', empty headers and status 200.
+   * Returns a mock response: ```
+   * {
+   *    body: 'some mock output',
+   *    headers: {},
+   *    status: 200,
+   * }
+   * ```
    *
-   * @function
-   * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
-   * @returns {Observable<HttpHandlerResponse>}
+   * @param {HttpHandlerContext} context - an irrelevant incoming context
+   * @returns {Observable<HttpHandlerResponse>} - the mock response
    */
   handle(context: HttpHandlerContext){
     if (!context){
@@ -30,11 +32,10 @@ export class MockHttpHandler extends HttpHandler {
   }
 
   /**
-   * canHandle returns a type Observable<Boolean>. This always returns an Observable of true.
+   * Indicates this handler accepts any input.
    *
-   * @function
-   * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
-   * @returns {Observable<Boolean>}
+   * @param {HttpHandlerContext} context - the irrelevant incoming context
+   * @returns always `of(true)`
    */
   canHandle(context: HttpHandlerContext){
     if (!context){
@@ -44,4 +45,3 @@ export class MockHttpHandler extends HttpHandler {
     return of(true);
   }
 }
-

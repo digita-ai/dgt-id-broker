@@ -1,10 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 
 /**
- * An interface for classes representing NodeHttpStreams
- * and describing a requestStream and  responseStream
- *
- * @interface
+ * A pair consisting of the IncomingMessage request steam and the ServerResponse response stream of the Node.js native HTTP library.
  */
 export interface NodeHttpStreams {
   requestStream: IncomingMessage;

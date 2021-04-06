@@ -1,21 +1,19 @@
 import { Daemon } from './daemon';
 
 /**
- * Abstract class Server extending the abstract Daemon class so it can implement
+ * A {Daemon} process listening on a given `scheme``://``host``:``port` location
  *
- * @class
  */
 export abstract class Server extends Daemon {
 
   /**
-   * Creates a new Server and super calls the Daemon cls
-   * as
+   * Creates a new {Server} that will listen on specified `scheme``://``host``:``port`.
    *
-   * @constructor
-   * @param port - the port the server needs to run on
-   * @param host - the host or ip the server needs to run on
+   * @param {string} scheme - the url scheme of the location on which the server will listen
+   * @param {string} host - the host name of the location on which the server will listen
+   * @param {number} port - the port number of the location on which the server will listen
    */
-  constructor (protected port: number, protected host: string){
+  constructor (protected scheme: string, protected host: string, protected port: number){
     super();
   }
 

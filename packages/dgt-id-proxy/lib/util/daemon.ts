@@ -1,7 +1,5 @@
 /**
- * Abstract Daemon class with start & stop methods
- *
- * @class
+ * This class represents typically long-running daemon processes that can be started and stopped.
  */
 export abstract class Daemon {
 

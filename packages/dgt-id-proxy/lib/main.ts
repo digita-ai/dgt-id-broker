@@ -3,10 +3,9 @@ import { ComponentsManager } from 'componentsjs';
 import { NodeHttpServer } from './server/node-http-server';
 
 /**
- * start tells componentsjs to build our application and setup all the dependencies.
- * It then instantiates our server and starts it.
+ * Instantiates a server from the passed configuration and starts it.
  *
- * @param {Record<string, any>} variables
+ * @param {Record<string, any>} variables - a record of values for the variables left open in the configuration.
  */
 export const start: (variables: Record<string, any>) => Promise<void> = async (variables: Record<string, any>) => {
   const mainModulePath = variables['urn:dgt-id-proxy:variables:mainModulePath']
@@ -24,8 +23,8 @@ export const start: (variables: Record<string, any>) => Promise<void> = async (v
 
   await manager.configRegistry.register(configPath);
 
-  const launch: NodeHttpServer = await manager.instantiate('urn:dgt-id-proxy:default:NodeHttpServer', { variables });
-  launch.start();
+  const server: NodeHttpServer = await manager.instantiate('urn:dgt-id-proxy:default:NodeHttpServer', { variables });
+  server.start();
   // eslint-disable-next-line no-console
   console.log('starting server');
 };

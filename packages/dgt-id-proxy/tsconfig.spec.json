@@ -3,9 +3,10 @@
     "compilerOptions": {
       "module": "commonjs",
       "declaration": false,
+      "sourceMap": false,
       "inlineSources": false,
       "strict": false,
-      "target": "es5",
+      "target": "es2020",
       "types": ["jest", "node"],
       "allowJs": true,
     },

@@ -4,8 +4,6 @@ import { NodeHttpStreams } from './node-http-streams.model';
 /**
  * Abstract class NodeHttpStreamsHandler extending a Handler of type NodeHttpStreams.
  * Used to lock the type of the handler to NodeHttpStreams.
- *
- * @class
  */
 export abstract class NodeHttpStreamsHandler extends Handler<NodeHttpStreams> {
 

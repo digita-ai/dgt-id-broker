@@ -5,8 +5,7 @@ import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
 /**
- * RoutedHttpRequestHandler extending the HttpHandler class
- *
+ * A {HttpHandler} handling requests based on routes in a given list of {HttpHandlerController}s.
  * @class
  */
 export class RoutedHttpRequestHandler extends HttpHandler {
@@ -14,7 +13,6 @@ export class RoutedHttpRequestHandler extends HttpHandler {
   /**
    * Creates a RoutedHttpRequestHandler, super calls the HttpHandler class and expects a list of HttpHandlerControllers
    *
-   * @constructor
    * @param {HttpHandlerController[]} handlerControllerList - a list of HttpHandlerController objects
    */
   constructor(private handlerControllerList: HttpHandlerController[]) {
@@ -22,9 +20,8 @@ export class RoutedHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * handle returns a type Observable<HttpHandlerResponse>
+   * Passes the {HttpHandlerContext} to the handler of the {HttpHandlerRoute} mathing the request's path.
    *
-   * @function
    * @param {HttpHandlerContext} input - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */
   handle(input: HttpHandlerContext): Observable<HttpHandlerResponse> {
@@ -38,10 +35,10 @@ export class RoutedHttpRequestHandler extends HttpHandler {
         methods: route.operations.flatMap((operation) => operation.method),
         handler: route.handler,
       }))
-      .filter(({ route, methods, handler }) => methods.includes(request.method))
+      .filter(({ methods }) => methods.includes(request.method))
       .pop();
 
-    if(matchedRequestRoute) {
+    if (matchedRequestRoute) {
       const httpHandlerContext: HttpHandlerContext = { request, route: matchedRequestRoute.route };
       return matchedRequestRoute.handler.handle(httpHandlerContext);
     } else {
@@ -51,13 +48,12 @@ export class RoutedHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * canHandle returns a type Observable<Boolean>. This Boolean is always true.
+   * Indicates that this handler can handle every `HttpHandlerContext `.
    *
-   * @function
-   * @param {HttpHandlerContext} input - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
+   * @returns always `of(true)`
+   * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
     return of(true);
   }
 }
-

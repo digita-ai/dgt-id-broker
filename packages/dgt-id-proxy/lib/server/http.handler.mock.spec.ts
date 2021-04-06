@@ -5,7 +5,7 @@ describe('MockHttpHandler', () => {
   let handler: MockHttpHandler;
   let context: HttpHandlerContext;
 
-  beforeAll(() => {
+  beforeEach(() => {
     handler = new MockHttpHandler();
     context = { request: { headers: {}, method: '', path: '' } };
   });
