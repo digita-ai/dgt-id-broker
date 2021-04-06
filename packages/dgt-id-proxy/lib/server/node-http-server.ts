@@ -30,6 +30,8 @@ export class NodeHttpServer extends Server {
    */
   start(){
     this.server.listen(this.port, this.host);
+    // eslint-disable-next-line no-console
+    console.log('starting server');
   }
 
   /**

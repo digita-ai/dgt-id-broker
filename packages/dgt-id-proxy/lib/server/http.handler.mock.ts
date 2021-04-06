@@ -9,9 +9,9 @@ export class MockHttpHandler extends HttpHandler {
   /**
    * Returns a mock response: ```
    * {
-   *    body: 'some mock output',
-   *    headers: {},
-   *    status: 200,
+   * body: 'some mock output',
+   * headers: {},
+   * status: 200,
    * }
    * ```
    *

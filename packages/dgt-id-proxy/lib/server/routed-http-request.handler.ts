@@ -6,6 +6,7 @@ import { NodeHttpStreams } from './node-http-streams.model';
 
 /**
  * A {HttpHandler} handling requests based on routes in a given list of {HttpHandlerController}s.
+ *
  * @class
  */
 export class RoutedHttpRequestHandler extends HttpHandler {
@@ -38,13 +39,7 @@ export class RoutedHttpRequestHandler extends HttpHandler {
       .filter(({ methods }) => methods.includes(request.method))
       .pop();
 
-    if (matchedRequestRoute) {
-      const httpHandlerContext: HttpHandlerContext = { request, route: matchedRequestRoute.route };
-      return matchedRequestRoute.handler.handle(httpHandlerContext);
-    } else {
-      const httpHandlerResponse: HttpHandlerResponse = { body: '', headers: {}, status: 404 };
-      return of(httpHandlerResponse);
-    }
+    return matchedRequestRoute ? matchedRequestRoute.handler.handle({ request, route: matchedRequestRoute.route }) : of({ body: '', headers: {}, status: 404 });
   }
 
   /**

@@ -22,9 +22,14 @@ describe('NodeHttpRequestResponseHandler', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('nestHttpHandler.handle() should be called', () => {
-    handler.handle(streamMock);
-    expect(nestedHttpHandler.handle).toHaveBeenCalledTimes(1);
+  describe('handle()', () => {
+
+    describe('nestHttpHandler.handle()', () => {
+      it('nestHttpHandler.handle() should be called', () => {
+        handler.handle(streamMock);
+        expect(nestedHttpHandler.handle).toHaveBeenCalledTimes(1);
+      });
+    });
   });
 
   describe('canHandle', () => {
