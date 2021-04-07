@@ -22,7 +22,7 @@ export class NodeHttpServer extends Server {
    */
   constructor(protected host: string, protected port: number, private nodeHttpStreamsHandler: NodeHttpStreamsHandler){
     super(`http`, host, port);
-    this.server = createServer((req, res) => this.serverHelper(req, res));
+    this.server = createServer(this.serverHelper.bind(this));
   }
 
   /**
@@ -32,7 +32,7 @@ export class NodeHttpServer extends Server {
   start(){
     this.server.listen(this.port, this.host);
     // eslint-disable-next-line no-console
-    console.log('starting server');
+    console.log('server started');
     return of(this.server);
   }
 

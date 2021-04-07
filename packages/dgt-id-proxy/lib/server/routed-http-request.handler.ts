@@ -20,6 +20,11 @@ export class RoutedHttpRequestHandler extends HttpHandler {
    */
   constructor(private handlerControllerList: HttpHandlerController[]) {
     super();
+
+    if(!handlerControllerList){
+      throw new Error('handlerControllerList must be defined.');
+    }
+
     this.pathToRouteMap = new Map(
       this.handlerControllerList
         .flatMap((controller) => controller.routes)
@@ -33,6 +38,12 @@ export class RoutedHttpRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} input - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */
   handle(input: HttpHandlerContext): Observable<HttpHandlerResponse> {
+    if (!input) {
+      return throwError(new Error('input must be defined.'));
+    }
+    if (!input.request) {
+      return throwError(new Error('input.request must be defined.'));
+    }
     const request = input.request;
 
     const matchingRoute = this.pathToRouteMap.get(request.path);
@@ -49,6 +60,6 @@ export class RoutedHttpRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
-    return of(true);
+    return context && context.request ? of(true) : of(false);
   }
 }
