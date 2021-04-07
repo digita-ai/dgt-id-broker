@@ -55,7 +55,7 @@ export class NodeHttpServer extends Server {
       requestStream: req,
       responseStream: res,
     };
-    this.nodeHttpStreamsHandler.handle(nodeHttpStreams).subscribe();
+    this.nodeHttpStreamsHandler.handle(nodeHttpStreams);
   }
 
 }
