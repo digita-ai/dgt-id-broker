@@ -15,6 +15,10 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    */
   constructor(private httpHandler: HttpHandler){
     super();
+
+    if(!httpHandler){
+      throw new Error('A HttpHandler object must be provided');
+    }
   }
 
   /**
@@ -60,10 +64,7 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    * @returns always `of(true)`
    */
   canHandle(input: NodeHttpStreams): Observable<boolean> {
-    if(input.requestStream && input.responseStream && input.requestStream !== null && input.responseStream !== null){
-      return of(true);
-    } else {
-      return of(false);
-    }
+    return input && input.requestStream && input.responseStream &&
+      input.requestStream !== null && input.responseStream !== null ? of(true) : of(false);
   }
 }

@@ -1,7 +1,7 @@
 import { Socket } from 'net';
 import { IncomingMessage, ServerResponse } from 'http';
 import { of } from 'rxjs';
-import { HttpHandler, HttpHandlerContext, HttpHandlerRequest, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandler } from '@digita-ai/handlersjs-http';
 import { NodeHttpRequestResponseHandler } from './node-http-request-response.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
@@ -20,7 +20,7 @@ describe('NodeHttpRequestResponseHandler', () => {
     } as HttpHandler;
     handler = new NodeHttpRequestResponseHandler(nestedHttpHandler);
     req = new IncomingMessage(new Socket());
-    req.url = 'www.bla.bla';
+    req.url = 'www.test.test';
     req.method = 'GET';
     req.headers = {};
     res = new ServerResponse(req);
@@ -33,8 +33,12 @@ describe('NodeHttpRequestResponseHandler', () => {
     };
   });
 
-  it('should be correctly instantiated', () => {
+  it('should be correctly instantiated if handler is present', () => {
     expect(handler).toBeTruthy();
+  });
+
+  it('should throw an error if handler is null', () => {
+    expect(() => new NodeHttpRequestResponseHandler(undefined)).toThrow('A HttpHandler object must be provided');
   });
 
   it('nested should be correctly instantiated', () => {
@@ -42,22 +46,22 @@ describe('NodeHttpRequestResponseHandler', () => {
   });
 
   describe('handle()', () => {
-    it('should error when url is null/undefined', () => {
+    it('should error when url is null/undefined', async () => {
       streamMock.requestStream.url = null;
       expect(streamMock.requestStream.url).toBeNull();
-      expect(() => handler.handle(streamMock).toPromise()).rejects.toThrow('url of the request cannot be null or undefined.');
+      await expect(handler.handle(streamMock).toPromise()).rejects.toThrow('url of the request cannot be null or undefined.');
     });
 
-    it('should error when method is null/undefined', () => {
+    it('should error when method is null/undefined', async () => {
       streamMock.requestStream.method = null;
       expect(streamMock.requestStream.method).toBeNull();
-      expect(() => handler.handle(streamMock).toPromise()).rejects.toThrow('method of the request cannot be null or undefined.');
+      await expect(handler.handle(streamMock).toPromise()).rejects.toThrow('method of the request cannot be null or undefined.');
     });
 
-    it('should error when headers is null/undefined', () => {
+    it('should error when headers is null/undefined', async () => {
       streamMock.requestStream.headers = null;
       expect(streamMock.requestStream.headers).toBeNull();
-      expect(() => handler.handle(streamMock).toPromise()).rejects.toThrow('headers of the request cannot be null or undefined.');
+      await expect(handler.handle(streamMock).toPromise()).rejects.toThrow('headers of the request cannot be null or undefined.');
     });
 
     describe('nestedHttpHandler.handle()', () => {
@@ -82,32 +86,37 @@ describe('NodeHttpRequestResponseHandler', () => {
   });
 
   describe('canHandle', () => {
-    it('returns false if input.responseStream is null', () => {
+    it('should return false if input is null', async () => {
+      const streamNull = null;
+      await expect(handler.canHandle(streamNull).toPromise()).resolves.toEqual(false);
+    });
+
+    it('returns false if input.requestStream is null', async () => {
       streamMock.requestStream = null;
       expect(streamMock.requestStream).toBeNull();
-      expect(handler.canHandle(streamMock).toPromise()).resolves.toBe(false);
+      await expect(handler.canHandle(streamMock).toPromise()).resolves.toEqual(false);
     });
 
-    it('returns false if input.responseStream is undefined', () => {
+    it('returns false if input.requestStream is undefined', async () => {
       streamMock.requestStream = undefined;
       expect(streamMock.requestStream).toBeUndefined();
-      expect(handler.canHandle(streamMock).toPromise()).resolves.toBe(false);
+      await expect(handler.canHandle(streamMock).toPromise()).resolves.toEqual(false);
     });
 
-    it('returns false if input.responseStream is null', () => {
+    it('returns false if input.requestStream is null', async () => {
       streamMock.responseStream = null;
       expect(streamMock.responseStream).toBeNull();
-      expect(handler.canHandle(streamMock).toPromise()).resolves.toBe(false);
+      await expect(handler.canHandle(streamMock).toPromise()).resolves.toEqual(false);
     });
 
-    it('returns false if input.responseStream is undefined', () => {
+    it('returns false if input.requestStream is undefined', async () => {
       streamMock.responseStream = undefined;
       expect(streamMock.responseStream).toBeUndefined();
-      expect(handler.canHandle(streamMock).toPromise()).resolves.toBe(false);
+      await expect(handler.canHandle(streamMock).toPromise()).resolves.toEqual(false);
     });
 
-    it('returns true if input is complete', () => {
-      expect(handler.canHandle(streamMock).toPromise()).resolves.toBe(true);
+    it('returns true if input is complete', async () => {
+      await expect(handler.canHandle(streamMock).toPromise()).resolves.toEqual(true);
     });
   });
 });

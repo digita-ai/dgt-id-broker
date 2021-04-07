@@ -38,10 +38,6 @@ export class MockHttpHandler extends HttpHandler {
    * @returns always `of(true)`
    */
   canHandle(context: HttpHandlerContext){
-    if (!context){
-      return throwError(new Error('Context cannot be null or undefined'));
-    }
-
-    return of(true);
+    return context ? of(true) : throwError(new Error('Context cannot be null or undefined'));
   }
 }
