@@ -11,6 +11,8 @@ import { NodeHttpStreams } from './node-http-streams.model';
  */
 export class RoutedHttpRequestHandler extends HttpHandler {
 
+  private pathToRouteMap: Map<string, HttpHandlerRoute>;
+
   /**
    * Creates a RoutedHttpRequestHandler, super calls the HttpHandler class and expects a list of HttpHandlerControllers
    *
@@ -18,6 +20,11 @@ export class RoutedHttpRequestHandler extends HttpHandler {
    */
   constructor(private handlerControllerList: HttpHandlerController[]) {
     super();
+    this.pathToRouteMap = new Map(
+      this.handlerControllerList
+        .flatMap((controller) => controller.routes)
+        .map((route) => [ route.path, route ]),
+    );
   }
 
   /**
@@ -28,18 +35,11 @@ export class RoutedHttpRequestHandler extends HttpHandler {
   handle(input: HttpHandlerContext): Observable<HttpHandlerResponse> {
     const request = input.request;
 
-    const matchedRequestRoute = this.handlerControllerList
-      .flatMap((controller) => controller.routes)
-      .filter((route) => route.path === request.path)
-      .flatMap((route) => ({
-        route,
-        methods: route.operations.flatMap((operation) => operation.method),
-        handler: route.handler,
-      }))
-      .filter(({ methods }) => methods.includes(request.method))
-      .pop();
+    const matchingRoute = this.pathToRouteMap.get(request.path);
+    const routeIncludesMethod = matchingRoute?.operations
+      .flatMap((operation) => operation.method).includes(request.method);
 
-    return matchedRequestRoute ? matchedRequestRoute.handler.handle({ request, route: matchedRequestRoute.route }) : of({ body: '', headers: {}, status: 404 });
+    return matchingRoute && routeIncludesMethod ? matchingRoute.handler.handle({ request, route: matchingRoute }) : of({ body: '', headers: {}, status: 404 });
   }
 
   /**

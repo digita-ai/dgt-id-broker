@@ -20,7 +20,7 @@ export class MockHttpHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext){
     if (!context){
-      return throwError('Context cannot be null or undefined');
+      return throwError(new Error('Context cannot be null or undefined'));
     }
 
     const response: HttpHandlerResponse = {
@@ -39,7 +39,7 @@ export class MockHttpHandler extends HttpHandler {
    */
   canHandle(context: HttpHandlerContext){
     if (!context){
-      return throwError('Context cannot be null or undefined');
+      return throwError(new Error('Context cannot be null or undefined'));
     }
 
     return of(true);
