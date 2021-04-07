@@ -1,4 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
+import { of } from 'rxjs';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { Server } from './../util/server';
 import { NodeHttpStreams } from './node-http-streams.model';
@@ -32,6 +33,7 @@ export class NodeHttpServer extends Server {
     this.server.listen(this.port, this.host);
     // eslint-disable-next-line no-console
     console.log('starting server');
+    return of(this.server);
   }
 
   /**
@@ -40,6 +42,7 @@ export class NodeHttpServer extends Server {
    */
   stop(){
     this.server.close();
+    return of(this.server);
   }
 
   /**
@@ -55,7 +58,7 @@ export class NodeHttpServer extends Server {
       requestStream: req,
       responseStream: res,
     };
-    this.nodeHttpStreamsHandler.handle(nodeHttpStreams);
+    this.nodeHttpStreamsHandler.handle(nodeHttpStreams).subscribe();
   }
 
 }
