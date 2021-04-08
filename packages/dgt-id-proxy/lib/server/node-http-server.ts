@@ -22,9 +22,7 @@ export class NodeHttpServer extends Server {
   constructor(protected host: string, protected port: number, private nodeHttpStreamsHandler: NodeHttpStreamsHandler){
     super(`http`, host, port);
 
-    if (!host && !port && !nodeHttpStreamsHandler) {
-      throw new Error('No arguments were provided');
-    } else if (!host) {
+    if (!host) {
       throw new Error('A host must be provided');
     } else if (!port) {
       throw new Error('A port must be provided');
@@ -43,7 +41,7 @@ export class NodeHttpServer extends Server {
     this.server.listen(this.port, this.host);
     // eslint-disable-next-line no-console
     console.log('server started');
-    return of(this.server);
+    return of(this);
   }
 
   /**
@@ -52,7 +50,7 @@ export class NodeHttpServer extends Server {
    */
   stop(){
     this.server.close();
-    return of(this.server);
+    return of(this);
   }
 
   /**
@@ -64,6 +62,12 @@ export class NodeHttpServer extends Server {
    * @param {ServerResponse} res - the Node.js HTTP callback's response stream
    */
   serverHelper(req: IncomingMessage, res: ServerResponse): void {
+    if (!req) {
+      throw new Error('request must be defined.');
+    }
+    if (!res) {
+      throw new Error('response must be defined.');
+    }
     const nodeHttpStreams: NodeHttpStreams = {
       requestStream: req,
       responseStream: res,

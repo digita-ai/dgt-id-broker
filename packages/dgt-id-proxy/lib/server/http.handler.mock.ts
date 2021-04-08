@@ -18,7 +18,7 @@ export class MockHttpHandler extends HttpHandler {
    * @param {HttpHandlerContext} context - an irrelevant incoming context
    * @returns {Observable<HttpHandlerResponse>} - the mock response
    */
-  handle(context: HttpHandlerContext){
+  handle(context: HttpHandlerContext) {
     if (!context){
       return throwError(new Error('Context cannot be null or undefined'));
     }
@@ -37,7 +37,7 @@ export class MockHttpHandler extends HttpHandler {
    * @param {HttpHandlerContext} context - the irrelevant incoming context
    * @returns always `of(true)`
    */
-  canHandle(context: HttpHandlerContext){
+  canHandle(context: HttpHandlerContext) {
     return context ? of(true) : throwError(new Error('Context cannot be null or undefined'));
   }
 }

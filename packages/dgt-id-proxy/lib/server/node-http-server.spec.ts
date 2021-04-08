@@ -1,4 +1,6 @@
 
+import { IncomingMessage, ServerResponse } from 'http';
+import { Socket } from 'net';
 import { HttpHandler } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import { NodeHttpServer } from './node-http-server';
@@ -10,19 +12,25 @@ describe('NodeHttpServer', () => {
   let nestedHttpHandler: HttpHandler;
   let host: string;
   let port: number;
+  let req: IncomingMessage;
+  let res: ServerResponse;
 
   beforeAll(() => {
     nestedHttpHandler = {
       canHandle: jest.fn(),
-      handle: jest.fn().mockReturnValueOnce(of({ body: {}, headers: {}, status: 200 })),
+      handle: jest.fn(),
       safeHandle: jest.fn(),
-    } as HttpHandler;
+    };
     handler = new NodeHttpRequestResponseHandler(nestedHttpHandler);
+    handler.handle = jest.fn().mockReturnValueOnce(of());
     host = 'test';
     port = 8080;
     server = new NodeHttpServer(host, port, handler);
-    server.start = jest.fn().mockReturnValueOnce(of());
-    server.stop = jest.fn().mockReturnValueOnce(of());
+    req = new IncomingMessage(new Socket());
+    req.url = 'www.digita.ai';
+    req.method = 'GET';
+    req.headers = {};
+    res = new ServerResponse(req);
   });
 
   it('should be correctly instantiated if all correct arguments are provided', () => {
@@ -42,16 +50,34 @@ describe('NodeHttpServer', () => {
   });
 
   describe('start()', () => {
-    it('should return successfully', async () => {
-      await server.start().toPromise();
-      expect(server.start).toHaveReturned();
+    it('should return an observable of the NodeHttpServer', async () => {
+      await expect(server.start().toPromise()).resolves.toEqual(server);
     });
   });
 
   describe('stop()', () => {
-    it('should return successfully', async () => {
-      await server.stop().toPromise();
-      expect(server.stop).toHaveReturned();
+    it('should return an observable of the NodeHttpServer', async () => {
+      await expect(server.stop().toPromise()).resolves.toEqual(server);
+    });
+  });
+
+  describe('serverHelper()', () => {
+    it('should call the handle function of the nested handler', async () => {
+      await server.serverHelper(req, res);
+
+      expect(handler.handle).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw an error when request is null or undefined', () => {
+      expect(() => server.serverHelper(null, res)).toThrow('request must be defined.');
+
+      expect(() => server.serverHelper(undefined, res)).toThrow('request must be defined.');
+    });
+
+    it('should throw an error when response is null or undefined', () => {
+      expect(() => server.serverHelper(req, null)).toThrow('response must be defined.');
+
+      expect(() => server.serverHelper(req, undefined)).toThrow('response must be defined.');
     });
   });
 });

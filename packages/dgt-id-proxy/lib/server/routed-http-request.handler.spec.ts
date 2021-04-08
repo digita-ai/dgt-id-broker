@@ -49,18 +49,13 @@ describe('RoutedHttpRequestHandler', () => {
     expect(() => new RoutedHttpRequestHandler(undefined)).toThrow('handlerControllerList must be defined.');
   });
 
-  describe('handle()', () => {
+  describe('handle', () => {
     it('should call the handle function of the handler in the HttpHandlerRoute when the requested route exists', async () => {
-      const httpHandlerContext1: HttpHandlerContext = {
+      const httpHandlerContext: HttpHandlerContext = {
         request: { path: '/path1', method: 'GET', headers: {} },
       };
-      await routedHttpRequestHandler.handle(httpHandlerContext1);
-
-      const httpHandlerContext2: HttpHandlerContext = {
-        request: { path: '/path2', method: 'POST', headers: {} },
-      };
-      await routedHttpRequestHandler.handle(httpHandlerContext2);
-      expect(mockHttpHandler.handle).toHaveBeenCalledTimes(2);
+      await routedHttpRequestHandler.handle(httpHandlerContext);
+      expect(mockHttpHandler.handle).toHaveBeenCalledTimes(1);
     });
 
     it('should return a 404 response when the path does not exist', async () => {
@@ -74,14 +69,6 @@ describe('RoutedHttpRequestHandler', () => {
     it('should return a 404 response when the path exists, but the method does not match ', async () => {
       const httpHandlerContext: HttpHandlerContext = {
         request: { path: '/path2', method: 'GET', headers: {} },
-      };
-      await expect(routedHttpRequestHandler.handle(httpHandlerContext).toPromise())
-        .resolves.toEqual(expect.objectContaining({ status: 404 }));
-    });
-
-    it('should return a 404 response when neither the path nor method exist ', async () => {
-      const httpHandlerContext: HttpHandlerContext = {
-        request: { path: '/nonExistantPath', method: 'POST', headers: {} },
       };
       await expect(routedHttpRequestHandler.handle(httpHandlerContext).toPromise())
         .resolves.toEqual(expect.objectContaining({ status: 404 }));
@@ -111,7 +98,8 @@ describe('RoutedHttpRequestHandler', () => {
         .rejects.toThrow('input.request must be defined.');
     });
   });
-  describe('canHandle()', () => {
+
+  describe('canHandle', () => {
     it ('should return true when context and request are defined', async () => {
       const httpHandlerContext: HttpHandlerContext = {
         request: { path: '/path1', method: 'GET', headers: {} },

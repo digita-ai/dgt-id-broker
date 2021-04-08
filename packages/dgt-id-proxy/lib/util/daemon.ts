@@ -1,4 +1,3 @@
-import { Server } from 'http';
 import { Observable } from 'rxjs';
 
 /**
@@ -8,12 +7,10 @@ export abstract class Daemon {
 
   /**
    * Start the server
-   *
    */
-  abstract start(): Observable<Server>;
+  abstract start(): Observable<Daemon>;
   /**
    * Stop the server
-   *
    */
-  abstract stop(): Observable<Server>;
+  abstract stop(): Observable<Daemon>;
 }
