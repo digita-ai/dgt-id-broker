@@ -1,8 +1,5 @@
-import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandler, HttpHandlerContext, HttpHandlerController, HttpHandlerResponse, HttpHandlerRoute } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
-import { NodeHttpStreamsHandler } from './node-http-streams.handler';
-import { NodeHttpStreams } from './node-http-streams.model';
 
 /**
  * A {HttpHandler} handling requests based on routes in a given list of {HttpHandlerController}s.
@@ -21,7 +18,7 @@ export class RoutedHttpRequestHandler extends HttpHandler {
   constructor(private handlerControllerList: HttpHandlerController[]) {
     super();
 
-    if(!handlerControllerList){
+    if (!handlerControllerList) {
       throw new Error('handlerControllerList must be defined.');
     }
 
