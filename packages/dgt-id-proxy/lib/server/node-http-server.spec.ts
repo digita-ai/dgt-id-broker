@@ -49,13 +49,13 @@ describe('NodeHttpServer', () => {
     expect(() => new NodeHttpServer(host, port, null)).toThrow('A handler must be provided');
   });
 
-  describe('start()', () => {
+  describe('start', () => {
     it('should return an observable of the NodeHttpServer', async () => {
       await expect(server.start().toPromise()).resolves.toEqual(server);
     });
   });
 
-  describe('stop()', () => {
+  describe('stop', () => {
     it('should return an observable of the NodeHttpServer', async () => {
       await expect(server.stop().toPromise()).resolves.toEqual(server);
     });

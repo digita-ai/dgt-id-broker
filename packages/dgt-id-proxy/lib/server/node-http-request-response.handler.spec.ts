@@ -47,7 +47,7 @@ describe('NodeHttpRequestResponseHandler', () => {
     expect(nestedHttpHandler).toBeTruthy();
   });
 
-  describe('handle()', () => {
+  describe('handle', () => {
     it('should error when url is null/undefined', async () => {
       streamMock.requestStream.url = null;
       expect(streamMock.requestStream.url).toBeNull();

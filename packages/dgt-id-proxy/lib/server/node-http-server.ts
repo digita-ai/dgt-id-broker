@@ -37,7 +37,7 @@ export class NodeHttpServer extends Server {
    * @override
    * {@inheritDoc Server.start}
    */
-  start(){
+  start() {
     this.server.listen(this.port, this.host);
     // eslint-disable-next-line no-console
     console.log('server started');
@@ -48,7 +48,7 @@ export class NodeHttpServer extends Server {
    * @override
    * {@inheritDoc Server.start}
    */
-  stop(){
+  stop() {
     this.server.close();
     return of(this);
   }
