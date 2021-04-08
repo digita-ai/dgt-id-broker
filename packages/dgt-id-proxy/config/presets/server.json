@@ -8,7 +8,7 @@
     {
       "@id": "urn:dgt-id-proxy:default:NodeHttpServer",
       "@type": "NodeHttpServer",
-      "NodeHttpServer:_port": "3000",
+      "NodeHttpServer:_port": "3003",
       "NodeHttpServer:_host": "localhost",
       "NodeHttpServer:_nodeHttpStreamsHandler": {
         "@id": "urn:dgt-id-proxy:default:NodeHttpRequestResponseHandler",
@@ -42,10 +42,10 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@id": "urn:dgt-id-proxy:default:",
-        "@type": "MockHttpHandler"
+        "@type": "PassThroughHttpRequestHandler",
+        "PassThroughHttpRequestHandler:_url": "http://localhost:3000"
       },
-      "HttpHandlerRoute:_path": "/mock"
+      "HttpHandlerRoute:_path": "/auth"
     }
   ]
 }

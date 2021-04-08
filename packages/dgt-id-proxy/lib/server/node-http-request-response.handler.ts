@@ -50,6 +50,8 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
 
     return this.httpHandler.handle(httpHandlerContext).pipe(
       map((response) => {
+        // eslint-disable-next-line no-console
+        console.log('----------------- response ', response);
         nodeHttpStreams.responseStream.writeHead(response.status, response.headers);
         nodeHttpStreams.responseStream.write(response.body);
         nodeHttpStreams.responseStream.end();

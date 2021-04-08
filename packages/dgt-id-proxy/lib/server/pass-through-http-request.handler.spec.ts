@@ -5,12 +5,12 @@ import { PassThroughHttpRequestHandler } from './pass-through-http-request.handl
 
 describe('PassThroughHttpRequestHandler', () => {
   let handler: PassThroughHttpRequestHandler;
-  let url: URL;
+  let url: string;
   let context: HttpHandlerContext;
 
   beforeEach(async () => {
-    url = new URL('https://www.digita.ai');
-    context = { request: { headers: {}, method: 'GET', path: '' } };
+    url = 'https://www.digita.ai';
+    context = { request: { headers: {}, method: 'GET', path: '/' } };
     handler = new PassThroughHttpRequestHandler(url);
   });
 
@@ -29,25 +29,32 @@ describe('PassThroughHttpRequestHandler', () => {
       expect(() => handler.handle(null)).toThrow('Context cannot be null or undefined');
     });
 
-    it('should error when no context request was provided', () => {
+    it('should error when no context request is provided', () => {
       context.request = null;
       expect(() => handler.handle(context)).toThrow('No request was included in the context');
       context.request = undefined;
       expect(() => handler.handle(context)).toThrow('No request was included in the context');
     });
 
-    it('should error when no context request method was provided', () => {
+    it('should error when no context request method is provided', () => {
       context.request.method = null;
       expect(() => handler.handle(context)).toThrow('No method was included in the request');
       context.request.method = undefined;
       expect(() => handler.handle(context)).toThrow('No method was included in the request');
     });
 
-    it('should error when no context request headers were provided', () => {
+    it('should error when no context request headers are provided', () => {
       context.request.headers = null;
       expect(() => handler.handle(context)).toThrow('No headers were included in the request');
       context.request.headers = undefined;
       expect(() => handler.handle(context)).toThrow('No headers were included in the request');
+    });
+
+    it('should error when no context request path is provided', () => {
+      context.request.path = null;
+      expect(() => handler.handle(context)).toThrow('No path was included in the request');
+      context.request.path = undefined;
+      expect(() => handler.handle(context)).toThrow('No path was included in the request');
     });
 
     it('should return a 200 response code', async () => {

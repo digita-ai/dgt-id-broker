@@ -6,3 +6,4 @@ export * from './server/node-http-server';
 export * from './server/node-http-streams.handler';
 export * from './server/node-http-streams.model';
 export * from './server/routed-http-request.handler';
+export * from './server/pass-through-http-request.handler';

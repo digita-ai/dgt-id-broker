@@ -12,9 +12,11 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   /**
    * Creates a Pass Trough Request Handler
    *
-   * @param {URL} url - the request URL
+   * @param {string} url - the request URL
    */
-  constructor(public url: URL) {
+
+  // Should this be a URL object or just a string?
+  constructor(public url: string) {
     super();
 
     if(!url){
@@ -39,12 +41,17 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       throw new Error('No headers were included in the request');
     }
 
+    if (!context.request.path) {
+      throw new Error('No path was included in the request');
+    }
+
     const req = context.request;
     const reqMethod = req.method;
     const reqHeaders = req.headers;
     const reqBody = req.body;
+    const reqPath = req.path;
 
-    return this.fetchRequest(this.url, reqMethod, reqHeaders, reqBody).pipe(
+    return this.fetchRequest(this.url + reqPath, reqMethod, reqHeaders, reqBody).pipe(
       tap((res) => assert(res)),
       map((res) => {
         let headers = {};
@@ -57,7 +64,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   }
 
   private fetchRequest(
-    url: URL,
+    url: string,
     reqMethod: string,
     reqHeaders: Record<string, string>,
     body?: any,
@@ -68,12 +75,12 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     return methodFetch.toLowerCase() === 'get' || methodFetch.toLowerCase() === 'head' ?
       from(
-        fetch(url.toString(), {
+        fetch(url, {
           method: methodFetch,
           headers: headersFetch,
         }),
       ) : from(
-        fetch(url.toString(), {
+        fetch(url, {
           method: methodFetch,
           headers: headersFetch,
           body: bodyFetch,
