@@ -7,7 +7,7 @@ import { NodeHttpServer } from './server/node-http-server';
  *
  * @param {Record<string, any>} variables - a record of values for the variables left open in the configuration.
  */
-export const start: (variables: Record<string, any>) => Promise<void> = async (variables: Record<string, any>) => {
+export const launch: (variables: Record<string, any>) => Promise<void> = async (variables: Record<string, any>) => {
   const mainModulePath = variables['urn:dgt-id-proxy:variables:mainModulePath']
     ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath'])
     : path.join(__dirname, '../');
@@ -27,4 +27,4 @@ export const start: (variables: Record<string, any>) => Promise<void> = async (v
   server.start();
 };
 
-start({});
+launch({});
