@@ -1,16 +1,13 @@
-import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { Observable, of } from 'rxjs';
-import { Server } from './../util/server';
+
+import { HttpHandler } from '@digita-ai/handlersjs-http';
+import { of } from 'rxjs';
 import { NodeHttpServer } from './node-http-server';
-import { MockHttpHandler } from './http.handler.mock';
 import { NodeHttpRequestResponseHandler } from './node-http-request-response.handler';
 
 describe('NodeHttpServer', () => {
   let server: NodeHttpServer;
   let handler: NodeHttpRequestResponseHandler;
   let nestedHttpHandler: HttpHandler;
-  let mockHandler: MockHttpHandler;
-  let context: HttpHandlerContext;
   let host: string;
   let port: number;
 
@@ -24,10 +21,8 @@ describe('NodeHttpServer', () => {
     host = 'test';
     port = 8080;
     server = new NodeHttpServer(host, port, handler);
-    server.start = jest.fn();
-    server.stop = jest.fn();
-    mockHandler = new MockHttpHandler();
-    context = { request: { headers: {}, method: '', path: '' } };
+    server.start = jest.fn().mockReturnValueOnce(of());
+    server.stop = jest.fn().mockReturnValueOnce(of());
   });
 
   it('should be correctly instantiated if all correct arguments are provided', () => {
@@ -46,15 +41,17 @@ describe('NodeHttpServer', () => {
     expect(() => new NodeHttpServer(host, port, null)).toThrow('A handler must be provided');
   });
 
-  it('should throw error when no arguments are provided', () => {
-    expect(() => new NodeHttpServer(null, null, null)).toThrow('No arguments were provided');
+  describe('start()', () => {
+    it('should return successfully', async () => {
+      await server.start().toPromise();
+      expect(server.start).toHaveReturned();
+    });
   });
 
-  describe('start()', () => {
-    it('should return the desired type', async () => {
-      const repServer = new Observable<Server>();
-      await server.start().toPromise();
-      expect(server.start).toHaveReturnedWith(repServer);
+  describe('stop()', () => {
+    it('should return successfully', async () => {
+      await server.stop().toPromise();
+      expect(server.stop).toHaveReturned();
     });
   });
 });
