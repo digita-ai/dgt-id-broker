@@ -33,9 +33,11 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
   handle(nodeHttpStreams: NodeHttpStreams): Observable<void> {
     if (!nodeHttpStreams.requestStream.url){
       return throwError(new Error('url of the request cannot be null or undefined.'));
-    } else if (!nodeHttpStreams.requestStream.method) {
+    }
+    if (!nodeHttpStreams.requestStream.method) {
       return throwError(new Error('method of the request cannot be null or undefined.'));
-    } else if (!nodeHttpStreams.requestStream.headers) {
+    }
+    if (!nodeHttpStreams.requestStream.headers) {
       return throwError(new Error('headers of the request cannot be null or undefined.'));
     }
     const httpHandlerRequest: HttpHandlerRequest = {

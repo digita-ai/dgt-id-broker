@@ -9,7 +9,7 @@ export abstract class Daemon {
    * Start the server
    */
   abstract start(): Observable<Daemon>;
-  
+
   /**
    * Stop the server
    */

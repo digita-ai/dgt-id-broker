@@ -24,13 +24,15 @@ export class NodeHttpServer extends Server {
 
     if (!host) {
       throw new Error('A host must be provided');
-    } else if (!port) {
-      throw new Error('A port must be provided');
-    } else if (!nodeHttpStreamsHandler) {
-      throw new Error('A handler must be provided');
-    } else {
-      this.server = createServer(this.serverHelper.bind(this));
     }
+    if (!port) {
+      throw new Error('A port must be provided');
+    }
+    if (!nodeHttpStreamsHandler) {
+      throw new Error('A handler must be provided');
+    }
+
+    this.server = createServer(this.serverHelper.bind(this));
   }
 
   /**
