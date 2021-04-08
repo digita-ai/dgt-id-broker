@@ -1,6 +1,5 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { of } from 'rxjs';
-import { Handler } from '@digita-ai/handlersjs-core';
 import { Server } from './../util/server';
 import { NodeHttpStreams } from './node-http-streams.model';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
@@ -22,7 +21,18 @@ export class NodeHttpServer extends Server {
    */
   constructor(protected host: string, protected port: number, private nodeHttpStreamsHandler: NodeHttpStreamsHandler){
     super(`http`, host, port);
-    this.server = createServer((req, res) => this.serverHelper(req, res));
+
+    if (!host && !port && !nodeHttpStreamsHandler) {
+      throw new Error('No arguments were provided');
+    } else if (!host) {
+      throw new Error('A host must be provided');
+    } else if (!port) {
+      throw new Error('A port must be provided');
+    } else if (!nodeHttpStreamsHandler) {
+      throw new Error('A handler must be provided');
+    } else {
+      this.server = createServer(this.serverHelper.bind(this));
+    }
   }
 
   /**
@@ -32,7 +42,7 @@ export class NodeHttpServer extends Server {
   start(){
     this.server.listen(this.port, this.host);
     // eslint-disable-next-line no-console
-    console.log('starting server');
+    console.log('server started');
     return of(this.server);
   }
 
