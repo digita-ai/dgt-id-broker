@@ -49,17 +49,23 @@ On a new branch, create a `PassThroughHttpRequestHandler` that takes a URL as de
 Try if this works as intended by writing tests. Then add as many routes to the existing configuration as there are OIDC endpoints, and pass all of them through a configuration of the `PassThroughHttpRequestHandler` pointing to a (local or hosted) classic OIDC provider. Perform some OIDC requests on the proxy and check if the response is what we would expect from the proxied provider. Try the same with our Solid-compliant provider.
 
 
+=== Intermezzo: returning useful errors
+
+Good applications sometimes fail, but when they do they return useful errors. Since we are building a server, the best way to return errors is with correct HTTP responses. Take a look at the `util/errors` directory of the Community Solid Sever (CSS) and make sure you understand how they are used. Then implement the grunt of them in a new branch (with the exception of `SystemError` and `ErrorUtil`), add the necessary tests, and replace all current errors in our code by a more fitting one.
+
+
 === Preface: a storage solution
 
-For the next steps, we will need a way to store some data that the proxied OIDC provider might not support itself.
+For the next steps, we will need a way to store some data that the proxied OIDC provider might not support itself. Make a new branch for this. We will follow the abstractions of the CSS, so feel free to be heavily inspired by their `KeyValueStorage` (although calling it a `~Store` might be more conventional), and it's `MemoryMap` and `JsonFile` implementations. Make sure to install all necessary dependencies, and put them in `/lib/storage`. Don't forget to write tests, equally inspired by the CSS.
 
-NOTE: This will be analysed separately.
 
 === Fixing DPoP
 
-Suppose a provider has everything set for Solid-compliance except DPoP. Create a `DpopTokenRequestHandler` that takes another `HttpRequestHandler` as dependency, and watches for a `DPoP` header in the request. It rejects the request if such a header is absent. Otherwise, it performs all the necessary checks and acts accordingly (look back to your notes and the specs). If all is well, the handler creates a DPoP-less request, lets its dependency handler handle it, and then adds and changes all necessary information on the returned response, before returning a valid DPoP response itself.
+Suppose a provider has everything set for Solid-compliance except DPoP. Create a `DpopTokenRequestHandler` that takes another `HttpRequestHandler` as dependency, and watches for a `DPoP` header in the request. It rejects the request if such a header is absent. Otherwise, it performs all the necessary checks and acts accordingly (look back to your notes and the specs). If all is well, the handler creates a DPoP-less request, lets its dependency handler handle it, and then adds/changes all necessary information on the returned response, before returning a valid DPoP response itself.
 
-Note that for some of the checks, such as checking the uniqueness of the `jti`, you will have to keep track of these identifiers. For now, simply store these in memory; we will work out a storage solution later.
+Note that for some of the checks, such as checking the uniqueness of the `jti`, you will have to keep track of some data for a limited amount of time. Therefore add a `KeyValueStore` to the dependencies of the class. 
+
+When finished, check the correct behavior of the `DpopTokenRequestHandler` by configuring it and placing it in front of an almost-Solid-OIDC-compliant provider which has no DPoP support.
 
 For good measure, we might also create a `DpopResourceRequestHandler` implementing the second step of DPoP security: checking the DPoP-bound token and, if valid, passes the request to the dependency handler.
 
@@ -68,7 +74,7 @@ For good measure, we might also create a `DpopResourceRequestHandler` implementi
 
 In the same fashion as the `DpopRequestHandler`, create two handlers adding missing PKCE support: a `PkceAuthRequestHandler` and a `PkceTokenRequestHandler`. 
 
-The first one watches for the `code_challenge` and `code_challenge_method` parameters. It rejects the request if one of these is absent. Otherwise, passes a PKCE-less request through its dependency handler, stores the parameters with the authorization code of the response, and returns the response itself.
+The first one watches for the `code_challenge` and `code_challenge_method` parameters. It rejects the request if one of these is absent. Otherwise, it passes a PKCE-less request through its dependency handler, stores the parameters with the authorization code of the response, and returns the response itself.
 
 The second one watches for the `code_verifier` parameter. It rejects the request if this parameter is absent. Otherwise, it performs the check of the verifier with the stored data and, if valid, passes a PKCE-less request through its dependency handler and returns the response.
 
