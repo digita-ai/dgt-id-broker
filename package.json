@@ -1,14 +1,21 @@
 {
     "name": "root",
     "private": true,
+    "lint-staged": {
+        "*.js": "eslint",
+        "*.ts": "eslint",
+        "*.css": "stylelint",
+        "*.scss": "stylelint --syntax=scss"
+    },
     "scripts": {
         "bootstrap": "npm ci && lerna bootstrap --ignore-prepublish",
         "bootstrap:no-ci": "npm i && lerna bootstrap --no-ci --ignore-prepublish",
         "build": "lerna run build",
         "lint": "lerna run lint --parallel",
+        "lint:all": "lerna run lint:all --parallel",
         "lint:fix": "lerna run lint:fix --parallel",
         "postinstall": "husky install",
-        "release": "lerna version --exact --conventional-commits -m 'chore: release %s' --force-publish --tag-version-prefix='' --no-granular-pathspec",
+        "release": "lerna version",
         "start": "lerna run start --parallel",
         "test": "lerna run test --parallel",
         "test:ci": "lerna run test:ci"
@@ -26,6 +33,7 @@
         "eslint-plugin-jsdoc": "^32.3.0",
         "eslint-plugin-prefer-arrow": "^1.2.3",
         "husky": "^5.2.0",
-        "lerna": "^3.22.1"
+        "lerna": "^3.22.1",
+        "lint-staged": "^10.5.4"
     }
 }

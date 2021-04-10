@@ -1,6 +1,34 @@
 {
-    "packages": [
-      "packages/*"
-    ],
-    "version": "0.1.0"
+  "packages": [
+    "packages/*"
+  ],
+  "version": "0.1.0",
+  "command": {
+    "version": {
+      "allowBranch": ["master", "develop"],
+      "conventionalCommits": true,
+      "exact": true,
+      "forcePublish": true,
+      "message": "chore: release %s",
+      "granularPathspec": false,
+      "tag-version-prefix": "",
+      "changelogPreset": {
+        "name": "conventionalcommits",
+        "types": [
+          { "type": "feat", "section": "**Features**" },
+          { "type": "fix", "section": "**Bug Fixes**" },
+          { "type": "docs", "section": "**Documentation**" },
+          { "type": "chore", "hidden": true },
+          { "type": "refactor", "hidden": true },
+          { "type": "revert", "hidden": true },
+          { "type": "style", "hidden": true },
+          { "type": "perf", "hidden": true },
+          { "type": "build", "hidden": true },
+          { "type": "ci", "hidden": true },
+          { "type": "test", "hidden": true }
+        ],
+        "releaseCommitMessageFormat": "chore: release v{{currentTag}}"
+      }
+    }
   }
+}

@@ -17,6 +17,9 @@
     "url": "https://github.com/digita-ai/dgt-id-broker.git"
   },
   "scripts": {
+    "lint": "lint-staged",
+    "lint:all:": "eslint .",
+    "lint:fix": "eslint --fix .",
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
