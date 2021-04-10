@@ -2,11 +2,11 @@
   "folders": [
     {
       "name": "Digita Identity Broker (root)",
-      "path": "."
+      "path": "../"
     },
     {
       "name": "Docs",
-      "path": "docs"
+      "path": "../docs"
     }
   ],
   "settings": {
