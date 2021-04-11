@@ -9,6 +9,6 @@ module.exports = {
     ],
     rules: {
         'scope-empty': [2, 'never'],
-        'scope-enum': async ctx => [2, 'always', [...(await getPackages(ctx)), 'all', 'multi']],
+        'scope-enum': async ctx => [2, 'always', [...(await getPackages(ctx)), 'multi']],
     }
 }

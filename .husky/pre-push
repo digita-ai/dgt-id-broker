@@ -17,8 +17,8 @@ do
         REGEX="^(develop|master|(feat|fix|docs|chore|refactor|revert|style|perf|build|ci|test)\/[a-zA-Z0-9\-]+)$"
 
         if [[ ! $BRANCH =~ $REGEX ]]; then 
-            echo "Please rename your branch in accordance with the following regex:" >&
-            echo "$REGEX" >&
+            echo "Please rename your branch in accordance with the following regex:" >&2
+            echo "/$REGEX/" >&2
             exit 1
         fi
 
