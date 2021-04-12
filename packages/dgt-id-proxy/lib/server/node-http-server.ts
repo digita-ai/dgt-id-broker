@@ -1,8 +1,9 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { of } from 'rxjs';
+import { Subject } from 'rxjs';
 import { Server } from './../util/server';
 import { NodeHttpStreams } from './node-http-streams.model';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
+import { Daemon } from 'lib/util/daemon';
 
 /**
  * A {Server} implemented with [Node.js HTTP]{@link https://nodejs.org/api/http.html}, handling requests through a {NodeHttpStreamsHandler}.
@@ -40,10 +41,20 @@ export class NodeHttpServer extends Server {
    * {@inheritDoc Server.start}
    */
   start() {
+    const subject = new Subject<Daemon>();
+
+    this.server.on(('error'), (err) => {
+      subject.error(err);
+    });
+
+    this.server.on(('listening'), () => {
+      subject.next(this);
+      subject.complete();
+    });
+
     this.server.listen(this.port, this.host);
-    // eslint-disable-next-line no-console
-    console.log('server started');
-    return of(this);
+
+    return subject;
   }
 
   /**
@@ -51,8 +62,20 @@ export class NodeHttpServer extends Server {
    * {@inheritDoc Server.start}
    */
   stop() {
+    const subject = new Subject<Daemon>();
+
+    this.server.on(('error'), (err) => {
+      subject.error(err);
+    });
+
+    this.server.on(('close'), () => {
+      subject.next(this);
+      subject.complete();
+    });
+
     this.server.close();
-    return of(this);
+
+    return subject;
   }
 
   /**
