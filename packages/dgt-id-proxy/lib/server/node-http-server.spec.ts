@@ -1,4 +1,3 @@
-
 import { IncomingMessage, ServerResponse } from 'http';
 import { Socket } from 'net';
 import { HttpHandler } from '@digita-ai/handlersjs-http';
@@ -8,6 +7,7 @@ import { NodeHttpRequestResponseHandler } from './node-http-request-response.han
 
 describe('NodeHttpServer', () => {
   let server: NodeHttpServer;
+  let badServer: NodeHttpServer;
   let handler: NodeHttpRequestResponseHandler;
   let nestedHttpHandler: HttpHandler;
   let host: string;
@@ -23,7 +23,7 @@ describe('NodeHttpServer', () => {
     };
     handler = new NodeHttpRequestResponseHandler(nestedHttpHandler);
     handler.handle = jest.fn().mockReturnValueOnce(of());
-    host = 'test';
+    host = 'localhost';
     port = 8080;
     server = new NodeHttpServer(host, port, handler);
     req = new IncomingMessage(new Socket());
@@ -31,6 +31,10 @@ describe('NodeHttpServer', () => {
     req.method = 'GET';
     req.headers = {};
     res = new ServerResponse(req);
+  });
+
+  afterAll(() => {
+    server.stop();
   });
 
   it('should be correctly instantiated if all correct arguments are provided', () => {
@@ -50,21 +54,34 @@ describe('NodeHttpServer', () => {
   });
 
   describe('start', () => {
-    it('should return an observable of the NodeHttpServer', async () => {
-      await expect(server.start().toPromise()).resolves.toEqual(server);
+    it('should return server if all goes well', async () => {
+      await expect (server.start().toPromise()).resolves.toEqual(server);
+      await server.stop().toPromise();
+    });
+
+    it('should return an error when something goes wrong', async () => {
+      host = 'test';
+      badServer = new NodeHttpServer(host, port, handler);
+      await expect (() => badServer.start().toPromise()).rejects.toThrow('getaddrinfo ENOTFOUND test');
+      await server.stop().toPromise();
     });
   });
 
   describe('stop', () => {
-    it('should return an observable of the NodeHttpServer', async () => {
-      await expect(server.stop().toPromise()).resolves.toEqual(server);
+    it('should return server if all goes well', async () => {
+      await server.start().toPromise();
+      await expect (server.stop().toPromise()).resolves.toEqual(server);
     });
+
+    // it('should return an error when something goes wrong', async () => {
+    //   await server.start().toPromise();
+    //   await expect (server.stop().toPromise()).rejects.toBeInstanceOf(Error);
+    // });
   });
 
   describe('serverHelper()', () => {
     it('should call the handle function of the nested handler', async () => {
       await server.serverHelper(req, res);
-
       expect(handler.handle).toHaveBeenCalledTimes(1);
     });
 
