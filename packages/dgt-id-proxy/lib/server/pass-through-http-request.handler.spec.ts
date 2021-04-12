@@ -1,0 +1,82 @@
+import fetch, { Response } from 'node-fetch';
+import { from } from 'rxjs';
+import { HttpHandlerContext, HttpHandlerRequest, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
+
+describe('PassThroughHttpRequestHandler', () => {
+  let handler: PassThroughHttpRequestHandler;
+  let context: HttpHandlerContext;
+
+  beforeEach(async () => {
+    context = { request: { headers: {}, method: 'GET', path: '/' } };
+    handler = new PassThroughHttpRequestHandler('http', 'localhost', 3000);
+  });
+
+  it('should be correctly instantiated', () => {
+    expect(handler).toBeTruthy();
+  });
+
+  it('should error when no scheme, host or port is provided', () => {
+    expect(() => new PassThroughHttpRequestHandler(undefined, 'localhost', 3000)).toThrow('No scheme was provided');
+    expect(() => new PassThroughHttpRequestHandler(null, 'localhost', 3000)).toThrow('No scheme was provided');
+    expect(() => new PassThroughHttpRequestHandler('http', undefined, 3000)).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler('http', null, 3000)).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler('http', 'localhost', undefined)).toThrow('No port was provided');
+    expect(() => new PassThroughHttpRequestHandler('http', 'localhost', null)).toThrow('No port was provided');
+  });
+
+  describe('handle', () => {
+    it('should error when no context was provided', async () => {
+      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+    });
+
+    it('should error when no context request is provided', async () => {
+      context.request = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      context.request = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+    });
+
+    it('should error when no context request method is provided', async () => {
+      context.request.method = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
+      context.request.method = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
+    });
+
+    it('should error when no context request headers are provided', async () => {
+      context.request.headers = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      context.request.headers = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+    });
+
+    it('should error when no context request path is provided', async () => {
+      context.request.path = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No path was included in the request');
+      context.request.path = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No path was included in the request');
+    });
+
+    // it('should return a 200 response code', async () => {
+    //   await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+    // });
+  });
+
+  describe('canHandle', () => {
+    it('should return false if no context was provided', async () => {
+      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return false if context was provided', async () => {
+      context.request = undefined;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return true if correct context was provided', async () => {
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+    });
+  });
+
+});

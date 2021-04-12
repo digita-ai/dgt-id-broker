@@ -1,0 +1,11 @@
+{
+    "@graph": [ 
+
+    ],
+    "@context": [
+        "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/context.jsonld"
+    ],
+    "import": [
+        "./presets/server.json"
+    ]
+}

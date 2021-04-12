@@ -4,8 +4,19 @@
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
+  "bin": {
+    "dgt-id-proxy": "./dist/main.js"
+  },
   "directories": {
     "lib": "lib"
+  },
+  "eslintConfig": {
+    "extends": [
+      "../../.eslintrc.json"
+    ],
+    "ignorePatterns": [
+      "coverage"
+    ]
   },
   "files": [
     "dist",
@@ -17,23 +28,33 @@
     "url": "https://github.com/digita-ai/dgt-id-broker.git"
   },
   "scripts": {
+    "start": "node ./dist/main.js",
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
     "test": "jest --silent",
     "test:ci": "jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
+    "@types/node": "^14.14.37",
+    "@types/node-fetch": "^2.5.10",
     "componentsjs-generator": "^2.1.0",
     "jest": "^26.6.3",
+    "jest-mock-extended": "^1.0.13",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
+    "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "componentsjs": "^4.0.6"
+    "@digita-ai/handlersjs-core": "^0.0.6",
+    "@digita-ai/handlersjs-http": "^0.0.6",
+    "componentsjs": "^4.0.6",
+    "node-fetch": "^2.6.1"
   },
   "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy",
   "lsd:components": "dist/components/components.jsonld",

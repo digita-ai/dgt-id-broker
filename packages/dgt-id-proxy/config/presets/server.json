@@ -1,0 +1,93 @@
+{
+  "@context": [
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-core/^0.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-http/^0.0.0/components/context.jsonld"
+  ],
+  "@graph": [
+    {
+      "@id": "urn:dgt-id-proxy:default:NodeHttpServer",
+      "@type": "NodeHttpServer",
+      "NodeHttpServer:_port": "3003",
+      "NodeHttpServer:_host": "localhost",
+      "NodeHttpServer:_nodeHttpStreamsHandler": {
+        "@id": "urn:dgt-id-proxy:default:NodeHttpRequestResponseHandler",
+        "@type": "NodeHttpRequestResponseHandler",
+        "NodeHttpRequestResponseHandler:_httpHandler":{
+          "@id": "urn:dgt-id-proxy:default:RoutedHttpRequestHandler",
+          "@type": "RoutedHttpRequestHandler",
+          "RoutedHttpRequestHandler:_handlerControllerList": [
+            {
+              "@id": "urn:dgt-id-proxy:default:HttpHandlerController",
+              "@type": "HttpHandlerController",
+              "HttpHandlerController:_label": "ControllerList",
+              "HttpHandlerController:_routes": [
+                {
+                  "@id": "urn:dgt-id-proxy:default:MockRoute1"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:MockRoute2"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:MockRoute3"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:MockRoute1",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@type": "PassThroughHttpRequestHandler",
+        "PassThroughHttpRequestHandler:_url": "localhost:3000"
+      },
+      "HttpHandlerRoute:_path": "/auth"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:MockRoute2",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@type": "MockHttpHandler"
+      },
+      "HttpHandlerRoute:_path": "/test"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:MockRoute3",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        },
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "POST",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@type": "PassThroughHttpRequestHandler",
+        "PassThroughHttpRequestHandler:_url": "http://localhost:3000"
+      },
+      "HttpHandlerRoute:_path": "/interaction"
+    }
+  ]
+}

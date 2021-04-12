@@ -7,6 +7,10 @@
     {
       "name": "Docs",
       "path": "docs"
+    },
+    {
+      "name": "dgt-id-proxy",
+      "path": "packages/dgt-id-proxy"
     }
   ],
   "settings": {
@@ -14,7 +18,8 @@
     "editor.defaultFormatter": "dbaeumer.vscode-eslint",
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
-    }
+    },
+    "files.eol": "\n",
   },
   "extensions": {
     "recommendations": [

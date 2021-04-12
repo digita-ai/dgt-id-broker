@@ -1,0 +1,23 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "module": "commonjs",
+      "declaration": false,
+      "sourceMap": false,
+      "inlineSources": true,
+      "strict": false,
+      "target": "es2020",
+      "types": ["jest", "node"],
+      "allowJs": true,
+    },
+    "files": [
+      "./jest.config.ts"
+    ],
+    "exclude": [
+      "node_modules", 
+      "dist"
+    ],
+    "include": [
+      "**/*.spec.ts"
+    ]
+  }
