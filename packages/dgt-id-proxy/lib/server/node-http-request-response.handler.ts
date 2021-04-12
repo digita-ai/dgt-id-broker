@@ -5,7 +5,8 @@ import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
 /**
- * A {NodeHttpStreamsHandler} reading the request stream into a {HttpHandlerRequest}, passing it through a {HttpHandler} and writing the resulting {HttpHandlerResponse} to the response stream.
+ * A {NodeHttpStreamsHandler} reading the request stream into a {HttpHandlerRequest},
+ * passing it through a {HttpHandler} and writing the resulting {HttpHandlerResponse} to the response stream.
  */
 export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
   /**
@@ -13,11 +14,11 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    *
    * @param {HttpHandler} httpHandler - the handler through which to pass incoming requests.
    */
-  constructor(private httpHandler: HttpHandler){
+  constructor(private httpHandler: HttpHandler) {
     super();
 
     if(!httpHandler){
-      throw new Error('A HttpHandler object must be provided');
+      throw new Error('A HttpHandler must be provided');
     }
   }
 
@@ -30,7 +31,7 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    * @returns an {Observable<void>} for completion detection
    */
   handle(nodeHttpStreams: NodeHttpStreams): Observable<void> {
-    if (!nodeHttpStreams.requestStream.url){
+    if (!nodeHttpStreams.requestStream.url) {
       return throwError(new Error('url of the request cannot be null or undefined.'));
     }
     if (!nodeHttpStreams.requestStream.method) {
@@ -83,7 +84,6 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    * @returns always `of(true)`
    */
   canHandle(input: NodeHttpStreams): Observable<boolean> {
-    return input && input.requestStream && input.responseStream &&
-      input.requestStream !== null && input.responseStream !== null ? of(true) : of(false);
+    return input && input.requestStream && input.responseStream ? of(true) : of(false);
   }
 }

@@ -1,8 +1,9 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { of } from 'rxjs';
+import { Subject } from 'rxjs';
 import { Server } from './../util/server';
 import { NodeHttpStreams } from './node-http-streams.model';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
+import { Daemon } from 'lib/util/daemon';
 
 /**
  * A {Server} implemented with [Node.js HTTP]{@link https://nodejs.org/api/http.html}, handling requests through a {NodeHttpStreamsHandler}.
@@ -22,37 +23,59 @@ export class NodeHttpServer extends Server {
   constructor(protected host: string, protected port: number, private nodeHttpStreamsHandler: NodeHttpStreamsHandler){
     super(`http`, host, port);
 
-    if (!host && !port && !nodeHttpStreamsHandler) {
-      throw new Error('No arguments were provided');
-    } else if (!host) {
+    if (!host) {
       throw new Error('A host must be provided');
-    } else if (!port) {
-      throw new Error('A port must be provided');
-    } else if (!nodeHttpStreamsHandler) {
-      throw new Error('A handler must be provided');
-    } else {
-      this.server = createServer(this.serverHelper.bind(this));
     }
+    if (!port) {
+      throw new Error('A port must be provided');
+    }
+    if (!nodeHttpStreamsHandler) {
+      throw new Error('A handler must be provided');
+    }
+
+    this.server = createServer(this.serverHelper.bind(this));
   }
 
   /**
    * @override
    * {@inheritDoc Server.start}
    */
-  start(){
+  start() {
+    const subject = new Subject<Daemon>();
+
+    this.server.on(('error'), (err) => {
+      subject.error(err);
+    });
+
+    this.server.on(('listening'), () => {
+      subject.next(this);
+      subject.complete();
+    });
+
     this.server.listen(this.port, this.host);
-    // eslint-disable-next-line no-console
-    console.log('server started');
-    return of(this.server);
+
+    return subject;
   }
 
   /**
    * @override
    * {@inheritDoc Server.start}
    */
-  stop(){
+  stop() {
+    const subject = new Subject<Daemon>();
+
+    this.server.on(('error'), (err) => {
+      subject.error(err);
+    });
+
+    this.server.on(('close'), () => {
+      subject.next(this);
+      subject.complete();
+    });
+
     this.server.close();
-    return of(this.server);
+
+    return subject;
   }
 
   /**
@@ -64,6 +87,12 @@ export class NodeHttpServer extends Server {
    * @param {ServerResponse} res - the Node.js HTTP callback's response stream
    */
   serverHelper(req: IncomingMessage, res: ServerResponse): void {
+    if (!req) {
+      throw new Error('request must be defined.');
+    }
+    if (!res) {
+      throw new Error('response must be defined.');
+    }
     const nodeHttpStreams: NodeHttpStreams = {
       requestStream: req,
       responseStream: res,
