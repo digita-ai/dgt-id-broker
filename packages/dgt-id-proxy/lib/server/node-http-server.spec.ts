@@ -33,10 +33,6 @@ describe('NodeHttpServer', () => {
     res = new ServerResponse(req);
   });
 
-  afterAll(() => {
-    server.stop();
-  });
-
   it('should be correctly instantiated if all correct arguments are provided', () => {
     expect(server).toBeTruthy();
   });
@@ -54,34 +50,37 @@ describe('NodeHttpServer', () => {
   });
 
   describe('start', () => {
+
     it('should return server if all goes well', async () => {
-      await expect (server.start().toPromise()).resolves.toEqual(server);
+      await expect(server.start().toPromise()).resolves.toEqual(server);
       await server.stop().toPromise();
     });
 
     it('should return an error when something goes wrong', async () => {
       host = 'test';
       badServer = new NodeHttpServer(host, port, handler);
-      await expect (() => badServer.start().toPromise()).rejects.toThrow('getaddrinfo ENOTFOUND test');
+      await expect(() => badServer.start().toPromise()).rejects.toThrow('getaddrinfo ENOTFOUND test');
       await server.stop().toPromise();
     });
   });
 
   describe('stop', () => {
+
     it('should return server if all goes well', async () => {
       await server.start().toPromise();
-      await expect (server.stop().toPromise()).resolves.toEqual(server);
+      await expect(server.stop().toPromise()).resolves.toEqual(server);
     });
 
     // it('should return an error when something goes wrong', async () => {
     //   await server.start().toPromise();
     //   await expect (server.stop().toPromise()).rejects.toBeInstanceOf(Error);
     // });
+    
   });
 
   describe('serverHelper()', () => {
-    it('should call the handle function of the nested handler', async () => {
-      await server.serverHelper(req, res);
+    it('should call the handle function of the nested handler', () => {
+      server.serverHelper(req, res);
       expect(handler.handle).toHaveBeenCalledTimes(1);
     });
 

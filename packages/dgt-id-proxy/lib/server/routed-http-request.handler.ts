@@ -30,7 +30,7 @@ export class RoutedHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * Passes the {HttpHandlerContext} to the handler of the {HttpHandlerRoute} mathing the request's path.
+   * Passes the {HttpHandlerContext} to the handler of the {HttpHandlerRoute} matching the request's path.
    *
    * @param {HttpHandlerContext} input - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */

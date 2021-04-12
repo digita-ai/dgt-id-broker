@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerRequest, HttpHandlerResponse, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable, Subject, of, throwError, combineLatest } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap, tap, toArray } from 'rxjs/operators';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
@@ -40,35 +40,33 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
     if (!nodeHttpStreams.requestStream.headers) {
       return throwError(new Error('headers of the request cannot be null or undefined.'));
     }
-    const chunks: any = [];
-    let data = '';
-    const subject = new Subject<string>();
-    nodeHttpStreams.requestStream.on('data', (chunk) => chunks.push(chunk));
-    nodeHttpStreams.requestStream.on('end', () => {
-      data = Buffer.concat(chunks).toString();
-      subject.next(data);
-      subject.complete();
-    });
+    
+    const buffer = new Subject<any>();
+
+    nodeHttpStreams.requestStream.on('data', (chunk) => buffer.next(chunk));
+    nodeHttpStreams.requestStream.on('end', () => buffer.complete());
 
     return combineLatest(
-      subject,
+      buffer.pipe(
+        toArray(),
+        map((chunks: any[]) => Buffer.concat(chunks).toString())
+      ),
       of(nodeHttpStreams.requestStream.url),
       of(nodeHttpStreams.requestStream.method),
       of(nodeHttpStreams.requestStream.headers),
     ).pipe(
       map(([ body, url, method, headers ]) => {
+        
         const httpHandlerRequest = {
           path: url,
           method,
           headers: headers as { [key: string]: string },
         };
 
-        const context: HttpHandlerContext = { request: body !== '' ? Object.assign(httpHandlerRequest, { body }) : httpHandlerRequest };
-        return context;
+        return { request: body !== '' ? Object.assign(httpHandlerRequest, { body }) : httpHandlerRequest };
+
       }),
-      // eslint-disable-next-line no-console
-      tap((context) => console.log('CONTEXT -----------', context)),
-      switchMap((context) => this.httpHandler.handle(context)),
+      switchMap((context: HttpHandlerContext) => this.httpHandler.handle(context)),
       map((response) => {
         nodeHttpStreams.responseStream.writeHead(response.status, response.headers);
         nodeHttpStreams.responseStream.write(response.body);

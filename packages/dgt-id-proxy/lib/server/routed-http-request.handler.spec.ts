@@ -50,6 +50,7 @@ describe('RoutedHttpRequestHandler', () => {
   });
 
   describe('handle', () => {
+
     it('should call the handle function of the handler in the HttpHandlerRoute when the requested route exists', async () => {
       const httpHandlerContext: HttpHandlerContext = {
         request: { path: '/path1', method: 'GET', headers: {} },
@@ -124,5 +125,7 @@ describe('RoutedHttpRequestHandler', () => {
       };
       await expect(routedHttpRequestHandler.canHandle(httpHandlerContext2).toPromise()).resolves.toEqual(false);
     });
+
   });
+  
 });
