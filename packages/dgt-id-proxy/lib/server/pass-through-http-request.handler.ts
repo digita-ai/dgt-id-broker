@@ -1,8 +1,10 @@
 import { assert } from 'console';
+import { get, RequestOptions, request } from 'http';
+import { OutgoingHttpHeaders } from 'http2';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
-import fetch, { Response } from 'node-fetch';
+import { map, switchMap, tap } from 'rxjs/operators';
+import { Request } from 'node-fetch';
 
 /**
  *
@@ -51,41 +53,72 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     const reqBody = req.body;
     const reqPath = req.path;
 
-    return this.fetchRequest(this.url + reqPath, reqMethod, reqHeaders, reqBody).pipe(
+    return this.fetchRequest(reqPath, reqMethod, reqHeaders, reqBody).pipe(
       tap((res) => assert(res)),
-      map((res) => {
-        let headers = {};
-        res.headers.forEach((val: string, key: string) => {
-          headers = { ...headers, [key]: val };
-        });
-        return { body: res.body, headers, status: res.status };
+      switchMap((res) => {
+        // eslint-disable-next-line no-console
+        console.log('RESPONSE FROM GET ----', res);
+        return of(res);
+
+        // let headers = {};
+        // res.headers.forEach((val: string, key: string) => {
+        //   headers = { ...headers, [key]: val };
+        // });
+
+        // return from(res.headers.get('content-type') === 'application/json' ? res.json() : res.text()).pipe(
+        //   map((body) => {
+        //     const httpHandlerResponse: HttpHandlerResponse = { body, headers, status: res.status };
+        //     return httpHandlerResponse;
+        //   }),
+        // );
       }),
     );
   }
 
   private fetchRequest(
-    url: string,
-    reqMethod: string,
-    reqHeaders: Record<string, string>,
+    path: string,
+    method: string,
+    headers: Record<string, string>,
     body?: any,
-  ): Observable<Response>{
-    const methodFetch = reqMethod;
-    const headersFetch = reqHeaders;
-    const bodyFetch = reqMethod.toLowerCase() === 'post' ? JSON.stringify(body) : '';
+  ): Observable<HttpHandlerResponse>{
+    const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
-    return methodFetch.toLowerCase() === 'get' || methodFetch.toLowerCase() === 'head' ?
-      from(
-        fetch(url, {
-          method: methodFetch,
-          headers: headersFetch,
-        }),
-      ) : from(
-        fetch(url, {
-          method: methodFetch,
-          headers: headersFetch,
-          body: bodyFetch,
-        }),
-      );
+    const requestOpts: RequestOptions = { hostname: 'localhost', port: 3000, path, method, headers: outgoingHttpHeaders };
+    // eslint-disable-next-line no-console
+    console.log('BODY ----', body);
+    const prom =  new Promise((resolve, reject) => {
+      const req = request(requestOpts, (res) => {
+        const bod: any = [];
+        res.on('data', (chunk) => bod.push(chunk));
+        res.on('end', () => {
+          const httpHandlerResponse: HttpHandlerResponse = {
+            body: Buffer.concat(bod).toString(),
+            headers: res.headers as { [key: string]: string },
+            status: res.statusCode ? res.statusCode : 500,
+          };
+          resolve(httpHandlerResponse);
+        });
+      });
+      if (body) {
+        req.write(body);
+      }
+      req.end();
+    }) as Promise<HttpHandlerResponse>;
+    return from(prom);
+
+    // return method.toLowerCase() === 'get' || method.toLowerCase() === 'head' ?
+    //   from(
+    //     fetch(url, {
+    //       method,
+    //       headers,
+    //     }),
+    //   ) : from(
+    //     fetch(url, {
+    //       method,
+    //       headers,
+    //       body,
+    //     }),
+    //   );
   }
 
   canHandle(context: HttpHandlerContext, response?: HttpHandlerResponse): Observable<boolean> {

@@ -41,9 +41,13 @@ export class RoutedHttpRequestHandler extends HttpHandler {
     if (!input.request) {
       return throwError(new Error('input.request must be defined.'));
     }
-    const request = input.request;
 
-    const matchingRoute = this.pathToRouteMap.get(request.path);
+    const request = input.request;
+    const splitPath = request.path.split('/');
+    splitPath.shift();
+    splitPath[0] = '/' + splitPath[0];
+
+    const matchingRoute = this.pathToRouteMap.get(splitPath[0].split('?')[0]);
     const routeIncludesMethod = matchingRoute?.operations
       .flatMap((operation) => operation.method).includes(request.method);
 

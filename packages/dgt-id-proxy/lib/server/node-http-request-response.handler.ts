@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerRequest, HttpHandlerResponse, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { Observable, of, throwError } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, Subject, of, throwError, combineLatest } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { NodeHttpStreamsHandler } from './node-http-streams.handler';
 import { NodeHttpStreams } from './node-http-streams.model';
 
@@ -30,28 +30,45 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
    * @returns an {Observable<void>} for completion detection
    */
   handle(nodeHttpStreams: NodeHttpStreams): Observable<void> {
-    let httpHandlerRequest: HttpHandlerRequest;
     if (!nodeHttpStreams.requestStream.url){
       return throwError(new Error('url of the request cannot be null or undefined.'));
-    } else if (!nodeHttpStreams.requestStream.method) {
-      return throwError(new Error('method of the request cannot be null or undefined.'));
-    } else if (!nodeHttpStreams.requestStream.headers) {
-      return throwError(new Error('headers of the request cannot be null or undefined.'));
-    } else {
-      httpHandlerRequest = {
-        path: nodeHttpStreams.requestStream.url,
-        method: nodeHttpStreams.requestStream.method,
-        headers: nodeHttpStreams.requestStream.headers as { [key: string]: string },
-      };
     }
-    const httpHandlerContext: HttpHandlerContext = {
-      request: httpHandlerRequest,
-    };
+    if (!nodeHttpStreams.requestStream.method) {
+      return throwError(new Error('method of the request cannot be null or undefined.'));
+    }
+    if (!nodeHttpStreams.requestStream.headers) {
+      return throwError(new Error('headers of the request cannot be null or undefined.'));
+    }
+    const chunks: any = [];
+    let data = '';
+    const subject = new Subject<string>();
+    nodeHttpStreams.requestStream.on('data', (chunk) => chunks.push(chunk));
+    nodeHttpStreams.requestStream.on('end', () => {
+      data = Buffer.concat(chunks).toString();
+      subject.next(data);
+      subject.complete();
+    });
 
-    return this.httpHandler.handle(httpHandlerContext).pipe(
+    return combineLatest(
+      subject,
+      of(nodeHttpStreams.requestStream.url),
+      of(nodeHttpStreams.requestStream.method),
+      of(nodeHttpStreams.requestStream.headers),
+    ).pipe(
+      map(([ body, url, method, headers ]) => {
+        const httpHandlerRequest = {
+          path: url,
+          method,
+          headers: headers as { [key: string]: string },
+        };
+
+        const context: HttpHandlerContext = { request: body !== '' ? Object.assign(httpHandlerRequest, { body }) : httpHandlerRequest };
+        return context;
+      }),
+      // eslint-disable-next-line no-console
+      tap((context) => console.log('CONTEXT -----------', context)),
+      switchMap((context) => this.httpHandler.handle(context)),
       map((response) => {
-        // eslint-disable-next-line no-console
-        console.log('----------------- response ', response);
         nodeHttpStreams.responseStream.writeHead(response.status, response.headers);
         nodeHttpStreams.responseStream.write(response.body);
         nodeHttpStreams.responseStream.end();
