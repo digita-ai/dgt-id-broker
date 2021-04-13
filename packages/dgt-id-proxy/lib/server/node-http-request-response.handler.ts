@@ -40,7 +40,7 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
     if (!nodeHttpStreams.requestStream.headers) {
       return throwError(new Error('headers of the request cannot be null or undefined.'));
     }
-    
+
     const buffer = new Subject<any>();
 
     nodeHttpStreams.requestStream.on('data', (chunk) => buffer.next(chunk));
@@ -49,14 +49,14 @@ export class NodeHttpRequestResponseHandler extends NodeHttpStreamsHandler {
     return combineLatest(
       buffer.pipe(
         toArray(),
-        map((chunks: any[]) => Buffer.concat(chunks).toString())
+        map((chunks: any[]) => Buffer.concat(chunks).toString()),
       ),
       of(nodeHttpStreams.requestStream.url),
       of(nodeHttpStreams.requestStream.method),
       of(nodeHttpStreams.requestStream.headers),
     ).pipe(
       map(([ body, url, method, headers ]) => {
-        
+
         const httpHandlerRequest = {
           path: url,
           method,
