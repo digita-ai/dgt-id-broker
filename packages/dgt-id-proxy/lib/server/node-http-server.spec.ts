@@ -75,7 +75,7 @@ describe('NodeHttpServer', () => {
     //   await server.start().toPromise();
     //   await expect (server.stop().toPromise()).rejects.toBeInstanceOf(Error);
     // });
-    
+
   });
 
   describe('serverHelper()', () => {
