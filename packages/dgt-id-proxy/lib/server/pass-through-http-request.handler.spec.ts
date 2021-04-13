@@ -16,7 +16,7 @@ describe('PassThroughHttpRequestHandler', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('should error when no scheme, host or port is provided', () => {
+  it('should error when no host or port is provided', () => {
     expect(() => new PassThroughHttpRequestHandler(undefined, 3000)).toThrow('No host was provided');
     expect(() => new PassThroughHttpRequestHandler(null, 3000)).toThrow('No host was provided');
     expect(() => new PassThroughHttpRequestHandler('localhost', undefined)).toThrow('No port was provided');
