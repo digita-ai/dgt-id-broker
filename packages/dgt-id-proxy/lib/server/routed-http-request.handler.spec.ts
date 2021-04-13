@@ -124,5 +124,7 @@ describe('RoutedHttpRequestHandler', () => {
       };
       await expect(routedHttpRequestHandler.canHandle(httpHandlerContext2).toPromise()).resolves.toEqual(false);
     });
+
   });
+
 });
