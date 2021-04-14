@@ -44,6 +44,12 @@
       }
     },
     {
+      "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
+      "@type": "PassThroughHttpRequestHandler",
+      "PassThroughHttpRequestHandler:_host": "localhost",
+      "PassThroughHttpRequestHandler:_port": "3000"
+    },
+    {
       "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
       "@type": "HttpHandlerRoute",
       "HttpHandlerRoute:_operations": [
@@ -54,9 +60,7 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@type": "PassThroughHttpRequestHandler",
-        "PassThroughHttpRequestHandler:_host": "localhost",
-        "PassThroughHttpRequestHandler:_port": "3000"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/auth"
     },
@@ -76,9 +80,7 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@type": "PassThroughHttpRequestHandler",
-        "PassThroughHttpRequestHandler:_host": "localhost",
-        "PassThroughHttpRequestHandler:_port": "3000"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/token"
     },
@@ -98,9 +100,7 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@type": "PassThroughHttpRequestHandler",
-        "PassThroughHttpRequestHandler:_host": "localhost",
-        "PassThroughHttpRequestHandler:_port": "3000"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/interaction"
     },
@@ -120,9 +120,7 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@type": "PassThroughHttpRequestHandler",
-        "PassThroughHttpRequestHandler:_host": "localhost",
-        "PassThroughHttpRequestHandler:_port": "3000"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/reg"
     },
@@ -137,9 +135,7 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@type": "PassThroughHttpRequestHandler",
-        "PassThroughHttpRequestHandler:_host": "localhost",
-        "PassThroughHttpRequestHandler:_port": "3000"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/.well-known"
     }
