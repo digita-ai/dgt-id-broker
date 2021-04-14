@@ -9,20 +9,18 @@ describe('PassThroughHttpRequestHandler', () => {
 
   beforeEach(async () => {
     context = { request: { headers: {}, method: 'GET', path: '/' } };
-    handler = new PassThroughHttpRequestHandler('http', 'localhost', 3000);
+    handler = new PassThroughHttpRequestHandler('localhost', 3000);
   });
 
   it('should be correctly instantiated', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('should error when no scheme, host or port is provided', () => {
-    expect(() => new PassThroughHttpRequestHandler(undefined, 'localhost', 3000)).toThrow('No scheme was provided');
-    expect(() => new PassThroughHttpRequestHandler(null, 'localhost', 3000)).toThrow('No scheme was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', undefined, 3000)).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', null, 3000)).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', 'localhost', undefined)).toThrow('No port was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', 'localhost', null)).toThrow('No port was provided');
+  it('should error when no host or port is provided', () => {
+    expect(() => new PassThroughHttpRequestHandler(undefined, 3000)).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler(null, 3000)).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', undefined)).toThrow('No port was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', null)).toThrow('No port was provided');
   });
 
   describe('handle', () => {
