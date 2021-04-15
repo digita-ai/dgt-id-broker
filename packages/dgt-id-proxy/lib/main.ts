@@ -11,18 +11,18 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
   const mainModulePath = variables['urn:dgt-id-proxy:variables:mainModulePath']
     ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath'])
     : path.join(__dirname, '../');
-  
+
   const configPath = variables['urn:dgt-id-proxy:variables:customConfigPath']
     ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:customConfigPath'])
     : path.join(__dirname, '../config/default.json');
-  
+
   const manager = await ComponentsManager.build({
     mainModulePath,
     logLevel: 'silly',
   });
-  
+
   await manager.configRegistry.register(configPath);
-  
+
   const server: NodeHttpServer = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
   server.start();
 };
