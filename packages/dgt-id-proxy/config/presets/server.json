@@ -6,19 +6,19 @@
   ],
   "@graph": [
     {
-      "@id": "urn:dgt-id-proxy:default:NodeHttpServer",
+      "@id": "urn:handlersjs-http:default:NodeHttpServer",
       "@type": "NodeHttpServer",
       "NodeHttpServer:_port": "3003",
       "NodeHttpServer:_host": "localhost",
       "NodeHttpServer:_nodeHttpStreamsHandler": {
-        "@id": "urn:dgt-id-proxy:default:NodeHttpRequestResponseHandler",
+        "@id": "urn:handlersjs-http:default:NodeHttpRequestResponseHandler",
         "@type": "NodeHttpRequestResponseHandler",
         "NodeHttpRequestResponseHandler:_httpHandler":{
-          "@id": "urn:dgt-id-proxy:default:RoutedHttpRequestHandler",
+          "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
           "@type": "RoutedHttpRequestHandler",
           "RoutedHttpRequestHandler:_handlerControllerList": [
             {
-              "@id": "urn:dgt-id-proxy:default:HttpHandlerController",
+              "@id": "urn:handlersjs-http:default:HttpHandlerController",
               "@type": "HttpHandlerController",
               "HttpHandlerController:_label": "ControllerList",
               "HttpHandlerController:_routes": [
