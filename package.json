@@ -17,7 +17,6 @@
         "@commitlint/cli": "^12.0.1",
         "@commitlint/config-conventional": "^12.0.1",
         "@commitlint/config-lerna-scopes": "^12.0.1",
-        "typescript": "^4.2.3",
         "@typescript-eslint/eslint-plugin": "^4.19.0",
         "@typescript-eslint/parser": "^4.19.0",
         "eslint": "^7.22.0",
@@ -27,6 +26,7 @@
         "eslint-plugin-jsdoc": "^32.3.0",
         "eslint-plugin-prefer-arrow": "^1.2.3",
         "husky": "^5.2.0",
-        "lerna": "^3.22.1"
+        "lerna": "^3.22.1",
+        "typescript": "^4.2.3"
     }
 }
