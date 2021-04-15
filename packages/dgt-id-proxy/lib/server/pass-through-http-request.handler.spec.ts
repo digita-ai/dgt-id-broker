@@ -1,6 +1,4 @@
-import fetch, { Response } from 'node-fetch';
-import { from } from 'rxjs';
-import { HttpHandlerContext, HttpHandlerRequest, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 
 describe('PassThroughHttpRequestHandler', () => {
@@ -69,7 +67,7 @@ describe('PassThroughHttpRequestHandler', () => {
       await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
     });
 
-    it('should return false if context was provided', async () => {
+    it('should return false if no context request was provided', async () => {
       context.request = undefined;
       await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
     });
