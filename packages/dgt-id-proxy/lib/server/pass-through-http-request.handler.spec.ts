@@ -8,7 +8,7 @@ describe('PassThroughHttpRequestHandler', () => {
   let context: HttpHandlerContext;
 
   beforeEach(async () => {
-    context = { request: { headers: {}, method: 'GET', path: '/' } };
+    context = { request: { headers: {}, method: 'GET', url: new URL('http://localhost:3000/') } };
     handler = new PassThroughHttpRequestHandler('localhost', 3000);
   });
 
@@ -50,11 +50,11 @@ describe('PassThroughHttpRequestHandler', () => {
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
     });
 
-    it('should error when no context request path is provided', async () => {
-      context.request.path = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No path was included in the request');
-      context.request.path = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No path was included in the request');
+    it('should error when no context request url is provided', async () => {
+      context.request.url = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      context.request.url = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
     });
 
     // it('should return a 200 response code', async () => {
