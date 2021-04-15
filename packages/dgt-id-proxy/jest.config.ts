@@ -7,12 +7,15 @@ const config: Config.InitialOptions = {
   testRegex: '.spec.ts$',
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
-  verbose: true,
+  verbose: false,
   preset: 'ts-jest',
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.spec.json',
     },
+  },
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
   },
 };
 export default config;
