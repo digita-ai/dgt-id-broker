@@ -122,19 +122,14 @@ export class DpopTokenRequestHandler extends HttpHandler {
           const decodedAccessTokenPayload = JSON.parse(decode(accessTokenPayload).toString());
           decodedAccessTokenPayload.iss = 'http://localhost:3003';
           decodedAccessTokenPayload.cnf = { 'jkt': thumbprint };
-          console.log(decodedAccessTokenPayload);
-          console.log(process.cwd());
 
           return of(response);
         }),
-        catchError((error) => {
-          console.log(error);
-          return of ({
-            body: error.message,
-            headers: { 'access-control-allow-origin': context.request.headers.origin },
-            status: 400,
-          });
-        }),
+        catchError((error) => of ({
+          body: error.message,
+          headers: { 'access-control-allow-origin': context.request.headers.origin },
+          status: 400,
+        })),
       );
     } else {
       return this.handler.handle(context);
