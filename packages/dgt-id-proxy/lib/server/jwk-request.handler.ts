@@ -19,25 +19,6 @@ export class JwkRequestHandler extends HttpHandler {
   }
 
   handle(context: HttpHandlerContext) {
-    if (!context) {
-      return throwError(new Error('Context cannot be null or undefined'));
-    }
-
-    if (!context.request) {
-      return throwError(new Error('No request was included in the context'));
-    }
-
-    if (!context.request.method) {
-      return throwError(new Error('No method was included in the request'));
-    }
-
-    if (!context.request.headers) {
-      return throwError(new Error('No headers were included in the request'));
-    }
-
-    if (!context.request.path) {
-      return throwError(new Error('No path was included in the request'));
-    }
 
     return of({ path: join(process.cwd(), this.path) })
       .pipe(
@@ -69,12 +50,6 @@ export class JwkRequestHandler extends HttpHandler {
   }
 
   canHandle(context: HttpHandlerContext) {
-    return context
-    && context.request
-    && context.request.method
-    && context.request.headers
-    && context.request.path
-      ? of(true)
-      : of(false);
+    return of(true);
   }
 }

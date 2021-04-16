@@ -1,11 +1,15 @@
+import { join } from 'path';
+import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, combineLatest } from 'rxjs';
 import { switchMap, map, catchError } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWK } from 'jose/webcrypto/types';
+import { JWK, JWTPayload } from 'jose/webcrypto/types';
 import { decode } from 'jose/util/base64url';
+import { SignJWT } from 'jose/jwt/sign';
+import { parseJwk } from 'jose/jwk/parse';
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**
@@ -17,7 +21,11 @@ export class DpopTokenRequestHandler extends HttpHandler {
    *
    * @param {HttpHandler} handler - the handler through which to pass incoming requests.
    */
-  constructor(private handler: HttpHandler, private keyValueStore: InMemoryStore<string, string[]>) {
+  constructor(
+    private handler: HttpHandler,
+    private keyValueStore: InMemoryStore<string, string[]>,
+    private pathToJwks: string,
+  ) {
     super();
 
     if(!handler){
@@ -47,8 +55,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
       return throwError(new Error('No headers were included in the request'));
     }
 
-    if (!context.request.path) {
-      return throwError(new Error('No path was included in the request'));
+    if (!context.request.url) {
+      return throwError(new Error('No url was included in the request'));
     }
 
     if (context.request.method === 'POST') {
@@ -114,16 +122,50 @@ export class DpopTokenRequestHandler extends HttpHandler {
           if (parsedBody.error) {
             throw new Error(response.body);
           }
-          return combineLatest(of(response), from(calculateThumbprint(jwk)));
+          return combineLatest(
+            of(response),
+            from(calculateThumbprint(jwk)),
+            from(readFile(join(process.cwd(), this.pathToJwks))),
+          );
         }),
-        switchMap(([ response, thumbprint ]) => {
+        switchMap(([ response, thumbprint, file ]) => {
+          const jwks = JSON.parse((file.toString()));
+
+          return combineLatest(
+            of(response),
+            of(jwks.keys[0]),
+            from(parseJwk(jwks.keys[0])),
+            of(thumbprint),
+          );
+        }),
+        switchMap(([ response, serverJwk, serverJwkAsKeyLike, thumbprint ]) => {
           const parsedBody = JSON.parse(response.body);
           const accessTokenPayload = parsedBody.access_token.split('.')[1];
           const decodedAccessTokenPayload = JSON.parse(decode(accessTokenPayload).toString());
-          decodedAccessTokenPayload.iss = 'http://localhost:3003';
           decodedAccessTokenPayload.cnf = { 'jkt': thumbprint };
 
-          return of(response);
+          return combineLatest(
+            of(response),
+            from(new SignJWT(decodedAccessTokenPayload as JWTPayload)
+              .setProtectedHeader({ alg: serverJwk.alg, typ: 'at+jwt', kid: serverJwk.kid })
+              // TO DO: Fix hardcoded URL
+              .setIssuer('http://localhost:3003')
+              .sign(serverJwkAsKeyLike)),
+          );
+        }),
+        switchMap(([ response, dpopBoundAccessToken ]) => {
+          const parsedBody = JSON.parse(response.body);
+          parsedBody.token_type = 'DPoP';
+          parsedBody.access_token = dpopBoundAccessToken;
+          return of({
+            body: JSON.stringify(parsedBody),
+            headers: {
+              'access-control-allow-origin': context.request.headers.origin,
+              'access-control-allow-headers': 'dpop',
+              'Content-Type':  'application/json',
+            },
+            status: 200,
+          });
         }),
         catchError((error) => of ({
           body: error.message,
@@ -144,7 +186,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       && context.request
       && context.request.method
       && context.request.headers
-      && context.request.path
+      && context.request.url
       ? of(true)
       : of(false);
   }
