@@ -51,17 +51,17 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       return throwError(new Error('No headers were included in the request'));
     }
 
-    if (!context.request.path) {
-      return throwError(new Error('No path was included in the request'));
+    if (!context.request.url) {
+      return throwError(new Error('No url was included in the request'));
     }
 
     const req = context.request;
     const reqMethod = req.method;
     const reqHeaders = req.headers;
     const reqBody = req.body;
-    const reqPath = req.path;
+    const reqUrl = req.url;
 
-    return this.fetchRequest(reqPath, reqMethod, reqHeaders, reqBody).pipe(
+    return this.fetchRequest(reqUrl, reqMethod, reqHeaders, reqBody).pipe(
       tap((res) => assert(res)),
       switchMap((res) => of(res)),
     );
@@ -77,7 +77,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       && context.request
       && context.request.method
       && context.request.headers
-      && context.request.path
+      && context.request.url
       ? of(true)
       : of(false);
   }
@@ -92,14 +92,14 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @param body - the request body
    */
   private fetchRequest(
-    path: string,
+    url: URL,
     method: string,
     headers: Record<string, string>,
     body?: any,
   ): Observable<HttpHandlerResponse>{
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
-    const requestOpts: RequestOptions = { protocol: `http:`, hostname: this.host, port: this.port, path, method, headers: outgoingHttpHeaders };
+    const requestOpts: RequestOptions = { protocol: `http:`, hostname: this.host, port: this.port, path: url.pathname + url.search, method, headers: outgoingHttpHeaders };
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
       const req = request(requestOpts, (res) => {

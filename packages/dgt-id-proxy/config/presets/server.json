@@ -26,10 +26,19 @@
                   "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
                 },
                 {
+                  "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
+                },
+                {
                   "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
                 },
                 {
                   "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
                 },
                 {
                   "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
@@ -63,6 +72,21 @@
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/auth"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "HttpHandlerRoute:_path": "/auth/:dynamic"
     },
     {
       "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
@@ -102,7 +126,47 @@
       "HttpHandlerRoute:_handler": {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
-      "HttpHandlerRoute:_path": "/interaction"
+      "HttpHandlerRoute:_path": "/interaction/:dynamic"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        },
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "POST",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "HttpHandlerRoute:_path": "/interaction/:dynamic/login"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "GET",
+          "HttpHandlerOperation:_publish": false
+        },
+        {
+          "@type": "HttpHandlerOperation",
+          "HttpHandlerOperation:_method": "POST",
+          "HttpHandlerOperation:_publish": false
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "HttpHandlerRoute:_path": "/interaction/:dynamic/confirm"
     },
     {
       "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint",
