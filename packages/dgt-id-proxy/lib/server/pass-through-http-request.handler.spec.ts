@@ -8,21 +8,19 @@ describe('PassThroughHttpRequestHandler', () => {
   let context: HttpHandlerContext;
 
   beforeEach(async () => {
-    context = { request: { headers: {}, method: 'GET', path: '/' } };
-    handler = new PassThroughHttpRequestHandler('http', 'localhost', 3000);
+    context = { request: { headers: {}, method: 'GET', url: new URL('http://localhost:3000/') } };
+    handler = new PassThroughHttpRequestHandler('localhost', 3000);
   });
 
   it('should be correctly instantiated', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('should error when no scheme, host or port is provided', () => {
-    expect(() => new PassThroughHttpRequestHandler(undefined, 'localhost', 3000)).toThrow('No scheme was provided');
-    expect(() => new PassThroughHttpRequestHandler(null, 'localhost', 3000)).toThrow('No scheme was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', undefined, 3000)).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', null, 3000)).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', 'localhost', undefined)).toThrow('No port was provided');
-    expect(() => new PassThroughHttpRequestHandler('http', 'localhost', null)).toThrow('No port was provided');
+  it('should error when no host or port is provided', () => {
+    expect(() => new PassThroughHttpRequestHandler(undefined, 3000)).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler(null, 3000)).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', undefined)).toThrow('No port was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', null)).toThrow('No port was provided');
   });
 
   describe('handle', () => {
@@ -52,11 +50,11 @@ describe('PassThroughHttpRequestHandler', () => {
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
     });
 
-    it('should error when no context request path is provided', async () => {
-      context.request.path = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No path was included in the request');
-      context.request.path = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No path was included in the request');
+    it('should error when no context request url is provided', async () => {
+      context.request.url = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      context.request.url = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
     });
 
     // it('should return a 200 response code', async () => {
