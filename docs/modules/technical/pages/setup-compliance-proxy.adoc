@@ -42,24 +42,24 @@ Create a `RoutedHttpRequestHandler` extending `HttpHandler` and taking a list of
 Replace the `MockHttpHandler` in the configuration by a `RoutedHttpRequestHandler`, and give this router a controller with a route to the `MockHttpHandler`.
 
 
-=== The null-operation: passing through
+=== The null-operation: passing through &#10004;&#65039;
 
 On a new branch, create a `PassThroughHttpRequestHandler` that takes a URL as dependency and performs the request on the URL, then parses the response and returns it.
 
 Try if this works as intended by writing tests. Then add as many routes to the existing configuration as there are OIDC endpoints, and pass all of them through a configuration of the `PassThroughHttpRequestHandler` pointing to a (local or hosted) classic OIDC provider. Perform some OIDC requests on the proxy and check if the response is what we would expect from the proxied provider. Try the same with our Solid-compliant provider.
 
 
-=== Intermezzo: returning useful errors
+=== Intermezzo: returning useful errors &#10004;&#65039;
 
 Good applications sometimes fail, but when they do they return useful errors. Since we are building a server, the best way to return errors is with correct HTTP responses. Take a look at the `util/errors` directory of the Community Solid Sever (CSS) and make sure you understand how they are used. Then implement the grunt of them in a new branch (with the exception of `SystemError` and `ErrorUtil`), add the necessary tests, and replace all current errors in our code by a more fitting one.
 
 
-=== Preface: a storage solution
+=== Preface: a storage solution &#10004;&#65039;
 
 For the next steps, we will need a way to store some data that the proxied OIDC provider might not support itself. Make a new branch for this. We will follow the abstractions of the CSS, so feel free to be heavily inspired by their `KeyValueStorage` (although calling it a `~Store` might be more conventional), and it's `MemoryMap` and `JsonFile` implementations. Make sure to install all necessary dependencies, and put them in `/lib/storage`. Don't forget to write tests, equally inspired by the CSS.
 
 
-=== Fixing DPoP
+=== Fixing DPoP &#10004;&#65039;
 
 Suppose a provider has everything set for Solid-compliance except DPoP. Create a `DpopTokenRequestHandler` that takes another `HttpRequestHandler` as dependency, and watches for a `DPoP` header in the request. It rejects the request if such a header is absent. Otherwise, it performs all the necessary checks and acts accordingly (look back to your notes and the specs). If all is well, the handler creates a DPoP-less request, lets its dependency handler handle it, and then adds/changes all necessary information on the returned response, before returning a valid DPoP response itself.
 
@@ -70,7 +70,7 @@ When finished, check the correct behavior of the `DpopTokenRequestHandler` by co
 For good measure, we might also create a `DpopResourceRequestHandler` implementing the second step of DPoP security: checking the DPoP-bound token and, if valid, passes the request to the dependency handler.
 
 
-=== Fixing PKCE
+=== Fixing PKCE &#10004;&#65039;
 
 In the same fashion as the `DpopRequestHandler`, create two handlers adding missing PKCE support: a `PkceAuthRequestHandler` and a `PkceTokenRequestHandler`. 
 
