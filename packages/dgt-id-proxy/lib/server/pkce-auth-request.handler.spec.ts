@@ -122,7 +122,6 @@ describe('PkceAuthRequestHandler', () => {
 
     it('should link the code & challenge + method in the inMemoryStore', async () => {
       await pkceHandler.handle(context).toPromise();
-      await nestedHttpHandler.handle(context).toPromise();
       const params = res.headers.location
         .split('?')[1]
         .split('=');
@@ -141,7 +140,7 @@ describe('PkceAuthRequestHandler', () => {
       await expect(pkceHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
     });
 
-    it('should return false if no context was provided', async () => {
+    it('should return false if no request was provided', async () => {
       context.request = undefined;
       await expect(pkceHandler.canHandle(context).toPromise()).resolves.toEqual(false);
       context.request = null;

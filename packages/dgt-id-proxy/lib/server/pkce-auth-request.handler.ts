@@ -5,8 +5,10 @@ import { InMemoryStore } from '../storage/in-memory-store';
 
 export class PkceAuthRequestHandler extends HttpHandler {
 
-  constructor(private httpHandler: HttpHandler,
-    private inMemoryStore: InMemoryStore<string, { challenge: string; method: string }>){
+  constructor(
+    private httpHandler: HttpHandler,
+    private inMemoryStore: InMemoryStore<string, { challenge: string; method: string }>,
+  ){
     super();
 
     if (!httpHandler) {
@@ -57,23 +59,21 @@ export class PkceAuthRequestHandler extends HttpHandler {
       method,
     };
 
-    return this.httpHandler.handle(context)
-      .pipe(
-        switchMap((response: HttpHandlerResponse) => {
-          const splitURL = response.headers.location
-            .split('?');
+    return this.httpHandler.handle(context).pipe(
+      switchMap((response: HttpHandlerResponse) => {
+        const splitURL = response.headers.location.split('?');
 
-          if (splitURL.length === 1) {
-            return throwError(new Error('No code was received'));
-          }
+        if (splitURL.length === 1) {
+          return throwError(new Error('No code was received'));
+        }
 
-          const splitQuery = splitURL[1].split('=');
-          const code = splitQuery[1];
-          this.inMemoryStore.set(code, challengeAndMethod);
+        const splitQuery = splitURL[1].split('=');
+        const code = splitQuery[1];
+        this.inMemoryStore.set(code, challengeAndMethod);
 
-          return of(response);
-        }),
-      );
+        return of(response);
+      }),
+    );
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
