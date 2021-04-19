@@ -79,8 +79,49 @@ The first one watches for the `code_challenge` and `code_challenge_method` param
 The second one watches for the `code_verifier` parameter. It rejects the request if this parameter is absent. Otherwise, it performs the check of the verifier with the stored data and, if valid, passes a PKCE-less request through its dependency handler and returns the response.
 
 
+=== WebIDs on the fly
+
+If an identity provider does not allow WebIDs as identities, either because of technical reasons or because of legacy identities, the proxy will have to find a way to still return a WebID to the client. Let's do this by implementing a `WebIDResponseHandler` that already takes a response as input, checks if it contains a correct `webid` claim and, if not, build one from the `sub` claim according to a WebID pattern given to the constructor. Let this pattern be similar to how the dynamic url pattern in our router works: a URL string in which the subject will be inserted instead of a tag starting with `:`. Whenever the upstream server returns a response that is not a WebID, the handler can then create on based on the subject claim and the WebID pattern. 
+
+For now, also write a `SequenceHandler` that takes a list of handlers and passes the initial input to the first handler, takes the response thereof and passes it to the next handler, and so on until it finally returns the response of the last handler.
+
+In the config for non-compliant providers, exchange the `PassThroughHandler` by a `SequenceHandler` with a list containing the `PassThroughHandler` as first handler and a `WebIDResponseHandler` as second.
+
+As always: write and run test while coding, and check afterwards with a real setup.
 
 
-//=== Refactor: adding observables
+=== Extend responses with Solid claims
+
+Regardless of the correct security measures, a token is only useful if it contains the right claims. Make sure the proxied response contains these, even if the upstream server left some out. Do this by implementing a basic `SolidTokensRequestHandler` which stores the necessary information from the request in a store, passes the request to a nested handler (given as dependency in the constructor), and based on the response and the initially stored information then adds all missing claims. Use your own comparison docs to decide what can be missing, and thus what checks to do and information to add. Be especially aware of the fact that the Solid specification has prescriptions for both the Access Token _and_ the ID Token, and that the Access Token in classic OIDC can be opaque.
+
+In the config for non-compliant providers, exchange the `PassThroughHandler` by a `SolidTokensRequestHandler` that takes the `PassThroughHandler` as nested handler.
+
+As always: write and run test while coding, and check afterwards with a real setup.
 
 
+=== Dynamic client registration
+
+Since Solid OIDC allows clients to simply refer to their WebId for registration info, while the upstream provider might only have static clients or classic dynamic registration enabled, we should provide a handler that provides this functionality. We might want to provide two different implementations of this handler, depending on the case of the upstream server:
+
+- One `SolidClientDynamicRegistrationHandler` that leverages the Dynamic Registration endpoint of the upstream server to check wether the client is registered (with it's up to date information from the WebID) and, if not, registers the client dynamically (or updates the clients registered information) before passing the request on through a nested handler and simply returning the response.
+
+- One `SolidClientStaticRegistrationHandler` that takes a static client ID, a store and a nested handler as dependencies, and replaces the client's ID with its own when passing the request to the nested handler, but restores it in the response before returning it.
+
+Beware of the fact that in either case, ephemeral Solid clients may also identify as http://www.w3.org/ns/solid/terms#PublicOidcClient, (in which case the IdP may accept any `redirect_uri`), _or_ may present an identifier that is already statically or dynamically registered.
+
+
+=== Advertise Solid compliance 
+
+Make sure the proxy advertises its Solid OIDC support in a OIDC Discovery resource.
+
+
+=== Addition: launch variables
+
+Look into the startup code of `platform-api` (link:https://github.com/digita-ai/dgt-platform/blob/develop/packages/dgt-platform-api/lib/main.ts[`lib/main.ts`], link:https://github.com/digita-ai/dgt-platform/blob/develop/packages/dgt-platform-api/bin/server.js[`bin/server.js`] and link:https://github.com/digita-ai/dgt-platform/blob/develop/packages/dgt-platform-api/config/presets/launch.json[config/presets/launch.json]) and implement a similar use of variables, at least for:
+
+- the config path;
+- the main module path;
+- the host and port of the proxy;
+- the host and port of the upstream server.
+
+Since our binary file _is_ our main file, the setup will look slightly different, but not much.
