@@ -73,7 +73,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context - a {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
-
     return context
       && context.request
       && context.request.method
