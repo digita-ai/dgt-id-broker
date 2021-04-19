@@ -2,16 +2,17 @@ import type { Config } from '@jest/types';
 
 const config: Config.InitialOptions = {
   testTimeout: 300000,
-  moduleFileExtensions: [ 'js', 'ts' ],
+  moduleFileExtensions: [ 'ts', 'js' ],
   rootDir: 'lib',
   testRegex: '.spec.ts$',
   coverageDirectory: '../coverage',
+  'collectCoverageFrom': [ '**/*.{ts,js}' ],
   testEnvironment: 'node',
   verbose: false,
   preset: 'ts-jest',
   globals: {
     'ts-jest': {
-      tsconfig: 'tsconfig.spec.json',
+      tsconfig: '<rootDir>/../tsconfig.spec.json',
     },
   },
   transform: {
