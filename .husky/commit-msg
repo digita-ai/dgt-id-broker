@@ -40,9 +40,9 @@ else
         LIST=$(echo "$LIST" ; echo "$NEW")
         NEW=$(echo "$NEW" | sed -e 's/^\(.*\)$/\1\^@/g' | xargs git rev-list --no-walk -E --grep="WIP")
     done
-    echo $LIST
+
     RELEVANT="$(echo "$LIST" | xargs -L1 git diff-tree --no-commit-id --name-only -r | sort -u ; echo "$STAGED")"
-    echo $RELEVANT
+
     ## Run tests related to staged files
     echo "$RELEVANT" | xargs ./node_modules/.bin/jest --bail --coverage --silent --passWithNoTests --findRelatedTests
 

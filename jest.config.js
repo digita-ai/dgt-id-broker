@@ -1,3 +1,3 @@
 module.exports = {
-  projects: ["<rootDir>/packages/dgt-id-proxy/jest.config.ts"],
+  projects: ["<rootDir>/packages/*/jest.config.ts"],
 };
