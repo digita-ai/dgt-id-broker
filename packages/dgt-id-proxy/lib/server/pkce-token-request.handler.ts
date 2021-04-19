@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { InMemoryStore } from '../storage/in-memory-store';
@@ -39,8 +39,8 @@ export class PkceTokenRequestHandler extends HttpHandler {
       if (body.code_verifier === undefined || body.code_verifier === null) {
         throw new Error('Code verifier is required.');
       }
-      if (body.code === undefined || body.code === null) {
-        throw new Error('Code is required.');
+      if (body.auth_code === undefined || body.auth_code === null) {
+        throw new Error('An authorization code is required.');
       }
     } catch (error) {
       return of(
@@ -52,17 +52,20 @@ export class PkceTokenRequestHandler extends HttpHandler {
       );
     }
 
-    return from(this.inMemoryStore.get(body.code))
+    return from(this.inMemoryStore.get(body.auth_code))
       .pipe(
         switchMap((codeChallengeAndMethod) => {
+
           try {
             if (codeChallengeAndMethod) {
+
               const challenge = this.generateCodeChallenge(body.code_verifier, codeChallengeAndMethod);
 
               if (challenge === codeChallengeAndMethod.challenge) {
                 return this.httpHandler.handle(context);
               }
               throw new Error('Code challenges do not match.');
+
             }
           } catch (error) {
             return of(
@@ -74,13 +77,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
             );
           }
 
-          return of(
-            {
-              body: 'Bad Request: ',
-              headers: {},
-              status: 400,
-            },
-          );
+          return throwError(new InternalServerError());
         }),
       );
   }
@@ -91,7 +88,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
       && context.request.url
       && context.request.body
       && context.request.body.code_verifier
-      && context.request.body.code
+      && context.request.body.auth_code
       ? of(true)
       : of(false);
   }
