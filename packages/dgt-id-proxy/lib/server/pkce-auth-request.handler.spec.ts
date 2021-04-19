@@ -1,44 +1,64 @@
 import { of } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerRequest, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
-import { PkceAuthRequestHandler } from './pkce-auth-request.handler';
+import { Code, ChallengeAndMethod, PkceAuthRequestHandler } from './pkce-auth-request.handler';
 
 describe('PkceAuthRequestHandler', () => {
   let pkceHandler: PkceAuthRequestHandler;
   let nestedHttpHandler: HttpHandler;
-  let inMemoryStore: InMemoryStore<string,  { challenge: string; method: string }>;
+  let inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>;
   let context: HttpHandlerContext;
   let res: HttpHandlerResponse;
   let url: URL;
+  let code_challenge_value: string;
+  let code_challenge_method_value: string;
+  let challengeAndMethod: ChallengeAndMethod;
+  let client_id: string;
+  let redirect_uri: string;
+  let endpoint: string;
+  let host_panva: string;
+  let auth_code: string;
+  let referer: string;
+  let host: string;
 
   beforeEach(async () => {
+    referer = 'http://client.example.com';
+    host = 'localhost:3000';
+    auth_code = 'yoEp04ySUmJ3BrI9qWlArQle7ej4D-FRYTUE9N8wCAa';
+
     res = {
       body: {},
-      headers: { location: 'http://localhost:3001/requests.html?code=yoEp04ySUmJ3BrI9qWlArQle7ej4D-FRYTUE9N8wCAa' },
-      status: 200,
+      headers: { location: `http://${referer}/redirect_callback.html?code=${auth_code}` },
+      status: 302,
     };
+
     nestedHttpHandler = {
       canHandle: jest.fn(),
       handle: jest.fn().mockReturnValue(of(res)),
       safeHandle: jest.fn(),
     } as HttpHandler;
+
     inMemoryStore = new InMemoryStore();
-    url = new URL('http://localhost:3000/auth?response_type=code&code_challenge=F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html');
+
+    code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
+    code_challenge_method_value = 'S256';
+    challengeAndMethod = {
+      challenge: code_challenge_value,
+      method: code_challenge_method_value,
+    };
+    client_id = 'http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me';
+    redirect_uri = 'http%3A%2F%2Flocalhost:3001%2Frequests.html';
+    endpoint = 'auth';
+    host_panva = 'localhost:3000';
+
+    url = new URL(`http://${host_panva}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
+
     context = { request: { headers: {
-      host: 'localhost:3003',
-      connection: 'keep-alive',
-      'upgrade-insecure-requests': '1',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36',
-      accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-      'sec-gpc': '1',
-      'sec-fetch-site': 'same-site',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-dest': 'document',
-      referer: 'http://localhost:3001/',
-      'accept-encoding': 'gzip, deflate, br',
-      'accept-language': 'en-US,en;q=0.9',
+      host,
+      referer,
     }, method: 'GET'
     , url } };
+
     pkceHandler = new PkceAuthRequestHandler(nestedHttpHandler, inMemoryStore);
   });
 
@@ -75,29 +95,27 @@ describe('PkceAuthRequestHandler', () => {
     });
 
     it('should error when no code_challenge was provided', async () => {
-      const noChallengeContext = context;
-      noChallengeContext.request.url = new URL('http://localhost:3000/auth?response_type=code&code_challenge=&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html');
+      context.request.url.searchParams.set('code_challenge', '');
       const response =  {
         body: JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge must be provided.' }),
         headers: { 'access-control-allow-origin': context.request.headers.origin },
         status: 400,
       };
-      await expect(pkceHandler.handle(noChallengeContext).toPromise()).resolves.toEqual(response);
-      noChallengeContext.request.url = new URL('http://localhost:3000/auth?response_type=code&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html');
-      await expect(pkceHandler.handle(noChallengeContext).toPromise()).resolves.toEqual(response);
+      await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
+      context.request.url.searchParams.delete('code_challenge');
+      await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
     it('should error when no code_challenge_method was provided', async () => {
-      const noChallengeContext = context;
-      noChallengeContext.request.url = new URL('http://localhost:3000/auth?response_type=code&code_challenge=F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ&code_challenge_method=&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html');
+      context.request.url.searchParams.set('code_challenge_method', '');
       const response =  {
         body: JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge method must be provided' }),
         headers: { 'access-control-allow-origin': context.request.headers.origin },
         status: 400,
       };
-      await expect(pkceHandler.handle(noChallengeContext).toPromise()).resolves.toEqual(response);
-      noChallengeContext.request.url = new URL('http://localhost:3000/auth?response_type=code&code_challenge=F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html');
-      await expect(pkceHandler.handle(noChallengeContext).toPromise()).resolves.toEqual(response);
+      await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
+      context.request.url.searchParams.delete('code_challenge_method');
+      await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
     it('should call the nestedHttpHandler handle method', async () => {
@@ -105,11 +123,11 @@ describe('PkceAuthRequestHandler', () => {
       expect(nestedHttpHandler.handle).toHaveBeenCalledTimes(1);
     });
 
-    it('should error when no code was provided in the response', async () => {
+    it('should error when no authorization code was provided in the response', async () => {
       const badRes = {
         body: {},
-        headers: { location: 'http://localhost:3001/requests.html' },
-        status: 200,
+        headers: { location: `${referer}/requests.html` },
+        status: 400,
       };
       const badHttpHandler = {
         canHandle: jest.fn(),
@@ -117,20 +135,16 @@ describe('PkceAuthRequestHandler', () => {
         safeHandle: jest.fn(),
       } as HttpHandler;
       const pkceHandler2 = new PkceAuthRequestHandler(badHttpHandler, inMemoryStore);
-      await expect(pkceHandler2.handle(context).toPromise()).rejects.toThrow('No code was received');
+      await expect(pkceHandler2.handle(context).toPromise()).rejects.toThrow();
     });
 
-    it('should link the code & challenge + method in the inMemoryStore', async () => {
+    it('should link the authorization code & challenge + method in the inMemoryStore', async () => {
       await pkceHandler.handle(context).toPromise();
       const params = res.headers.location
         .split('?')[1]
         .split('=');
-      const code = params[1];
-      const challengeAndMethod = {
-        challenge: 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ',
-        method: 'S256',
-      };
-      await expect(inMemoryStore.get(code).then((data) => data)).resolves.toEqual(challengeAndMethod);
+      const authCode = params[1];
+      await expect(inMemoryStore.get(authCode).then((data) => data)).resolves.toEqual(challengeAndMethod);
     });
   });
 

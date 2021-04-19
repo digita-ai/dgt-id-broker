@@ -1,13 +1,15 @@
 import { of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 
+export type Code = string;
+export interface ChallengeAndMethod { challenge: string; method: string }
 export class PkceAuthRequestHandler extends HttpHandler {
 
   constructor(
     private httpHandler: HttpHandler,
-    private inMemoryStore: InMemoryStore<string, { challenge: string; method: string }>,
+    private inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>,
   ){
     super();
 
@@ -32,9 +34,9 @@ export class PkceAuthRequestHandler extends HttpHandler {
     if (!context.request.url) {
       return throwError(new Error('No url was included in the request'));
     }
-    const urlSearchParams = new URLSearchParams(context.request.url.toString());
-    const challenge = urlSearchParams.get('code_challenge');
-    const method = urlSearchParams.get('code_challenge_method');
+
+    const challenge = context.request.url.searchParams.get('code_challenge');
+    const method = context.request.url.searchParams.get('code_challenge_method');
 
     try{
       if (!challenge) {
@@ -54,22 +56,24 @@ export class PkceAuthRequestHandler extends HttpHandler {
       );
     }
 
-    const challengeAndMethod = {
-      challenge,
-      method,
-    };
+    context.request.url.searchParams.delete('code_challenge');
+    context.request.url.searchParams.delete('code_challenge_method');
 
     return this.httpHandler.handle(context).pipe(
       switchMap((response: HttpHandlerResponse) => {
         const splitURL = response.headers.location.split('?');
 
         if (splitURL.length === 1) {
-          return throwError(new Error('No code was received'));
+          return throwError(new InternalServerError());
         }
 
         const splitQuery = splitURL[1].split('=');
-        const code = splitQuery[1];
-        this.inMemoryStore.set(code, challengeAndMethod);
+        const authCode = splitQuery[1];
+
+        this.inMemoryStore.set(authCode, {
+          challenge,
+          method,
+        });
 
         return of(response);
       }),
