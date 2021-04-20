@@ -51,14 +51,19 @@ describe('PkceTokenRequestHandler', () => {
       handle: jest.fn().mockReturnValueOnce(of()),
       safeHandle: jest.fn(),
     } as HttpHandler;
+
     inMemoryStore = new InMemoryStore();
+
     referer = 'http://client.example.com';
     url = new URL(`${referer}/token`);
     code_verifier = generateRandomString(128);
     challengeAndMethod.challenge = generateCodeChallenge(code_verifier);
     auth_code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
+
     context = { request: { headers: {}, body: { code_verifier, auth_code }, method: 'POST', url } };
+
     inMemoryStore.set(context.request.body.auth_code, challengeAndMethod);
+
     pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, inMemoryStore);
   });
 
@@ -97,11 +102,13 @@ describe('PkceTokenRequestHandler', () => {
     it('should error when no code_verifier was provided', async () => {
       const noCodeVerifierContext = context;
       noCodeVerifierContext.request.body = { cd_vrfr: 'bla', auth_code };
+
       const response =  {
         body: JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier is required.' }),
         headers: { 'access-control-allow-origin': context.request.headers.origin },
         status: 400,
       };
+
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
       noCodeVerifierContext.request.body = { code_verifier: null, auth_code };
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
@@ -112,11 +119,13 @@ describe('PkceTokenRequestHandler', () => {
     it('should error when no authorization code was provided', async () => {
       const noCodeContext = context;
       noCodeContext.request.body = { code_verifier, kode: 'z' };
+
       const response =  {
         body: JSON.stringify({ error: 'invalid_request', error_description: 'An authorization code is required.' }),
         headers: { 'access-control-allow-origin': context.request.headers.origin },
         status: 400,
       };
+
       await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
       noCodeContext.request.body = { code_verifier, auth_code: null };
       await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
@@ -133,11 +142,13 @@ describe('PkceTokenRequestHandler', () => {
 
       it('should give a valid error when code challenges do not match', async () => {
         challengeAndMethod.challenge = 'ezffzekfkzfe';
+
         const response =  {
-          body: JSON.stringify({ error: 'invalid_request', error_description: 'Code challenges do not match.' }),
+          body: JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' }),
           headers: { 'access-control-allow-origin': context.request.headers.origin },
           status: 400,
         };
+
         await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
       });
 
@@ -220,9 +231,11 @@ describe('PkceTokenRequestHandler', () => {
 
       it('should call return hashed & encoded code_verifier when the algorithm is S256', () => {
         challengeAndMethod.method = 'S256';
+
         const hash = createHash('sha256');
         hash.update(code_verifier);
         const hashed = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
         pkceTokenRequestHandler.generateCodeChallenge = jest.fn().mockReturnValueOnce(hashed);
         pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
         expect(pkceTokenRequestHandler.generateCodeChallenge)

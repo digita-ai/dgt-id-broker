@@ -3,11 +3,12 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerErr
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { InMemoryStore } from '../storage/in-memory-store';
+import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
 
 export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
-    private inMemoryStore: InMemoryStore<string, { challenge: string; method: string }>){
+    private inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>){
     super();
 
     if (!httpHandler) {
@@ -64,13 +65,13 @@ export class PkceTokenRequestHandler extends HttpHandler {
               if (challenge === codeChallengeAndMethod.challenge) {
                 return this.httpHandler.handle(context);
               }
-              throw new Error('Code challenges do not match.');
+              throw new Error(JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' }));
 
             }
           } catch (error) {
             return of(
               {
-                body: JSON.stringify({ error: 'invalid_request', error_description: error.message }),
+                body: error.message,
                 headers: { 'access-control-allow-origin': context.request.headers.origin },
                 status: 400,
               },
@@ -100,6 +101,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
   generateCodeChallenge (code_verifier: string,
     challengeAndMethod: { challenge: string; method: string }): string {
     let challengeNew = '';
+
     if (challengeAndMethod.method === 'S256') {
       const hash = createHash('sha256');
 
@@ -108,9 +110,13 @@ export class PkceTokenRequestHandler extends HttpHandler {
       challengeNew = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
     } else if (challengeAndMethod.method === 'plain') {
+
       challengeNew = this.base64URL(code_verifier);
+
     } else {
-      throw new Error('Transform algorithm not supported.');
+
+      throw new Error(JSON.stringify({ error: 'invalid_grant', error_description: 'Transform algorithm not supported.' }));
+
     }
 
     return challengeNew;
