@@ -20,6 +20,7 @@ describe('PkceAuthRequestHandler', () => {
   let auth_code: string;
   let referer: string;
   let host: string;
+  let response: HttpHandlerResponse;
 
   beforeEach(async () => {
     referer = 'http://client.example.com';
@@ -60,6 +61,12 @@ describe('PkceAuthRequestHandler', () => {
     , url } };
 
     pkceHandler = new PkceAuthRequestHandler(nestedHttpHandler, inMemoryStore);
+
+    response =  {
+      body: '',
+      headers: { 'access-control-allow-origin': context.request.headers.origin },
+      status: 400,
+    };
   });
 
   it('should be correctly instantiated if all deps are provided', () => {
@@ -96,11 +103,7 @@ describe('PkceAuthRequestHandler', () => {
 
     it('should error when no code_challenge was provided', async () => {
       context.request.url.searchParams.set('code_challenge', '');
-      const response =  {
-        body: JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge must be provided.' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
-        status: 400,
-      };
+      response.body = JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge must be provided.' });
       await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
       context.request.url.searchParams.delete('code_challenge');
       await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
@@ -108,11 +111,7 @@ describe('PkceAuthRequestHandler', () => {
 
     it('should error when no code_challenge_method was provided', async () => {
       context.request.url.searchParams.set('code_challenge_method', '');
-      const response =  {
-        body: JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge method must be provided' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
-        status: 400,
-      };
+      response.body = JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge method must be provided' });
       await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
       context.request.url.searchParams.delete('code_challenge_method');
       await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
@@ -129,11 +128,13 @@ describe('PkceAuthRequestHandler', () => {
         headers: { location: `${referer}/requests.html` },
         status: 400,
       };
+
       const badHttpHandler = {
         canHandle: jest.fn(),
         handle: jest.fn().mockReturnValue(of(badRes)),
         safeHandle: jest.fn(),
       } as HttpHandler;
+
       const pkceHandler2 = new PkceAuthRequestHandler(badHttpHandler, inMemoryStore);
       await expect(pkceHandler2.handle(context).toPromise()).rejects.toThrow();
     });
