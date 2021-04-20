@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { of } from 'rxjs';
-import { HttpHandler, HttpHandlerContext, InternalServerError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { PkceTokenRequestHandler } from './pkce-token-request.handler';
 import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
@@ -44,6 +44,7 @@ describe('PkceTokenRequestHandler', () => {
   let url: URL;
   let code_verifier: string;
   let auth_code: string;
+  let response: HttpHandlerResponse;
 
   beforeEach(async () => {
     httpHandler = {
@@ -65,6 +66,12 @@ describe('PkceTokenRequestHandler', () => {
     inMemoryStore.set(context.request.body.auth_code, challengeAndMethod);
 
     pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, inMemoryStore);
+
+    response =  {
+      body: '',
+      headers: { 'access-control-allow-origin': context.request.headers.origin },
+      status: 400,
+    };
   });
 
   it('should be correctly instantiated if all deps are provided', () => {
@@ -102,12 +109,7 @@ describe('PkceTokenRequestHandler', () => {
     it('should error when no code_verifier was provided', async () => {
       const noCodeVerifierContext = context;
       noCodeVerifierContext.request.body = { cd_vrfr: 'bla', auth_code };
-
-      const response =  {
-        body: JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier is required.' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
-        status: 400,
-      };
+      response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier is required.' });
 
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
       noCodeVerifierContext.request.body = { code_verifier: null, auth_code };
@@ -116,15 +118,18 @@ describe('PkceTokenRequestHandler', () => {
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
     });
 
+    it('should error when code_verifier is not the correct length', async () => {
+      const shortCodeVerifierContext = context;
+      shortCodeVerifierContext.request.body = { code_verifier: 'blabla', auth_code };
+      response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier must be between 43 and 128 characters.' });
+
+      await expect(pkceTokenRequestHandler.handle(shortCodeVerifierContext).toPromise()).resolves.toEqual(response);
+    });
+
     it('should error when no authorization code was provided', async () => {
       const noCodeContext = context;
       noCodeContext.request.body = { code_verifier, kode: 'z' };
-
-      const response =  {
-        body: JSON.stringify({ error: 'invalid_request', error_description: 'An authorization code is required.' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
-        status: 400,
-      };
+      response.body = JSON.stringify({ error: 'invalid_request', error_description: 'An authorization code is required.' });
 
       await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
       noCodeContext.request.body = { code_verifier, auth_code: null };
@@ -142,12 +147,7 @@ describe('PkceTokenRequestHandler', () => {
 
       it('should give a valid error when code challenges do not match', async () => {
         challengeAndMethod.challenge = 'ezffzekfkzfe';
-
-        const response =  {
-          body: JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' }),
-          headers: { 'access-control-allow-origin': context.request.headers.origin },
-          status: 400,
-        };
+        response.body = JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' });
 
         await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
       });

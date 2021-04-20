@@ -40,6 +40,11 @@ export class PkceTokenRequestHandler extends HttpHandler {
       if (body.code_verifier === undefined || body.code_verifier === null) {
         throw new Error('Code verifier is required.');
       }
+
+      if (body.code_verifier.length < 43 || body.code_verifier.length > 128){
+        throw new Error('Code verifier must be between 43 and 128 characters.');
+      }
+
       if (body.auth_code === undefined || body.auth_code === null) {
         throw new Error('An authorization code is required.');
       }
