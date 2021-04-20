@@ -191,14 +191,7 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@type": "DpopTokenRequestHandler",
-        "DpopTokenRequestHandler:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-        },
-        "DpopTokenRequestHandler:_keyValueStore": {
-          "@type": "InMemoryStore"
-        },
-        "DpopTokenRequestHandler:_pathToJwks": "static-assets/jwks.json"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "HttpHandlerRoute:_path": "/token"
     },
@@ -217,7 +210,7 @@
           "ConsoleLogger:_minimumLevel": 1,
           "ConsoleLogger:_minimumLevelPrintData": 1
         },
-        "HttpHandlerStaticAssetService:_path": "static-assets/openid-configuration.json",
+        "HttpHandlerStaticAssetService:_path": "assets/openid-configuration.json",
         "HttpHandlerStaticAssetService:_contentType": "application/json"
       },
       "HttpHandlerRoute:_path": "/.well-known/openid-configuration"
@@ -232,7 +225,7 @@
       ],
       "HttpHandlerRoute:_handler": {
         "@type": "JwkRequestHandler",
-        "JwkRequestHandler:_path": "static-assets/jwks.json"
+        "JwkRequestHandler:_path": "assets/jwks.json"
       },
       "HttpHandlerRoute:_path": "/jwks"
     }
