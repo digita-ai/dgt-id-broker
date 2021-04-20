@@ -193,6 +193,10 @@ describe('PkceTokenRequestHandler', () => {
         context.request.body.auth_code = undefined;
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
       });
+
+      it('should return true if context is complete', async () => {
+        await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+      });
     });
 
     describe('base64URL', () => {
@@ -205,6 +209,24 @@ describe('PkceTokenRequestHandler', () => {
       it('should error when the algorithm is not supported', () => {
         challengeAndMethod.method = '123';
         expect(() => pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod)).toThrow('Transform algorithm not supported.');
+      });
+
+      it('should call base64URL with a plain code_verifier when the algorithm is plain', () => {
+        challengeAndMethod.method = 'plain';
+        pkceTokenRequestHandler.base64URL = jest.fn();
+        pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
+        expect(pkceTokenRequestHandler.base64URL).toHaveBeenCalledWith(code_verifier);
+      });
+
+      it('should call return hashed & encoded code_verifier when the algorithm is S256', () => {
+        challengeAndMethod.method = 'S256';
+        const hash = createHash('sha256');
+        hash.update(code_verifier);
+        const hashed = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+        pkceTokenRequestHandler.generateCodeChallenge = jest.fn().mockReturnValueOnce(hashed);
+        pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
+        expect(pkceTokenRequestHandler.generateCodeChallenge)
+          .toHaveReturnedWith(hashed);
       });
     });
   });
