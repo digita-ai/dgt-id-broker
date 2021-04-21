@@ -198,7 +198,8 @@
           "DpopTokenRequestHandler:_keyValueStore": {
             "@type": "InMemoryStore"
           },
-          "DpopTokenRequestHandler:_pathToJwks": "assets/jwks.json"
+          "DpopTokenRequestHandler:_pathToJwks": "assets/jwks.json",
+          "DpopTokenRequestHandler:_proxyUrl": "http://localhost:3003"
         },
         "HttpHandlerRoute:_path": "/token"
       },
