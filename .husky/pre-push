@@ -15,7 +15,7 @@ do
     if [[ "$R_SHA" = "$(printf "%040d")" ]] ; then
 
         # Check branch name convention
-        if [[ ! "$BRANCH" =~ "$REGEX" ]] ; then
+        if ! (echo "$BRANCH" | grep -qE "$REGEX") ; then
 
             echo "[PRE-PUSH Hook] Please name your new branch in accordance with the coding conventions" >&2
             exit 1
