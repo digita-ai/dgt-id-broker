@@ -27,8 +27,11 @@ else
     echo "[COMMIT-MSG Hook] No WIP mention found"
 
     ## Check for ongoing merge
-    MERGE=$(git rev-parse -q --verify MERGE_HEAD)
-    [[ -n "$MERGE" ]] && echo "[COMMIT-MSG Hook] Saved ongoing merge status"
+    MERGE=$(git rev-parse -q --verify MERGE_HEAD || echo "")
+
+    if [[ -n "$MERGE" ]] ; then
+        echo "[COMMIT-MSG Hook] Saved ongoing merge status"
+    fi
 
     echo "[COMMIT-MSG Hook] Stashing working tree"
 
@@ -72,7 +75,10 @@ else
     ## Unstash changes & restore stage
     git stash list | grep -q "$STASH" && git stash pop -q --index
 
-    [[ -n "$MERGE" ]] && echo "[COMMIT-MSG Hook] Restoring ongoing merge status" && git update-ref MERGE_HEAD "$MERGE"
+    if [[ -n "$MERGE" ]] ; then 
+        echo "[COMMIT-MSG Hook] Restoring ongoing merge status"
+        git update-ref MERGE_HEAD "$MERGE"
+    fi
 
     exit $TESTS
 
