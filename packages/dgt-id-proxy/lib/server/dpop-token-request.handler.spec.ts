@@ -143,7 +143,11 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('unexpected "typ" JWT header value');
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error:'invalid_dpop_proof', error_description:'unexpected "typ" JWT header value' }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      });
     });
 
     it('should error when a jwt was issued more than 60 seconds ago', async () => {
@@ -162,7 +166,11 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('"iat" claim timestamp check failed (too far in the past)');
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error:'invalid_dpop_proof', error_description:'"iat" claim timestamp check failed (too far in the past)' }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      });
     });
 
     it('should error when a jwt is issued in the future', async () => {
@@ -181,7 +189,11 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('"iat" claim timestamp check failed (it should be in the past)');
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error:'invalid_dpop_proof', error_description: '"iat" claim timestamp check failed (it should be in the past)' }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      });
     });
 
     it('should error when a jwt has an unsupported algorithm', async () => {
@@ -202,7 +214,11 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('"alg" (Algorithm) Header Parameter not allowed');
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error:'invalid_dpop_proof', error_description: '"alg" (Algorithm) Header Parameter not allowed' }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      });
     });
 
     it('should error when a jwt\'s htm value is missing or does not match', async () => {
@@ -283,7 +299,6 @@ describe('DpopTokenRequestHandler', () => {
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWrongHtu };
-
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htu does not match' }),
         headers: { 'access-control-allow-origin': context.request.headers.origin },

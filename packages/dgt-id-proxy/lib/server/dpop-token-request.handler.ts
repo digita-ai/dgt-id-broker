@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, from, throwError, combineLatest, Observable } from 'rxjs';
-import { switchMap, map, catchError } from 'rxjs/operators';
+import { of, from, throwError, zip, Observable } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWK, JWTPayload } from 'jose/webcrypto/types';
+import { JWK, JWTPayload, JWTVerifyResult } from 'jose/webcrypto/types';
 import { decode } from 'jose/util/base64url';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
@@ -50,6 +50,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    *
    */
   handle(context: HttpHandlerContext) {
+
     if (!context) {
       return throwError(new Error('Context cannot be null or undefined'));
     }
@@ -70,120 +71,77 @@ export class DpopTokenRequestHandler extends HttpHandler {
       return throwError(new Error('No url was included in the request'));
     }
 
-    if (context.request.method === 'POST') {
-      if (!context.request.headers.dpop) {
-        return of({
-          body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
-          headers: { 'access-control-allow-origin': context.request.headers.origin },
-          status: 400,
-        });
-      }
-
-      const dpopJWT = context.request.headers.dpop;
-
-      const decodedDpopJwt = from(
-        jwtVerify(
-          dpopJWT,
-          EmbeddedJWK,
-          {
-            maxTokenAge: `60 seconds`,
-            typ: 'dpop+jwt',
-            algorithms: [
-              'RS256',
-              'PS256',
-              'ES256',
-              'EdDSA',
-            ],
-          },
-        ),
-      );
-
-      const responseAfterVerification = decodedDpopJwt.pipe(
-        switchMap(({ payload }) => this.verifyDpopProof(context, payload)),
-        catchError((error) => throwError({
-          body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: error.message }),
-          headers: { 'access-control-allow-origin': context.request.headers.origin },
-          status: 400,
-        })),
-        switchMap(() => {
-          // if the observable completes, remove the dpop header from the request and pass it on to the handler
-          delete context.request.headers.dpop;
-          return this.handler.handle(context);
-        }),
-        // if the observable was rejected during the verification process create an error response.
-        switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
-      );
-
-      const clientJwk = decodedDpopJwt.pipe(map(({ protectedHeader }) => protectedHeader.jwk as JWK));
-      const jwkFile = from(readFile(join(process.cwd(), this.pathToJwks)));
-
-      const jwksAndThumbprint = combineLatest(jwkFile, clientJwk).pipe(
-        switchMap(([ file, jwk ]) => {
-          const jwks = JSON.parse((file.toString()));
-
-          const rawJwk = of(jwks.keys[0]);
-          const parsedJwk = from(parseJwk(jwks.keys[0]));
-
-          return combineLatest(
-            rawJwk,
-            parsedJwk,
-            from(calculateThumbprint(jwk)),
-          );
-        }),
-      );
-
-      return combineLatest(jwksAndThumbprint, responseAfterVerification).pipe(
-        switchMap(([ [ serverJwk, serverJwkAsKeyLike, thumbprint ], response ]) => {
-          const dpopAccessTokenPayload = this.createDpopAccessTokenPayload(response.body, thumbprint);
-
-          const dpopBoundAccessToken = from(new SignJWT(dpopAccessTokenPayload)
-            .setProtectedHeader({ alg: serverJwk.alg, typ: 'at+jwt', kid: serverJwk.kid })
-            .setIssuer(this.proxyUrl)
-            .sign(serverJwkAsKeyLike));
-
-          return combineLatest(
-            of(response),
-            dpopBoundAccessToken,
-          );
-        }),
-        switchMap(([ response, dpopBoundAccessToken ]) => this.createDpopResponse(
-          response,
-          dpopBoundAccessToken,
-          context.request.headers.origin,
-        )),
-        catchError((error) =>
-          // TODO: Fix this. This is probably not the right way to go about it. This catches the throwError(response) on line 102
-          // but we aren't sure that it's actually of the type HttpHandlerResponse
-          error.body && error.headers && error.status ? of(error) : throwError(error)),
-      );
-    } else if (context.request.method === 'OPTIONS') {
+    if (context.request.method === 'OPTIONS') {
       return this.handler.handle(context);
-    } else {
+    }
+
+    if (context.request.method !== 'POST') {
       return throwError(new MethodNotAllowedHttpError('this method is not supported.'));
     }
+
+    if (!context.request.headers.dpop) {
+      return of({
+        body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      });
+    }
+
+    const { dpop, ... noDpopHeaders } = context.request.headers;
+
+    const noDpopRequestContext = {
+      ... context,
+      request: {
+        ... context.request,
+        headers: noDpopHeaders,
+      },
+    };
+
+    const verifyOptions = {
+      maxTokenAge: `60 seconds`,
+      typ: 'dpop+jwt',
+      algorithms: [
+        'RS256',
+        'PS256',
+        'ES256',
+        'EdDSA',
+      ],
+    };
+
+    return from(jwtVerify(dpop, EmbeddedJWK, verifyOptions)).pipe(
+      // verifies or errors with dpop message
+      switchMap((jwt) => this.verifyDpopProof(context.request.method, jwt)),
+      // creates thumbprint or errors
+      switchMap((verified) => from(calculateThumbprint(verified.protectedHeader.jwk))),
+      // builds error body around previous errors
+      catchError((error) => throwError(this.dpopError(error?.message ?? 'could not create thumbprint from dpop proof', context))),
+      // gets successful response or errors with body
+      switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
+      // creates dpop bound token
+      switchMap(([ thumbprint, response ]) => zip(of(response), this.createToken(response.body, thumbprint))),
+      // creates dpop response
+      switchMap(([ response, token ]) => this.createDpopResponse(response, token, context.request.headers.origin)),
+      // switches any errors with body into responses; all the rest are server errors which will hopefully be catched higher
+      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+    );
+
   }
 
-  /**
-   *
-   */
-  canHandle(context: HttpHandlerContext) {
-    return context
-      && context.request
-      && context.request.method
-      && context.request.headers
-      && context.request.url
-      ? of(true)
-      : of(false);
-  }
+  private verifyDpopProof(
+    method: string, { payload, protectedHeader: header }: JWTVerifyResult,
+  ): Observable<JWTVerifyResult & { protectedHeader: { jwk: Pick<JWK, 'kty' | 'crv' | 'x' | 'y' | 'e' | 'n'> } }> {
 
-  private verifyDpopProof(context: HttpHandlerContext, payload: JWTPayload): Observable<unknown> {
+    const jwk = header.jwk;
 
-    // check the parameters, and throw an error if they are missing
+    if (!jwk) {
+      return throwError(new Error('must have a jti string property'));
+    }
+
     if (!payload.jti || typeof payload.jti !== 'string') {
       return throwError(new Error('must have a jti string property'));
     }
 
-    if (payload.htm !== context.request.method) {
+    if (payload.htm !== method) {
       return throwError(new Error('htm does not match the request method'));
     }
 
@@ -199,12 +157,39 @@ export class DpopTokenRequestHandler extends HttpHandler {
           return throwError(new Error('jti must be unique'));
         }
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
-        return of({});
+        return of({ payload, protectedHeader: { ... header, jwk } });
       }),
     );
   }
 
-  private createDpopAccessTokenPayload(responseBody: string, clientPublicKeyThumbprint: string): JWTPayload {
+  private dpopError = (error_description: string, context: HttpHandlerContext) => ({
+    body: JSON.stringify({
+      error: 'invalid_dpop_proof',
+      error_description,
+    }),
+    headers: { 'access-control-allow-origin': context.request.headers.origin },
+    status: 400,
+  });
+
+  private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
+    switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
+  );
+
+  private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
+    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),    // I would like to see some safer way than casting after a read
+    switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
+  );
+
+  private signJwtPayload = (jwtPayload: JWTPayload) => zip(of(jwtPayload), this.getSigningKit()).pipe(
+    switchMap(([ payload, [ alg, kid, key ] ]) => from(
+      new SignJWT(payload)
+        .setProtectedHeader({ alg, kid, typ: 'at+jwt'  })
+        .setIssuer(this.proxyUrl)
+        .sign(key),
+    )),
+  );
+
+  private createToken(responseBody: string, clientPublicKeyThumbprint: string): Observable<string> {
     const parsedBody = JSON.parse(responseBody);
     // split the access token into header, payload, and footer parts, then get the payload
     const accessTokenPayload = parsedBody.access_token.split('.')[1];
@@ -213,7 +198,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
     // set the cnf claim
     decodedAccessTokenPayload.cnf = { 'jkt': clientPublicKeyThumbprint };
 
-    return decodedAccessTokenPayload;
+    return this.signJwtPayload(decodedAccessTokenPayload);
+
   }
 
   private createDpopResponse(response: HttpHandlerResponse, dpopBoundAccessToken: string, corsOrigin: string) {
@@ -230,4 +216,18 @@ export class DpopTokenRequestHandler extends HttpHandler {
       status: 200,
     });
   }
+
+  /**
+   *
+   */
+  canHandle(context: HttpHandlerContext) {
+    return context
+      && context.request
+      && context.request.method
+      && context.request.headers
+      && context.request.url
+      ? of(true)
+      : of(false);
+  }
+
 }
