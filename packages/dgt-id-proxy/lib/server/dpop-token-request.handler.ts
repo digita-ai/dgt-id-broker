@@ -164,7 +164,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
   );
 
   private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
-    switchMap<Buffer, JWK>((keyFile) => JSON.parse(keyFile.toString()).keys[0]),    // I would like to see some safer way than casting after a read
+    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),    // I would like to see some safer way than casting after a read
     switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
   );
 
