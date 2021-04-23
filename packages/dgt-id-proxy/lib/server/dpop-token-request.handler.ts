@@ -1,8 +1,8 @@
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, from, throwError, combineLatest, EMPTY, Observable } from 'rxjs';
-import { switchMap, map, catchError, withLatestFrom, tap } from 'rxjs/operators';
+import { of, from, throwError, combineLatest, Observable } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
@@ -31,6 +31,18 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     if(!handler){
       throw new Error('A HttpHandler must be provided');
+    }
+
+    if(!keyValueStore){
+      throw new Error('A keyValueStore must be provided');
+    }
+
+    if(!pathToJwks){
+      throw new Error('A pathToJwks must be provided');
+    }
+
+    if(!proxyUrl){
+      throw new Error('A proxyUrl must be provided');
     }
   }
 

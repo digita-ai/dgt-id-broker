@@ -32,7 +32,7 @@
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
-    "test": "jest --silent --coverage",
+    "test": "jest --coverage",
     "test:ci": "jest --runInBand --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "lint": "eslint .",
@@ -57,7 +57,8 @@
     "@digita-ai/handlersjs-http": "^0.0.11",
     "componentsjs": "^4.0.6",
     "lint-staged": "^10.5.4",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "uuid": "^8.3.2"
   },
   "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy",
   "lsd:components": "dist/components/components.jsonld",
