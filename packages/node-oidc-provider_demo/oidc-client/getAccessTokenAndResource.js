@@ -31,7 +31,8 @@ async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
         mode: 'cors',
         // We add our DPoP proof to the headers.
         headers: {
-            'DPoP': dpopJwtForToken
+            'DPoP': dpopJwtForToken,
+            'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: data
     });
@@ -105,7 +106,7 @@ async function instantiateJWTsForDPoP() {
     dpopJwtForToken = await new SignJWT({
         // Each DPoP-proof needs to say what type of request it is making and to where to be valid.
         'htm': 'POST',
-        'htu': 'http://localhost:3000/token',
+        'htu': 'http://localhost:3003/token',
     })
         // set the necessary headers and body of our JWT with the necessary components as prescribed by the spec.
         .setProtectedHeader({

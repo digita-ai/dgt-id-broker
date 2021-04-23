@@ -43,7 +43,7 @@ describe('PkceTokenRequestHandler', () => {
   let referer: string;
   let url: URL;
   let code_verifier: string;
-  let auth_code: string;
+  let code: string;
   let response: HttpHandlerResponse;
 
   beforeEach(async () => {
@@ -59,11 +59,11 @@ describe('PkceTokenRequestHandler', () => {
     url = new URL(`${referer}/token`);
     code_verifier = generateRandomString(128);
     challengeAndMethod.challenge = generateCodeChallenge(code_verifier);
-    auth_code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
+    code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
 
-    context = { request: { headers: {}, body: { code_verifier, auth_code }, method: 'POST', url } };
+    context = { request: { headers: {}, body: { code_verifier, code }, method: 'POST', url } };
 
-    inMemoryStore.set(context.request.body.auth_code, challengeAndMethod);
+    inMemoryStore.set(context.request.body.code, challengeAndMethod);
 
     pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, inMemoryStore);
 
@@ -108,19 +108,19 @@ describe('PkceTokenRequestHandler', () => {
 
     it('should error when no code_verifier was provided', async () => {
       const noCodeVerifierContext = context;
-      noCodeVerifierContext.request.body = { cd_vrfr: 'bla', auth_code };
+      noCodeVerifierContext.request.body = { cd_vrfr: 'bla', code };
       response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier is required.' });
 
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
-      noCodeVerifierContext.request.body = { code_verifier: null, auth_code };
+      noCodeVerifierContext.request.body = { code_verifier: null, code };
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
-      noCodeVerifierContext.request.body = { code_verifier: undefined, auth_code };
+      noCodeVerifierContext.request.body = { code_verifier: undefined, code };
       await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
     });
 
     it('should error when code_verifier is not the correct length', async () => {
       const shortCodeVerifierContext = context;
-      shortCodeVerifierContext.request.body = { code_verifier: 'blabla', auth_code };
+      shortCodeVerifierContext.request.body = { code_verifier: 'blabla', code };
       response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier must be between 43 and 128 characters.' });
 
       await expect(pkceTokenRequestHandler.handle(shortCodeVerifierContext).toPromise()).resolves.toEqual(response);
@@ -132,15 +132,15 @@ describe('PkceTokenRequestHandler', () => {
       response.body = JSON.stringify({ error: 'invalid_request', error_description: 'An authorization code is required.' });
 
       await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
-      noCodeContext.request.body = { code_verifier, auth_code: null };
+      noCodeContext.request.body = { code_verifier, code: null };
       await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
-      noCodeContext.request.body = { code_verifier, auth_code: undefined };
+      noCodeContext.request.body = { code_verifier, code: undefined };
       await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
     });
 
     describe('inMemoryStore', () => {
       it('should get the associated challenge and method from the inMemoryStore', async () => {
-        const challengeInStore = await inMemoryStore.get(auth_code);
+        const challengeInStore = await inMemoryStore.get(code);
         const challengeReceived = pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
         expect(challengeInStore.challenge).toEqual(challengeReceived);
       });
@@ -153,7 +153,7 @@ describe('PkceTokenRequestHandler', () => {
       });
 
       it('should reply with an InternalServerError when nothing was found in the InMemoryStore', async () => {
-        inMemoryStore.delete(auth_code);
+        inMemoryStore.delete(code);
         await expect(pkceTokenRequestHandler.handle(context).toPromise()).rejects.toBeInstanceOf(InternalServerError);
       });
 
@@ -198,10 +198,10 @@ describe('PkceTokenRequestHandler', () => {
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
       });
 
-      it('should return false if context.request.url.body.auth_code is null or undefined', async () => {
-        context.request.body.auth_code = null;
+      it('should return false if context.request.url.body.code is null or undefined', async () => {
+        context.request.body.code = null;
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
-        context.request.body.auth_code = undefined;
+        context.request.body.code = undefined;
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
       });
 

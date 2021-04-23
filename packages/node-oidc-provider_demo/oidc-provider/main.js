@@ -44,7 +44,7 @@ const configuration = {
     conformIdTokenClaims: false,
     // Require PKCE as it is a must for Solid-OIDC
     pkce: {
-        required: () => true
+        required: () => false
     },
     interactions: {
         url(ctx, interaction) {
@@ -189,6 +189,7 @@ oidc.use(async (ctx, next) => {
 
             // In the case of a POST request we get the parameters from the request body.
         } else if (ctx.method === "POST") {
+            console.log('POST ', ctx.request)
             clientID = ctx.request.body["client_id"];
             redirectURI = ctx.request.body["redirect_uri"];
             clientName = ctx.request.body["client_name"];
@@ -325,6 +326,7 @@ async function getOIDCRegistrationFromWebID(clientID) {
 // Set our Cors policy.
 let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
 `http://localhost:${process.env.VITE_PORT}`,
+`http://localhost:${process.env.PASS_PORT}`,
 `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`]
 
 

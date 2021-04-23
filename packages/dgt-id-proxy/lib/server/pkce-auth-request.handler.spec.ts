@@ -6,59 +6,38 @@ import { Code, ChallengeAndMethod, PkceAuthRequestHandler } from './pkce-auth-re
 describe('PkceAuthRequestHandler', () => {
   let pkceHandler: PkceAuthRequestHandler;
   let nestedHttpHandler: HttpHandler;
-  let inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>;
-  let context: HttpHandlerContext;
-  let res: HttpHandlerResponse;
-  let url: URL;
-  let code_challenge_value: string;
-  let code_challenge_method_value: string;
-  let challengeAndMethod: ChallengeAndMethod;
-  let client_id: string;
-  let redirect_uri: string;
-  let endpoint: string;
-  let host_panva: string;
-  let auth_code: string;
-  let referer: string;
-  let host: string;
   let response: HttpHandlerResponse;
+  let context: HttpHandlerContext;
+  const inMemoryStore = new InMemoryStore<Code, ChallengeAndMethod>();
+  const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
+  const code_challenge_method_value = 'S256';
+  const challengeAndMethod = {
+    challenge: code_challenge_value,
+    method: code_challenge_method_value,
+  };
+  const client_id = 'http%3A%2F%2Fsolidpod.%2Fjaspervandenberghen%2Fprofile%2Fcard%23me';
+  const redirect_uri = 'http%3A%2F%2Fclient.example.com%2Frequests.html';
+  const endpoint = 'auth';
+  const code = 'yoEp04ySUmJ3BrI9qWlArQle7ej4D-FRYTUE9N8wCAa';
+  const referer = 'client.example.com';
+  const host = 'server.example.com';
+  const redirectWithAuth = `http://${referer}/redirect_callback.html?code=${code}`;
+  let url: URL;
 
   beforeEach(async () => {
-    referer = 'http://client.example.com';
-    host = 'localhost:3000';
-    auth_code = 'yoEp04ySUmJ3BrI9qWlArQle7ej4D-FRYTUE9N8wCAa';
-
-    res = {
-      body: {},
-      headers: { location: `http://${referer}/redirect_callback.html?code=${auth_code}` },
-      status: 302,
-    };
 
     nestedHttpHandler = {
       canHandle: jest.fn(),
-      handle: jest.fn().mockReturnValue(of(res)),
+      handle: jest.fn().mockReturnValue(of({
+        body: {},
+        headers: { location: redirectWithAuth },
+        status: 302,
+      } as HttpHandlerResponse)),
       safeHandle: jest.fn(),
     } as HttpHandler;
 
-    inMemoryStore = new InMemoryStore();
-
-    code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
-    code_challenge_method_value = 'S256';
-    challengeAndMethod = {
-      challenge: code_challenge_value,
-      method: code_challenge_method_value,
-    };
-    client_id = 'http%3A%2F%2Flocalhost:3002%2Fjaspervandenberghen%2Fprofile%2Fcard%23me';
-    redirect_uri = 'http%3A%2F%2Flocalhost:3001%2Frequests.html';
-    endpoint = 'auth';
-    host_panva = 'localhost:3000';
-
-    url = new URL(`http://${host_panva}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
-
-    context = { request: { headers: {
-      host,
-      referer,
-    }, method: 'GET'
-    , url } };
+    context = { request: { headers: { host, referer }, method: 'GET', url } };
+    url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
 
     pkceHandler = new PkceAuthRequestHandler(nestedHttpHandler, inMemoryStore);
 
@@ -117,9 +96,10 @@ describe('PkceAuthRequestHandler', () => {
       await expect(pkceHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
-    it('should call the nestedHttpHandler handle method', async () => {
+    it('should call the nestedHttpHandler handle method with the context', async () => {
       await pkceHandler.handle(context).toPromise();
       expect(nestedHttpHandler.handle).toHaveBeenCalledTimes(1);
+      expect(nestedHttpHandler.handle).toHaveBeenCalledWith(context);
     });
 
     it('should error when no authorization code was provided in the response', async () => {
@@ -136,15 +116,14 @@ describe('PkceAuthRequestHandler', () => {
       } as HttpHandler;
 
       const pkceHandler2 = new PkceAuthRequestHandler(badHttpHandler, inMemoryStore);
-      await expect(pkceHandler2.handle(context).toPromise()).rejects.toThrow();
+      await expect(pkceHandler2.handle(context).toPromise()).resolves.toEqual(badRes);
     });
 
     it('should link the authorization code & challenge + method in the inMemoryStore', async () => {
       await pkceHandler.handle(context).toPromise();
-      const params = res.headers.location
+      const authCode = redirectWithAuth
         .split('?')[1]
-        .split('=');
-      const authCode = params[1];
+        .split('=')[1];
       await expect(inMemoryStore.get(authCode).then((data) => data)).resolves.toEqual(challengeAndMethod);
     });
   });

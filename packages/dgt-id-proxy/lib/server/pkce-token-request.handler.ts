@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerRequest, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { InMemoryStore } from '../storage/in-memory-store';
@@ -21,6 +21,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
   }
 
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
+
     if (!context) {
       return throwError(new Error('Context cannot be null or undefined'));
     }
@@ -29,72 +30,98 @@ export class PkceTokenRequestHandler extends HttpHandler {
       return throwError(new Error('No request was included in the context'));
     }
 
-    if (!context.request.body) {
-      return throwError(new Error('No body was included in the request'));
-    }
+    if (context.request.method === 'POST') {
 
-    const request = context.request;
-    const body = request.body;
-
-    try{
-      if (body.code_verifier === undefined || body.code_verifier === null) {
-        throw new Error('Code verifier is required.');
+      if (!context.request.body) {
+        return throwError(new Error('No body was included in the request'));
       }
 
-      if (body.code_verifier.length < 43 || body.code_verifier.length > 128){
-        throw new Error('Code verifier must be between 43 and 128 characters.');
+      const request = context.request;
+
+      const params  = new URLSearchParams(request.body);
+      const encodedCode_verifier = params.get('code_verifier');
+      const code =  params.get('code');
+      let code_verifier = '';
+
+      if (encodedCode_verifier) {
+        code_verifier = decodeURI(encodedCode_verifier);
       }
 
-      if (body.auth_code === undefined || body.auth_code === null) {
-        throw new Error('An authorization code is required.');
+      try{
+        if (!code_verifier) {
+          throw new Error('Code verifier is required.');
+        }
+
+        if (code_verifier.length < 43 || code_verifier.length > 128){
+          throw new Error('Code verifier must be between 43 and 128 characters.');
+        }
+
+        if (!code) {
+          throw new Error('An authorization code is required.');
+        }
+
+      } catch (error) {
+
+        return of(
+          {
+            body: JSON.stringify({ error: 'invalid_request', error_description: error.message }),
+            headers: { 'access-control-allow-origin': context.request.headers.origin },
+            status: 400,
+          },
+        );
       }
-    } catch (error) {
-      return of(
-        {
-          body: JSON.stringify({ error: 'invalid_request', error_description: error.message }),
-          headers: { 'access-control-allow-origin': context.request.headers.origin },
-          status: 400,
-        },
-      );
-    }
 
-    return from(this.inMemoryStore.get(body.auth_code))
-      .pipe(
-        switchMap((codeChallengeAndMethod) => {
+      // console.log('token pkce1 ---- ', context.request);
+      params.delete('code_verifier');
+      // request.body = params.toString(); als je deze uit comment dan blijft de request pending
+      // zo niet dan is krijg je invalid_grant als response
 
-          try {
-            if (codeChallengeAndMethod) {
+      return from(this.inMemoryStore.get(code))
+        .pipe(
+          switchMap((codeChallengeAndMethod) => {
+            try {
+              if (codeChallengeAndMethod) {
 
-              const challenge = this.generateCodeChallenge(body.code_verifier, codeChallengeAndMethod);
+                const challenge = this.generateCodeChallenge(code_verifier, codeChallengeAndMethod);
 
-              if (challenge === codeChallengeAndMethod.challenge) {
-                return this.httpHandler.handle(context);
+                if (challenge === codeChallengeAndMethod.challenge) {
+                  return this.httpHandler.handle(context);
+                }
+                throw new Error(JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' }));
+
               }
-              throw new Error(JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' }));
-
+            } catch (error) {
+              return of(
+                {
+                  body: error.message,
+                  headers: { 'access-control-allow-origin': context.request.headers.origin },
+                  status: 400,
+                },
+              );
             }
-          } catch (error) {
-            return of(
-              {
-                body: error.message,
-                headers: { 'access-control-allow-origin': context.request.headers.origin },
-                status: 400,
-              },
-            );
-          }
+            return throwError(new InternalServerError());
+          }),
+        );
+    } else if (context.request.method === 'OPTIONS') {
 
-          return throwError(new InternalServerError());
-        }),
-      );
+      return this.httpHandler.handle(context);
+
+    } else {
+
+      return throwError(new MethodNotAllowedHttpError(`${context.request.method} requests are not allowed on token endpoint`));
+
+    }
+
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+    const params  = new URLSearchParams(context.request.body);
     return context
       && context.request
       && context.request.url
       && context.request.body
-      && context.request.body.code_verifier
-      && context.request.body.auth_code
+      && params.get('code_verifier')
+      && params.get('code')
       ? of(true)
       : of(false);
   }
