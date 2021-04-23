@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, from, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { of, from, throwError, combineLatest, zip, Observable } from 'rxjs';
+import { switchMap, map, catchError, withLatestFrom, switchMapTo, tap } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWK, JWTPayload, JWTVerifyResult } from 'jose/webcrypto/types';
+import { JWK, JWSHeaderParameters, JWTPayload, JWTVerifyResult } from 'jose/webcrypto/types';
 import { decode } from 'jose/util/base64url';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
