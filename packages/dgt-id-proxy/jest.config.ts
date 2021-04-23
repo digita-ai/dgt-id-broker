@@ -6,7 +6,16 @@ const config: Config.InitialOptions = {
   rootDir: 'lib',
   testRegex: '.spec.ts$',
   coverageDirectory: '../coverage',
-  'collectCoverageFrom': [ '**/*.{ts,js}' ],
+  collectCoverageFrom: [ '**/*.{ts,js}' ],
+  coveragePathIgnorePatterns: [ 'public-api.ts' ],
+  // coverageThreshold: {
+  //   global: {
+  //     branches: 60,
+  //     functions: 60,
+  //     lines: 60,
+  //     statements: 60,
+  //   },
+  // },
   testEnvironment: 'node',
   verbose: true,
   preset: 'ts-jest',

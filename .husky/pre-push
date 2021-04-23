@@ -10,12 +10,12 @@ URL="$2"
 while read L_REF L_SHA R_REF R_SHA
 do
 
-    BRANCH=$(git rev-parse --abbrev-ref $L_SHA)
+    BRANCH=$(git rev-parse --abbrev-ref "$L_REF")
 
     if [[ "$R_SHA" = "$(printf "%040d")" ]] ; then
 
         # Check branch name convention
-        if [[ ! $BRANCH =~ $REGEX ]] ; then
+        if ! (echo "$BRANCH" | grep -qE "$REGEX") ; then
 
             echo "[PRE-PUSH Hook] Please name your new branch in accordance with the coding conventions" >&2
             exit 1
