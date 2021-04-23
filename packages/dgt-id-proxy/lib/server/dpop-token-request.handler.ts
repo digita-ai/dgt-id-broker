@@ -1,25 +1,29 @@
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, from, throwError, combineLatest, zip, Observable } from 'rxjs';
-import { switchMap, map, catchError, withLatestFrom, switchMapTo, tap } from 'rxjs/operators';
+import { of, from, throwError, zip, Observable } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWK, JWSHeaderParameters, JWTPayload, JWTVerifyResult } from 'jose/webcrypto/types';
+import { JWK, JWTPayload, JWTVerifyResult } from 'jose/webcrypto/types';
 import { decode } from 'jose/util/base64url';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**
- *
+ * A {HttpHandler} that handles DPoP requests for an upstream server that does not support them
+ * and returns a valid DPoP bound token to the user upon success.
  */
 export class DpopTokenRequestHandler extends HttpHandler {
   /**
    * Creates a {DpopTokenRequestHandler} passing requests through the given handler.
    *
    * @param {HttpHandler} handler - the handler through which to pass incoming requests.
+   * @param {InMemoryStore<string, string[]>} keyValueStore - the KeyValueStore in which to save jti's.
+   * @param {string} pathToJwks - the path to a json file containing jwks.
+   * @param {string} proxyUrl - the url of the upstream server.
    */
   constructor(
     private handler: HttpHandler,
@@ -47,7 +51,11 @@ export class DpopTokenRequestHandler extends HttpHandler {
   }
 
   /**
+   * handles the context's incoming request. If the request is a valid DPoP request it will send a DPoP-less request
+   * to the upstream server and modify the Access Token to be a valid DPoP bound Access Token.
+   * Otherwise it will return error responses as specified by the DPoP proof spec otherwise.
    *
+   * @param {HttpHandlerContext} context
    */
   handle(context: HttpHandlerContext) {
 
@@ -121,7 +129,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       switchMap(([ thumbprint, response ]) => zip(of(response), this.createToken(response.body, thumbprint))),
       // creates dpop response
       switchMap(([ response, token ]) => this.createDpopResponse(response, token, context.request.headers.origin)),
-      // switches any errors with body into responses; all the rest are server errors which will hopefully be catched higher
+      // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
       catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
     );
 
@@ -218,7 +226,10 @@ export class DpopTokenRequestHandler extends HttpHandler {
   }
 
   /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or the request's method, headers, or url are not included.
    *
+   * @param {HttpHandlerContext} context
    */
   canHandle(context: HttpHandlerContext) {
     return context
