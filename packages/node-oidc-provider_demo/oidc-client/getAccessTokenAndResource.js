@@ -31,8 +31,7 @@ async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
         mode: 'cors',
         // We add our DPoP proof to the headers.
         headers: {
-            'DPoP': dpopJwtForToken,
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'DPoP': dpopJwtForToken
         },
         body: data
     });

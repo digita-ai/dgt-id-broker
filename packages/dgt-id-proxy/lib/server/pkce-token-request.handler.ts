@@ -71,10 +71,9 @@ export class PkceTokenRequestHandler extends HttpHandler {
         );
       }
 
-      // console.log('token pkce1 ---- ', context.request);
       params.delete('code_verifier');
-      // request.body = params.toString(); als je deze uit comment dan blijft de request pending
-      // zo niet dan is krijg je invalid_grant als response
+      request.body = params.toString();
+      request.headers['Content-length'] = request.body.length;
 
       return from(this.inMemoryStore.get(code))
         .pipe(
