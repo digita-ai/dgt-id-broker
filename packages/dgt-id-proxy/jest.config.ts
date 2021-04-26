@@ -24,5 +24,8 @@ const config: Config.InitialOptions = {
       tsconfig: '<rootDir>/../tsconfig.spec.json',
     },
   },
+  moduleNameMapper: {
+    '^jose/(.*)$': '<rootDir>/../node_modules/jose/dist/node/cjs/$1',
+  },
 };
 export default config;
