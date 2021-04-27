@@ -10,9 +10,6 @@
       "types": ["jest", "node"],
       "allowJs": true,
     },
-    "files": [
-      "./jest.config.ts"
-    ],
     "exclude": [
       "node_modules", 
       "dist"
