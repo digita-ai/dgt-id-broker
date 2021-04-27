@@ -50,7 +50,7 @@ jobs:
       
       - run: npm run lint:all
 
-      - run: npm test:all
+      - run: npm run test:all
 
   release:
     name: Create release
