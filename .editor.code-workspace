@@ -20,6 +20,9 @@
       "source.fixAll.eslint": true
     },
     "files.eol": "\n",
+    "cSpell.words": [
+        "panva"
+    ]
   },
   "extensions": {
     "recommendations": [
