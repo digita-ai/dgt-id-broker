@@ -94,16 +94,11 @@ export class SolidTokenRequestHandler extends HttpHandler {
     // base64url decode the access token payload
     const decodedAccessTokenPayload = JSON.parse(decode(accessTokenPayload).toString());
     // set the aud claim
-    decodedAccessTokenPayload.aud = 'solid';
-
-    // NOTE: Due to an issue with the css (https://github.com/digita-ai/dgt-id-broker/issues/44) the aud is currently set to just 'solid'.
-    // Once this issue is fixed, we should keep what the upstream server sends us, and simply turn it into an array which includes 'solid' as follows:
-
-    // if (Array.isArray(decodedAccessTokenPayload.aud) && !decodedAccessTokenPayload.aud.includes('solid')) {
-    //   decodedAccessTokenPayload.aud.push('solid');
-    // } else {
-    //   decodedAccessTokenPayload.aud = [ decodedAccessTokenPayload.aud, 'solid' ];
-    // }
+    if (Array.isArray(decodedAccessTokenPayload.aud) && !decodedAccessTokenPayload.aud.includes('solid')) {
+      decodedAccessTokenPayload.aud.push('solid');
+    } else {
+      decodedAccessTokenPayload.aud = [ decodedAccessTokenPayload.aud, 'solid' ];
+    }
 
     return this.signJwtPayload(decodedAccessTokenPayload);
   }
