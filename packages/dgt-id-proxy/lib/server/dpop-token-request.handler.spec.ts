@@ -9,6 +9,26 @@ import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { DpopTokenRequestHandler } from './dpop-token-request.handler';
 
+jest.mock('fs/promises', () => {
+  const testJwks = {
+    'keys': [
+      {
+        'crv': 'P-256',
+        'x': 'ZXD5luOOClkYI-WieNfw7WGISxIPjH_PWrtvDZRZsf0',
+        'y': 'vshKz414TtqkkM7gNXKqawrszn44OTSR_j-JxP-BlWo',
+        'd': '07JS0yPt-fDABw_28JdENtlF0PTNMchYmfSXz7pRhVw',
+        'kty': 'EC',
+        'kid': 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
+        'alg': 'ES256',
+        'use': 'sig',
+      },
+    ],
+  };
+  return {
+    readFile: jest.fn().mockResolvedValue(Buffer.from(JSON.stringify(testJwks))),
+  };
+});
+
 describe('DpopTokenRequestHandler', () => {
   let handler: DpopTokenRequestHandler;
   let nestedHandler: HttpHandler;
@@ -330,72 +350,67 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    // NOTE: These tests are commented out because it does not pass the git commit hook. @woutermont is aware of this issue.
-    // The handler requires a relative path to a file containing jwks. The git commit hook runs the tests from the root,
-    // so the relative path is searched from the root, but it should be searched from the dgt-id-proxy.
-    // The tests pass when running npm run test from the dgt-id-proxy directory.
+    it('should error when a jwt\'s jti is not unique', async () => {
+      const repeatUuid = uuid();
 
-    // it('should error when a jwt\'s jti is not unique', async () => {
-    //   const repeatUuid = uuid();
+      const dpopJwtWithSetJti = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(repeatUuid)
+        .setIssuedAt()
+        .sign(privateKey);
 
-    //   const dpopJwtWithSetJti = await new SignJWT({
-    //     'htm': 'POST',
-    //     'htu': 'http://localhost:3003/token',
-    //   })
-    //     .setProtectedHeader({
-    //       alg: 'ES256',
-    //       typ: 'dpop+jwt',
-    //       jwk: publicJwk,
-    //     })
-    //     .setJti(repeatUuid)
-    //     .setIssuedAt()
-    //     .sign(privateKey);
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      // send the jti once
+      await handler.handle(context).toPromise();
 
-    //   context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
-    //   nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
-    //   // send the jti once
-    //   await handler.handle(context).toPromise();
+      // send the jti again
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'jti must be unique' }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      });
+    });
 
-    //   // send the jti again
-    //   context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
-    //   await expect(handler.handle(context).toPromise()).resolves.toEqual({
-    //     body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'jti must be unique' }),
-    //     headers: { 'access-control-allow-origin': context.request.headers.origin },
-    //     status: 400,
-    //   });
-    // });
+    it('should return an error response when the upstream server returns a response with status other than 200', async () => {
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
+        headers: {},
+        status: 400,
+      }));
 
-    // it('should return an error response when the upstream server returns a response with status other than 200', async () => {
-    //   nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
-    //     body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
-    //     headers: {},
-    //     status: 400,
-    //   }));
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
+        headers: {},
+        status: 400,
+      });
+    });
 
-    //   await expect(handler.handle(context).toPromise()).resolves.toEqual({
-    //     body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
-    //     headers: {},
-    //     status: 400,
-    //   });
-    // });
+    it('should return a valid DPoP bound access token response when the upstream server returns a valid response', async () => {
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      const resp = await handler.handle(context).toPromise();
+      expect(resp.headers).toEqual({ 'Content-Type': 'application/json', 'access-control-allow-headers': 'dpop', 'access-control-allow-origin': context.request.headers.origin });
+      expect(resp.status).toEqual(200);
 
-    // it('should return a valid DPoP bound access token response when the upstream server returns a valid response', async () => {
-    //   nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
-    //   const resp = await handler.handle(context).toPromise();
-    //   expect(resp.headers).toEqual({ 'Content-Type': 'application/json', 'access-control-allow-headers': 'dpop', 'access-control-allow-origin': context.request.headers.origin });
-    //   expect(resp.status).toEqual(200);
+      const parsedBody = JSON.parse(resp.body);
+      expect(parsedBody.access_token).toBeDefined();
+      expect(parsedBody.token_type).toEqual('DPoP');
+      expect(parsedBody.expires_in).toBeDefined();
 
-    //   const parsedBody = JSON.parse(resp.body);
-    //   expect(parsedBody.access_token).toBeDefined();
-    //   expect(parsedBody.token_type).toEqual('DPoP');
-    //   expect(parsedBody.expires_in).toBeDefined();
+      const tokenPayload = JSON.parse(decode(parsedBody.access_token.split('.')[1]).toString());
 
-    //   const tokenPayload = JSON.parse(decode(parsedBody.access_token.split('.')[1]).toString());
-
-    //   expect(tokenPayload.cnf).toBeDefined();
-    //   const thumbprint = await calculateThumbprint(publicJwk);
-    //   expect(tokenPayload.cnf.jkt).toEqual(thumbprint);
-    // });
+      expect(tokenPayload.cnf).toBeDefined();
+      const thumbprint = await calculateThumbprint(publicJwk);
+      expect(tokenPayload.cnf.jkt).toEqual(thumbprint);
+    });
 
   });
 

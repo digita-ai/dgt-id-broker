@@ -53,8 +53,8 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "^0.0.11",
-    "@digita-ai/handlersjs-http": "^0.0.11",
+    "@digita-ai/handlersjs-core": "^0.1.2",
+    "@digita-ai/handlersjs-http": "^0.1.2",
     "componentsjs": "^4.0.6",
     "lint-staged": "^10.5.4",
     "node-fetch": "^2.6.1",
