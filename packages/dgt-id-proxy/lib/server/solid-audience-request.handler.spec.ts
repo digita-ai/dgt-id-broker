@@ -1,9 +1,30 @@
+import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { SignJWT } from 'jose/jwt/sign';
 import { decode } from 'jose/util/base64url';
 import { SolidAudienceRequestHandler } from './solid-audience-request.handler';
+
+jest.mock('fs/promises', () => {
+  const testJwks = {
+    'keys': [
+      {
+        'crv': 'P-256',
+        'x': 'ZXD5luOOClkYI-WieNfw7WGISxIPjH_PWrtvDZRZsf0',
+        'y': 'vshKz414TtqkkM7gNXKqawrszn44OTSR_j-JxP-BlWo',
+        'd': '07JS0yPt-fDABw_28JdENtlF0PTNMchYmfSXz7pRhVw',
+        'kty': 'EC',
+        'kid': 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
+        'alg': 'ES256',
+        'use': 'sig',
+      },
+    ],
+  };
+  return {
+    readFile: jest.fn().mockResolvedValue(Buffer.from(JSON.stringify(testJwks))),
+  };
+});
 
 describe('SolidAudienceRequestHandler', () => {
   let handler: SolidAudienceRequestHandler;
@@ -112,11 +133,6 @@ describe('SolidAudienceRequestHandler', () => {
       });
     });
 
-    // NOTE: This test is commented out because it does not pass the git commit hook. @woutermont is aware of this issue.
-    // The handler requires a relative path to a file containing jwks. The git commit hook runs the tests from the root,
-    // so the relative path is searched from the root, but it should be searched from the dgt-id-proxy.
-    // The tests pass when running npm run test from the dgt-id-proxy directory.
-
     it('should return a token with the issuer set to the proxy and an aud array containing solid', async () => {
       // mocked response with audience as a string (single item)
       const token1 = await mockedAccessToken('client');
@@ -163,5 +179,44 @@ describe('SolidAudienceRequestHandler', () => {
       expect(tokenPayload2.aud).toEqual([ 'client', 'audience', 'solid' ]);
     });
 
+  });
+
+  describe('canHandle', () => {
+    it('should return false if no context was provided', async () => {
+      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return false if context was provided', async () => {
+      context.request = undefined;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      context.request = null;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return false when no context request method is provided', async () => {
+      context.request.method = null;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      context.request.method = undefined;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return false when no context request headers are provided', async () => {
+      context.request.headers = null;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      context.request.headers = undefined;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return false when no context request url is provided', async () => {
+      context.request.url = null;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      context.request.url = undefined;
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return true if correct context was provided', async () => {
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+    });
   });
 });
