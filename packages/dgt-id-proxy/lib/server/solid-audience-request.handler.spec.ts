@@ -3,10 +3,10 @@ import { of } from 'rxjs';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { SignJWT } from 'jose/jwt/sign';
 import { decode } from 'jose/util/base64url';
-import { SolidTokenRequestHandler } from './solid-token-request.handler';
+import { SolidAudienceRequestHandler } from './solid-audience-request.handler';
 
-describe('SolidTokenRequestHandler', () => {
-  let handler: SolidTokenRequestHandler;
+describe('SolidAudienceRequestHandler', () => {
+  let handler: SolidAudienceRequestHandler;
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
 
@@ -35,7 +35,7 @@ describe('SolidTokenRequestHandler', () => {
       canHandle: jest.fn(),
       safeHandle: jest.fn(),
     };
-    handler = new SolidTokenRequestHandler(nestedHandler, 'assets/jwks.json', 'http://localhost:3003');
+    handler = new SolidAudienceRequestHandler(nestedHandler, 'assets/jwks.json', 'http://localhost:3003');
     context = { request: { headers: { 'origin': 'http://localhost' }, method: 'POST', url: new URL('http://digita.ai/') } };
   });
 
@@ -44,12 +44,12 @@ describe('SolidTokenRequestHandler', () => {
   });
 
   it('should error when no handler or proxyUrl is provided in the constructor', () => {
-    expect(() => new SolidTokenRequestHandler(undefined, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A handler must be provided');
-    expect(() => new SolidTokenRequestHandler(null, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A handler must be provided');
-    expect(() => new SolidTokenRequestHandler(nestedHandler, undefined, 'http://localhost:3003')).toThrow('A pathToJwks must be provided');
-    expect(() => new SolidTokenRequestHandler(nestedHandler, null, 'http://localhost:3003')).toThrow('A pathToJwks must be provided');
-    expect(() => new SolidTokenRequestHandler(nestedHandler, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
-    expect(() => new SolidTokenRequestHandler(nestedHandler, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
+    expect(() => new SolidAudienceRequestHandler(undefined, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A handler must be provided');
+    expect(() => new SolidAudienceRequestHandler(null, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A handler must be provided');
+    expect(() => new SolidAudienceRequestHandler(nestedHandler, undefined, 'http://localhost:3003')).toThrow('A pathToJwks must be provided');
+    expect(() => new SolidAudienceRequestHandler(nestedHandler, null, 'http://localhost:3003')).toThrow('A pathToJwks must be provided');
+    expect(() => new SolidAudienceRequestHandler(nestedHandler, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
+    expect(() => new SolidAudienceRequestHandler(nestedHandler, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
 
   });
 
@@ -92,6 +92,12 @@ describe('SolidTokenRequestHandler', () => {
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('this method is not supported.');
     });
 
+    it('should return the response of the nestedHandler unedited when method is OPTIONS', async () => {
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({ body: 'options', headers: {}, status: 200 }));
+      context.request.method = 'OPTIONS';
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'options', headers: {}, status: 200 });
+    });
+
     it('should return an error response when the upstream server returns a response with status other than 200', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
         body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
@@ -111,51 +117,51 @@ describe('SolidTokenRequestHandler', () => {
     // so the relative path is searched from the root, but it should be searched from the dgt-id-proxy.
     // The tests pass when running npm run test from the dgt-id-proxy directory.
 
-    // it('should return a token with the issuer set to the proxy and an aud array containing solid', async () => {
-    //   // mocked response with audience as a string (single item)
-    //   const token1 = await mockedAccessToken('client');
-    //   nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
-    //     body: JSON.stringify({
-    //       access_token: token1,
-    //       expires_in: 7200,
-    //       scope: '',
-    //       token_type: 'Bearer',
-    //     }),
-    //     headers: {},
-    //     status: 200,
-    //   }));
-    //   const resp1 = await handler.handle(context).toPromise();
-    //   expect(resp1.status).toEqual(200);
+    it('should return a token with the issuer set to the proxy and an aud array containing solid', async () => {
+      // mocked response with audience as a string (single item)
+      const token1 = await mockedAccessToken('client');
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        body: JSON.stringify({
+          access_token: token1,
+          expires_in: 7200,
+          scope: '',
+          token_type: 'Bearer',
+        }),
+        headers: {},
+        status: 200,
+      }));
+      const resp1 = await handler.handle(context).toPromise();
+      expect(resp1.status).toEqual(200);
 
-    //   const parsedBody1 = JSON.parse(resp1.body);
-    //   expect(parsedBody1.access_token).toBeDefined();
+      const parsedBody1 = JSON.parse(resp1.body);
+      expect(parsedBody1.access_token).toBeDefined();
 
-    //   const tokenPayload1 = JSON.parse(decode(parsedBody1.access_token.split('.')[1]).toString());
-    //   expect(tokenPayload1.iss).toEqual('http://localhost:3003');
-    //   expect(tokenPayload1.aud).toEqual([ 'client', 'solid' ]);
+      const tokenPayload1 = JSON.parse(decode(parsedBody1.access_token.split('.')[1]).toString());
+      expect(tokenPayload1.iss).toEqual('http://localhost:3003');
+      expect(tokenPayload1.aud).toEqual([ 'client', 'solid' ]);
 
-    //   // mocked response with audience as an array
-    //   const token2 = await mockedAccessToken([ 'client', 'audience' ]);
-    //   nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
-    //     body: JSON.stringify({
-    //       access_token: token2,
-    //       expires_in: 7200,
-    //       scope: '',
-    //       token_type: 'Bearer',
-    //     }),
-    //     headers: {},
-    //     status: 200,
-    //   }));
-    //   const resp2 = await handler.handle(context).toPromise();
-    //   expect(resp2.status).toEqual(200);
+      // mocked response with audience as an array
+      const token2 = await mockedAccessToken([ 'client', 'audience' ]);
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        body: JSON.stringify({
+          access_token: token2,
+          expires_in: 7200,
+          scope: '',
+          token_type: 'Bearer',
+        }),
+        headers: {},
+        status: 200,
+      }));
+      const resp2 = await handler.handle(context).toPromise();
+      expect(resp2.status).toEqual(200);
 
-    //   const parsedBody2 = JSON.parse(resp2.body);
-    //   expect(parsedBody2.access_token).toBeDefined();
+      const parsedBody2 = JSON.parse(resp2.body);
+      expect(parsedBody2.access_token).toBeDefined();
 
-    //   const tokenPayload2 = JSON.parse(decode(parsedBody2.access_token.split('.')[1]).toString());
-    //   expect(tokenPayload2.iss).toEqual('http://localhost:3003');
-    //   expect(tokenPayload2.aud).toEqual([ 'client', 'audience', 'solid' ]);
-    // });
+      const tokenPayload2 = JSON.parse(decode(parsedBody2.access_token.split('.')[1]).toString());
+      expect(tokenPayload2.iss).toEqual('http://localhost:3003');
+      expect(tokenPayload2.aud).toEqual([ 'client', 'audience', 'solid' ]);
+    });
 
   });
 });

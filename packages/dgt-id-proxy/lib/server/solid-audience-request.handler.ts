@@ -8,7 +8,7 @@ import { JWK, JWTPayload } from 'jose/webcrypto/types';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 
-export class SolidTokenRequestHandler extends HttpHandler {
+export class SolidAudienceRequestHandler extends HttpHandler {
 
   constructor(private handler: HttpHandler, private pathToJwks: string, private proxyUrl: string) {
     super();

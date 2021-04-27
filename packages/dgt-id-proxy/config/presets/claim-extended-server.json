@@ -107,12 +107,12 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-            "@type": "SolidTokenRequestHandler",
-            "SolidTokenRequestHandler:_handler": {
+            "@type": "SolidAudienceRequestHandler",
+            "SolidAudienceRequestHandler:_handler": {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
-            "SolidTokenRequestHandler:_pathToJwks": "assets/jwks.json",
-            "SolidTokenRequestHandler:_proxyUrl": "http://localhost:3003"
+            "SolidAudienceRequestHandler:_pathToJwks": "assets/jwks.json",
+            "SolidAudienceRequestHandler:_proxyUrl": "http://localhost:3003"
         },
         "HttpHandlerRoute:_path": "/token"
       },
