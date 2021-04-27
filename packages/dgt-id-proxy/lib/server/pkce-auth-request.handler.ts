@@ -1,20 +1,20 @@
 import { of, Observable, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { switchMap } from 'rxjs/operators';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
+import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
 export type Code = string;
 export interface ChallengeAndMethod { challenge: string; method: string; state?: string }
 export class PkceAuthRequestHandler extends HttpHandler {
 
   constructor(
-    private httpHandler: HttpHandler,
+    private codeHandler: PkceCodeRequestHandler,
     private inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>,
   ){
     super();
 
-    if (!httpHandler) {
+    if (!codeHandler) {
       throw new Error('A HttpHandler must be provided');
     }
 
@@ -78,7 +78,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
 
-    return this.httpHandler.handle(context);
+    return this.codeHandler.handle(context);
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {

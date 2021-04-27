@@ -4,7 +4,7 @@ import { switchMap } from 'rxjs/operators';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
 
-export class PkceAuthDynamicRequestHandler extends HttpHandler {
+export class PkceCodeRequestHandler extends HttpHandler {
 
   constructor(
     private httpHandler: HttpHandler,
@@ -37,6 +37,7 @@ export class PkceAuthDynamicRequestHandler extends HttpHandler {
     return this.httpHandler.handle(context).pipe(
       switchMap((response: HttpHandlerResponse) => {
         if (response.headers.location && !response.headers.location.startsWith('/')){
+
           const url = new URL(response.headers.location);
 
           let state = url.searchParams.get('state');
@@ -48,7 +49,6 @@ export class PkceAuthDynamicRequestHandler extends HttpHandler {
             .pipe(switchMap(([ challengeAndMethod, res ]) => {
               if (challengeAndMethod) {
                 if (!challengeAndMethod.state) {
-
                   url.searchParams.delete('state');
                   res.headers.location = url.toString();
                   res.body = '';

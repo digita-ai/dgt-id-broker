@@ -47,57 +47,45 @@ export class PkceTokenRequestHandler extends HttpHandler {
         code_verifier = decodeURI(encodedCode_verifier);
       }
 
-      try{
-        if (!code_verifier) {
-          throw new Error('Code verifier is required.');
-        }
+      if (!code_verifier) {
+        return this.throwErrorResponse('Code verifier is required.', context, 'invalid_request');
+      }
 
-        if (code_verifier.length < 43 || code_verifier.length > 128){
-          throw new Error('Code verifier must be between 43 and 128 characters.');
-        }
+      if (code_verifier.length < 43 || code_verifier.length > 128){
+        return this.throwErrorResponse('Code verifier must be between 43 and 128 characters.', context, 'invalid_request');
+      }
 
-        if (!code) {
-          throw new Error('An authorization code is required.');
-        }
-
-      } catch (error) {
-
-        return of(
-          {
-            body: JSON.stringify({ error: 'invalid_request', error_description: error.message }),
-            headers: { 'access-control-allow-origin': context.request.headers.origin },
-            status: 400,
-          },
-        );
+      if (!code) {
+        return this.throwErrorResponse('An authorization code is required.', context, 'invalid_request');
       }
 
       params.delete('code_verifier');
       request.body = params.toString();
-      request.headers['Content-length'] = request.body.length;
+      request.headers['content-length'] = request.body.length;
+      // const contentTypes = request.headers['content-type'];
+      // if (contentTypes.includes('charset=') && contentTypes.includes(';')) {
+      //   contentTypes.split(';')
+      // }
 
       return from(this.inMemoryStore.get(code))
         .pipe(
           switchMap((codeChallengeAndMethod) => {
-            try {
-              if (codeChallengeAndMethod) {
 
-                const challenge = this.generateCodeChallenge(code_verifier, codeChallengeAndMethod);
-
-                if (challenge === codeChallengeAndMethod.challenge) {
-                  return this.httpHandler.handle(context);
-                }
-                throw new Error(JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' }));
-
+            if (codeChallengeAndMethod) {
+              let challenge = '';
+              try{
+                challenge = this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method);
+              } catch(error) {
+                return this.throwErrorResponse(error.message, context, 'invalid_request');
               }
-            } catch (error) {
-              return of(
-                {
-                  body: error.message,
-                  headers: { 'access-control-allow-origin': context.request.headers.origin },
-                  status: 400,
-                },
-              );
+
+              if (challenge === codeChallengeAndMethod.challenge) {
+                return this.httpHandler.handle(context);
+              }
+              return this.throwErrorResponse('Code challenges do not match.', context, 'invalid_grant');
+
             }
+
             return throwError(new InternalServerError());
           }),
         );
@@ -114,7 +102,11 @@ export class PkceTokenRequestHandler extends HttpHandler {
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
-    const params  = new URLSearchParams(context.request.body);
+    let params = new URLSearchParams();
+    if (context && context.request && context.request.body) {
+      params  = new URLSearchParams(context.request.body);
+    }
+
     return context
       && context.request
       && context.request.url
@@ -130,27 +122,33 @@ export class PkceTokenRequestHandler extends HttpHandler {
   }
 
   generateCodeChallenge (code_verifier: string,
-    challengeAndMethod: { challenge: string; method: string }): string {
+    method: string) {
     let challengeNew = '';
 
-    if (challengeAndMethod.method === 'S256') {
+    if (method === 'S256') {
       const hash = createHash('sha256');
 
       hash.update(code_verifier);
 
       challengeNew = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
-    } else if (challengeAndMethod.method === 'plain') {
-
-      challengeNew = this.base64URL(code_verifier);
-
+    } else if (method === 'plain') {
+      challengeNew = code_verifier;
     } else {
-
-      throw new Error(JSON.stringify({ error: 'invalid_grant', error_description: 'Transform algorithm not supported.' }));
-
+      throw new Error('Transform algorithm not supported.');
     }
 
     return challengeNew;
+  }
+
+  throwErrorResponse(msg: string, context: HttpHandlerContext, error: string): Observable<HttpHandlerResponse> {
+    return of(
+      {
+        body: JSON.stringify({ error, error_description: msg }),
+        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        status: 400,
+      },
+    );
   }
 
 }

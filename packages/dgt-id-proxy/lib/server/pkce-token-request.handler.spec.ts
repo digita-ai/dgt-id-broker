@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { of } from 'rxjs';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { PkceTokenRequestHandler } from './pkce-token-request.handler';
 import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
@@ -14,37 +14,26 @@ const generateRandomString = (length: number): string => {
   return text;
 };
 
-const base64URL = (str: string) => Buffer.from(str).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-const challengeAndMethod = {
-  challenge: '',
-  method: 'S256',
-};
-
-const generateCodeChallenge = (code_verifier: string): string => {
-  let challenge: string;
-  if(challengeAndMethod.method === 'S256'){
-    const hash = createHash('sha256');
-
-    hash.update(code_verifier);
-
-    challenge = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-    return challenge;
-  }
-  return base64URL(code_verifier);
-};
-
 describe('PkceTokenRequestHandler', () => {
   let pkceTokenRequestHandler: PkceTokenRequestHandler;
   let httpHandler: HttpHandler;
   let inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>;
   let context: HttpHandlerContext;
-  let referer: string;
-  let url: URL;
-  let code_verifier: string;
-  let code: string;
   let response: HttpHandlerResponse;
+  let bodyParams: URLSearchParams;
+
+  const challengeAndMethod = {
+    challenge: '',
+    method: 'S256',
+  };
+
+  const referer = 'http://client.example.com';
+  const url =  new URL(`${referer}/token`);
+  const redirect_uri = encodeURI('http://client.example.com/requests.html');
+  const client_id = encodeURI('http://solidpod./jaspervandenberghen/profile/card#me');
+
+  const code_verifier = generateRandomString(128);
+  const code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
 
   beforeEach(async () => {
     httpHandler = {
@@ -55,17 +44,13 @@ describe('PkceTokenRequestHandler', () => {
 
     inMemoryStore = new InMemoryStore();
 
-    referer = 'http://client.example.com';
-    url = new URL(`${referer}/token`);
-    code_verifier = generateRandomString(128);
-    challengeAndMethod.challenge = generateCodeChallenge(code_verifier);
-    code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
-
-    context = { request: { headers: {}, body: { code_verifier, code }, method: 'POST', url } };
-
-    inMemoryStore.set(context.request.body.code, challengeAndMethod);
+    context = { request: { headers: {}, body: `grant_type=authorization_code&code=${code}&client_id=${client_id}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`, method: 'POST', url } };
 
     pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, inMemoryStore);
+    challengeAndMethod.challenge = pkceTokenRequestHandler
+      .generateCodeChallenge(code_verifier, challengeAndMethod.method);
+    bodyParams = new URLSearchParams(context.request.body);
+    inMemoryStore.set(bodyParams.get('code'), challengeAndMethod);
 
     response =  {
       body: '',
@@ -107,46 +92,38 @@ describe('PkceTokenRequestHandler', () => {
     });
 
     it('should error when no code_verifier was provided', async () => {
-      const noCodeVerifierContext = context;
-      noCodeVerifierContext.request.body = { cd_vrfr: 'bla', code };
+      bodyParams.delete('code_verifier');
+      context.request.body = bodyParams.toString();
       response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier is required.' });
 
-      await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
-      noCodeVerifierContext.request.body = { code_verifier: null, code };
-      await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
-      noCodeVerifierContext.request.body = { code_verifier: undefined, code };
-      await expect(pkceTokenRequestHandler.handle(noCodeVerifierContext).toPromise()).resolves.toEqual(response);
+      await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
     it('should error when code_verifier is not the correct length', async () => {
-      const shortCodeVerifierContext = context;
-      shortCodeVerifierContext.request.body = { code_verifier: 'blabla', code };
+      bodyParams.set('code_verifier', 'short_verifier');
+      context.request.body = bodyParams.toString();
       response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Code verifier must be between 43 and 128 characters.' });
 
-      await expect(pkceTokenRequestHandler.handle(shortCodeVerifierContext).toPromise()).resolves.toEqual(response);
+      await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
     it('should error when no authorization code was provided', async () => {
-      const noCodeContext = context;
-      noCodeContext.request.body = { code_verifier, kode: 'z' };
+      bodyParams.delete('code');
+      context.request.body = bodyParams.toString();
       response.body = JSON.stringify({ error: 'invalid_request', error_description: 'An authorization code is required.' });
-
-      await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
-      noCodeContext.request.body = { code_verifier, code: null };
-      await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
-      noCodeContext.request.body = { code_verifier, code: undefined };
-      await expect(pkceTokenRequestHandler.handle(noCodeContext).toPromise()).resolves.toEqual(response);
+      await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
     describe('inMemoryStore', () => {
       it('should get the associated challenge and method from the inMemoryStore', async () => {
         const challengeInStore = await inMemoryStore.get(code);
-        const challengeReceived = pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
+        const challengeReceived = pkceTokenRequestHandler
+          .generateCodeChallenge(code_verifier, challengeAndMethod.method);
         expect(challengeInStore.challenge).toEqual(challengeReceived);
       });
 
       it('should give a valid error when code challenges do not match', async () => {
-        challengeAndMethod.challenge = 'ezffzekfkzfe';
+        challengeAndMethod.challenge = 'non_matching_challenge';
         response.body = JSON.stringify({ error: 'invalid_grant', error_description: 'Code challenges do not match.' });
 
         await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
@@ -161,6 +138,19 @@ describe('PkceTokenRequestHandler', () => {
         await pkceTokenRequestHandler.handle(context).toPromise();
         expect(httpHandler.handle).toHaveBeenCalledTimes(1);
         expect(httpHandler.handle).toHaveBeenCalledWith(context);
+      });
+
+      it('should just call the httpHandler handle when request method is options', async () => {
+        context.request.method = 'OPTIONS';
+        await pkceTokenRequestHandler.handle(context).toPromise();
+        expect(httpHandler.handle).toHaveBeenCalledTimes(1);
+        expect(httpHandler.handle).toHaveBeenCalledWith(context);
+      });
+
+      it('should just throw a method not allowed error when request method is not options or post', async () => {
+        context.request.method = 'GET';
+        await expect(pkceTokenRequestHandler.handle(context).toPromise())
+          .rejects.toBeInstanceOf(MethodNotAllowedHttpError);
       });
     });
 
@@ -192,16 +182,14 @@ describe('PkceTokenRequestHandler', () => {
       });
 
       it('should return false if context.request.body.code_verifier is null or undefined', async () => {
-        context.request.body.code_verifier = null;
-        await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
-        context.request.body.code_verifier = undefined;
+        bodyParams.delete('code_verifier');
+        context.request.body = bodyParams.toString();
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
       });
 
       it('should return false if context.request.url.body.code is null or undefined', async () => {
-        context.request.body.code = null;
-        await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
-        context.request.body.code = undefined;
+        bodyParams.delete('code');
+        context.request.body = bodyParams.toString();
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
       });
 
@@ -212,35 +200,29 @@ describe('PkceTokenRequestHandler', () => {
 
     describe('base64URL', () => {
       it('should encode the string', async () => {
-        expect(pkceTokenRequestHandler.base64URL('bla')).toEqual('Ymxh');
+        expect(pkceTokenRequestHandler.base64URL('code_verifier')).toEqual('Y29kZV92ZXJpZmllcg');
       });
     });
 
     describe('generateCodeChallenge', () => {
-      it('should error when the algorithm is not supported', () => {
-        challengeAndMethod.method = '123';
-        expect(() => pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod)).toThrow('Transform algorithm not supported.');
-      });
-
-      it('should call base64URL with a plain code_verifier when the algorithm is plain', () => {
-        challengeAndMethod.method = 'plain';
-        pkceTokenRequestHandler.base64URL = jest.fn();
-        pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
-        expect(pkceTokenRequestHandler.base64URL).toHaveBeenCalledWith(code_verifier);
+      it('should call return a plain code_verifier when the algorithm is plain', () => {
+        expect(pkceTokenRequestHandler
+          .generateCodeChallenge(code_verifier, 'plain')).toEqual(code_verifier);
       });
 
       it('should call return hashed & encoded code_verifier when the algorithm is S256', () => {
-        challengeAndMethod.method = 'S256';
-
         const hash = createHash('sha256');
         hash.update(code_verifier);
         const hashed = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-        pkceTokenRequestHandler.generateCodeChallenge = jest.fn().mockReturnValueOnce(hashed);
-        pkceTokenRequestHandler.generateCodeChallenge(code_verifier, challengeAndMethod);
-        expect(pkceTokenRequestHandler.generateCodeChallenge)
-          .toHaveReturnedWith(hashed);
+        expect(pkceTokenRequestHandler.generateCodeChallenge(code_verifier, 'S256')).toEqual(hashed);
       });
+
+      it('should error when the algorithm is not supported', async () => {
+        challengeAndMethod.method = '123';
+        response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Transform algorithm not supported.' });
+        await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
+      });
+
     });
   });
 
