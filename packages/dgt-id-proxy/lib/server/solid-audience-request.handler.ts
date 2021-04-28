@@ -8,8 +8,17 @@ import { JWK, JWTPayload } from 'jose/webcrypto/types';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 
+/**
+ * A {HttpHandler} that adds the 'solid' claim to the aud claim of a JWT Access Token
+ */
 export class SolidAudienceRequestHandler extends HttpHandler {
-
+/**
+ * Creates a {SolidAudienceRequestHandler} passing requests through the given handler.
+ *
+ * @param {HttpHandler} handler - the handler through which to pass incoming requests.
+ * @param {string} pathToJwks - the path to a json file containing jwks.
+ * @param {string} proxyUrl - the url of the upstream server.
+ */
   constructor(private handler: HttpHandler, private pathToJwks: string, private proxyUrl: string) {
     super();
 
@@ -26,6 +35,14 @@ export class SolidAudienceRequestHandler extends HttpHandler {
     }
   }
 
+  /**
+   * Passes the context's incoming request to the nested handler.
+   * It then handles the response. If the response is a 200 response it adds
+   * the string 'solid' to the aud claim of the Access Token.
+   * Otherwise it returns an error response.
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext) {
     if (!context) {
       return throwError(new Error('Context cannot be null or undefined'));
@@ -58,7 +75,7 @@ export class SolidAudienceRequestHandler extends HttpHandler {
     return this.getUpstreamResponse(context).pipe(
       // creates a claim extended token
       switchMap((response) => zip(of(response), this.createClaimExtendedToken(response.body))),
-      // creates dpop response
+      // creates a response including the new access token
       switchMap(([ response, token ]) => this.createAccessTokenResponse(
         response,
         token,
@@ -120,6 +137,12 @@ export class SolidAudienceRequestHandler extends HttpHandler {
     });
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or the request's method, headers, or url are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext) {
     return context
       && context.request
