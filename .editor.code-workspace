@@ -21,6 +21,9 @@
     },
     "typescript.preferences.importModuleSpecifier": "relative",
     "files.eol": "\n",
+    "cSpell.words": [
+        "panva"
+    ]
   },
   "extensions": {
     "recommendations": [

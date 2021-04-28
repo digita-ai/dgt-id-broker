@@ -4,13 +4,16 @@
 
 ## List changed files
 STATUS=$(git status --porcelain)
-STAGED=$(echo "$STATUS" | grep -e '^M ' | sed -e 's/^M  //g')
-#MODIFIED=$(echo "$STATUS" | grep -e '^ M' | sed -e 's/^ M //g')
-#UNTRACKED=$(echo "$STATUS" | grep -e '^??' | sed -e 's/^?? //g')
+STAGED=$(echo "$STATUS" | grep -E '^(M|A|D|R|C) ' | sed -E 's/^(M|A|D|R|C)  //g')
+#MODIFIED=$(echo "$STATUS" | grep -E '^ M' | sed -E 's/^ M //g')
+#UNTRACKED=$(echo "$STATUS" | grep -E '^??' | sed -E 's/^?? //g')
 #CHANGED=$(echo "$STAGED" && echo "$MODIFIED" && echo "$UNTRACKED")
 
+## Check for ongoing merge
+MERGE=$(git rev-parse -q --verify MERGE_HEAD || echo "")
+
 ## Check for empty commits
-[[ -z "$STAGED" ]] && echo "[COMMIT-MSG Hook] No staged changes => aborting commit" && exit 1
+[[ -z "$STAGED" && -z "$MERGE" ]] && echo "[COMMIT-MSG Hook] No staged changes && no ongoing merge => aborting commit" && exit 1
 
 ## Lint commit message
 echo "[COMMIT-MSG Hook] Linting commit message" && ./node_modules/.bin/commitlint --edit $1
@@ -26,17 +29,15 @@ else
     ## If no WIP, run tests
     echo "[COMMIT-MSG Hook] No WIP mention found"
 
-    echo "[COMMIT-MSG Hook] Stashing working tree"
+    if [[ -n "$MERGE" ]] ; then
+        echo "[COMMIT-MSG Hook] Saved ongoing merge status"
+    fi
 
-    ## Stash changes
-    STASH="pre-commit hook test on $(date '+%F %T')" && git stash push -qukm "$STASH"
+    if [[ -n "$STAGED" ]] ; then
+        echo "[COMMIT-MSG Hook] Stashing working tree"
+        STASH="pre-commit hook test on $(date '+%F %T')" && git stash push -qukm "$STASH"
+    fi
 
-    ## Install root dependencies if package.json changed
-    echo "$CHANGED" | grep -q "^package.json$" && npm i
-
-    ## Bootstrap packages with changed package.json
-    PACKAGES=$(echo "$CHANGED" | grep "package.json$" | grep -v "^package.json$" | xargs cat | grep name
-    echo "$PACKAGES" | sed 's/.*"name": "\(.*\)".*/--scope "\1"/g') | xargs ./node_modules/.bin/lerna bootstrap --since HEAD
     echo "[COMMIT-MSG Hook] Running tests"
 
     ## Build list of previous WIP changes
@@ -65,14 +66,21 @@ else
         echo "[COMMIT-MSG Hook] Resolve the remaining issues or commit current changes as WIP."
     fi
 
-    echo "[COMMIT-MSG Hook] Restoring working tree"
+    echo "[COMMIT-MSG Hook] Resetting the stage"
 
     ## Reset tracked files & clean untracked files
     git reset --hard
     git clean -df
 
-    ## Unstash changes & restore stage
-    git stash list | grep -q "$STASH" && git stash pop -q --index
+    if [[ -n "$STAGED" ]] ; then 
+        echo "[COMMIT-MSG Hook] Restoring working tree"
+        git stash list | grep -q "$STASH" && git stash pop -q --index
+    fi
+
+    if [[ -n "$MERGE" ]] ; then 
+        echo "[COMMIT-MSG Hook] Restoring ongoing merge status"
+        git update-ref MERGE_HEAD "$MERGE"
+    fi
 
     exit $TESTS
 
