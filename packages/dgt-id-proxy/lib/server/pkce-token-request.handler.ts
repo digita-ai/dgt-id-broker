@@ -61,11 +61,32 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
       params.delete('code_verifier');
       request.body = params.toString();
-      request.headers['content-length'] = request.body.length;
-      // const contentTypes = request.headers['content-type'];
-      // if (contentTypes.includes('charset=') && contentTypes.includes(';')) {
-      //   contentTypes.split(';')
-      // }
+
+      const contentTypes = request.headers['content-type'];
+
+      if (contentTypes) {
+        let charset: BufferEncoding;
+        let set  = '';
+
+        if (contentTypes.includes('charset=') && contentTypes.includes(';')) {
+          contentTypes.split(';')
+            .map((type) => {
+              if (type.includes('charset=')) {
+                set = type.split('=')[1].toLowerCase();
+              }
+            });
+        } else {
+          set = 'utf-8';
+        }
+
+        if (set !== 'ascii' && set !== 'utf8' && set !== 'utf-8' && set !== 'utf16le' && set !== 'ucs2' && set !== 'ucs-2' && set !== 'base64' && set !== 'latin1' && set !== 'binary' && set !== 'hex') {
+          return throwError(new Error('The specified charset is not supported'));
+        } else {
+          charset = set;
+        }
+
+        request.headers['content-length'] = Buffer.byteLength(request.body, charset).toString();
+      }
 
       return from(this.inMemoryStore.get(code))
         .pipe(

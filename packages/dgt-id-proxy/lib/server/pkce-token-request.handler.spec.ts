@@ -114,6 +114,25 @@ describe('PkceTokenRequestHandler', () => {
       await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
+    it('should error when no given charset not supported', async () => {
+      context.request.headers['content-type'] = 'application/x-www-form-urlencoded;charset=ABC-1';
+      await expect(pkceTokenRequestHandler.handle(context).toPromise()).rejects.toThrow('The specified charset is not supported');
+    });
+
+    it('should set the charset to utf-8 if no charset was included in the content-type header', async () => {
+      context.request.headers['content-type'] = 'application/x-www-form-urlencoded;';
+      await pkceTokenRequestHandler.handle(context).toPromise();
+      const byteLen = Buffer.byteLength(context.request.body, 'utf-8').toString();
+      expect(context.request.headers['content-length']).toEqual(byteLen);
+    });
+
+    it('should set the content-length header to the correct bytelength', async () => {
+      context.request.headers['content-type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+      await pkceTokenRequestHandler.handle(context).toPromise();
+      const byteLen = Buffer.byteLength(context.request.body, 'utf-8').toString();
+      expect(context.request.headers['content-length']).toEqual(byteLen);
+    });
+
     describe('inMemoryStore', () => {
       it('should get the associated challenge and method from the inMemoryStore', async () => {
         const challengeInStore = await inMemoryStore.get(code);
