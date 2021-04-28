@@ -73,9 +73,9 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
     }
 
     return this.getUpstreamResponse(context).pipe(
-      // creates a claim extended token
+      // creates a jwt access token from claims int he id token
       switchMap((response) => zip(of(response), this.createJwtAccessToken(response.body))),
-      // creates dpop response
+      // create a response to replace the opaque access token with the jwt acces token
       switchMap(([ response, token ]) => this.createAccessTokenResponse(
         response,
         token,
@@ -91,7 +91,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
   );
 
   private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
-    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),    // I would like to see some safer way than casting after a read
+    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
     switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
   );
 
@@ -114,11 +114,13 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
     // base64url decode the id token payload
     const decodedIdTokenPayload = JSON.parse(decode(idTokenPayload).toString());
 
+    // get the sub and aud claims from the id token and add them to the accessTokenPayload
     const accessTokenPayload = {
       sub: decodedIdTokenPayload.sub,
       aud: decodedIdTokenPayload.aud,
     };
 
+    // sign the token
     return this.signJwtPayload(accessTokenPayload);
   }
 
