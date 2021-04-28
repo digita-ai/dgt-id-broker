@@ -41,26 +41,28 @@ export class PkceCodeRequestHandler extends HttpHandler {
           const url = new URL(response.headers.location);
 
           let state = url.searchParams.get('state');
+
           if (!state) {
             state = '';
           }
 
           return combineLatest(from(this.inMemoryStore.get(state)), of(response))
             .pipe(switchMap(([ challengeAndMethod, res ]) => {
-              if (challengeAndMethod) {
+              if (challengeAndMethod && state) {
                 if (!challengeAndMethod.state) {
                   url.searchParams.delete('state');
                   res.headers.location = url.toString();
                   res.body = '';
+                }
 
-                }
                 const code = url.searchParams.get('code');
-                if (state) {
-                  this.inMemoryStore.delete(state);
-                }
+
+                this.inMemoryStore.delete(state);
 
                 if (code) {
                   this.inMemoryStore.set(code, challengeAndMethod);
+                } else {
+                  return throwError(new Error('No code was included in the response'));
                 }
 
                 return of(res);

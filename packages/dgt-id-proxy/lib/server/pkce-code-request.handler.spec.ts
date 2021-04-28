@@ -23,6 +23,12 @@ describe('PkceCodeRequestHandler', () => {
   const code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
   const url =  new URL(`http://${referer}/auth?response_type=code&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}&state=9c59c72b-c282-4370-bfae-33f3f5dfb42e`);
 
+  const challengeAndMethodAndState = {
+    challenge: 'code_challenge_value',
+    method: 'S256',
+    state,
+  };
+
   beforeEach(async () => {
     response = {
       body: '',
@@ -84,9 +90,26 @@ describe('PkceCodeRequestHandler', () => {
       expect(httpHandler.handle).toHaveBeenCalledWith(context);
     });
 
-    it('should remove state from the url if no state is included in the store', async () => {
+    it('should remove state from the url if no state is included in the store and set the body empty', async () => {
       const responseGotten = await pkceCodeRequestHandler.handle(context).toPromise();
       expect(responseGotten).toEqual({ 'body': '', 'headers': { 'location': `http://${referer}/requests.html?code=${code}` }, 'status': 302 });
+    });
+
+    it('should set the headers location to a URL without state if no state is included in the store', async () => {
+      const responseGotten = await pkceCodeRequestHandler.handle(context).toPromise();
+      expect(responseGotten.headers.location).toEqual(`http://${referer}/requests.html?code=${code}`);
+    });
+
+    it('should delete the inMemory data with the state as key from the store if no state was included in the value', async () => {
+      await pkceCodeRequestHandler.handle(context).toPromise();
+      expect(inMemoryStore.get(state).then((data) => data)).resolves.toBeUndefined();
+    });
+
+    it('should delete the inMemory data with the state as key from the store if no state was included in the value', async () => {
+      inMemoryStore.delete(state);
+      inMemoryStore.set(state, challengeAndMethodAndState);
+      await pkceCodeRequestHandler.handle(context).toPromise();
+      expect(inMemoryStore.get(state).then((data) => data)).resolves.toBeUndefined();
     });
 
     it('should switch the state key with the code in the store', async () => {
@@ -99,15 +122,28 @@ describe('PkceCodeRequestHandler', () => {
       await expect(pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No data was found in the store');
     });
 
-    // it('should return the response if location header starts with a /', async () => {
-    //   context.request.url =  new URL(`http://${referer}/auth/123456`);
-    //   const responseGotten = await pkceCodeRequestHandler.handle(context).toPromise();
-    //   console.log(responseGotten);
-    //   await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(responseGotten);
-    // });
+    it('should error if no state in the location', async () => {
+      response.headers.location = `http://${referer}/requests.html?code=${code}`;
+      await expect(pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No data was found in the store');
+    });
+
+    it('should error when no code was included in the response', async () => {
+      response.headers.location = `http://${referer}/requests.html?state=${state}`;
+      await expect(pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No code was included in the response');
+    });
+
+    it('should return the response if its a dynamic auth request', async () => {
+      response.headers.location = '/auth/123456';
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+      await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
+    });
   });
 
   describe('canHandle', () => {
+    it('should return true if context is complete', async () => {
+      await expect(pkceCodeRequestHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+    });
+
     it('should return false if context is null or undefined', async () => {
       await expect(pkceCodeRequestHandler.canHandle(null).toPromise()).resolves.toEqual(false);
       await expect(pkceCodeRequestHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
