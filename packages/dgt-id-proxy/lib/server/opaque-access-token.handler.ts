@@ -99,7 +99,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
     switchMap(([ payload, [ alg, kid, key ] ]) => from(
       new SignJWT(payload)
         .setProtectedHeader({ alg, kid, typ: 'at+jwt'  })
-        .setExpirationTime(7200)
+        .setExpirationTime('2h')
         .setIssuedAt()
         .setJti(uuid())
         .setIssuer(this.proxyUrl)
