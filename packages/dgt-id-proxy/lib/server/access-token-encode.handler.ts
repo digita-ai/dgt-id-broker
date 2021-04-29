@@ -1,16 +1,29 @@
 
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, throwError, zip } from 'rxjs';
+import { of, throwError, zip, from } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
-import { decode } from 'jose/util/base64url';
+import { JoseHeaderParameters, JWK, JWSHeaderParameters, JWTPayload } from 'jose/webcrypto/types';
+import { SignJWT } from 'jose/jwt/sign';
+import { parseJwk } from 'jose/jwk/parse';
+import { v4 as uuid }  from 'uuid';
 
-export class AccessTokenDecodeHandler extends HttpHandler {
+export class AccessTokenEncodeHandler extends HttpHandler {
 
-  constructor(private handler: HttpHandler) {
+  constructor(private handler: HttpHandler, private pathToJwks: string, private proxyUrl: string) {
     super();
 
     if (!handler) {
       throw new Error('A handler must be provided');
+    }
+
+    if(!pathToJwks){
+      throw new Error('A pathToJwks must be provided');
+    }
+
+    if(!proxyUrl){
+      throw new Error('A proxyUrl must be provided');
     }
   }
 
@@ -44,10 +57,14 @@ export class AccessTokenDecodeHandler extends HttpHandler {
     }
 
     return this.getUpstreamResponse(context).pipe(
-      // decode the access token
-      switchMap((response) => zip(of(response), this.decodeAccessToken(response.body))),
+      // create a signed access token based on the access_token payload
+      switchMap((response) => zip(of(response), this.signJwtPayload(response.body.access_token.payload))),
       // create a response containing the decoded access token
-      switchMap(([ response, decodedToken ]) => this.createDecodedAccessTokenResponse(response, decodedToken)),
+      switchMap(([ response, encodedToken ]) => this.createEncodedAccessTokenResponse(
+        response,
+        encodedToken,
+        context.request.headers.origin,
+      )),
       // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
       catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
     );
@@ -57,30 +74,36 @@ export class AccessTokenDecodeHandler extends HttpHandler {
     switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
   );
 
-  private decodeAccessToken(responseBody: string) {
-    const parsedBody = JSON.parse(responseBody);
-    // split the access token into header, payload, and footer parts
-    const accessTokenSplit = parsedBody.access_token.split('.');
+  private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
+    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
+    switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
+  );
 
-    // create a decoded access token with a JSON header and payload.
-    const decodedAccessToken = {
-      header: JSON.parse(decode(accessTokenSplit[0]).toString()),
-      payload: JSON.parse(decode(accessTokenSplit[1]).toString()),
-    };
+  private signJwtPayload = (jwtPayload: JWTPayload) => zip(of(jwtPayload), this.getSigningKit()).pipe(
+    switchMap(([ payload, [ alg, kid, key ] ]) => from(
+      new SignJWT(payload)
+        .setProtectedHeader({ alg, kid, typ: 'at+jwt'  })
+        .setExpirationTime('2h')
+        .setIssuedAt()
+        .setJti(uuid())
+        .setIssuer(this.proxyUrl)
+        .sign(key),
+    )),
+  );
 
-    return of(decodedAccessToken);
-  }
-
-  private createDecodedAccessTokenResponse(
+  private createEncodedAccessTokenResponse(
     response: HttpHandlerResponse,
-    decodedAccessToken: { header: any; payload: any },
+    encodedAccessToken: string,
+    corsOrigin: string,
   ) {
-    const parsedBody = JSON.parse(response.body);
-    parsedBody.access_token = decodedAccessToken;
+    response.body.access_token = encodedAccessToken;
 
     return of({
-      body: parsedBody,
-      headers: {},
+      body: JSON.stringify(response.body),
+      headers: {
+        'access-control-allow-origin': corsOrigin,
+        'content-type':  'application/json',
+      },
       status: 200,
     });
   }
