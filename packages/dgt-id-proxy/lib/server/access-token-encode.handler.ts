@@ -1,22 +1,19 @@
 
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, throwError, zip, from } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
-import { JoseHeaderParameters, JWK, JWSHeaderParameters, JWTPayload } from 'jose/webcrypto/types';
+import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { Handler } from '@digita-ai/handlersjs-core';
+import { of, throwError, zip, from, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { JWK, JWTPayload } from 'jose/webcrypto/types';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';
 
-export class AccessTokenEncodeHandler extends HttpHandler {
+export class AccessTokenEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  constructor(private handler: HttpHandler, private pathToJwks: string, private proxyUrl: string) {
+  constructor(private pathToJwks: string, private proxyUrl: string) {
     super();
-
-    if (!handler) {
-      throw new Error('A handler must be provided');
-    }
 
     if(!pathToJwks){
       throw new Error('A pathToJwks must be provided');
@@ -27,52 +24,24 @@ export class AccessTokenEncodeHandler extends HttpHandler {
     }
   }
 
-  handle(context: HttpHandlerContext) {
-    if (!context) {
-      return throwError(new Error('Context cannot be null or undefined'));
+  handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
+    if (!response) {
+      return throwError(new Error('response cannot be null or undefined'));
     }
 
-    if (!context.request) {
-      return throwError(new Error('No request was included in the context'));
+    if (response.status !== 200) {
+      return of(response);
     }
 
-    if (!context.request.method) {
-      return throwError(new Error('No method was included in the request'));
+    if (!response.body.access_token) {
+      return throwError(new Error('the response body did not include an access token, or the response body is not JSON'));
     }
-
-    if (!context.request.headers) {
-      return throwError(new Error('No headers were included in the request'));
-    }
-
-    if (!context.request.url) {
-      return throwError(new Error('No url was included in the request'));
-    }
-
-    if (context.request.method === 'OPTIONS') {
-      return this.handler.handle(context);
-    }
-
-    if (context.request.method !== 'POST') {
-      return throwError(new MethodNotAllowedHttpError('this method is not supported.'));
-    }
-
-    return this.getUpstreamResponse(context).pipe(
-      // create a signed access token based on the access_token payload
-      switchMap((response) => zip(of(response), this.signJwtPayload(response.body.access_token.payload))),
-      // create a response containing the decoded access token
-      switchMap(([ response, encodedToken ]) => this.createEncodedAccessTokenResponse(
-        response,
-        encodedToken,
-        context.request.headers.origin,
-      )),
-      // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
-      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+    // create a signed access token based on the access_token payload
+    return this.signJwtPayload(response.body.access_token.payload).pipe(
+      // create a response including the signed access token and stringify the body
+      switchMap((encodedToken) => this.createEncodedAccessTokenResponse(response, encodedToken)),
     );
   }
-
-  private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
-    switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
-  );
 
   private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
     switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
@@ -94,26 +63,19 @@ export class AccessTokenEncodeHandler extends HttpHandler {
   private createEncodedAccessTokenResponse(
     response: HttpHandlerResponse,
     encodedAccessToken: string,
-    corsOrigin: string,
   ) {
     response.body.access_token = encodedAccessToken;
-
     return of({
       body: JSON.stringify(response.body),
       headers: {
-        'access-control-allow-origin': corsOrigin,
         'content-type':  'application/json',
       },
       status: 200,
     });
   }
 
-  canHandle(context: HttpHandlerContext) {
-    return context
-      && context.request
-      && context.request.method
-      && context.request.headers
-      && context.request.url
+  canHandle(response: HttpHandlerResponse) {
+    return response
       ? of(true)
       : of(false);
   }

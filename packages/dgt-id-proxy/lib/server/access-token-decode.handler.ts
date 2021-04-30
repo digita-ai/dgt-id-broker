@@ -1,66 +1,44 @@
 
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
-import { of, throwError, zip } from 'rxjs';
+import { HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { Handler } from '@digita-ai/handlersjs-core';
+import { of, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { decode } from 'jose/util/base64url';
 
-export class AccessTokenDecodeHandler extends HttpHandler {
+export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  constructor(private handler: HttpHandler) {
+  constructor() {
     super();
-
-    if (!handler) {
-      throw new Error('A handler must be provided');
-    }
   }
 
-  handle(context: HttpHandlerContext) {
-    if (!context) {
-      return throwError(new Error('Context cannot be null or undefined'));
+  handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
+    if (!response) {
+      return throwError(new Error('response cannot be null or undefined'));
     }
 
-    if (!context.request) {
-      return throwError(new Error('No request was included in the context'));
+    if (response.status !== 200) {
+      return of(response);
     }
 
-    if (!context.request.method) {
-      return throwError(new Error('No method was included in the request'));
-    }
-
-    if (!context.request.headers) {
-      return throwError(new Error('No headers were included in the request'));
-    }
-
-    if (!context.request.url) {
-      return throwError(new Error('No url was included in the request'));
-    }
-
-    if (context.request.method === 'OPTIONS') {
-      return this.handler.handle(context);
-    }
-
-    if (context.request.method !== 'POST') {
-      return throwError(new MethodNotAllowedHttpError('this method is not supported.'));
-    }
-
-    return this.getUpstreamResponse(context).pipe(
-      // decode the access token
-      switchMap((response) => zip(of(response), this.decodeAccessToken(response.body))),
+    // decode the access token
+    return this.decodeAccessToken(response.body).pipe(
       // create a response containing the decoded access token
-      switchMap(([ response, decodedToken ]) => this.createDecodedAccessTokenResponse(response, decodedToken)),
-      // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
-      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+      switchMap((decodedToken) => this.createDecodedAccessTokenResponse(response, decodedToken)),
     );
   }
 
-  private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
-    switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
-  );
-
   private decodeAccessToken(responseBody: string) {
     const parsedBody = JSON.parse(responseBody);
+    if (!parsedBody.access_token) {
+      return throwError(new Error('the response body did not include an access token.'));
+    }
+
     // split the access token into header, payload, and footer parts
     const accessTokenSplit = parsedBody.access_token.split('.');
+
+    if (accessTokenSplit.length === 1) {
+      return throwError(new Error('the access token is not a valid JWT'));
+    }
 
     // create a decoded access token with a JSON header and payload.
     const decodedAccessToken = {
@@ -77,7 +55,6 @@ export class AccessTokenDecodeHandler extends HttpHandler {
   ) {
     const parsedBody = JSON.parse(response.body);
     parsedBody.access_token = decodedAccessToken;
-
     return of({
       body: parsedBody,
       headers: {},
@@ -85,12 +62,8 @@ export class AccessTokenDecodeHandler extends HttpHandler {
     });
   }
 
-  canHandle(context: HttpHandlerContext) {
-    return context
-      && context.request
-      && context.request.method
-      && context.request.headers
-      && context.request.url
+  canHandle(response: HttpHandlerResponse) {
+    return response
       ? of(true)
       : of(false);
   }

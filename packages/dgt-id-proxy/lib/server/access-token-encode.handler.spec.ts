@@ -48,12 +48,7 @@ describe('AccessTokenEncodeHandler', () => {
 
   beforeEach(() => {
     proxyUrl = 'http://mock-proxy.com';
-    nestedHandler = {
-      handle: jest.fn(),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
-    };
-    handler = new AccessTokenEncodeHandler(nestedHandler, 'assets/jwks.json', proxyUrl);
+    handler = new AccessTokenEncodeHandler('assets/jwks.json', proxyUrl);
     context = { request: { headers: { 'origin': 'http://localhost' }, method: 'POST', url: new URL('http://digita.ai/') } };
   });
 
@@ -61,76 +56,55 @@ describe('AccessTokenEncodeHandler', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('should error when no handler or proxyUrl is provided in the constructor', () => {
-    expect(() => new AccessTokenEncodeHandler(undefined, 'assets/jwks.json', proxyUrl)).toThrow('A handler must be provided');
-    expect(() => new AccessTokenEncodeHandler(null, 'assets/jwks.json', proxyUrl)).toThrow('A handler must be provided');
-    expect(() => new AccessTokenEncodeHandler(nestedHandler, undefined, proxyUrl)).toThrow('A pathToJwks must be provided');
-    expect(() => new AccessTokenEncodeHandler(nestedHandler, null, proxyUrl)).toThrow('A pathToJwks must be provided');
-    expect(() => new AccessTokenEncodeHandler(nestedHandler, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
-    expect(() => new AccessTokenEncodeHandler(nestedHandler, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
+  it('should error when no proxyUrl or pathToJwks is provided in the constructor', () => {
+    expect(() => new AccessTokenEncodeHandler(undefined, proxyUrl)).toThrow('A pathToJwks must be provided');
+    expect(() => new AccessTokenEncodeHandler(null, proxyUrl)).toThrow('A pathToJwks must be provided');
+    expect(() => new AccessTokenEncodeHandler('assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
+    expect(() => new AccessTokenEncodeHandler('assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
 
   });
 
   describe('handle', () => {
-    it('should error when no context was provided', async () => {
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('Context cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+    it('should error when no response was provided', async () => {
+      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('response cannot be null or undefined');
+      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('response cannot be null or undefined');
     });
 
-    it('should error when no context request is provided', async () => {
-      context.request = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
-      context.request = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
-    });
-
-    it('should error when no context request method is provided', async () => {
-      context.request.method = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
-      context.request.method = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
-    });
-
-    it('should error when no context request headers are provided', async () => {
-      context.request.headers = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
-      context.request.headers = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
-    });
-
-    it('should error when no context request url is provided', async () => {
-      context.request.url = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
-      context.request.url = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
-    });
-
-    it('should error when method is not OPTIONS or POST', async () => {
-      context.request.method = 'GET';
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('this method is not supported.');
-    });
-
-    it('should return the response of the nestedHandler unedited when method is OPTIONS', async () => {
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({ body: 'options', headers: {}, status: 200 }));
-      context.request.method = 'OPTIONS';
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'options', headers: {}, status: 200 });
-    });
-
-    it('should return an error response when the nested handler returns a response with status other than 200', async () => {
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
-        body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
+    it('should return the response unedited if the status is not 200', async () => {
+      const response = {
+        body: 'mockbody',
         headers: {},
         status: 400,
-      }));
+      };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
-        body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
+      await expect(handler.handle(response).toPromise()).resolves.toEqual({
+        body: 'mockbody',
         headers: {},
         status: 400,
       });
     });
 
-    it('should return an encoded access token when the nested handler returns a 200 response', async () => {
+    it('should error when no access_token is included in the response body, or if the response body is not JSON', async () => {
+      const bodyString = {
+        body: 'mockBodyAsAString',
+        headers: {},
+        status: 200,
+      };
+
+      await expect(() => handler.handle(bodyString).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
+
+      const bodyNoAccessToken = {
+        body: {
+          mockKey: 'mockValue',
+        },
+        headers: {},
+        status: 200,
+      };
+
+      await expect(() => handler.handle(bodyNoAccessToken).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
+    });
+
+    it('should return an encoded access token when the response has a 200 status and contains an access token', async () => {
       const payload = {
         'jti': 'mockJti',
         'sub': 'mockSub',
@@ -141,7 +115,7 @@ describe('AccessTokenEncodeHandler', () => {
         'iss': 'http://mock-issuer.com',
         'aud': 'mockAudience',
       };
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+      const response = {
         body: {
           access_token: {
             header: {
@@ -158,25 +132,17 @@ describe('AccessTokenEncodeHandler', () => {
         },
         headers: {},
         status: 200,
-      }));
+      };
 
-      const encodedAccessToken = await new SignJWT(payload)
-        .setProtectedHeader({
-          alg: 'ES256',
-          typ: 'at+jwt',
-          kid: 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
-        })
-        .sign(privateKey);
-
-      const response = await handler.handle(context).toPromise();
-      const parsedBody = JSON.parse(response.body);
+      const encodedAccessTokenResponse = await handler.handle(response).toPromise();
+      const parsedBody = JSON.parse(encodedAccessTokenResponse.body);
       expect(parsedBody.id_token).toEqual('mockIdToken');
       expect(parsedBody.expires_in).toEqual(7200);
       expect(parsedBody.scope).toEqual('mockScope');
       expect(parsedBody.token_type).toEqual('Bearer');
 
-      expect(response.headers['content-type']).toEqual('application/json');
-      expect(response.status).toEqual(200);
+      expect(encodedAccessTokenResponse.headers['content-type']).toEqual('application/json');
+      expect(encodedAccessTokenResponse.status).toEqual(200);
 
       const decodedHeader = JSON.parse(decode(parsedBody.access_token.split('.')[0]).toString());
       const encodedPayload = JSON.parse(decode(parsedBody.access_token.split('.')[1]).toString());
@@ -199,41 +165,18 @@ describe('AccessTokenEncodeHandler', () => {
   });
 
   describe('canHandle', () => {
-    it('should return false if no context was provided', async () => {
+    it('should return false if no response was provided', async () => {
       await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
       await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
     });
 
-    it('should return false if context was provided', async () => {
-      context.request = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-    });
-
-    it('should return false when no context request method is provided', async () => {
-      context.request.method = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.method = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-    });
-
-    it('should return false when no context request headers are provided', async () => {
-      context.request.headers = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.headers = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-    });
-
-    it('should return false when no context request url is provided', async () => {
-      context.request.url = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.url = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-    });
-
-    it('should return true if correct context was provided', async () => {
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+    it('should return true if a response was provided', async () => {
+      const response = {
+        body: 'mockBody',
+        headers: {},
+        status: 200,
+      };
+      await expect(handler.canHandle(response).toPromise()).resolves.toEqual(true);
     });
   });
 });

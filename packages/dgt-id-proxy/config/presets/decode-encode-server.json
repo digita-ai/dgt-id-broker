@@ -188,15 +188,23 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@type": "AccessTokenEncodeHandler",
-          "AccessTokenEncodeHandler:_handler": {
-            "@type": "AccessTokenDecodeHandler",
-            "AccessTokenDecodeHandler:_handler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-            }
-          },
-          "AccessTokenEncodeHandler:_pathToJwks": "assets/jwks.json",
-          "AccessTokenEncodeHandler:_proxyUrl": "http://localhost:3003"  
+          "@type": "HttpCorsRequestHandler",
+          "HttpCorsRequestHandler:_handler": {
+            "@type": "PipeThroughHandler",
+            "PipeThroughHandler:_handlers": [
+              {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+              },
+              {
+                "@type": "AccessTokenDecodeHandler"
+              },
+              {
+                "@type": "AccessTokenEncodeHandler",
+                "AccessTokenEncodeHandler:_pathToJwks": "assets/jwks.json",
+                "AccessTokenEncodeHandler:_proxyUrl": "http://localhost:3003"
+              }
+            ]
+          } 
         },
         "HttpHandlerRoute:_path": "/token"
       },
