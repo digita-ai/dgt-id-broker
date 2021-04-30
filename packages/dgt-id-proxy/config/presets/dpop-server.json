@@ -191,15 +191,36 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@type": "DpopTokenRequestHandler",
-          "DpopTokenRequestHandler:_handler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-          },
-          "DpopTokenRequestHandler:_keyValueStore": {
-            "@type": "InMemoryStore"
-          },
-          "DpopTokenRequestHandler:_pathToJwks": "assets/jwks.json",
-          "DpopTokenRequestHandler:_proxyUrl": "http://localhost:3003"
+          "@type": "HttpCorsRequestHandler",
+          "HttpCorsRequestHandler:_handler": {
+            "@type": "PipeThroughHandler",
+            "PipeThroughHandler:_handlers": [
+              {
+                "@type": "DpopTokenRequestHandler",
+                "DpopTokenRequestHandler:_handler": {
+                  "@type": "PipeThroughHandler",
+                  "PipeThroughHandler:_handlers": [
+                    {
+                      "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+                    },
+                    {
+                      "@type": "AccessTokenDecodeHandler"
+                    }
+                  ]
+                },
+                "DpopTokenRequestHandler:_keyValueStore": {
+                  "@type": "InMemoryStore"
+                },
+                "DpopTokenRequestHandler:_pathToJwks": "assets/jwks.json",
+                "DpopTokenRequestHandler:_proxyUrl": "http://localhost:3003"
+              },
+              {
+                "@type": "AccessTokenEncodeHandler",
+                "AccessTokenEncodeHandler:_pathToJwks": "assets/jwks.json",
+                "AccessTokenEncodeHandler:_proxyUrl": "http://localhost:3003"
+              }
+            ]
+          }
         },
         "HttpHandlerRoute:_path": "/token"
       },

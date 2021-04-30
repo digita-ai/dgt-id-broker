@@ -40,12 +40,28 @@ describe('DpopTokenRequestHandler', () => {
 
   const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
   const successfullProxiedServerResponse = () => of({
-    body: JSON.stringify({
-      access_token: 'eyJhbGciOiJFUzI1NiIsInR5cCI6ImF0K2p3dCIsImtpZCI6ImVtSTNJckZTcHJHMXZQMXRBVWh4emlyOHBDSGJWaUQ2UGxKZFVPM1dldW8ifQ.eyJ3ZWJpZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMi9qYXNwZXJ2YW5kZW5iZXJnaGVuL3Byb2ZpbGUvY2FyZCNtZSIsImp0aSI6IlM5WlR1b0VPWFhJWWMwZTJKVFN6ViIsInN1YiI6IjIzMTIxZDNjLTg0ZGYtNDRhYy1iNDU4LTNkNjNhOWEwNTQ5NyIsImlhdCI6MTYxOTA4NTM3MywiZXhwIjoxNjE5MDkyNTczLCJzY29wZSI6IiIsImNsaWVudF9pZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMi9qYXNwZXJ2YW5kZW5iZXJnaGVuL3Byb2ZpbGUvY2FyZCNtZSIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCIsImF1ZCI6InNvbGlkIn0.d5IatldeFNR7a_9sPatxk3acVEL6NNKfiXwWPJH7Ljx2noEkCWal3p5EJW3OcADB5x2zpy6oeQjgUbVVw_4vsQ',
+    body: {
+      access_token: {
+        header: {
+          'alg': 'ES256',
+          'typ': 'at+jwt',
+          'kid': 'idOfAKey',
+        },
+        payload: {
+          'jti': 'S9ZTuoEOXXIYc0e2JTSzV',
+          'sub': '23121d3c-84df-44ac-b458-3d63a9a05497',
+          'iat': 1619085373,
+          'exp': 1619092573,
+          'scope': 'mockScope',
+          'client_id': 'mockClient',
+          'iss': 'mockIssuer',
+          'aud': 'solid',
+        },
+      },
       expires_in: 7200,
       scope: '',
       token_type: 'Bearer',
-    }),
+    },
     headers: {},
     status: 200,
   });
@@ -149,7 +165,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt has an incorrect typ header', async () => {
+    it('should error when a DPoP proof has an incorrect typ header', async () => {
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
         'htu': 'http://localhost:3003/token',
@@ -172,7 +188,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt was issued more than 60 seconds ago', async () => {
+    it('should error when a DPoP proof was issued more than 60 seconds ago', async () => {
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
         'htu': 'http://localhost:3003/token',
@@ -195,7 +211,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt is issued in the future', async () => {
+    it('should error when a DPoP proof is issued in the future', async () => {
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
         'htu': 'http://localhost:3003/token',
@@ -218,7 +234,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt has an unsupported algorithm', async () => {
+    it('should error when a DPoP proof has an unsupported algorithm', async () => {
       const rs384KeyPair = await generateKeyPair('RS384');
       const rs384PublicJwk = await fromKeyLike(rs384KeyPair.publicKey);
       const dpopJwt = await new SignJWT({
@@ -243,7 +259,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt\'s htm value is missing or does not match', async () => {
+    it('should error when a DPoP proof\'s htm value is missing or does not match', async () => {
       const dpopJwtMissingHtm = await new SignJWT({
         'htu': 'http://localhost:3000/token',
       })
@@ -286,7 +302,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt\'s htu value is missing or does not match', async () => {
+    it('should error when a DPoP proof\'s htu value is missing or does not match', async () => {
       const dpopJwtMissingHtu = await new SignJWT({
         'htm': 'POST',
       })
@@ -328,7 +344,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt\'s jti value is missing', async () => {
+    it('should error when a DPoP proof\'s jti value is missing', async () => {
       const dpopJwtMissingJti = await new SignJWT({
         'htm': 'POST',
         'htu': 'http://localhost:3003/token',
@@ -350,7 +366,7 @@ describe('DpopTokenRequestHandler', () => {
       });
     });
 
-    it('should error when a jwt\'s jti is not unique', async () => {
+    it('should error when a DPoP proof\'s jti is not unique', async () => {
       const repeatUuid = uuid();
 
       const dpopJwtWithSetJti = await new SignJWT({
@@ -397,19 +413,16 @@ describe('DpopTokenRequestHandler', () => {
     it('should return a valid DPoP bound access token response when the upstream server returns a valid response', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
       const resp = await handler.handle(context).toPromise();
-      expect(resp.headers).toEqual({ 'Content-Type': 'application/json', 'access-control-allow-headers': 'dpop', 'access-control-allow-origin': context.request.headers.origin });
+      expect(resp.headers).toEqual({});
       expect(resp.status).toEqual(200);
 
-      const parsedBody = JSON.parse(resp.body);
-      expect(parsedBody.access_token).toBeDefined();
-      expect(parsedBody.token_type).toEqual('DPoP');
-      expect(parsedBody.expires_in).toBeDefined();
+      expect(resp.body.access_token).toBeDefined();
+      expect(resp.body.token_type).toEqual('DPoP');
+      expect(resp.body.expires_in).toBeDefined();
 
-      const tokenPayload = JSON.parse(decode(parsedBody.access_token.split('.')[1]).toString());
-
-      expect(tokenPayload.cnf).toBeDefined();
+      expect(resp.body.access_token.payload.cnf).toBeDefined();
       const thumbprint = await calculateThumbprint(publicJwk);
-      expect(tokenPayload.cnf.jkt).toEqual(thumbprint);
+      expect(resp.body.access_token.payload.cnf.jkt).toEqual(thumbprint);
     });
 
   });

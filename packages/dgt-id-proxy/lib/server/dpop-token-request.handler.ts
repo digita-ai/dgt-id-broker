@@ -1,15 +1,10 @@
-import { join } from 'path';
-import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWK, JWTPayload, JWTVerifyResult } from 'jose/webcrypto/types';
-import { decode } from 'jose/util/base64url';
-import { SignJWT } from 'jose/jwt/sign';
-import { parseJwk } from 'jose/jwk/parse';
+import { JWK, JWTVerifyResult } from 'jose/webcrypto/types';
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**
@@ -125,10 +120,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
       catchError((error) => throwError(this.dpopError(error?.message ?? 'could not create thumbprint from dpop proof', context))),
       // gets successful response or errors with body
       switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
-      // creates dpop bound token
-      switchMap(([ thumbprint, response ]) => zip(of(response), this.createToken(response.body, thumbprint))),
       // creates dpop response
-      switchMap(([ response, token ]) => this.createDpopResponse(response, token, context.request.headers.origin)),
+      switchMap(([ thumbprint, response ]) => this.createDpopResponse(response, thumbprint)),
       // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
       catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
     );
@@ -142,7 +135,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
     const jwk = header.jwk;
 
     if (!jwk) {
-      return throwError(new Error('must have a jti string property'));
+      return throwError(new Error('header must contain a jwk'));
     }
 
     if (!payload.jti || typeof payload.jti !== 'string') {
@@ -183,44 +176,14 @@ export class DpopTokenRequestHandler extends HttpHandler {
     switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
   );
 
-  private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
-    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),    // I would like to see some safer way than casting after a read
-    switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
-  );
+  private createDpopResponse(response: HttpHandlerResponse, thumbprint: string) {
+    // set the cnf claim to contain the thumbprint of the client's jwk
+    response.body.access_token.payload.cnf = { 'jkt': thumbprint };
+    response.body.token_type = 'DPoP';
 
-  private signJwtPayload = (jwtPayload: JWTPayload) => zip(of(jwtPayload), this.getSigningKit()).pipe(
-    switchMap(([ payload, [ alg, kid, key ] ]) => from(
-      new SignJWT(payload)
-        .setProtectedHeader({ alg, kid, typ: 'at+jwt'  })
-        .setIssuer(this.proxyUrl)
-        .sign(key),
-    )),
-  );
-
-  private createToken(responseBody: string, clientPublicKeyThumbprint: string): Observable<string> {
-    const parsedBody = JSON.parse(responseBody);
-    // split the access token into header, payload, and footer parts, then get the payload
-    const accessTokenPayload = parsedBody.access_token.split('.')[1];
-    // base64url decode the access token payload
-    const decodedAccessTokenPayload = JSON.parse(decode(accessTokenPayload).toString());
-    // set the cnf claim
-    decodedAccessTokenPayload.cnf = { 'jkt': clientPublicKeyThumbprint };
-
-    return this.signJwtPayload(decodedAccessTokenPayload);
-
-  }
-
-  private createDpopResponse(response: HttpHandlerResponse, dpopBoundAccessToken: string, corsOrigin: string) {
-    const parsedBody = JSON.parse(response.body);
-    parsedBody.token_type = 'DPoP';
-    parsedBody.access_token = dpopBoundAccessToken;
     return of({
-      body: JSON.stringify(parsedBody),
-      headers: {
-        'access-control-allow-origin': corsOrigin,
-        'access-control-allow-headers': 'dpop',
-        'Content-Type':  'application/json',
-      },
+      body: response.body,
+      headers: {},
       status: 200,
     });
   }
