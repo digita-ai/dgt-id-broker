@@ -36,6 +36,8 @@ describe('WebIDResponseHandler', () => {
       status: 400,
     } as HttpHandlerResponse;
 
+    response.body.id_token = response.body.id_token.toString();
+
   });
 
   it('should be correctly instantiated', () => {
