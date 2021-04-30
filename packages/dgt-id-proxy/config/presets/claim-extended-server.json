@@ -62,6 +62,20 @@
         "PassThroughHttpRequestHandler:_port": "3000"
       },
       {
+        "@id": "urn:handlersjs-core:default:PipeThroughHandler",
+          "@type": "PipeThroughHandler",
+          "PipeThroughHandler:_handlers": [
+            {
+              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
+              "@type": "WebIDResponseHandler",
+              "WebIDResponseHandler:_webIdPattern": "http://solid.community.com/:uuid/profile/card#me"
+            }
+          ]
+      },
+      {
         "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
         "@type": "HttpHandlerRoute",
         "HttpHandlerRoute:_operations": [
@@ -107,12 +121,7 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-            "@type": "SolidAudienceRequestHandler",
-            "SolidAudienceRequestHandler:_handler": {
-                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-            },
-            "SolidAudienceRequestHandler:_pathToJwks": "assets/jwks.json",
-            "SolidAudienceRequestHandler:_proxyUrl": "http://localhost:3003"
+          "@id": "urn:handlersjs-core:default:PipeThroughHandler"
         },
         "HttpHandlerRoute:_path": "/token"
       },
