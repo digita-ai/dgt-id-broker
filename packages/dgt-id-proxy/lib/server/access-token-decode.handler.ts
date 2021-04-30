@@ -7,10 +7,6 @@ import { decode } from 'jose/util/base64url';
 
 export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  constructor() {
-    super();
-  }
-
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
     if (!response) {
       return throwError(new Error('response cannot be null or undefined'));

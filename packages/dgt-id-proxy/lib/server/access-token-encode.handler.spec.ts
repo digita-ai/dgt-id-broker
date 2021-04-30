@@ -1,8 +1,5 @@
 import { readFile } from 'fs/promises';
-import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { of } from 'rxjs';
-import { KeyLike, SignJWT } from 'jose/jwt/sign';
-import { parseJwk } from 'jose/jwk/parse';
+import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
 import { AccessTokenEncodeHandler } from './access-token-encode.handler';
 
@@ -28,28 +25,19 @@ jest.mock('fs/promises', () => {
 
 describe('AccessTokenEncodeHandler', () => {
   let handler: AccessTokenEncodeHandler;
-  let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
-  let privateKey: KeyLike;
   let proxyUrl: string;
-
-  beforeAll(async () => {
-    privateKey = await parseJwk({
-      'crv': 'P-256',
-      'x': 'ZXD5luOOClkYI-WieNfw7WGISxIPjH_PWrtvDZRZsf0',
-      'y': 'vshKz414TtqkkM7gNXKqawrszn44OTSR_j-JxP-BlWo',
-      'd': '07JS0yPt-fDABw_28JdENtlF0PTNMchYmfSXz7pRhVw',
-      'kty': 'EC',
-      'kid': 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
-      'alg': 'ES256',
-      'use': 'sig',
-    });
-  });
+  let response: HttpHandlerResponse;
 
   beforeEach(() => {
     proxyUrl = 'http://mock-proxy.com';
     handler = new AccessTokenEncodeHandler('assets/jwks.json', proxyUrl);
     context = { request: { headers: { 'origin': 'http://localhost' }, method: 'POST', url: new URL('http://digita.ai/') } };
+    response = {
+      body: 'mockbody',
+      headers: {},
+      status: 200,
+    };
   });
 
   it('should be correctly instantiated', () => {
@@ -71,37 +59,21 @@ describe('AccessTokenEncodeHandler', () => {
     });
 
     it('should return the response unedited if the status is not 200', async () => {
-      const response = {
-        body: 'mockbody',
-        headers: {},
-        status: 400,
-      };
+      response.status = 400;
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual({
-        body: 'mockbody',
-        headers: {},
-        status: 400,
-      });
+      await expect(handler.handle(response).toPromise()).resolves.toEqual(response);
     });
 
     it('should error when no access_token is included in the response body, or if the response body is not JSON', async () => {
-      const bodyString = {
-        body: 'mockBodyAsAString',
-        headers: {},
-        status: 200,
+      response.body = 'mockBodyAsAString';
+
+      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
+
+      response.body = {
+        mockKey: 'mockValue',
       };
 
-      await expect(() => handler.handle(bodyString).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
-
-      const bodyNoAccessToken = {
-        body: {
-          mockKey: 'mockValue',
-        },
-        headers: {},
-        status: 200,
-      };
-
-      await expect(() => handler.handle(bodyNoAccessToken).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
+      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
     });
 
     it('should return an encoded access token when the response has a 200 status and contains an access token', async () => {
@@ -115,23 +87,19 @@ describe('AccessTokenEncodeHandler', () => {
         'iss': 'http://mock-issuer.com',
         'aud': 'mockAudience',
       };
-      const response = {
-        body: {
-          access_token: {
-            header: {
-              alg: 'ES256',
-              typ: 'at+jwt',
-              kid: 'idofakey',
-            },
-            payload,
+      response.body = {
+        access_token: {
+          header: {
+            alg: 'ES256',
+            typ: 'at+jwt',
+            kid: 'idofakey',
           },
-          id_token: 'mockIdToken',
-          expires_in: 7200,
-          scope: 'mockScope',
-          token_type: 'Bearer',
+          payload,
         },
-        headers: {},
-        status: 200,
+        id_token: 'mockIdToken',
+        expires_in: 7200,
+        scope: 'mockScope',
+        token_type: 'Bearer',
       };
 
       const encodedAccessTokenResponse = await handler.handle(response).toPromise();
@@ -171,11 +139,6 @@ describe('AccessTokenEncodeHandler', () => {
     });
 
     it('should return true if a response was provided', async () => {
-      const response = {
-        body: 'mockBody',
-        headers: {},
-        status: 200,
-      };
       await expect(handler.canHandle(response).toPromise()).resolves.toEqual(true);
     });
   });
