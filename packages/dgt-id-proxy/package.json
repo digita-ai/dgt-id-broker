@@ -54,7 +54,9 @@
   "dependencies": {
     "@digita-ai/handlersjs-core": "^0.1.4",
     "@digita-ai/handlersjs-http": "^0.1.4",
+    "@types/uuid": "^8.3.0",
     "componentsjs": "^4.0.6",
+    "jose": "^3.11.5",
     "lint-staged": "^10.5.4",
     "node-fetch": "^2.6.1",
     "jose": "^3.11.4"
