@@ -1,3 +1,4 @@
+
 import { of } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
@@ -12,8 +13,8 @@ describe('PkceAuthRequestHandler', () => {
   let context: HttpHandlerContext;
   let url: URL;
   let stateURL: URL;
+  const store = new InMemoryStore<Code, ChallengeAndMethod>();
 
-  const inMemoryStore = new InMemoryStore<Code, ChallengeAndMethod>();
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
 
@@ -49,12 +50,13 @@ describe('PkceAuthRequestHandler', () => {
       safeHandle: jest.fn(),
     } as HttpHandler;
 
-    pkceCodeHandler = new PkceCodeRequestHandler(nestedHttpHandler, inMemoryStore);
+    pkceCodeHandler = new PkceCodeRequestHandler(nestedHttpHandler, store);
 
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
     context = { request: { headers: { host, referer }, method: 'GET', url } };
-    pkceHandler = new PkceAuthRequestHandler(pkceCodeHandler, inMemoryStore);
+    pkceHandler = new PkceAuthRequestHandler(pkceCodeHandler, store);
     stateURL = new URL(`http://${host}/${endpoint}?response_type=code&state=${state}&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
+
     response =  {
       body: '',
       headers: { 'access-control-allow-origin': context.request.headers.origin },
@@ -67,10 +69,10 @@ describe('PkceAuthRequestHandler', () => {
   });
 
   it('should error when no handler or memory store was provided', () => {
-    expect(() => new PkceAuthRequestHandler(undefined, inMemoryStore)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceAuthRequestHandler(null, inMemoryStore)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, undefined)).toThrow('An InMemoryStore must be provided');
-    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, null)).toThrow('An InMemoryStore must be provided');
+    expect(() => new PkceAuthRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceAuthRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, undefined)).toThrow('A store must be provided');
+    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, null)).toThrow('A store must be provided');
   });
 
   describe('handle', () => {
@@ -130,16 +132,16 @@ describe('PkceAuthRequestHandler', () => {
         safeHandle: jest.fn(),
       } as HttpHandler;
 
-      const badCodeHandler = new PkceCodeRequestHandler(badHttpHandler, inMemoryStore);
+      const badCodeHandler = new PkceCodeRequestHandler(badHttpHandler, store);
 
-      const pkceHandler2 = new PkceAuthRequestHandler(badCodeHandler, inMemoryStore);
+      const pkceHandler2 = new PkceAuthRequestHandler(badCodeHandler, store);
       await expect(pkceHandler2.handle(context).toPromise()).resolves.toEqual(badRes);
     });
 
     it('should create a state if no one was provided and use it as a key to save the challenge & method in memory', async () => {
       await pkceHandler.handle(context).toPromise();
       const getState = context.request.url.searchParams.get('state');
-      await expect(inMemoryStore.get(getState).then((data) => data)).resolves.toEqual(challengeAndMethod);
+      await expect(store.get(getState).then((data) => data)).resolves.toEqual(challengeAndMethod);
     });
 
     it('should use the given state as a key to save the challenge & method & state in memory', async () => {
@@ -147,7 +149,7 @@ describe('PkceAuthRequestHandler', () => {
       const getState = context.request.url.searchParams.get('state');
       await pkceHandler.handle(context).toPromise();
       challengeAndMethodAndState.state = getState;
-      await expect(inMemoryStore.get(getState)
+      await expect(store.get(getState)
         .then((data) => data)).resolves.toEqual(challengeAndMethodAndState);
     });
 
@@ -156,7 +158,7 @@ describe('PkceAuthRequestHandler', () => {
       await pkceHandler.handle(context).toPromise();
       const getState = context.request.url.searchParams.get('state');
       challengeAndMethodAndState.state = getState;
-      await expect(inMemoryStore.get(getState)
+      await expect(store.get(getState)
         .then((data) => data)).resolves.toEqual(challengeAndMethod);
     });
   });

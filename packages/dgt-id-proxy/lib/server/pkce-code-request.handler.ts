@@ -1,14 +1,14 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, combineLatest, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { KeyValueStore } from './../storage/key-value-store';
 import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
 
 export class PkceCodeRequestHandler extends HttpHandler {
 
   constructor(
     private httpHandler: HttpHandler,
-    private inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>,
+    private store: KeyValueStore<Code, ChallengeAndMethod>,
   ){
     super();
 
@@ -16,8 +16,8 @@ export class PkceCodeRequestHandler extends HttpHandler {
       throw new Error('A HttpHandler must be provided');
     }
 
-    if (!inMemoryStore) {
-      throw new Error('An InMemoryStore must be provided');
+    if (!store) {
+      throw new Error('A store must be provided');
     }
   }
 
@@ -46,7 +46,7 @@ export class PkceCodeRequestHandler extends HttpHandler {
             state = '';
           }
 
-          return combineLatest(from(this.inMemoryStore.get(state)), of(response))
+          return combineLatest(from(this.store.get(state)), of(response))
             .pipe(switchMap(([ challengeAndMethod, res ]) => {
               if (challengeAndMethod && state) {
                 if (!challengeAndMethod.state) {
@@ -57,10 +57,10 @@ export class PkceCodeRequestHandler extends HttpHandler {
 
                 const code = url.searchParams.get('code');
 
-                this.inMemoryStore.delete(state);
+                this.store.delete(state);
 
                 if (code) {
-                  this.inMemoryStore.set(code, challengeAndMethod);
+                  this.store.set(code, challengeAndMethod);
                 } else {
                   return throwError(new Error('No code was included in the response'));
                 }

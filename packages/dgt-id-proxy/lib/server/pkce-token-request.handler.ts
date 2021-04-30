@@ -1,22 +1,22 @@
 import { createHash } from 'crypto';
-import { HttpHandler, HttpHandlerContext, HttpHandlerRequest, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { KeyValueStore } from '../storage/key-value-store';
 import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
 
 export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
-    private inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>){
+    private store: KeyValueStore<Code, ChallengeAndMethod>) {
     super();
 
     if (!httpHandler) {
       throw new Error('A HttpHandler must be provided');
     }
 
-    if (!inMemoryStore) {
-      throw new Error('An InMemoryStore must be provided');
+    if (!store) {
+      throw new Error('A store must be provided');
     }
   }
 
@@ -88,7 +88,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
         request.headers['content-length'] = Buffer.byteLength(request.body, charset).toString();
       }
 
-      return from(this.inMemoryStore.get(code))
+      return from(this.store.get(code))
         .pipe(
           switchMap((codeChallengeAndMethod) => {
 

@@ -1,7 +1,7 @@
 import { of, Observable, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { KeyValueStore } from '../storage/key-value-store';
 import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
 export type Code = string;
@@ -10,7 +10,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
 
   constructor(
     private codeHandler: PkceCodeRequestHandler,
-    private inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>,
+    private store: KeyValueStore<Code, ChallengeAndMethod>,
   ){
     super();
 
@@ -18,8 +18,8 @@ export class PkceAuthRequestHandler extends HttpHandler {
       throw new Error('A HttpHandler must be provided');
     }
 
-    if (!inMemoryStore) {
-      throw new Error('An InMemoryStore must be provided');
+    if (!store) {
+      throw new Error('A store must be provided');
     }
   }
 
@@ -53,12 +53,12 @@ export class PkceAuthRequestHandler extends HttpHandler {
       if (!state) {
         state = uuidv4();
         context.request.url.searchParams.append('state', state);
-        this.inMemoryStore.set(state, {
+        this.store.set(state, {
           challenge,
           method,
         });
       } else {
-        this.inMemoryStore.set(state, {
+        this.store.set(state, {
           challenge,
           method,
           state,

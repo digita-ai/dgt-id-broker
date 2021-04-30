@@ -7,7 +7,7 @@ import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 describe('PkceCodeRequestHandler', () => {
   let pkceCodeRequestHandler: PkceCodeRequestHandler;
   let httpHandler: HttpHandler;
-  let inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>;
+  let store: InMemoryStore<Code, ChallengeAndMethod>;
   let context: HttpHandlerContext;
   let response: HttpHandlerResponse;
 
@@ -44,12 +44,12 @@ describe('PkceCodeRequestHandler', () => {
       safeHandle: jest.fn(),
     };
 
-    inMemoryStore = new InMemoryStore();
-    inMemoryStore.set(state, challengeAndMethod);
+    store = new InMemoryStore();
+    store.set(state, challengeAndMethod);
 
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
 
-    pkceCodeRequestHandler = new PkceCodeRequestHandler(httpHandler, inMemoryStore);
+    pkceCodeRequestHandler = new PkceCodeRequestHandler(httpHandler, store);
 
   });
 
@@ -58,10 +58,10 @@ describe('PkceCodeRequestHandler', () => {
   });
 
   it('should error when no handler or memory store was provided', () => {
-    expect(() => new PkceCodeRequestHandler(undefined, inMemoryStore)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceCodeRequestHandler(null, inMemoryStore)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceCodeRequestHandler(httpHandler, undefined)).toThrow('An InMemoryStore must be provided');
-    expect(() => new PkceCodeRequestHandler(httpHandler, null)).toThrow('An InMemoryStore must be provided');
+    expect(() => new PkceCodeRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceCodeRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceCodeRequestHandler(httpHandler, undefined)).toThrow('A store must be provided');
+    expect(() => new PkceCodeRequestHandler(httpHandler, null)).toThrow('A store must be provided');
   });
 
   describe('handle', () => {
@@ -102,23 +102,23 @@ describe('PkceCodeRequestHandler', () => {
 
     it('should delete the inMemory data with the state as key from the store if no state was included in the value', async () => {
       await pkceCodeRequestHandler.handle(context).toPromise();
-      expect(inMemoryStore.get(state).then((data) => data)).resolves.toBeUndefined();
+      expect(store.get(state).then((data) => data)).resolves.toBeUndefined();
     });
 
     it('should delete the inMemory data with the state as key from the store if no state was included in the value', async () => {
-      inMemoryStore.delete(state);
-      inMemoryStore.set(state, challengeAndMethodAndState);
+      store.delete(state);
+      store.set(state, challengeAndMethodAndState);
       await pkceCodeRequestHandler.handle(context).toPromise();
-      expect(inMemoryStore.get(state).then((data) => data)).resolves.toBeUndefined();
+      expect(store.get(state).then((data) => data)).resolves.toBeUndefined();
     });
 
     it('should switch the state key with the code in the store', async () => {
       await pkceCodeRequestHandler.handle(context).toPromise();
-      await expect(inMemoryStore.get(code).then((data) => data)).resolves.toEqual(challengeAndMethod);
+      await expect(store.get(code).then((data) => data)).resolves.toEqual(challengeAndMethod);
     });
 
     it('should error when no data was found in the store', async () => {
-      inMemoryStore.delete(state);
+      store.delete(state);
       await expect(pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No data was found in the store');
     });
 

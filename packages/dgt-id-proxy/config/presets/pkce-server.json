@@ -90,8 +90,8 @@
         "PkceAuthRequestHandler:_codeHandler": {
           "@id": "urn:dgt-id-proxy:default:PkceCodeRequestHandler"
         },
-        "PkceAuthRequestHandler:_inMemoryStore": {
-          "@id": "urn:dgt-id-proxy:default:PkceInMemoryStore"
+        "PkceAuthRequestHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:PkceStore"
         }
       },
       "HttpHandlerRoute:_path": "/auth"
@@ -112,8 +112,8 @@
         "PkceCodeRequestHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "PkceCodeRequestHandler:_inMemoryStore": {
-          "@id": "urn:dgt-id-proxy:default:PkceInMemoryStore"
+        "PkceCodeRequestHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:PkceStore"
         }
       },
       "HttpHandlerRoute:_path": "/auth/:dynamic"
@@ -207,7 +207,7 @@
         "PkceTokenRequestHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "PkceTokenRequestHandler:_inMemoryStore": {
+        "PkceTokenRequestHandler:_store": {
           "@id": "urn:dgt-id-proxy:default:PkceInMemoryStore",
           "@type": "InMemoryStore"
         }

@@ -17,7 +17,7 @@ const generateRandomString = (length: number): string => {
 describe('PkceTokenRequestHandler', () => {
   let pkceTokenRequestHandler: PkceTokenRequestHandler;
   let httpHandler: HttpHandler;
-  let inMemoryStore: InMemoryStore<Code, ChallengeAndMethod>;
+  let store: InMemoryStore<Code, ChallengeAndMethod>;
   let context: HttpHandlerContext;
   let response: HttpHandlerResponse;
   let bodyParams: URLSearchParams;
@@ -42,15 +42,15 @@ describe('PkceTokenRequestHandler', () => {
       safeHandle: jest.fn(),
     } as HttpHandler;
 
-    inMemoryStore = new InMemoryStore();
+    store = new InMemoryStore();
 
     context = { request: { headers: {}, body: `grant_type=authorization_code&code=${code}&client_id=${client_id}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`, method: 'POST', url } };
 
-    pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, inMemoryStore);
+    pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, store);
     challengeAndMethod.challenge = pkceTokenRequestHandler
       .generateCodeChallenge(code_verifier, challengeAndMethod.method);
     bodyParams = new URLSearchParams(context.request.body);
-    inMemoryStore.set(bodyParams.get('code'), challengeAndMethod);
+    store.set(bodyParams.get('code'), challengeAndMethod);
 
     response =  {
       body: '',
@@ -64,10 +64,10 @@ describe('PkceTokenRequestHandler', () => {
   });
 
   it('should error when no handler or memory store was provided', () => {
-    expect(() => new PkceTokenRequestHandler(undefined, inMemoryStore)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceTokenRequestHandler(null, inMemoryStore)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceTokenRequestHandler(httpHandler, undefined)).toThrow('An InMemoryStore must be provided');
-    expect(() => new PkceTokenRequestHandler(httpHandler, null)).toThrow('An InMemoryStore must be provided');
+    expect(() => new PkceTokenRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceTokenRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceTokenRequestHandler(httpHandler, undefined)).toThrow('A store must be provided');
+    expect(() => new PkceTokenRequestHandler(httpHandler, null)).toThrow('A store must be provided');
   });
 
   describe('handle', () => {
@@ -133,9 +133,9 @@ describe('PkceTokenRequestHandler', () => {
       expect(context.request.headers['content-length']).toEqual(byteLen);
     });
 
-    describe('inMemoryStore', () => {
-      it('should get the associated challenge and method from the inMemoryStore', async () => {
-        const challengeInStore = await inMemoryStore.get(code);
+    describe('store', () => {
+      it('should get the associated challenge and method from the store', async () => {
+        const challengeInStore = await store.get(code);
         const challengeReceived = pkceTokenRequestHandler
           .generateCodeChallenge(code_verifier, challengeAndMethod.method);
         expect(challengeInStore.challenge).toEqual(challengeReceived);
@@ -148,8 +148,8 @@ describe('PkceTokenRequestHandler', () => {
         await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
       });
 
-      it('should reply with an InternalServerError when nothing was found in the InMemoryStore', async () => {
-        inMemoryStore.delete(code);
+      it('should reply with an InternalServerError when nothing was found in the store', async () => {
+        store.delete(code);
         await expect(pkceTokenRequestHandler.handle(context).toPromise()).rejects.toBeInstanceOf(InternalServerError);
       });
 
@@ -219,7 +219,9 @@ describe('PkceTokenRequestHandler', () => {
 
     describe('base64URL', () => {
       it('should encode the string', async () => {
-        expect(pkceTokenRequestHandler.base64URL('code_verifier')).toEqual('Y29kZV92ZXJpZmllcg');
+        const plainCode_verifier = 'code_verifier';
+        const encodedCode_verifier = 'Y29kZV92ZXJpZmllcg';
+        expect(pkceTokenRequestHandler.base64URL(plainCode_verifier)).toEqual(encodedCode_verifier);
       });
     });
 
