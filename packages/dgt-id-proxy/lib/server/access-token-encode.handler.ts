@@ -4,7 +4,7 @@ import { join } from 'path';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, zip, from, Observable } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, map } from 'rxjs/operators';
 import { JWK, JWTPayload } from 'jose/webcrypto/types';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
@@ -39,7 +39,7 @@ export class AccessTokenEncodeHandler extends Handler<HttpHandlerResponse, HttpH
     // create a signed access token based on the access_token payload
     return this.signJwtPayload(response.body.access_token.payload).pipe(
       // create a response including the signed access token and stringify the body
-      switchMap((encodedToken) => this.createEncodedAccessTokenResponse(response, encodedToken)),
+      map((encodedToken) => this.createEncodedAccessTokenResponse(response, encodedToken)),
     );
   }
 
@@ -65,13 +65,13 @@ export class AccessTokenEncodeHandler extends Handler<HttpHandlerResponse, HttpH
     encodedAccessToken: string,
   ) {
     response.body.access_token = encodedAccessToken;
-    return of({
+    return {
       body: JSON.stringify(response.body),
       headers: {
         'content-type':  'application/json',
       },
       status: 200,
-    });
+    };
   }
 
   canHandle(response: HttpHandlerResponse) {

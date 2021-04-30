@@ -1,8 +1,8 @@
 
-import { HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
-import { of, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { of, throwError, Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { decode } from 'jose/util/base64url';
 
 export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
@@ -23,7 +23,7 @@ export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpH
     // decode the access token
     return this.decodeAccessToken(response.body).pipe(
       // create a response containing the decoded access token
-      switchMap((decodedToken) => this.createDecodedAccessTokenResponse(response, decodedToken)),
+      map((decodedToken) => this.createDecodedAccessTokenResponse(response, decodedToken)),
     );
   }
 
@@ -55,11 +55,11 @@ export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpH
   ) {
     const parsedBody = JSON.parse(response.body);
     parsedBody.access_token = decodedAccessToken;
-    return of({
+    return {
       body: parsedBody,
       headers: {},
       status: 200,
-    });
+    };
   }
 
   canHandle(response: HttpHandlerResponse) {
