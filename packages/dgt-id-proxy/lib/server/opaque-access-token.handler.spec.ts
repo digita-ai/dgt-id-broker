@@ -42,7 +42,7 @@ describe('OpaqueAccessTokenHandler', () => {
     )
       .setProtectedHeader({ alg: 'ES256', kid: 'keyid', typ: 'jwt'  })
       .setIssuedAt()
-      .setExpirationTime(7200)
+      .setExpirationTime('2h')
       .sign(keyPair.privateKey);
   };
 
