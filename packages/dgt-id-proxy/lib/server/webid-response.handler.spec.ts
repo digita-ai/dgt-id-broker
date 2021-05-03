@@ -8,6 +8,7 @@ describe('WebIDResponseHandler', () => {
 
   const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
   const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497/profile/card#me';
+  const webid = 'http://example.com/examplename/profile/card#me';
   const webIDResponseHandler = new WebIDResponseHandler(webIdPattern);
 
   beforeEach(() => {
@@ -16,7 +17,7 @@ describe('WebIDResponseHandler', () => {
         access_token: {
           header: {},
           payload: {
-            'webid': 'http://localhost:3002/jaspervandenberghen/profile/card#me',
+            webid,
             'sub': '23121d3c-84df-44ac-b458-3d63a9a05497',
           },
         },
@@ -85,7 +86,7 @@ describe('WebIDResponseHandler', () => {
       const keyPair = await generateKeyPair('ES256');
       const mockIdToken = await new SignJWT(
         {
-          webid: 'http://localhost:3002/jaspervandenberghen/profile/card#me',
+          webid,
         },
       )
         .setProtectedHeader({ alg: 'ES256', kid: 'keyid', typ: 'jwt'  })
@@ -96,7 +97,7 @@ describe('WebIDResponseHandler', () => {
       response.body.id_token = mockIdToken;
       delete response.body.access_token.payload.webid;
       const responseGotten = await webIDResponseHandler.handle(response).toPromise();
-      expect(responseGotten.body.access_token.payload.webid).toEqual('http://localhost:3002/jaspervandenberghen/profile/card#me');
+      expect(responseGotten.body.access_token.payload.webid).toEqual(webid);
     });
 
     it('should return the response if the webID claim is present', async () => {
