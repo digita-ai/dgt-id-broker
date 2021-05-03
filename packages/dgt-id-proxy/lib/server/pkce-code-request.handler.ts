@@ -1,9 +1,8 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { of, from, combineLatest, Observable, throwError } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { of,  from, Observable, throwError } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
+import { Code, ChallengeAndMethod } from '../util/models';
 import { KeyValueStore } from './../storage/key-value-store';
-import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
-
 export class PkceCodeRequestHandler extends HttpHandler {
 
   constructor(
@@ -40,35 +39,30 @@ export class PkceCodeRequestHandler extends HttpHandler {
 
           const url = new URL(response.headers.location);
 
-          let state = url.searchParams.get('state');
+          const state = url.searchParams.get('state') ?? '';
 
-          if (!state) {
-            state = '';
-          }
+          url.searchParams.delete('state');
+          response.headers.location = url.toString();
+          response.body = '';
 
-          return combineLatest(from(this.store.get(state)), of(response))
-            .pipe(switchMap(([ challengeAndMethod, res ]) => {
-              if (challengeAndMethod && state) {
-                if (!challengeAndMethod.state) {
-                  url.searchParams.delete('state');
-                  res.headers.location = url.toString();
-                  res.body = '';
-                }
+          return from(this.store.get(state))
+            .pipe(
+              switchMap((challengeAndMethod) => challengeAndMethod
+                ? of(challengeAndMethod)
+                : throwError(new Error('No data was found in the store'))),
+              tap(() => this.store.delete(state)),
+              switchMap((challengeAndMethod) => {
 
                 const code = url.searchParams.get('code');
-
-                this.store.delete(state);
 
                 if (code) {
                   this.store.set(code, challengeAndMethod);
                 } else {
                   return throwError(new Error('No code was included in the response'));
                 }
-
-                return of(res);
-              }
-              return throwError(new Error('No data was found in the store'));
-            }));
+                return of(response);
+              }),
+            );
         }
         return of(response);
       }),

@@ -2,10 +2,9 @@ import { of, Observable, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { KeyValueStore } from '../storage/key-value-store';
+import { createErrorResponse, Code, ChallengeAndMethod } from '../util/models';
 import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
-export type Code = string;
-export interface ChallengeAndMethod { challenge: string; method: string; state?: string }
 export class PkceAuthRequestHandler extends HttpHandler {
 
   constructor(
@@ -41,39 +40,22 @@ export class PkceAuthRequestHandler extends HttpHandler {
     const method = context.request.url.searchParams.get('code_challenge_method');
     let state = context.request.url.searchParams.get('state');
 
-    try{
-      if (!challenge) {
-        throw new Error('A code challenge must be provided.');
-      }
-
-      if (!method) {
-        throw new Error('A code challenge method must be provided');
-      }
-
-      if (!state) {
-        state = uuidv4();
-        context.request.url.searchParams.append('state', state);
-        this.store.set(state, {
-          challenge,
-          method,
-        });
-      } else {
-        this.store.set(state, {
-          challenge,
-          method,
-          state,
-        });
-      }
-
-    } catch (error) {
-      return of(
-        {
-          body: JSON.stringify({ error: 'invalid_request', error_description: error.message }),
-          headers: { },
-          status: 400,
-        },
-      );
+    if (!challenge) {
+      return createErrorResponse('A code challenge must be provided.', context, 'invalid_request');
     }
+
+    if (!method) {
+      return createErrorResponse('A code challenge method must be provided', context, 'invalid_request');
+    }
+
+    let generatedState = false;
+    if (!state) {
+      state = uuidv4();
+      context.request.url.searchParams.append('state', state);
+      generatedState = true;
+    }
+
+    this.setStore(state, challenge, method, generatedState);
 
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
@@ -89,5 +71,18 @@ export class PkceAuthRequestHandler extends HttpHandler {
       && context.request.url.searchParams.get('code_challenge_method')
       ? of(true)
       : of(false);
+  }
+
+  setStore(state: string, challenge: string, method: string, generatedState: boolean): void {
+    generatedState ?
+      this.store.set(state, {
+        challenge,
+        method,
+      }) :
+      this.store.set(state, {
+        challenge,
+        method,
+        clientState: state,
+      });
   }
 }

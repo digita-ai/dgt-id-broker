@@ -4,7 +4,7 @@
 
 ## List changed files
 STATUS=$(git status --porcelain)
-STAGED=$(echo "$STATUS" | grep -E '^(M|A|D|R|C) ' | sed -E 's/^(M|A|D|R|C)  //g')
+STAGED=$(echo "$STATUS" | grep -E '^(M|A|D|R|C) ' | sed -E 's/^(M|A|D|R|C)  ([^ ]+).*$/\2/g')
 #MODIFIED=$(echo "$STATUS" | grep -E '^ M' | sed -E 's/^ M //g')
 #UNTRACKED=$(echo "$STATUS" | grep -E '^??' | sed -E 's/^?? //g')
 #CHANGED=$(echo "$STAGED" && echo "$MODIFIED" && echo "$UNTRACKED")

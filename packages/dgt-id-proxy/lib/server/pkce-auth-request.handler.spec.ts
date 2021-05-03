@@ -2,7 +2,8 @@
 import { of } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
-import { Code, ChallengeAndMethod, PkceAuthRequestHandler } from './pkce-auth-request.handler';
+import { Code, ChallengeAndMethod } from '../util/models';
+import { PkceAuthRequestHandler } from './pkce-auth-request.handler';
 import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
 describe('PkceAuthRequestHandler', () => {
@@ -27,7 +28,7 @@ describe('PkceAuthRequestHandler', () => {
   const challengeAndMethodAndState = {
     challenge: code_challenge_value,
     method: code_challenge_method_value,
-    state,
+    clientState: state,
   };
 
   const referer = 'client.example.com';
@@ -148,7 +149,7 @@ describe('PkceAuthRequestHandler', () => {
       context.request.url = stateURL;
       const getState = context.request.url.searchParams.get('state');
       await pkceHandler.handle(context).toPromise();
-      challengeAndMethodAndState.state = getState;
+      challengeAndMethodAndState.clientState = getState;
       await expect(store.get(getState)
         .then((data) => data)).resolves.toEqual(challengeAndMethodAndState);
     });
@@ -157,7 +158,7 @@ describe('PkceAuthRequestHandler', () => {
       context.request.url = url;
       await pkceHandler.handle(context).toPromise();
       const getState = context.request.url.searchParams.get('state');
-      challengeAndMethodAndState.state = getState;
+      challengeAndMethodAndState.clientState = getState;
       await expect(store.get(getState)
         .then((data) => data)).resolves.toEqual(challengeAndMethod);
     });

@@ -3,8 +3,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerErr
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { createErrorResponse } from '../util/create-error-response';
-import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
+import { createErrorResponse, Code, ChallengeAndMethod } from '../util/models';
 export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
@@ -62,27 +61,25 @@ export class PkceTokenRequestHandler extends HttpHandler {
       params.delete('code_verifier');
       request.body = params.toString();
 
-      const contentTypes = request.headers['content-type'];
+      const contentTypeHeader = request.headers['content-type'];
 
-      if (contentTypes) {
+      if (contentTypeHeader) {
         let charset: BufferEncoding;
-        let set  = '';
+        let charsetString  = 'utf-8';
 
-        if (contentTypes.includes('charset=') && contentTypes.includes(';')) {
-          contentTypes.split(';')
-            .map((type) => {
+        if (contentTypeHeader.includes('charset=')) {
+          contentTypeHeader.split(';')
+            .filter((type) => {
               if (type.includes('charset=')) {
-                set = type.split('=')[1].toLowerCase();
+                charsetString = type.split('=')[1].toLowerCase();
               }
             });
-        } else {
-          set = 'utf-8';
         }
 
-        if (set !== 'ascii' && set !== 'utf8' && set !== 'utf-8' && set !== 'utf16le' && set !== 'ucs2' && set !== 'ucs-2' && set !== 'base64' && set !== 'latin1' && set !== 'binary' && set !== 'hex') {
+        if (charsetString !== 'ascii' && charsetString !== 'utf8' && charsetString !== 'utf-8' && charsetString !== 'utf16le' && charsetString !== 'ucs2' && charsetString !== 'ucs-2' && charsetString !== 'base64' && charsetString !== 'latin1' && charsetString !== 'binary' && charsetString !== 'hex') {
           return throwError(new Error('The specified charset is not supported'));
         } else {
-          charset = set;
+          charset = charsetString;
         }
 
         request.headers['content-length'] = Buffer.byteLength(request.body, charset).toString();

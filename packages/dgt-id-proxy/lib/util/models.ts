@@ -12,3 +12,6 @@ export const createErrorResponse = (
     status: 400,
   },
 );
+
+export type Code = string;
+export interface ChallengeAndMethod { challenge: string; method: string; clientState?: string }

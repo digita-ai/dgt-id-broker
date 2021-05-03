@@ -1,7 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
-import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
+import { Code, ChallengeAndMethod } from '../util/models';
 import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
 describe('PkceCodeRequestHandler', () => {

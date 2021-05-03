@@ -208,7 +208,7 @@
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
         "PkceTokenRequestHandler:_store": {
-          "@id": "urn:dgt-id-proxy:default:PkceInMemoryStore",
+          "@id": "urn:dgt-id-proxy:default:PkceStore",
           "@type": "InMemoryStore"
         }
       },
