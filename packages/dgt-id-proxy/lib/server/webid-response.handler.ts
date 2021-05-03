@@ -39,9 +39,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
       return throwError(new Error('The id_token did not contain a payload'));
     }
 
-    // ofcourse these tokens won't arrive decoded but for testing I assumed they do.
     const access_token_payload = response.body.access_token.payload;
-    // const id_token_payload = JSON.parse(decode(response.body.id_token.split('.')[1]).toString());
     const id_token_payload = response.body.id_token.payload;
     const webID = access_token_payload.webid;
     const sub = access_token_payload.sub;
