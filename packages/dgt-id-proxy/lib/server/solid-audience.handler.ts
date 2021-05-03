@@ -6,7 +6,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 /**
  * A {Handler} that adds 'solid' to the audience claim of a JWT Access Token
  */
-export class SolidAudienceRequestHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
    * Handles the response. If the response is a 200 response it adds
@@ -14,7 +14,7 @@ export class SolidAudienceRequestHandler extends Handler<HttpHandlerResponse, Ht
    *
    * @param {HttpHandlerResponse} response
    */
-  handle(response: HttpHandlerResponse) {
+  handle (response: HttpHandlerResponse) {
     if (!response) {
       return throwError(new Error('response cannot be null or undefined'));
     }

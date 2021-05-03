@@ -119,7 +119,7 @@
                 "@type": "AccessTokenDecodeHandler"
               },
               {
-                "@type": "SolidAudienceRequestHandler"
+                "@type": "SolidAudienceHandler"
               },
               {
                 "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
