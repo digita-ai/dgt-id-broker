@@ -27,38 +27,17 @@ export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandl
       return throwError(new Error('Response body must contain an access token with a payload in JSON format'));
     }
 
-    // creates a claim extended token
-    return this.addAudienceClaimToToken(response.body.access_token).pipe(
-      // creates a response including the new access token
-      switchMap((token) => this.createAccessTokenResponse(response, token)),
-    );
-  }
-
-  private addAudienceClaimToToken(token: { header: any; payload: any }): Observable<{ header: any; payload: any }> {
-    // set the aud claim
-    if (token.payload.aud !== 'solid'){
-      if (Array.isArray(token.payload.aud)) {
-        if (!token.payload.aud.includes('solid')){
-          token.payload.aud.push('solid');
+    if (response.body.access_token.payload.aud !== 'solid'){
+      if (Array.isArray(response.body.access_token.payload.aud)) {
+        if (!response.body.access_token.payload.aud.includes('solid')){
+          response.body.access_token.payload.aud.push('solid');
         }
       } else {
-        token.payload.aud = [ token.payload.aud, 'solid' ];
+        response.body.access_token.payload.aud = [ response.body.access_token.payload.aud, 'solid' ];
       }
     }
 
-    return of(token);
-  }
-
-  private createAccessTokenResponse(
-    response: HttpHandlerResponse,
-    claimExtendedAccessToken: { header: any; payload: any },
-  ) {
-    response.body.access_token = claimExtendedAccessToken;
-    return of({
-      body: response.body,
-      headers: {},
-      status: 200,
-    });
+    return of(response);
   }
 
   /**
