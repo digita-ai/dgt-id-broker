@@ -58,8 +58,7 @@
     "componentsjs": "^4.0.6",
     "jose": "^3.11.5",
     "lint-staged": "^10.5.4",
-    "node-fetch": "^2.6.1",
-    "jose": "^3.11.4"
+    "node-fetch": "^2.6.1"
   },
   "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy",
   "lsd:components": "dist/components/components.jsonld",

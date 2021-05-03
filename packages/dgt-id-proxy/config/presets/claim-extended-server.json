@@ -119,6 +119,9 @@
                 "@type": "AccessTokenDecodeHandler"
               },
               {
+                "@type": "SolidAudienceRequestHandler"
+              },
+              {
                 "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
                 "@type": "WebIDResponseHandler",
                 "WebIDResponseHandler:_webIdPattern": "http://solid.community.com/:uuid/profile/card#me"
