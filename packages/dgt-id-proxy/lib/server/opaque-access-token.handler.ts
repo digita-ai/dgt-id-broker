@@ -38,7 +38,8 @@ export class OpaqueAccessTokenHandler extends Handler<HttpHandlerResponse, HttpH
     // base64url decode the id token payload
     const decodedIdTokenPayload = JSON.parse(decode(idTokenPayload).toString());
 
-    // get the sub and aud claims from the id token and add them to the accessTokenPayload
+    // get the sub, aud, iat and exp claims from the id token and create an access token with those claims as payload.
+    // the encoder will add other necessary claims such as iss and typ
     const accessToken = {
       header: {},
       payload: {
@@ -49,7 +50,6 @@ export class OpaqueAccessTokenHandler extends Handler<HttpHandlerResponse, HttpH
       },
     };
 
-    // sign the token
     return of(accessToken);
   }
 
