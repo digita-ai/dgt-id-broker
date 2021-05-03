@@ -63,7 +63,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     return this.fetchRequest(reqUrl, reqMethod, reqHeaders, reqBody).pipe(
       tap((res) => assert(res)),
-      switchMap((res) => of(res)),
     );
   }
 
