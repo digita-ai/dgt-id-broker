@@ -3,8 +3,8 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerErr
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
+import { createErrorResponse } from '../util/create-error-response';
 import { Code, ChallengeAndMethod } from './pkce-auth-request.handler';
-
 export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
@@ -48,15 +48,15 @@ export class PkceTokenRequestHandler extends HttpHandler {
       }
 
       if (!code_verifier) {
-        return this.throwErrorResponse('Code verifier is required.', context, 'invalid_request');
+        return createErrorResponse('Code verifier is required.', context, 'invalid_request');
       }
 
       if (code_verifier.length < 43 || code_verifier.length > 128){
-        return this.throwErrorResponse('Code verifier must be between 43 and 128 characters.', context, 'invalid_request');
+        return createErrorResponse('Code verifier must be between 43 and 128 characters.', context, 'invalid_request');
       }
 
       if (!code) {
-        return this.throwErrorResponse('An authorization code is required.', context, 'invalid_request');
+        return createErrorResponse('An authorization code is required.', context, 'invalid_request');
       }
 
       params.delete('code_verifier');
@@ -97,13 +97,13 @@ export class PkceTokenRequestHandler extends HttpHandler {
               try{
                 challenge = this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method);
               } catch(error) {
-                return this.throwErrorResponse(error.message, context, 'invalid_request');
+                return createErrorResponse(error.message, context, 'invalid_request');
               }
 
               if (challenge === codeChallengeAndMethod.challenge) {
                 return this.httpHandler.handle(context);
               }
-              return this.throwErrorResponse('Code challenges do not match.', context, 'invalid_grant');
+              return createErrorResponse('Code challenges do not match.', context, 'invalid_grant');
 
             }
 
@@ -160,16 +160,6 @@ export class PkceTokenRequestHandler extends HttpHandler {
     }
 
     return challengeNew;
-  }
-
-  throwErrorResponse(msg: string, context: HttpHandlerContext, error: string): Observable<HttpHandlerResponse> {
-    return of(
-      {
-        body: JSON.stringify({ error, error_description: msg }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
-        status: 400,
-      },
-    );
   }
 
 }
