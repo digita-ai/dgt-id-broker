@@ -145,17 +145,6 @@ describe('DpopTokenRequestHandler', () => {
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
     });
 
-    it('should error when method is not OPTIONS or POST', async () => {
-      context.request.method = 'GET';
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('this method is not supported.');
-    });
-
-    it('should return the response of the nestedHandler unedited when method is OPTIONS', async () => {
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({ body: 'options', headers: {}, status: 200 }));
-      context.request.method = 'OPTIONS';
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'options', headers: {}, status: 200 });
-    });
-
     it('should return an error response if context does not include a dpop header', async () => {
       delete context.request.headers.dpop;
       await expect(handler.handle(context).toPromise()).resolves.toEqual({

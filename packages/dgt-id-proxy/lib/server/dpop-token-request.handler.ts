@@ -12,6 +12,7 @@ import { InMemoryStore } from '../storage/in-memory-store';
  * and returns a valid DPoP bound token to the user upon success.
  */
 export class DpopTokenRequestHandler extends HttpHandler {
+
   /**
    * Creates a {DpopTokenRequestHandler} passing requests through the given handler.
    *
@@ -46,7 +47,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
   }
 
   /**
-   * handles the context's incoming request. If the request is a valid DPoP request it will send a DPoP-less request
+   * Handles the context's incoming request. If the request is a valid DPoP request it will send a DPoP-less request
    * to the upstream server and modify the Access Token to be a valid DPoP bound Access Token.
    * Otherwise it will return error responses as specified by the DPoP proof spec otherwise.
    *
@@ -72,14 +73,6 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     if (!context.request.url) {
       return throwError(new Error('No url was included in the request'));
-    }
-
-    if (context.request.method === 'OPTIONS') {
-      return this.handler.handle(context);
-    }
-
-    if (context.request.method !== 'POST') {
-      return throwError(new MethodNotAllowedHttpError('this method is not supported.'));
     }
 
     if (!context.request.headers.dpop) {
