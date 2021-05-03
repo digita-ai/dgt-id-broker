@@ -41,13 +41,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     const sub = access_token_payload.sub;
 
     if (!sub) {
-      return of(
-        {
-          body: JSON.stringify({ error: 'bad_request', error_description: 'No sub claim was included' }),
-          headers: { },
-          status: 400,
-        },
-      );
+      return throwError(new Error('No sub claim was included in the access token'));
     }
 
     if (!webID) {
