@@ -191,12 +191,23 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@type": "OpaqueAccessTokenHandler",
-          "OpaqueAccessTokenHandler:_handler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-          },
-          "OpaqueAccessTokenHandler:_pathToJwks": "assets/jwks.json",
-          "OpaqueAccessTokenHandler:_proxyUrl": "http://localhost:3003"
+          "@type": "HttpCorsRequestHandler",
+          "HttpCorsRequestHandler:_handler": {
+            "@type": "PipeThroughHandler",
+            "PipeThroughHandler:_handlers": [
+              {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+              },
+              {
+                "@type": "OpaqueAccessTokenHandler"
+              },
+              {
+                "@type": "AccessTokenEncodeHandler",
+                "AccessTokenEncodeHandler:_pathToJwks": "assets/jwks.json",
+                "AccessTokenEncodeHandler:_proxyUrl": "http://localhost:3003"
+              }
+            ]
+          }
         },
         "HttpHandlerRoute:_path": "/token"
       },
