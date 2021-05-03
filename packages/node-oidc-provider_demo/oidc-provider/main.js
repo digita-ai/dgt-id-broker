@@ -325,6 +325,7 @@ async function getOIDCRegistrationFromWebID(clientID) {
 // Set our Cors policy.
 let whitelist = [`http://localhost:${process.env.OIDC_PORT}`,
 `http://localhost:${process.env.VITE_PORT}`,
+`http://localhost:${process.env.PASS_PORT}`,
 `http://${process.env.VITE_IP}:${process.env.VITE_PORT}`]
 
 
