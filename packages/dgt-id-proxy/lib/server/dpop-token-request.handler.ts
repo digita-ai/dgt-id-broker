@@ -12,7 +12,7 @@ import { InMemoryStore } from '../storage/in-memory-store';
  * and returns a valid DPoP bound token to the user upon success.
  */
 export class DpopTokenRequestHandler extends HttpHandler {
-  
+
   /**
    * Creates a {DpopTokenRequestHandler} passing requests through the given handler.
    *
