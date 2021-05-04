@@ -37,26 +37,24 @@ export class PkceAuthRequestHandler extends HttpHandler {
     }
 
     const challenge = context.request.url.searchParams.get('code_challenge');
-
     const method = context.request.url.searchParams.get('code_challenge_method');
-    let state = context.request.url.searchParams.get('state');
+    const state = context.request.url.searchParams.get('state');
 
     if (!challenge) {
-      return createErrorResponse('A code challenge must be provided.', context, 'invalid_request');
+      return of(createErrorResponse('A code challenge must be provided.', 'invalid_request'));
     }
 
     if (!method) {
-      return createErrorResponse('A code challenge method must be provided', context, 'invalid_request');
+      return of(createErrorResponse('A code challenge method must be provided', 'invalid_request'));
     }
 
-    let generatedState = false;
-    if (!state) {
-      state = uuidv4();
-      context.request.url.searchParams.append('state', state);
-      generatedState = true;
+    const generatedState = state ? '' : uuidv4();
+
+    if (generatedState) {
+      context.request.url.searchParams.append('state', generatedState);
     }
 
-    this.setStore(state, challenge, method, generatedState);
+    this.setStore(state ?? generatedState, challenge, method, !!state);
 
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
@@ -74,16 +72,11 @@ export class PkceAuthRequestHandler extends HttpHandler {
       : of(false);
   }
 
-  setStore(state: string, challenge: string, method: string, generatedState: boolean): void {
-    generatedState ?
-      this.store.set(state, {
-        challenge,
-        method,
-      }) :
-      this.store.set(state, {
-        challenge,
-        method,
-        clientState: state,
-      });
+  setStore(state: string, challenge: string, method: string, initialState: boolean): void {
+    this.store.set(state, {
+      challenge,
+      method,
+      initialState,
+    });
   }
 }

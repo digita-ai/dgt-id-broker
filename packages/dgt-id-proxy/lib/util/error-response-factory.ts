@@ -3,12 +3,9 @@ import { of, Observable } from 'rxjs';
 
 export const createErrorResponse = (
   msg: string,
-  context: HttpHandlerContext,
   error: string,
-): Observable<HttpHandlerResponse> => of(
-  {
-    body: JSON.stringify({ error, error_description: msg }),
-    headers: { 'access-control-allow-origin': context.request.headers.origin },
-    status: 400,
-  },
-);
+): HttpHandlerResponse => ({
+  body: JSON.stringify({ error, error_description: msg }),
+  headers: { },
+  status: 400,
+});

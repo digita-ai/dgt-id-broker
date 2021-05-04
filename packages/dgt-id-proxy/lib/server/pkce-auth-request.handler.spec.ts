@@ -22,13 +22,14 @@ describe('PkceAuthRequestHandler', () => {
   const challengeAndMethod = {
     challenge: code_challenge_value,
     method: code_challenge_method_value,
+    initialState: false,
   };
 
   const state = '123456';
   const challengeAndMethodAndState = {
     challenge: code_challenge_value,
     method: code_challenge_method_value,
-    clientState: state,
+    initialState: true,
   };
 
   const referer = 'client.example.com';
@@ -139,7 +140,7 @@ describe('PkceAuthRequestHandler', () => {
       await expect(pkceHandler2.handle(context).toPromise()).resolves.toEqual(badRes);
     });
 
-    it('should create a state if no one was provided and use it as a key to save the challenge & method in memory', async () => {
+    it('should create a state if none was provided and use it as a key to save the challenge & method in memory', async () => {
       await pkceHandler.handle(context).toPromise();
       const getState = context.request.url.searchParams.get('state');
       await expect(store.get(getState).then((data) => data)).resolves.toEqual(challengeAndMethod);
@@ -149,7 +150,7 @@ describe('PkceAuthRequestHandler', () => {
       context.request.url = stateURL;
       const getState = context.request.url.searchParams.get('state');
       await pkceHandler.handle(context).toPromise();
-      challengeAndMethodAndState.clientState = getState;
+      challengeAndMethodAndState.initialState = true;
       await expect(store.get(getState)
         .then((data) => data)).resolves.toEqual(challengeAndMethodAndState);
     });
@@ -158,7 +159,7 @@ describe('PkceAuthRequestHandler', () => {
       context.request.url = url;
       await pkceHandler.handle(context).toPromise();
       const getState = context.request.url.searchParams.get('state');
-      challengeAndMethodAndState.clientState = getState;
+      challengeAndMethodAndState.initialState = true;
       await expect(store.get(getState)
         .then((data) => data)).resolves.toEqual(challengeAndMethod);
     });

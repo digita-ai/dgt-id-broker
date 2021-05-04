@@ -47,8 +47,8 @@ describe('PkceTokenRequestHandler', () => {
     context = { request: { headers: {}, body: `grant_type=authorization_code&code=${code}&client_id=${client_id}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`, method: 'POST', url } };
 
     pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, store);
-    challengeAndMethod.challenge = pkceTokenRequestHandler
-      .generateCodeChallenge(code_verifier, challengeAndMethod.method);
+    challengeAndMethod.challenge = await pkceTokenRequestHandler
+      .generateCodeChallenge(code_verifier, challengeAndMethod.method).toPromise();
     bodyParams = new URLSearchParams(context.request.body);
     store.set(bodyParams.get('code'), challengeAndMethod);
 
@@ -136,8 +136,8 @@ describe('PkceTokenRequestHandler', () => {
     describe('store', () => {
       it('should get the associated challenge and method from the store', async () => {
         const challengeInStore = await store.get(code);
-        const challengeReceived = pkceTokenRequestHandler
-          .generateCodeChallenge(code_verifier, challengeAndMethod.method);
+        const challengeReceived = await pkceTokenRequestHandler
+          .generateCodeChallenge(code_verifier, challengeAndMethod.method).toPromise();
         expect(challengeInStore.challenge).toEqual(challengeReceived);
       });
 
@@ -210,35 +210,27 @@ describe('PkceTokenRequestHandler', () => {
         await expect(pkceTokenRequestHandler.canHandle(context).toPromise()).resolves.toEqual(true);
       });
     });
+  });
 
-    describe('base64URL', () => {
-      it('should encode the string', async () => {
-        const plainCode_verifier = 'code_verifier';
-        const encodedCode_verifier = 'Y29kZV92ZXJpZmllcg';
-        expect(pkceTokenRequestHandler.base64URL(plainCode_verifier)).toEqual(encodedCode_verifier);
-      });
+  describe('generateCodeChallenge', () => {
+    it('should return a plain code_verifier when the algorithm is plain', async () => {
+      await expect(pkceTokenRequestHandler
+        .generateCodeChallenge(code_verifier, 'plain').toPromise()).resolves.toEqual(code_verifier);
     });
 
-    describe('generateCodeChallenge', () => {
-      it('should call return a plain code_verifier when the algorithm is plain', () => {
-        expect(pkceTokenRequestHandler
-          .generateCodeChallenge(code_verifier, 'plain')).toEqual(code_verifier);
-      });
-
-      it('should call return hashed & encoded code_verifier when the algorithm is S256', () => {
-        const hash = createHash('sha256');
-        hash.update(code_verifier);
-        const hashed = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-        expect(pkceTokenRequestHandler.generateCodeChallenge(code_verifier, 'S256')).toEqual(hashed);
-      });
-
-      it('should error when the algorithm is not supported', async () => {
-        challengeAndMethod.method = '123';
-        response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Transform algorithm not supported.' });
-        await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
-      });
-
+    it('should return hashed & encoded code_verifier when the algorithm is S256', async () => {
+      const hash = createHash('sha256');
+      hash.update(code_verifier);
+      const hashed = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      await expect(pkceTokenRequestHandler.generateCodeChallenge(code_verifier, 'S256').toPromise()).resolves.toEqual(hashed);
     });
+
+    it('should error when the algorithm is not supported', async () => {
+      challengeAndMethod.method = '123';
+      response.body = JSON.stringify({ error: 'invalid_request', error_description: 'Transform algorithm not supported.' });
+      await expect(pkceTokenRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
+    });
+
   });
 
 });
