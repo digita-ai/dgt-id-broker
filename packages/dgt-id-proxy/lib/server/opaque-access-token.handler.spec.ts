@@ -91,6 +91,7 @@ describe('OpaqueAccessTokenHandler', () => {
       expect(resp.body.access_token.payload.sub).toEqual(decodedIdTokenPayload.sub);
       expect(resp.body.access_token.payload.iat).toEqual(decodedIdTokenPayload.iat);
       expect(resp.body.access_token.payload.exp).toEqual(decodedIdTokenPayload.exp);
+      expect(resp.body.access_token.payload.client_id).toEqual(decodedIdTokenPayload.aud);
 
     });
 
