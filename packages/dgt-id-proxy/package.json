@@ -38,8 +38,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "lint:staged": "lint-staged",
-    "generate-config": "node dist/util/generate-openid-configuration.js",
-    "generate-keys": "node dist/util/generate-keys.js"
+    "generate:oidc": "node dist/util/generate-openid-configuration.js",
+    "generate:keys": "node dist/util/generate-keys.js"
   },
   "devDependencies": {
     "@types/jest": "^26.0.22",
