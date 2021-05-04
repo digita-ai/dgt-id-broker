@@ -196,10 +196,10 @@
             "@type": "PipeThroughHandler",
             "PipeThroughHandler:_handlers": [
               {
-                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-              },
-              {
-                "@type": "OpaqueAccessTokenHandler"
+                "@type": "OpaqueAccessTokenHandler",
+                "OpaqueAccessTokenHandler:_handler": {
+                  "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+                }
               },
               {
                 "@type": "AccessTokenEncodeHandler",
