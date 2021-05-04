@@ -2,7 +2,8 @@ import { of, Observable, throwError } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { KeyValueStore } from '../storage/key-value-store';
-import { createErrorResponse, Code, ChallengeAndMethod } from '../util/models';
+import { createErrorResponse } from '../util/error-response-factory';
+import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
 export class PkceAuthRequestHandler extends HttpHandler {

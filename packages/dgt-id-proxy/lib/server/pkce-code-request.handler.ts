@@ -1,7 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of,  from, Observable, throwError } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
-import { Code, ChallengeAndMethod } from '../util/models';
+import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { KeyValueStore } from './../storage/key-value-store';
 export class PkceCodeRequestHandler extends HttpHandler {
 

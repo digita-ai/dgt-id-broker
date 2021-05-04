@@ -3,7 +3,8 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerErr
 import { from, of, Observable, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { createErrorResponse, Code, ChallengeAndMethod } from '../util/models';
+import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
+import { createErrorResponse } from '../util/error-response-factory';
 export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
