@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of,  from, Observable, throwError } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { KeyValueStore } from './../storage/key-value-store';
 export class PkceCodeRequestHandler extends HttpHandler {
@@ -35,36 +35,18 @@ export class PkceCodeRequestHandler extends HttpHandler {
 
     return this.httpHandler.handle(context).pipe(
       switchMap((response: HttpHandlerResponse) => {
-        if (response.headers.location && !response.headers.location.startsWith('/')){
-
+        try{
           const url = new URL(response.headers.location);
-
           const state = url.searchParams.get('state') ?? '';
-
-          url.searchParams.delete('state');
-          response.headers.location = url.toString();
-          response.body = '';
-
-          return from(this.store.get(state))
-            .pipe(
-              switchMap((challengeAndMethod) => challengeAndMethod
-                ? of(challengeAndMethod)
-                : throwError(new Error('No data was found in the store'))),
-              tap(() => this.store.delete(state)),
-              switchMap((challengeAndMethod) => {
-
-                const code = url.searchParams.get('code');
-
-                if (code) {
-                  this.store.set(code, challengeAndMethod);
-                } else {
-                  return throwError(new Error('No code was included in the response'));
-                }
-                return of(response);
-              }),
-            );
+          const code = url.searchParams.get('code');
+          if (code) {
+            return this.handleCodeResponse(response, state, code, url);
+          } else {
+            return of(response);
+          }
+        } catch (error) {
+          return of(response);
         }
-        return of(response);
       }),
     );
   }
@@ -75,6 +57,25 @@ export class PkceCodeRequestHandler extends HttpHandler {
       && context.request.url
       ? of(true)
       : of(false);
+  }
+
+  private handleCodeResponse(response: HttpHandlerResponse,
+    state: string,
+    code: string,
+    url: URL): Observable<HttpHandlerResponse> {
+    url.searchParams.delete('state');
+    response.headers.location = url.toString();
+    response.body = '';
+    return from(this.store.get(state)).pipe(
+      switchMap((challengeAndMethod) => challengeAndMethod
+        ? of(challengeAndMethod)
+        : throwError(new Error('No data was found in the store'))),
+      tap((challengeAndMethod) => {
+        this.store.delete(state);
+        this.store.set(code, challengeAndMethod);
+      }),
+      mapTo(response),
+    );
   }
 
 }

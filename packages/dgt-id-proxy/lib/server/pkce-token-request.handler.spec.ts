@@ -165,12 +165,6 @@ describe('PkceTokenRequestHandler', () => {
         expect(httpHandler.handle).toHaveBeenCalledTimes(1);
         expect(httpHandler.handle).toHaveBeenCalledWith(context);
       });
-
-      it('should just throw a method not allowed error when request method is not options or post', async () => {
-        context.request.method = 'GET';
-        await expect(pkceTokenRequestHandler.handle(context).toPromise())
-          .rejects.toBeInstanceOf(MethodNotAllowedHttpError);
-      });
     });
 
     describe('canHandle', () => {

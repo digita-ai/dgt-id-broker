@@ -127,12 +127,13 @@ describe('PkceCodeRequestHandler', () => {
       await expect(pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No data was found in the store');
     });
 
-    it('should error when no code was included in the response', async () => {
+    it('should straight return the response when no code was included', async () => {
       response.headers.location = `http://${referer}/requests.html?state=${state}`;
-      await expect(pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No code was included in the response');
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+      await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
     });
 
-    it('should return the response if its a dynamic auth request', async () => {
+    it('should return the response if creating a URL fails (e.g. /interaction, /auth/dynamic call)', async () => {
       response.headers.location = '/auth/123456';
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
       await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
