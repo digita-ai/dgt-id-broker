@@ -27,7 +27,7 @@ async function postRegisterClient(url, data) {
 
 let requestData = {
   "client_name": "My Panva Application",
-  "client_id": "bla",
+  "client_id": "http://localhost:3002/jaspervandenberghen/profile/card#me",
   "redirect_uris": [
     `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`,
   ],

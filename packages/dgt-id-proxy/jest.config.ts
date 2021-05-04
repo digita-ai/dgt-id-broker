@@ -19,6 +19,9 @@ const config: Config.InitialOptions = {
   testEnvironment: 'node',
   verbose: false,
   preset: 'ts-jest',
+  moduleNameMapper: {
+    '^jose/(.*)$': '<rootDir>/../node_modules/jose/dist/node/cjs/$1',
+  },
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/../tsconfig.spec.json',

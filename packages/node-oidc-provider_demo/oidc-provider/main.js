@@ -122,7 +122,7 @@ const configuration = {
         // Enable DPoP. This cannot be required, so if DPoP headers are not included, a user might still be able to get an Access Token. 
         // However, since the token won't be DPoP bound, it won't be valid to access a solid resource server, and should be rejected.S
         dPoP: {
-            enabled: true
+            enabled: false
         }
     },
     jwks,
@@ -195,7 +195,7 @@ oidc.use(async (ctx, next) => {
             clientName = ctx.request.body["client_name"];
         }
 
-        // Only contiue if the parameters are present.
+        // Only continue if the parameters are present.
         if (
             clientID !== undefined &&
             redirectURI !== undefined
