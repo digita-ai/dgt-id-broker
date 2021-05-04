@@ -41,11 +41,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
       const params  = new URLSearchParams(request.body);
       const encodedCode_verifier = params.get('code_verifier');
       const code =  params.get('code');
-      let code_verifier = '';
-
-      if (encodedCode_verifier) {
-        code_verifier = decodeURI(encodedCode_verifier);
-      }
+      const code_verifier = encodedCode_verifier ? decodeURI(encodedCode_verifier) : undefined;
 
       if (!code_verifier) {
         return createErrorResponse('Code verifier is required.', context, 'invalid_request');
@@ -66,16 +62,11 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
       if (contentTypeHeader) {
         let charset: BufferEncoding;
-        let charsetString  = 'utf-8';
 
-        if (contentTypeHeader.includes('charset=')) {
-          contentTypeHeader.split(';')
-            .filter((type) => {
-              if (type.includes('charset=')) {
-                charsetString = type.split('=')[1].toLowerCase();
-              }
-            });
-        }
+        const charsetString  = contentTypeHeader.split(';')
+          .filter((part) => part.includes('charset='))
+          .map((part) => part.split('=')[1].toLowerCase())
+          ?? 'utf-8';
 
         if (charsetString !== 'ascii' && charsetString !== 'utf8' && charsetString !== 'utf-8' && charsetString !== 'utf16le' && charsetString !== 'ucs2' && charsetString !== 'ucs-2' && charsetString !== 'base64' && charsetString !== 'latin1' && charsetString !== 'binary' && charsetString !== 'hex') {
           return throwError(new Error('The specified charset is not supported'));
@@ -88,25 +79,15 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
       return from(this.store.get(code))
         .pipe(
-          switchMap((codeChallengeAndMethod) => {
-
-            if (codeChallengeAndMethod) {
-              let challenge = '';
-              try{
-                challenge = this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method);
-              } catch(error) {
-                return createErrorResponse(error.message, context, 'invalid_request');
-              }
-
-              if (challenge === codeChallengeAndMethod.challenge) {
-                return this.httpHandler.handle(context);
-              }
-              return createErrorResponse('Code challenges do not match.', context, 'invalid_grant');
-
-            }
-
-            return throwError(new InternalServerError());
-          }),
+          switchMap((codeChallengeAndMethod) => codeChallengeAndMethod 
+            ? this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method);
+            : throwError(new InternalServerError('No stored challenge and method found.'))
+          ),
+          switchMap((challenge) => challenge === codeChallengeAndMethod.challenge 
+            ? this.httpHandler.handle(context)
+            : createErrorResponse('Code challenges do not match.', context, 'invalid_grant')
+          ),
+          catchError(error) => error?.status && error?.headers ? of(error) : throwError(error)),
         );
     } else if (context.request.method === 'OPTIONS') {
 
@@ -140,24 +121,32 @@ export class PkceTokenRequestHandler extends HttpHandler {
     return Buffer.from(str).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   }
 
-  generateCodeChallenge (code_verifier: string,
-    method: string) {
-    let challengeNew = '';
-
-    if (method === 'S256') {
-      const hash = createHash('sha256');
-
-      hash.update(code_verifier);
-
-      challengeNew = hash.digest('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-    } else if (method === 'plain') {
-      challengeNew = code_verifier;
-    } else {
-      throw new Error('Transform algorithm not supported.');
+  generateCodeChallenge (code_verifier: string, method: string): Observable<string> {
+    
+    if (method !== 'S256' && method !== 'plain') {
+        return createErrorResponse('Transform algorithm not supported.', 'invalid_request');
     }
 
-    return challengeNew;
+    switch (method) {
+
+      case 'S256': {
+          
+        const hash = createHash('sha256');
+        hash.update(code_verifier);
+
+        return of(
+          hash.digest('base64')
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+           .replace(/\//g, '_')
+        );
+
+      }
+
+      case 'plain': return of(code_verifier);
+
+    } 
+
   }
 
 }
