@@ -105,7 +105,7 @@ async function instantiateJWTsForDPoP() {
     dpopJwtForToken = await new SignJWT({
         // Each DPoP-proof needs to say what type of request it is making and to where to be valid.
         'htm': 'POST',
-        'htu': 'http://localhost:3000/token',
+        'htu': 'http://localhost:3003/token',
     })
         // set the necessary headers and body of our JWT with the necessary components as prescribed by the spec.
         .setProtectedHeader({

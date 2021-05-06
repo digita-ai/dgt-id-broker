@@ -17,7 +17,7 @@ const config: Config.InitialOptions = {
   //   },
   // },
   testEnvironment: 'node',
-  verbose: true,
+  verbose: false,
   preset: 'ts-jest',
   moduleNameMapper: {
     '^jose/(.*)$': '<rootDir>/../node_modules/jose/dist/node/cjs/$1',
@@ -26,6 +26,9 @@ const config: Config.InitialOptions = {
     'ts-jest': {
       tsconfig: '<rootDir>/../tsconfig.spec.json',
     },
+  },
+  transform: {
+    '^.+\\.ts$': 'ts-jest',
   },
 };
 export default config;
