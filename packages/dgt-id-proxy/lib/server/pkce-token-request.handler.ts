@@ -87,17 +87,16 @@ export class PkceTokenRequestHandler extends HttpHandler {
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
-    let params = new URLSearchParams();
-    if (context && context.request && context.request.body) {
-      params  = new URLSearchParams(context.request.body);
-    }
+    const params = context && context.request && context.request.body
+      ? new URLSearchParams(context.request.body)
+      : undefined;
 
     return context
       && context.request
       && context.request.url
       && context.request.body
-      && params.get('code_verifier')
-      && params.get('code')
+      && params?.get('code_verifier')
+      && params?.get('code')
       ? of(true)
       : of(false);
   }

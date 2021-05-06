@@ -7,7 +7,6 @@ import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 describe('PkceCodeRequestHandler', () => {
   let pkceCodeRequestHandler: PkceCodeRequestHandler;
   let httpHandler: HttpHandler;
-  let store: InMemoryStore<Code, ChallengeAndMethod>;
   let context: HttpHandlerContext;
   let response: HttpHandlerResponse;
 
@@ -16,6 +15,7 @@ describe('PkceCodeRequestHandler', () => {
     method: 'S256',
   };
 
+  const store = new InMemoryStore() as InMemoryStore<Code, ChallengeAndMethod>;
   const client_id = encodeURI('http://solidpod.com/jaspervandenberghen/profile/card#me');
   const referer = 'client.example.com';
   const redirect_uri = encodeURI(`http://${referer}/requests.html`);
@@ -44,7 +44,6 @@ describe('PkceCodeRequestHandler', () => {
       safeHandle: jest.fn(),
     };
 
-    store = new InMemoryStore();
     store.set(state, challengeAndMethod);
 
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
@@ -71,17 +70,13 @@ describe('PkceCodeRequestHandler', () => {
     });
 
     it('should error when no context request is provided', async () => {
-      context.request = null;
-      await expect(() => pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
-      context.request = undefined;
-      await expect(() => pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => pkceCodeRequestHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => pkceCodeRequestHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
     });
 
     it('should error when no context request url is provided', async () => {
-      context.request.url = null;
-      await expect(() => pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
-      context.request.url= undefined;
-      await expect(() => pkceCodeRequestHandler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => pkceCodeRequestHandler.handle({ ...context, request: { ...context.request, url: null } }).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => pkceCodeRequestHandler.handle({ ...context, request: { ...context.request, url: undefined } }).toPromise()).rejects.toThrow('No url was included in the request');
     });
 
     it('should call the httpHandler with the context', async () => {
@@ -128,15 +123,15 @@ describe('PkceCodeRequestHandler', () => {
     });
 
     it('should straight return the response when no code was included', async () => {
-      response.headers.location = `http://${referer}/requests.html?state=${state}`;
-      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
-      await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
+      const responseWithNoCode = { ...response, headers: { ...response.headers, location: `http://${referer}/requests.html?state=${state}` } };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(responseWithNoCode));
+      await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(responseWithNoCode);
     });
 
     it('should return the response if creating a URL fails (e.g. /interaction, /auth/dynamic call)', async () => {
-      response.headers.location = '/auth/123456';
-      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
-      await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(response);
+      const responseWithBadURLLocation = { ...response, headers: { ...response.headers, location: `/auth/123456` } };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(responseWithBadURLLocation));
+      await expect(pkceCodeRequestHandler.handle(context).toPromise()).resolves.toEqual(responseWithBadURLLocation);
     });
   });
 
@@ -151,17 +146,17 @@ describe('PkceCodeRequestHandler', () => {
     });
 
     it('should return false if context.request is null or undefined', async () => {
-      context.request = null;
-      await expect(pkceCodeRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request = undefined;
-      await expect(pkceCodeRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(pkceCodeRequestHandler.canHandle({ ...context, request: null })
+        .toPromise()).resolves.toEqual(false);
+      await expect(pkceCodeRequestHandler.canHandle({ ...context, request: undefined })
+        .toPromise()).resolves.toEqual(false);
     });
 
     it('should return false if context.request.url is null or undefined', async () => {
-      context.request.url = null;
-      await expect(pkceCodeRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.url = undefined;
-      await expect(pkceCodeRequestHandler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(pkceCodeRequestHandler.canHandle({ ...context, request: { ...context.request, url: null } })
+        .toPromise()).resolves.toEqual(false);
+      await expect(pkceCodeRequestHandler.canHandle({ ...context, request: { ...context.request, url: undefined } })
+        .toPromise()).resolves.toEqual(false);
     });
   });
 

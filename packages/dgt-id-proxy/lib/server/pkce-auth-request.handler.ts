@@ -54,7 +54,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
       context.request.url.searchParams.append('state', generatedState);
     }
 
-    this.setStore(state ?? generatedState, challenge, method, !!state);
+    this.store.set(state ?? generatedState, { challenge, method, initialState: !!state });
 
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
@@ -72,11 +72,4 @@ export class PkceAuthRequestHandler extends HttpHandler {
       : of(false);
   }
 
-  setStore(state: string, challenge: string, method: string, initialState: boolean): void {
-    this.store.set(state, {
-      challenge,
-      method,
-      initialState,
-    });
-  }
 }

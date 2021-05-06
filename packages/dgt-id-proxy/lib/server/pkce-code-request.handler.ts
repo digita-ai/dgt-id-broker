@@ -39,11 +39,8 @@ export class PkceCodeRequestHandler extends HttpHandler {
           const url = new URL(response.headers.location);
           const state = url.searchParams.get('state') ?? '';
           const code = url.searchParams.get('code');
-          if (code) {
-            return this.handleCodeResponse(response, state, code, url);
-          } else {
-            return of(response);
-          }
+
+          return code ? this.handleCodeResponse(response, state, code, url) : of(response);
         } catch (error) {
           return of(response);
         }
@@ -59,10 +56,12 @@ export class PkceCodeRequestHandler extends HttpHandler {
       : of(false);
   }
 
-  private handleCodeResponse(response: HttpHandlerResponse,
+  private handleCodeResponse(
+    response: HttpHandlerResponse,
     state: string,
     code: string,
-    url: URL): Observable<HttpHandlerResponse> {
+    url: URL,
+  ): Observable<HttpHandlerResponse> {
     url.searchParams.delete('state');
     response.headers.location = url.toString();
     response.body = '';
