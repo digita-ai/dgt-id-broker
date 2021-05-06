@@ -6,6 +6,6 @@
         "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/context.jsonld"
     ],
     "import": [
-        "./presets/pkce-server.json"
+        "./presets/opaque-access-token-server.json"
     ]
 }
