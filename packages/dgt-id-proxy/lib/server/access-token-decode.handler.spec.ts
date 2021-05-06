@@ -1,14 +1,24 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { SignJWT } from 'jose/jwt/sign';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
+import fetchMock from 'jest-fetch-mock';
+import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { AccessTokenDecodeHandler } from './access-token-decode.handler';
 
 describe('AccessTokenDecodeHandler', () => {
   let handler: AccessTokenDecodeHandler;
   let response: HttpHandlerResponse;
+  let url: string;
+
+  const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
+
+  beforeAll(() => {
+    fetchMock.enableMocks();
+  });
 
   beforeEach(async () => {
-    handler = new AccessTokenDecodeHandler();
+    url = 'http://digita.ai';
+    handler = new AccessTokenDecodeHandler(url);
     response = {
       body: 'mockbody',
       headers: {},
@@ -18,6 +28,11 @@ describe('AccessTokenDecodeHandler', () => {
 
   it('should be correctly instantiated', () => {
     expect(handler).toBeTruthy();
+  });
+
+  it('should be error when no upstreamUrl is provided', async () => {
+    await expect(() => new AccessTokenDecodeHandler(null)).toThrow('upstreamUrl must be defined');
+    await expect(() => new AccessTokenDecodeHandler(undefined)).toThrow('upstreamUrl must be defined');
   });
 
   describe('handle', () => {
@@ -46,11 +61,21 @@ describe('AccessTokenDecodeHandler', () => {
 
     it('should return a response with a decoded access token header and payload when method is POST and upstream returns 200 response', async () => {
       const keyPair = await generateKeyPair('ES256');
+      const publicJwk = await fromKeyLike(keyPair.publicKey);
+      publicJwk.kid = 'mockKeyId';
+      publicJwk.alg = 'ES256';
+
+      // mock the fetches of the verifyUpstreamJwk function
+      fetchMock.mockResponses(
+        [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ],
+        [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
+      );
+
       const payload = {
         'jti': 'mockJti',
         'sub': 'mockSub',
-        'iat': 1619085373,
-        'exp': 1619092573,
+        'iat': secondsSinceEpoch(),
+        'exp': secondsSinceEpoch() + 7200,
         'scope': 'mockScope',
         'client_id': 'mockClient',
         'iss': 'http://mock-issuer.com',
@@ -59,7 +84,7 @@ describe('AccessTokenDecodeHandler', () => {
       const header = {
         alg: 'ES256',
         typ: 'at+jwt',
-        kid: 'idofakey',
+        kid: 'mockKeyId',
       };
       const mockedUpstreamAccessToken = await new SignJWT(payload)
         .setProtectedHeader(header)

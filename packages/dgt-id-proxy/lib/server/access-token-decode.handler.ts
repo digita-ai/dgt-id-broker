@@ -3,9 +3,17 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { decode } from 'jose/util/base64url';
+import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
 
 export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+
+  constructor (private upstreamUrl: string) {
+    super();
+
+    if (!upstreamUrl) {
+      throw new Error('upstreamUrl must be defined');
+    }
+  }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
     if (!response) {
@@ -32,17 +40,13 @@ export class AccessTokenDecodeHandler extends Handler<HttpHandlerResponse, HttpH
     // split the access token into header, payload, and footer parts
     const accessTokenSplit = parsedBody.access_token.split('.');
 
-    if (accessTokenSplit.length === 1) {
+    if (accessTokenSplit.length < 3) {
       return throwError(new Error('the access token is not a valid JWT'));
     }
 
-    // create a decoded access token with a JSON header and payload.
-    const decodedAccessToken = {
-      header: JSON.parse(decode(accessTokenSplit[0]).toString()),
-      payload: JSON.parse(decode(accessTokenSplit[1]).toString()),
-    };
-
-    return of(decodedAccessToken);
+    return verifyUpstreamJwk(parsedBody.access_token, this.upstreamUrl).pipe(
+      map(({ protectedHeader, payload }) => ({ header: protectedHeader, payload })),
+    );
   }
 
   private createDecodedAccessTokenResponse(

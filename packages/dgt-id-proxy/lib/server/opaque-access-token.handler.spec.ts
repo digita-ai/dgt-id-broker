@@ -3,6 +3,8 @@ import { of } from 'rxjs';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { SignJWT } from 'jose/jwt/sign';
 import { decode } from 'jose/util/base64url';
+import { fromKeyLike } from 'jose/jwk/from_key_like';
+import fetchMock from 'jest-fetch-mock';
 import { OpaqueAccessTokenHandler } from './opaque-access-token.handler';
 
 jest.mock('fs/promises', () => {
@@ -29,32 +31,34 @@ describe('OpaqueAccessTokenHandler', () => {
   let handler: OpaqueAccessTokenHandler;
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
+  let url: string;
 
-  const mockedIdToken = async () => {
-    const keyPair = await generateKeyPair('ES256');
+  const mockedIdToken = async (privateKey) => new SignJWT(
+    {
+      sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
+      scope: '',
+      client_id: 'client',
+      iss: 'http://localhost:3000',
+      aud: 'http://digita.ai',
+    },
+  )
+    .setProtectedHeader({ alg: 'ES256', kid: 'mockKeyId', typ: 'jwt'  })
+    .setIssuedAt()
+    .setExpirationTime('2h')
+    .sign(privateKey);
 
-    return new SignJWT(
-      {
-        sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
-        scope: '',
-        client_id: 'client',
-        iss: 'http://localhost:3000',
-        aud: 'http://digita.ai',
-      },
-    )
-      .setProtectedHeader({ alg: 'ES256', kid: 'keyid', typ: 'jwt'  })
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .sign(keyPair.privateKey);
-  };
+  beforeAll(() => {
+    fetchMock.enableMocks();
+  });
 
   beforeEach(() => {
+    url = 'http://digita.ai';
     nestedHandler = {
       handle: jest.fn(),
       canHandle: jest.fn(),
       safeHandle: jest.fn(),
     };
-    handler = new OpaqueAccessTokenHandler(nestedHandler);
+    handler = new OpaqueAccessTokenHandler(nestedHandler, url);
     context = { request: { headers: {}, method: 'POST', url: new URL('http://digita.ai/'), body: 'client_id=mockClient' } };
   });
 
@@ -62,9 +66,11 @@ describe('OpaqueAccessTokenHandler', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('should error when no handler is provided', () => {
-    expect(() => new OpaqueAccessTokenHandler(undefined)).toThrow('handler must be defined');
-    expect(() => new OpaqueAccessTokenHandler(null)).toThrow('handler must be defined');
+  it('should error when no handler or upstreamUrl is provided', () => {
+    expect(() => new OpaqueAccessTokenHandler(undefined, url)).toThrow('handler must be defined');
+    expect(() => new OpaqueAccessTokenHandler(null, url)).toThrow('handler must be defined');
+    expect(() => new OpaqueAccessTokenHandler(nestedHandler, undefined)).toThrow('upstreamUrl must be defined');
+    expect(() => new OpaqueAccessTokenHandler(nestedHandler, null)).toThrow('upstreamUrl must be defined');
   });
 
   describe('handle', () => {
@@ -128,8 +134,12 @@ describe('OpaqueAccessTokenHandler', () => {
     });
 
     it('should return a token with the issuer set to the proxy and the aud, sub, iat and exp claims of the id token', async () => {
-      // mocked response with audience as a string (single item)
-      const idToken = await mockedIdToken();
+      const keyPair = await generateKeyPair('ES256');
+      const publicJwk = await fromKeyLike(keyPair.publicKey);
+      publicJwk.kid = 'mockKeyId';
+      publicJwk.alg = 'ES256';
+
+      const idToken = await mockedIdToken(keyPair.privateKey);
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
         body: JSON.stringify({
           access_token: 'opaqueaccesstoken',
@@ -142,6 +152,12 @@ describe('OpaqueAccessTokenHandler', () => {
         status: 200,
       }));
       const decodedIdTokenPayload = JSON.parse(decode(idToken.split('.')[1]).toString());
+
+      // mock the fetches of the verifyUpstreamJwk function
+      fetchMock.mockResponses(
+        [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ],
+        [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
+      );
 
       const resp = await handler.handle(context).toPromise();
       expect(resp.status).toEqual(200);

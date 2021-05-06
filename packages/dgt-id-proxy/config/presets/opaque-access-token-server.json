@@ -199,7 +199,8 @@
                 "@type": "OpaqueAccessTokenHandler",
                 "OpaqueAccessTokenHandler:_handler": {
                   "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-                }
+                },
+                "OpaqueAccessTokenHandler:_upstreamUrl": "http://localhost:3000"
               },
               {
                 "@type": "AccessTokenEncodeHandler",

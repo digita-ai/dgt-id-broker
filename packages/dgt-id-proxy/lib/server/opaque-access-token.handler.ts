@@ -1,22 +1,34 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError, zip } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
-import { decode } from 'jose/util/base64url';
+import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
 
 /**
  * A {HttpHandler} that handles Access Token responses for an upstream server that returns Opaque Access Tokens
  * by turning them into valid JSON Web Tokens
  */
 export class OpaqueAccessTokenHandler extends HttpHandler {
-
-  constructor(private handler: HttpHandler){
+  /**
+   * Creates an {OpaqueAccessTokenHandler} which passes requests it receives through the given handler,
+   * and uses the upstream url to verify the id token it receives.
+   *
+   * @param {HttpHandler} handler - the handler to pass requests to
+   * @param {string} upstreamUrl - url of the upstream server
+   */
+  constructor(private handler: HttpHandler, private upstreamUrl: string){
     super();
+
     if (!handler) {
       throw Error('handler must be defined');
     }
+
+    if (!upstreamUrl) {
+      throw new Error('upstreamUrl must be defined');
+    }
   }
+
   /**
-   * handles the context by saving the client_id passed in it and then getting the response from it's handler.
+   * Handles the context by saving the client_id passed in it and then getting the response from it's handler.
    * The sub, aud, iat and exp claims from the id_token returned by the upstream server, along with the client_id,
    * are used to create a valid JWT Access Token.
    *
@@ -65,25 +77,21 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
 
   private createJwtAccessToken(responseBody: string, client_id: string): Observable<{ header: any; payload: any }> {
     const parsedBody = JSON.parse(responseBody);
-    // split the id token into header, payload, and footer parts, then get the payload
-    const idTokenPayload = parsedBody.id_token.split('.')[1];
-    // base64url decode the id token payload
-    const decodedIdTokenPayload = JSON.parse(decode(idTokenPayload).toString());
 
-    // get the sub, aud, iat and exp claims from the id token and create an access token with those claims as payload.
-    // the encoder will add other necessary claims such as iss and typ
-    const accessToken = {
-      header: {},
-      payload: {
-        sub: decodedIdTokenPayload.sub,
-        aud: decodedIdTokenPayload.aud,
-        iat: decodedIdTokenPayload.iat,
-        exp: decodedIdTokenPayload.exp,
-        client_id,
-      },
-    };
-
-    return of(accessToken);
+    // verify that the id_token was sent and signed by the upstream server, then use claims from the payload we get back to create
+    // an access token
+    return verifyUpstreamJwk(parsedBody.id_token, this.upstreamUrl).pipe(
+      map(({ payload }) => ({
+        header: {},
+        payload: {
+          sub: payload.sub,
+          aud: payload.aud,
+          iat: payload.iat,
+          exp: payload.exp,
+          client_id,
+        },
+      })),
+    );
   }
 
   private createAccessTokenResponse(
