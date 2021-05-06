@@ -1,6 +1,5 @@
 import { of } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import async from 'c:/users/jasper/appdata/local/microsoft/typescript/4.2/node_modules/@types/async';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceAuthRequestHandler } from './pkce-auth-request.handler';
