@@ -1,51 +1,51 @@
-import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { SolidClientDynamicRegistrationHandler } from './solid-client-dynamic-registration.handler';
 
 describe('SolidClientDynamicRegistrationHandler', () => {
-  let solidClientDynamicRegistrationHandler: SolidClientDynamicRegistrationHandler;
-  let context: HttpHandlerContext;
-  let httpHandler: HttpHandler;
-  let store: KeyValueStore<string, string>;
 
-  beforeEach(async () => {
-    httpHandler = {
-      canHandle: jest.fn(),
-      handle: jest.fn().mockReturnValueOnce(of()),
-      safeHandle: jest.fn(),
-    } as HttpHandler;
+  const httpHandler: HttpHandler = {
+    canHandle: jest.fn(),
+    handle: jest.fn().mockReturnValueOnce(of()),
+    safeHandle: jest.fn(),
+  };
 
-    store = new InMemoryStore();
-    solidClientDynamicRegistrationHandler = new SolidClientDynamicRegistrationHandler(store, httpHandler);
+  const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
+  const code_challenge_method_value = 'S256';
+  const store: KeyValueStore<string, HttpHandlerResponse> = new InMemoryStore();
+  const referer = 'localhost:3001';
+  const client_id = encodeURIComponent('http://localhost:3002/jaspervandenberghen/profile/card#me');
+  const incorrectClient_id = encodeURIComponent('jaspervandenberghen/profile/card#me');
+  const redirect_uri = encodeURIComponent(`http://${referer}/requests.html`);
+  const endpoint = 'auth';
+  const host = 'server.example.com';
 
-    const url = new URL(`http://example.com:3001/reg`);
+  const url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
+  const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${incorrectClient_id}&redirect_uri=${redirect_uri}`);
+  const context: HttpHandlerContext = { request: { headers: {}, body: {
+    application_type: 'web',
+    grant_types: [ 'refresh_token', 'authorization_code' ],
+    id_token_signed_response_alg: 'RS256',
+    post_logout_redirect_uris: [],
+    require_auth_time: true,
+    response_types: [ 'code' ],
+    subject_type: 'public',
+    token_endpoint_auth_method: 'none',
+    require_signed_request_object: false,
+    request_uris: [],
+    client_id_issued_at: 1620313101,
+    client_id: 'Vbhf7LEuw3INWvNYSI6Va',
+    client_uri: 'https://app.example/',
+    default_max_age: 60000,
+    logo_uri: 'https://app.example/logo.png',
+    redirect_uris: [ 'http://localhost:3001/requests.html' ],
+    scope: 'openid offline_access',
+    tos_uri: 'https://app.example/tos.html',
+  }, method: 'POST', url } };
 
-    context = { request: { headers: {}, body: {
-      application_type: 'web',
-      grant_types: [ 'refresh_token', 'authorization_code' ],
-      id_token_signed_response_alg: 'RS256',
-      post_logout_redirect_uris: [],
-      require_auth_time: true,
-      response_types: [ 'code' ],
-      subject_type: 'public',
-      token_endpoint_auth_method: 'none',
-      require_signed_request_object: false,
-      request_uris: [],
-      client_id_issued_at: 1620136678,
-      client_id: 'http://localhost:3002/jaspervandenberghen/profile/card#me',
-      client_name: 'My Panva Application',
-      client_uri: 'https://app.example/',
-      default_max_age: 60000,
-      logo_uri: 'https://app.example/logo.png',
-      redirect_uris: [ 'http://localhost:3001/requests.html' ],
-      scope: 'openid offline_access',
-      tos_uri: 'https://app.example/tos.html',
-      registration_client_uri: 'http://localhost:3000/reg/http://localhost:3002/jaspervandenberghen/profile/card#me',
-      registration_access_token: 'TbaivMJxlyzf31i_3h7N3u2ycR83KZuBxeU2t7xRdfl',
-    }, method: 'POST', url } };
-  });
+  const solidClientDynamicRegistrationHandler = new SolidClientDynamicRegistrationHandler(store, httpHandler);
 
   it('should be correctly instantiated', () => {
     expect(solidClientDynamicRegistrationHandler).toBeTruthy();
@@ -68,19 +68,60 @@ describe('SolidClientDynamicRegistrationHandler', () => {
     });
 
     it('should error when no context request is provided', async () => {
-      context.request = null;
-      await expect(() => solidClientDynamicRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
-      context.request = undefined;
-      await expect(() => solidClientDynamicRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => solidClientDynamicRegistrationHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => solidClientDynamicRegistrationHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
     });
 
-    it('should error when no context request body is provided', async () => {
-      context.request.body = null;
-      await expect(() => solidClientDynamicRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No body was included in the request');
-      context.request.body = undefined;
-      await expect(() => solidClientDynamicRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No body was included in the request');
+    it('should error when no client_id was provided', async () => {
+      const noClientIdURL = new URL(url.href);
+      const noClientIdContext = { ... context, request: { ...context.request, url: noClientIdURL } };
+
+      noClientIdContext.request.url.searchParams.set('client_id', '');
+      await expect(() => solidClientDynamicRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+
+      noClientIdContext.request.url.searchParams.delete('client_id');
+      await expect(() => solidClientDynamicRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
     });
 
+    it('should error when client_id is not a valid URL', async () => {
+      const invalidClientIdURLContext = { ... context, request: { ...context.request, url: incorrectClientIdURL } };
+      await expect(() => solidClientDynamicRegistrationHandler.handle(invalidClientIdURLContext).toPromise()).rejects.toThrow('The provided client_id is not a valid URL');
+    });
+
+    it('should error when no redirect_uri was provided', async () => {
+      const noRedirectUriURL = new URL(url.href);
+      const noRedirectUriContext = { ... context, request: { ...context.request, url: noRedirectUriURL } };
+
+      noRedirectUriContext.request.url.searchParams.set('redirect_uri', '');
+      await expect(() => solidClientDynamicRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+
+      noRedirectUriContext.request.url.searchParams.delete('redirect_uri');
+      await expect(() => solidClientDynamicRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+    });
+
+    it('should get the webId from the pod', async () => {
+      await solidClientDynamicRegistrationHandler.handle(context).toPromise();
+      solidClientDynamicRegistrationHandler.getPod = jest.fn();
+      expect(solidClientDynamicRegistrationHandler.getPod).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('canHandle', () => {
+    it('should return true if correct context was provided', async () => {
+      await expect(solidClientDynamicRegistrationHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+    });
+
+    it('should return false if no context was provided', async () => {
+      await expect(solidClientDynamicRegistrationHandler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(solidClientDynamicRegistrationHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+    });
+
+    it('should return false if no request was provided', async () => {
+      await expect(solidClientDynamicRegistrationHandler.canHandle({ ...context, request: null })
+        .toPromise()).resolves.toEqual(false);
+      await expect(solidClientDynamicRegistrationHandler.canHandle({ ...context, request: undefined })
+        .toPromise()).resolves.toEqual(false);
+    });
   });
 
 });

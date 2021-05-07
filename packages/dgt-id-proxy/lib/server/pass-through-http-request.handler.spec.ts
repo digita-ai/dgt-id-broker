@@ -67,7 +67,7 @@ describe('PassThroughHttpRequestHandler', () => {
       await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
     });
 
-    it('should return false if context was provided', async () => {
+    it('should return false if no request was provided', async () => {
       context.request = undefined;
       await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
     });

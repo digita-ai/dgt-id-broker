@@ -179,73 +179,74 @@ oidc.use(async (ctx, next) => {
     let redirectURI = "";
     let client = "";
 
-    // If the client sends either a get or post request to either /auth or /token we want to intercept it and do some checks for the WebID flow of Solid-OIDC
-    if ((ctx.path === "/auth" || ctx.path === "/token") && (ctx.method === "GET" || ctx.method === "POST")) {
-        // In the case of a GET request we get the parameters from the url.
-        if (ctx.method === "GET") {
-            const params = new URLSearchParams(ctx.req.url);
-            clientID = params.get("client_id");
-            redirectURI = params.get("redirect_uri");
+    // // If the client sends either a get or post request to either /auth or /token we want to intercept it and do some checks for the WebID flow of Solid-OIDC
+    // if ((ctx.path === "/auth" || ctx.path === "/token") && (ctx.method === "GET" || ctx.method === "POST")) {
+    //     // In the case of a GET request we get the parameters from the url.
+    //     if (ctx.method === "GET") {
+    //         const params = new URLSearchParams(ctx.req.url);
+    //         clientID = params.get("client_id");
+    //         redirectURI = params.get("redirect_uri");
 
-            // In the case of a POST request we get the parameters from the request body.
-        } else if (ctx.method === "POST") {
-            clientID = ctx.request.body["client_id"];
-            redirectURI = ctx.request.body["redirect_uri"];
-            clientName = ctx.request.body["client_name"];
-        }
+    //         // In the case of a POST request we get the parameters from the request body.
+    //     } else if (ctx.method === "POST") {
+    //         clientID = ctx.request.body["client_id"];
+    //         redirectURI = ctx.request.body["redirect_uri"];
+    //         clientName = ctx.request.body["client_name"];
+    //     }
 
-        // Only contiue if the parameters are present.
-        if (
-            clientID !== undefined &&
-            redirectURI !== undefined
-        ) {
-            let known_client = false;
+    //     // Only contiue if the parameters are present.
+    //     if (
+    //         clientID !== undefined &&
+    //         redirectURI !== undefined
+    //     ) {
+    //         let known_client = false;
 
-            // Check if we already know the client. This will only check the hardcoded clients. More of a safety check.
-            for (const x of clients) {
-                if (x["client_id"] === clientID) {
-                    known_client = true;
-                }
-            }
-            // Only continue if the client is unknown.
-            if (!known_client) {
-                let url = undefined
-                try {
-                    // Check if the clientID is a valid url
-                    url = new URL(clientID);
-                } catch (error) {
-                    // If the clientID is not a valid url, it can't be a webid. By catching here, we ensure that url will remain undefined.
-                    console.error(error)
-                }
-                // if url is defined, it means it was a valid url, so we can continue.
-                if (url) {
-                    // Get the solid:oidcRegistration field from the webID
-                    await getOIDCRegistrationFromWebID(clientID)
-                        .then(async (data) => {
-                            // If data is defined, it means a solid:oidcRegistration field was found at the webID.
-                            if (data !== undefined) {
+    //         // Check if we already know the client. This will only check the hardcoded clients. More of a safety check.
+    //         for (const x of clients) {
+    //             if (x["client_id"] === clientID) {
+    //                 known_client = true;
+    //             }
+    //         }
+    //         // Only continue if the client is unknown.
+    //         if (!known_client) {
+    //             let url = undefined
+    //             try {
+    //                 // Check if the clientID is a valid url
+    //                 url = new URL(clientID);
+    //             } catch (error) {
+    //                 // If the clientID is not a valid url, it can't be a webid. By catching here, we ensure that url will remain undefined.
+    //                 console.error(error)
+    //             }
+    //             // if url is defined, it means it was a valid url, so we can continue.
+    //             if (url) {
+    //                 // Get the solid:oidcRegistration field from the webID
+    //                 await getOIDCRegistrationFromWebID(clientID)
+    //                     .then(async (data) => {
+    //                         // If data is defined, it means a solid:oidcRegistration field was found at the webID.
+    //                         if (data !== undefined) {
 
-                                // Encrypt the webID with the secret we generated.
-                                let secretID = CryptoJS.AES.encrypt(data.client_id, process.env.CLIENT_IDENTIFICATION_159357).toString();
-                                // Add a field to the data object to send our encrypted webID
-                                data.client_identification_159357 = secretID
-                                // Add a field to the data object so that when requesting a token, we don't have to send along a client secret.
-                                data.token_endpoint_auth_method = "none"
+    //                             // Encrypt the webID with the secret we generated.
+    //                             let secretID = CryptoJS.AES.encrypt(data.client_id, process.env.CLIENT_IDENTIFICATION_159357).toString();
+    //                             // Add a field to the data object to send our encrypted webID
+    //                             data.client_identification_159357 = secretID
+    //                             // Add a field to the data object so that when requesting a token, we don't have to send along a client secret.
+    //                             data.token_endpoint_auth_method = "none"
 
-                                // Register the webID as a client via our dynamic registration endpoint.
-                                await postDynamicClientRegister(`http://localhost:${process.env.OIDC_PORT}/reg`, data)
-                                    .then(data => { console.log(data) })
+    //                             console.log(data)
+    //                             // Register the webID as a client via our dynamic registration endpoint.
+    //                             await postDynamicClientRegister(`http://localhost:${process.env.OIDC_PORT}/reg`, data)
+    //                                 .then(data => { console.log(data) })
 
-                                // If data is undefined, it means that there was no solid:oidcRegistration field found at the webID.
-                            } else {
-                                console.log("This is not a valid WebID, or the WebID does not contain solid:oidcRegistration, please register dynamically")
-                            }
-                        })
-                }
-            }
-        }
+    //                             // If data is undefined, it means that there was no solid:oidcRegistration field found at the webID.
+    //                         } else {
+    //                             console.log("This is not a valid WebID, or the WebID does not contain solid:oidcRegistration, please register dynamically")
+    //                         }
+    //                     })
+    //             }
+    //         }
+    //     }
 
-    }
+    // }
     // Send the request along to the oidc provider who handles it further.
     await next();
 });
