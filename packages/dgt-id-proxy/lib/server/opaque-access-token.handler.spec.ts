@@ -1,10 +1,6 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { SignJWT } from 'jose/jwt/sign';
 import { decode } from 'jose/util/base64url';
-import { fromKeyLike } from 'jose/jwk/from_key_like';
-import fetchMock from 'jest-fetch-mock';
 import { OpaqueAccessTokenHandler } from './opaque-access-token.handler';
 
 jest.mock('fs/promises', () => {
@@ -31,34 +27,14 @@ describe('OpaqueAccessTokenHandler', () => {
   let handler: OpaqueAccessTokenHandler;
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
-  let url: string;
-
-  const mockedIdToken = async (privateKey) => new SignJWT(
-    {
-      sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
-      scope: '',
-      client_id: 'client',
-      iss: 'http://localhost:3000',
-      aud: 'http://digita.ai',
-    },
-  )
-    .setProtectedHeader({ alg: 'ES256', kid: 'mockKeyId', typ: 'jwt'  })
-    .setIssuedAt()
-    .setExpirationTime('2h')
-    .sign(privateKey);
-
-  beforeAll(() => {
-    fetchMock.enableMocks();
-  });
 
   beforeEach(() => {
-    url = 'http://digita.ai';
     nestedHandler = {
       handle: jest.fn(),
       canHandle: jest.fn(),
       safeHandle: jest.fn(),
     };
-    handler = new OpaqueAccessTokenHandler(nestedHandler, url);
+    handler = new OpaqueAccessTokenHandler(nestedHandler);
     context = { request: { headers: {}, method: 'POST', url: new URL('http://digita.ai/'), body: 'client_id=mockClient' } };
   });
 
@@ -66,11 +42,9 @@ describe('OpaqueAccessTokenHandler', () => {
     expect(handler).toBeTruthy();
   });
 
-  it('should error when no handler or upstreamUrl is provided', () => {
-    expect(() => new OpaqueAccessTokenHandler(undefined, url)).toThrow('handler must be defined');
-    expect(() => new OpaqueAccessTokenHandler(null, url)).toThrow('handler must be defined');
-    expect(() => new OpaqueAccessTokenHandler(nestedHandler, undefined)).toThrow('upstreamUrl must be defined');
-    expect(() => new OpaqueAccessTokenHandler(nestedHandler, null)).toThrow('upstreamUrl must be defined');
+  it('should error when no handler is provided', () => {
+    expect(() => new OpaqueAccessTokenHandler(undefined)).toThrow('handler must be defined');
+    expect(() => new OpaqueAccessTokenHandler(null)).toThrow('handler must be defined');
   });
 
   describe('handle', () => {
@@ -133,42 +107,54 @@ describe('OpaqueAccessTokenHandler', () => {
       });
     });
 
-    it('should return a token with the issuer set to the proxy and the aud, sub, iat and exp claims of the id token', async () => {
-      const keyPair = await generateKeyPair('ES256');
-      const publicJwk = await fromKeyLike(keyPair.publicKey);
-      publicJwk.kid = 'mockKeyId';
-      publicJwk.alg = 'ES256';
-
-      const idToken = await mockedIdToken(keyPair.privateKey);
+    it('should error when the response body is not JSON or does not contain an id_token property', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
-        body: JSON.stringify({
-          access_token: 'opaqueaccesstoken',
-          id_token: idToken,
-          expires_in: 7200,
-          scope: '',
-          token_type: 'Bearer',
-        }),
+        body: 'notJSON',
         headers: {},
         status: 200,
       }));
-      const decodedIdTokenPayload = JSON.parse(decode(idToken.split('.')[1]).toString());
 
-      // mock the fetches of the verifyUpstreamJwk function
-      fetchMock.mockResponses(
-        [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ],
-        [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
-      );
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body must be JSON and must contain an id_token');
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        body: { mockKey: 'mockValue' },
+        headers: {},
+        status: 200,
+      }));
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body must be JSON and must contain an id_token');
+    });
+
+    it('should return a token with the issuer set to the proxy and the aud, sub, iat and exp claims of the id token', async () => {
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        body: {
+          access_token: 'opaqueaccesstoken',
+          id_token: {
+            header: {},
+            payload: {
+              sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
+              iat: 1619085373,
+              exp: 1619092573,
+              aud: 'mockClient',
+            },
+          },
+          expires_in: 7200,
+          scope: '',
+          token_type: 'Bearer',
+        },
+        headers: {},
+        status: 200,
+      }));
 
       const resp = await handler.handle(context).toPromise();
       expect(resp.status).toEqual(200);
 
       expect(resp.body.access_token).toBeDefined();
-      expect(resp.body.access_token.payload.aud).toEqual(decodedIdTokenPayload.aud);
-      expect(resp.body.access_token.payload.sub).toEqual(decodedIdTokenPayload.sub);
-      expect(resp.body.access_token.payload.iat).toEqual(decodedIdTokenPayload.iat);
-      expect(resp.body.access_token.payload.exp).toEqual(decodedIdTokenPayload.exp);
+      expect(resp.body.access_token.payload.aud).toEqual('mockClient');
+      expect(resp.body.access_token.payload.sub).toEqual('23121d3c-84df-44ac-b458-3d63a9a05497');
+      expect(resp.body.access_token.payload.iat).toEqual(1619085373);
+      expect(resp.body.access_token.payload.exp).toEqual(1619092573);
       expect(resp.body.access_token.payload.client_id).toEqual('mockClient');
-
     });
 
     describe('canHandle', () => {

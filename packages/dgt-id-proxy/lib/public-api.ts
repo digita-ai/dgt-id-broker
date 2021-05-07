@@ -6,5 +6,5 @@ export * from './server/opaque-access-token.handler';
 export * from './server/dpop-token-request.handler';
 export * from './storage/in-memory-store';
 export * from './storage/key-value-store';
-export * from './server/access-token-decode.handler';
-export * from './server/access-token-encode.handler';
+export * from './server/jwt-decode.handler';
+export * from './server/jwt-encode.handler';

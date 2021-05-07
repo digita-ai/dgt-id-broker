@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
-import { AccessTokenEncodeHandler } from './access-token-encode.handler';
+import { JwtEncodeHandler, JwtField } from './jwt-encode.handler';
 
 jest.mock('fs/promises', () => {
   const testJwks = {
@@ -23,20 +23,35 @@ jest.mock('fs/promises', () => {
   };
 });
 
-describe('AccessTokenEncodeHandler', () => {
-  let handler: AccessTokenEncodeHandler;
-  let context: HttpHandlerContext;
+describe('JwtEncodeHandler', () => {
+  let handler: JwtEncodeHandler;
   let proxyUrl: string;
   let response: HttpHandlerResponse;
+  let jwtFields: JwtField[];
+  let payload: any;
+  let header: any;
 
   beforeEach(() => {
     proxyUrl = 'http://mock-proxy.com';
-    handler = new AccessTokenEncodeHandler('assets/jwks.json', proxyUrl);
-    context = { request: { headers: { 'origin': 'http://localhost' }, method: 'POST', url: new URL('http://digita.ai/') } };
+    jwtFields = [ { field: 'access_token', type: 'at+jwt' } ];
+    handler = new JwtEncodeHandler(jwtFields, 'assets/jwks.json', proxyUrl);
     response = {
       body: 'mockbody',
       headers: {},
       status: 200,
+    };
+    payload = {
+      'jti': 'mockJti',
+      'sub': 'mockSub',
+      'iat': 1619085373,
+      'exp': 1619092573,
+      'scope': 'mockScope',
+      'client_id': 'mockClient',
+      'iss': 'http://mock-issuer.com',
+      'aud': 'mockAudience',
+    };
+    header = {
+      'mockKey': 'mockValue',
     };
   });
 
@@ -45,11 +60,17 @@ describe('AccessTokenEncodeHandler', () => {
   });
 
   it('should error when no proxyUrl or pathToJwks is provided in the constructor', () => {
-    expect(() => new AccessTokenEncodeHandler(undefined, proxyUrl)).toThrow('A pathToJwks must be provided');
-    expect(() => new AccessTokenEncodeHandler(null, proxyUrl)).toThrow('A pathToJwks must be provided');
-    expect(() => new AccessTokenEncodeHandler('assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
-    expect(() => new AccessTokenEncodeHandler('assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
+    expect(() => new JwtEncodeHandler(undefined, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtEncodeHandler(null, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtEncodeHandler(jwtFields, undefined, proxyUrl)).toThrow('A pathToJwks must be provided');
+    expect(() => new JwtEncodeHandler(jwtFields, null, proxyUrl)).toThrow('A pathToJwks must be provided');
+    expect(() => new JwtEncodeHandler(jwtFields, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
+    expect(() => new JwtEncodeHandler(jwtFields, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
+  });
 
+  it('should be error when passed an empty list of jwtFields', async () => {
+    jwtFields = [];
+    await expect(() => new JwtEncodeHandler(jwtFields, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
   });
 
   describe('handle', () => {
@@ -64,36 +85,22 @@ describe('AccessTokenEncodeHandler', () => {
       await expect(handler.handle(response).toPromise()).resolves.toEqual(response);
     });
 
-    it('should error when no access_token is included in the response body, or if the response body is not JSON', async () => {
-      response.body = 'mockBodyAsAString';
+    it('should error when the response body does not contain a field that is in the jwtFields list', async () => {
+      response.body = { 'id_token': 'mockToken' };
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
+      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include the field "access_token"');
+    });
 
-      response.body = {
-        mockKey: 'mockValue',
-      };
+    it('should error when the response body does not contain a payload or header property for a field that is in the jwtFields list', async () => {
+      response.body = { 'access_token': 'noPayloadOrHeader' };
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include an access token, or the response body is not JSON');
+      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include a header and payload property for the field "access_token"');
     });
 
     it('should return an encoded access token when the response has a 200 status and contains an access token', async () => {
-      const payload = {
-        'jti': 'mockJti',
-        'sub': 'mockSub',
-        'iat': 1619085373,
-        'exp': 1619092573,
-        'scope': 'mockScope',
-        'client_id': 'mockClient',
-        'iss': 'http://mock-issuer.com',
-        'aud': 'mockAudience',
-      };
       response.body = {
         access_token: {
-          header: {
-            alg: 'ES256',
-            typ: 'at+jwt',
-            kid: 'idofakey',
-          },
+          header,
           payload,
         },
         id_token: 'mockIdToken',
@@ -102,20 +109,20 @@ describe('AccessTokenEncodeHandler', () => {
         token_type: 'Bearer',
       };
 
-      const encodedAccessTokenResponse = await handler.handle(response).toPromise();
-      const parsedBody = JSON.parse(encodedAccessTokenResponse.body);
+      const encodedTokenResponse = await handler.handle(response).toPromise();
+      const parsedBody = JSON.parse(encodedTokenResponse.body);
       expect(parsedBody.id_token).toEqual('mockIdToken');
       expect(parsedBody.expires_in).toEqual(7200);
       expect(parsedBody.scope).toEqual('mockScope');
       expect(parsedBody.token_type).toEqual('Bearer');
 
-      expect(encodedAccessTokenResponse.headers['content-type']).toEqual('application/json');
-      expect(encodedAccessTokenResponse.status).toEqual(200);
+      expect(encodedTokenResponse.headers['content-type']).toEqual('application/json');
+      expect(encodedTokenResponse.status).toEqual(200);
 
-      const decodedHeader = JSON.parse(decode(parsedBody.access_token.split('.')[0]).toString());
+      const decodedAccessTokenHeader = JSON.parse(decode(parsedBody.access_token.split('.')[0]).toString());
       const encodedPayload = JSON.parse(decode(parsedBody.access_token.split('.')[1]).toString());
 
-      expect(decodedHeader).toEqual({
+      expect(decodedAccessTokenHeader).toEqual({
         alg: 'ES256',
         typ: 'at+jwt',
         kid: 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
