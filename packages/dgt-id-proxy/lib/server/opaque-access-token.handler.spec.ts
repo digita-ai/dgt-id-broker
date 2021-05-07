@@ -1,8 +1,5 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { SignJWT } from 'jose/jwt/sign';
-import { decode } from 'jose/util/base64url';
 import { OpaqueAccessTokenHandler } from './opaque-access-token.handler';
 
 jest.mock('fs/promises', () => {
@@ -29,23 +26,10 @@ describe('OpaqueAccessTokenHandler', () => {
   let handler: OpaqueAccessTokenHandler;
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
-
-  const mockedIdToken = async () => {
-    const keyPair = await generateKeyPair('ES256');
-
-    return new SignJWT(
-      {
-        sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
-        scope: '',
-        client_id: 'client',
-        iss: 'http://localhost:3000',
-        aud: 'http://digita.ai',
-      },
-    )
-      .setProtectedHeader({ alg: 'ES256', kid: 'keyid', typ: 'jwt'  })
-      .setIssuedAt()
-      .setExpirationTime('2h')
-      .sign(keyPair.privateKey);
+  const response = {
+    body: 'mockBody',
+    headers: {},
+    status: 200,
   };
 
   beforeEach(() => {
@@ -115,44 +99,63 @@ describe('OpaqueAccessTokenHandler', () => {
 
     it('should return an error response when the upstream server returns a response with status other than 200', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
         body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
-        headers: {},
         status: 400,
       }));
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        ...response,
         body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
-        headers: {},
         status: 400,
       });
     });
 
-    it('should return a token with the issuer set to the proxy and the aud, sub, iat and exp claims of the id token', async () => {
-      // mocked response with audience as a string (single item)
-      const idToken = await mockedIdToken();
+    it('should error when the response body is not JSON or does not contain an id_token property', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
-        body: JSON.stringify({
+        ...response,
+        body: 'notJSON',
+      }));
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body must be JSON and must contain an id_token');
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
+        body: { mockKey: 'mockValue' },
+      }));
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body must be JSON and must contain an id_token');
+    });
+
+    it('should return a token with the issuer set to the proxy and the aud, sub, iat and exp claims of the id token', async () => {
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
+        body: {
           access_token: 'opaqueaccesstoken',
-          id_token: idToken,
+          id_token: {
+            header: {},
+            payload: {
+              sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
+              iat: 1619085373,
+              exp: 1619092573,
+              aud: 'mockClient',
+            },
+          },
           expires_in: 7200,
           scope: '',
           token_type: 'Bearer',
-        }),
-        headers: {},
-        status: 200,
+        },
       }));
-      const decodedIdTokenPayload = JSON.parse(decode(idToken.split('.')[1]).toString());
 
       const resp = await handler.handle(context).toPromise();
       expect(resp.status).toEqual(200);
 
       expect(resp.body.access_token).toBeDefined();
-      expect(resp.body.access_token.payload.aud).toEqual(decodedIdTokenPayload.aud);
-      expect(resp.body.access_token.payload.sub).toEqual(decodedIdTokenPayload.sub);
-      expect(resp.body.access_token.payload.iat).toEqual(decodedIdTokenPayload.iat);
-      expect(resp.body.access_token.payload.exp).toEqual(decodedIdTokenPayload.exp);
+      expect(resp.body.access_token.payload.aud).toEqual('mockClient');
+      expect(resp.body.access_token.payload.sub).toEqual('23121d3c-84df-44ac-b458-3d63a9a05497');
+      expect(resp.body.access_token.payload.iat).toEqual(1619085373);
+      expect(resp.body.access_token.payload.exp).toEqual(1619092573);
       expect(resp.body.access_token.payload.client_id).toEqual('mockClient');
-
     });
 
     describe('canHandle', () => {

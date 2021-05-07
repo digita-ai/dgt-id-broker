@@ -4,5 +4,7 @@ export * from './server/pkce-token-request.handler';
 export * from './server/pkce-code-request.handler';
 export * from './storage/in-memory-store';
 export * from './storage/key-value-store';
+export * from './server/jwt-decode.handler';
+export * from './server/jwt-encode.handler';
 export * from './util/error-response-factory';
 export * from './util/code-challenge-method';
