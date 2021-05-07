@@ -1,6 +1,5 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
-import { decode } from 'jose/util/base64url';
 import { OpaqueAccessTokenHandler } from './opaque-access-token.handler';
 
 jest.mock('fs/promises', () => {
@@ -27,6 +26,11 @@ describe('OpaqueAccessTokenHandler', () => {
   let handler: OpaqueAccessTokenHandler;
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
+  const response = {
+    body: 'mockBody',
+    headers: {},
+    status: 200,
+  };
 
   beforeEach(() => {
     nestedHandler = {
@@ -95,31 +99,29 @@ describe('OpaqueAccessTokenHandler', () => {
 
     it('should return an error response when the upstream server returns a response with status other than 200', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
         body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
-        headers: {},
         status: 400,
       }));
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        ...response,
         body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
-        headers: {},
         status: 400,
       });
     });
 
     it('should error when the response body is not JSON or does not contain an id_token property', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
         body: 'notJSON',
-        headers: {},
-        status: 200,
       }));
 
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body must be JSON and must contain an id_token');
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
         body: { mockKey: 'mockValue' },
-        headers: {},
-        status: 200,
       }));
 
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body must be JSON and must contain an id_token');
@@ -127,6 +129,7 @@ describe('OpaqueAccessTokenHandler', () => {
 
     it('should return a token with the issuer set to the proxy and the aud, sub, iat and exp claims of the id token', async () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
         body: {
           access_token: 'opaqueaccesstoken',
           id_token: {
@@ -142,8 +145,6 @@ describe('OpaqueAccessTokenHandler', () => {
           scope: '',
           token_type: 'Bearer',
         },
-        headers: {},
-        status: 200,
       }));
 
       const resp = await handler.handle(context).toPromise();

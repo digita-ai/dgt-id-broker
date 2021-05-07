@@ -60,18 +60,15 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
     ));
 
     return zip(...signedTokens).pipe(
-      map((tokenAndFields) => {
-        for (const [ field, token ] of tokenAndFields) {
-          response.body[field] = token;
-        }
-        return {
-          body: JSON.stringify(response.body),
-          headers: {
-            'content-type':  'application/json',
-          },
-          status: 200,
-        };
-      }),
+      map((tokenAndFields) => tokenAndFields.forEach(([ field, token ]) => response.body[field] = token)),
+      map(() => ({
+        body: JSON.stringify(response.body),
+        headers: {
+          'content-type':  'application/json',
+          ...response.headers,
+        },
+        status: 200,
+      })),
     );
   }
 

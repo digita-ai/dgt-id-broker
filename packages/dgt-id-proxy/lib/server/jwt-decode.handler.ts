@@ -61,16 +61,12 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
     // set each of the requested fields to their decoded token in the response body
     return zip(...tokens).pipe(
-      map((tokenAndFields) => {
-        for (const [ field, token ] of tokenAndFields) {
-          parsedBody[field] = token;
-        }
-        return {
-          body: parsedBody,
-          headers: {},
-          status: 200,
-        };
-      }),
+      map((tokenAndFields) => tokenAndFields.forEach(([ field, token ]) => parsedBody[field] = token)),
+      map(() => ({
+        body: parsedBody,
+        headers: response.headers,
+        status: 200,
+      })),
     );
   }
 

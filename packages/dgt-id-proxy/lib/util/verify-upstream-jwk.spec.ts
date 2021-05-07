@@ -9,8 +9,9 @@ describe('verifyUpstreamJwk', () => {
   let privateKey: KeyLike;
   let publicJwk: JWK;
   let validToken: string;
-  let url: string;
-  let configResponse: [string, { status: number }];
+  let configResponse: [string, { status: number }] ;
+  let jwkResponse: [string, { status: number }];
+  const url = 'http://digita.ai';
 
   const mockJwt = (kid, privKey) => new SignJWT({ 'mockKey': 'mockValue' })
     .setProtectedHeader({
@@ -27,12 +28,12 @@ describe('verifyUpstreamJwk', () => {
     publicJwk.kid = 'mockKeyId';
     publicJwk.alg = 'ES256';
     validToken = await mockJwt(publicJwk.kid, privateKey);
+    jwkResponse = [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ];
+    configResponse = [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ];
   });
 
   beforeEach(() => {
-    url = 'http://digita.ai';
     publicJwk.kid = 'mockKeyId';
-    configResponse = [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ];
   });
 
   it('should error when token or upstreamUrl are null or undefined', async () => {
@@ -80,7 +81,7 @@ describe('verifyUpstreamJwk', () => {
 
     fetchMock.mockResponses(
       configResponse,
-      [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
+      jwkResponse,
     );
 
     await expect(() => verifyUpstreamJwk(tokenNoAlg, url).toPromise()).rejects.toThrow('Token did not contain an alg, and is therefore invalid');
@@ -88,7 +89,7 @@ describe('verifyUpstreamJwk', () => {
     // this has to be repeated or the fetch will not be mocked again
     fetchMock.mockResponses(
       configResponse,
-      [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
+      jwkResponse,
     );
 
     // create an unsigned token with alg set to 'none' in the header
@@ -102,7 +103,7 @@ describe('verifyUpstreamJwk', () => {
     const incorrectlySignedToken = await mockJwt(publicJwk.kid, keyPair.privateKey);
     fetchMock.mockResponses(
       configResponse,
-      [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
+      jwkResponse,
     );
 
     await expect(() => verifyUpstreamJwk(incorrectlySignedToken, url).toPromise()).rejects.toThrow('signature verification failed');
@@ -111,7 +112,7 @@ describe('verifyUpstreamJwk', () => {
   it('should return the payload and header of the token upon success', async () => {
     fetchMock.mockResponses(
       configResponse,
-      [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
+      jwkResponse,
     );
 
     await expect(verifyUpstreamJwk(validToken, url).toPromise()).resolves.toEqual({

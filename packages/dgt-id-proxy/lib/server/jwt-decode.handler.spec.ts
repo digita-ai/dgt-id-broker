@@ -7,27 +7,62 @@ import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { JwtDecodeHandler } from './jwt-decode.handler';
 
 describe('JwtDecodeHandler', () => {
+  fetchMock.enableMocks();
   let handler: JwtDecodeHandler;
   let response: HttpHandlerResponse;
-  let url: string;
   let jwtFields: string[];
-  let payload;
-  let header;
   let privateKey: KeyLike;
   let publicJwk: JWK;
+  const url = 'http://digita.ai';
+
+  const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
+
+  const payload = {
+    'jti': 'mockJti',
+    'sub': 'mockSub',
+    'iat': secondsSinceEpoch(),
+    'exp': secondsSinceEpoch() + 7200,
+    'scope': 'mockScope',
+    'client_id': 'mockClient',
+    'iss': 'http://mock-issuer.com',
+    'aud': 'mockAudience',
+  };
+  const header = {
+    alg: 'ES256',
+    typ: 'at+jwt',
+    kid: 'mockKeyId',
+  };
+  const expectedResponse =  {
+    body: {
+      access_token: {
+        header,
+        payload,
+      },
+      id_token: {
+        header,
+        payload,
+      },
+      expires_in: 7200,
+      scope: 'mockScope',
+      token_type: 'Bearer',
+    },
+    headers: {},
+    status: 200,
+  };
 
   const mockedUpstreamJwt = async () => new SignJWT(payload)
     .setProtectedHeader(header)
     .sign(privateKey);
 
-  const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
-
-  beforeAll(() => {
-    fetchMock.enableMocks();
+  beforeAll(async () => {
+    const keyPair = await generateKeyPair('ES256');
+    privateKey = keyPair.privateKey;
+    publicJwk = await fromKeyLike(keyPair.publicKey);
+    publicJwk.kid = 'mockKeyId';
+    publicJwk.alg = 'ES256';
   });
 
   beforeEach(async () => {
-    url = 'http://digita.ai';
     jwtFields = [ 'access_token', 'id_token' ];
     handler = new JwtDecodeHandler(jwtFields, url, false);
     response = {
@@ -35,26 +70,6 @@ describe('JwtDecodeHandler', () => {
       headers: {},
       status: 200,
     };
-    payload = {
-      'jti': 'mockJti',
-      'sub': 'mockSub',
-      'iat': secondsSinceEpoch(),
-      'exp': secondsSinceEpoch() + 7200,
-      'scope': 'mockScope',
-      'client_id': 'mockClient',
-      'iss': 'http://mock-issuer.com',
-      'aud': 'mockAudience',
-    };
-    header = {
-      alg: 'ES256',
-      typ: 'at+jwt',
-      kid: 'mockKeyId',
-    };
-    const keyPair = await generateKeyPair('ES256');
-    privateKey = keyPair.privateKey;
-    publicJwk = await fromKeyLike(keyPair.publicKey);
-    publicJwk.kid = 'mockKeyId';
-    publicJwk.alg = 'ES256';
   });
 
   it('should be correctly instantiated', () => {
@@ -119,22 +134,13 @@ describe('JwtDecodeHandler', () => {
         token_type: 'Bearer',
       });
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(
-        {
-          body: {
-            access_token: 'mockAccessToken',
-            id_token: {
-              header,
-              payload,
-            },
-            expires_in: 7200,
-            scope: 'mockScope',
-            token_type: 'Bearer',
-          },
-          headers: {},
-          status: 200,
+      await expect(handler.handle(response).toPromise()).resolves.toEqual({
+        ...expectedResponse,
+        body: {
+          ...expectedResponse.body,
+          access_token: 'mockAccessToken',
         },
-      );
+      });
     });
 
     it('should return a response with a decoded access token header and payload when method is POST and upstream returns 200 response and verifyJwk is false', async () => {
@@ -149,25 +155,7 @@ describe('JwtDecodeHandler', () => {
         token_type: 'Bearer',
       });
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(
-        {
-          body: {
-            access_token: {
-              header,
-              payload,
-            },
-            id_token: {
-              header,
-              payload,
-            },
-            expires_in: 7200,
-            scope: 'mockScope',
-            token_type: 'Bearer',
-          },
-          headers: {},
-          status: 200,
-        },
-      );
+      await expect(handler.handle(response).toPromise()).resolves.toEqual(expectedResponse);
     });
   });
 

@@ -98,7 +98,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
     response.body.access_token = accessToken;
     return {
       body: response.body,
-      headers: {},
+      headers: response.headers,
       status: 200,
     };
   }
