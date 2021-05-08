@@ -48,7 +48,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
       if (id_token_payload.webid) {
         access_token_payload.webid = id_token_payload.webid;
       } else {
-        access_token_payload.webid = this.webIdPattern.replace(new RegExp(':+[^/.]+'), sub);
+        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), sub);
       }
     }
 
