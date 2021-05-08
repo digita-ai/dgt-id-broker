@@ -18,7 +18,6 @@ const code = params.get("code")
 async function postDataToGetAccessToken(url, data) {
   const response = await fetch(url, {
     method: 'POST',
-    mode: 'cors',
     body: data
   });
   return response.json(); // parses JSON response into native JavaScript objects
