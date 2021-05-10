@@ -130,8 +130,6 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
     switchMap(([ payload, [ alg, kid, key ] ]) => from(
       new SignJWT(payload)
         .setProtectedHeader({ alg, kid, typ })
-        .setExpirationTime('2h')
-        .setIssuedAt()
         .setJti(uuid())
         .setIssuer(this.proxyUrl)
         .sign(key),
@@ -141,7 +139,7 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
   /**
    * Specifies that if the response is defined this handler can handle the response.
    */
-  canHandle(response: HttpHandlerResponse) {
+  canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
     return response
       ? of(true)
