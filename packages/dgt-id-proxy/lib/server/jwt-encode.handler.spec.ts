@@ -1,5 +1,4 @@
-import { readFile } from 'fs/promises';
-import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
 import { JwtEncodeHandler, JwtField } from './jwt-encode.handler';
 
@@ -154,8 +153,8 @@ describe('JwtEncodeHandler', () => {
       });
 
       expect(encodedPayload.jti).toBeDefined();
-      expect(encodedPayload.iat).toBeDefined();
-      expect(encodedPayload.exp).toBeDefined();
+      expect(encodedPayload.iat).toEqual(payload.iat);
+      expect(encodedPayload.exp).toEqual(payload.exp);
       expect(encodedPayload.sub).toEqual(payload.sub);
       expect(encodedPayload.scope).toEqual(payload.scope);
       expect(encodedPayload.client_id).toEqual(payload.client_id);
