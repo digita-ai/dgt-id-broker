@@ -68,7 +68,7 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
   }
 
   /**
-   * Handles the response. If the response body contains the specified fields, and the fiels contain a JSON header and payload object
+   * Handles the response. If the response body contains the specified fields, and the fields contain a JSON header and payload object
    * the payload is used to create a new signed JWT token and placed in the response body.
    *
    * @param {HttpHandlerResponse} response

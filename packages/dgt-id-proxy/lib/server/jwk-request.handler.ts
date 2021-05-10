@@ -22,7 +22,7 @@ export class JwkRequestHandler extends HttpHandler {
   }
 
   /**
-   * handles a request by reading the json file containing JWKs specified by path,
+   * Handles a request by reading the json file containing JWKs specified by path,
    * removing the private claims in the JWKs, and creating a response containing the public JWKs
    * in the body.
    */

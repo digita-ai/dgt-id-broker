@@ -13,7 +13,7 @@ export class PkceCodeRequestHandler extends HttpHandler {
   /**
    * Creates a {PkceCodeRequestHandler}
    *
-   * @param {HttpHandler} - the handler to which to pass the request.
+   * @param {HttpHandler} httpHandler - the handler to which to pass the request.
    * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method, code challenge, and wether or not the user sent state.
    */
   constructor(
