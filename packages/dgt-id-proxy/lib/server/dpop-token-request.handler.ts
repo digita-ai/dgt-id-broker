@@ -78,7 +78,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
     if (!context.request.headers.dpop) {
       return of({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     }
@@ -161,7 +161,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       error: 'invalid_dpop_proof',
       error_description,
     }),
-    headers: { 'access-control-allow-origin': context.request.headers.origin },
+    headers: { },
     status: 400,
   });
 

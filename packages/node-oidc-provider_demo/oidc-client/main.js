@@ -16,7 +16,6 @@ const code_challenge = generateCodeChallenge(code_verifier);
 async function postRegisterClient(url, data) {
   const response = await fetch(url, {
     method: "POST",
-    mode: "cors",
     headers: {
       "Content-Type": "application/json",
     },

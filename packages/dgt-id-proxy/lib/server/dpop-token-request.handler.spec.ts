@@ -85,7 +85,7 @@ describe('DpopTokenRequestHandler', () => {
       .setJti(uuid())
       .setIssuedAt()
       .sign(privateKey);
-    context = { request: { headers: { 'origin': 'http://localhost', 'dpop': validDpopJwt }, method: 'POST', url: new URL('http://digita.ai/') } };
+    context = { request: { headers: { 'dpop': validDpopJwt }, method: 'POST', url: new URL('http://digita.ai/') } };
     nestedHandler = {
       handle: jest.fn(),
       canHandle: jest.fn(),
@@ -149,7 +149,7 @@ describe('DpopTokenRequestHandler', () => {
       delete context.request.headers.dpop;
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -172,7 +172,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description:'unexpected "typ" JWT header value' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -195,7 +195,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description:'"iat" claim timestamp check failed (too far in the past)' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -218,7 +218,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description: '"iat" claim timestamp check failed (it should be in the past)' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -243,7 +243,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description: '"alg" (Algorithm) Header Parameter not allowed' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -265,7 +265,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htm does not match the request method' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
 
@@ -286,7 +286,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htm does not match the request method' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -308,7 +308,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htu does not match' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
 
@@ -328,7 +328,7 @@ describe('DpopTokenRequestHandler', () => {
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWrongHtu };
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htu does not match' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -350,7 +350,7 @@ describe('DpopTokenRequestHandler', () => {
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'must have a jti string property' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });
@@ -380,7 +380,7 @@ describe('DpopTokenRequestHandler', () => {
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
       await expect(handler.handle(context).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'jti must be unique' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
     });

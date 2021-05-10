@@ -54,7 +54,7 @@ describe('PkceTokenRequestHandler', () => {
 
     response =  {
       body: '',
-      headers: { 'access-control-allow-origin': context.request.headers.origin },
+      headers: { },
       status: 400,
     };
   });
