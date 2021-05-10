@@ -36,7 +36,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     }
 
     const access_token_payload = response.body.access_token.payload;
-    const id_token_payload = JSON.parse(decode(response.body.id_token.split('.')[1]).toString());
+    const id_token_payload = response.body.id_token.payload;
     const webID = access_token_payload.webid;
     const sub = access_token_payload.sub;
 

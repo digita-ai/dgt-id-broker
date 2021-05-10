@@ -59,6 +59,74 @@
         }
       },
       {
+        "@id": "urn:dgt-id-proxy:default:PkceStore",
+        "@type": "InMemoryStore"
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
+        "@type": "JwtEncodeHandler",
+        "JwtEncodeHandler:_jwtFields":[
+          { 
+            "@type": "JwtField",
+            "JwtField:_field": "access_token", 
+            "JwtField:_type": "at+jwt" 
+          },
+          { 
+            "@type": "JwtField",
+            "JwtField:_field": "id_token", 
+            "JwtField:_type": "JWT" 
+          }
+        ],
+        "JwtEncodeHandler:_pathToJwks": "assets/jwks.json",
+        "JwtEncodeHandler:_proxyUrl": "http://localhost:3003"
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
+        "@type": "JwtDecodeHandler",
+        "JwtDecodeHandler:_jwtFields": [
+          "id_token"
+        ],
+        "JwtDecodeHandler:_upstreamUrl": "http://localhost:3000",
+        "JwtDecodeHandler:_verifyJwk": true
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
+        "@type": "OpaqueAccessTokenHandler",
+        "OpaqueAccessTokenHandler:_handler": {
+          "@type": "PipeThroughHandler",
+          "PipeThroughHandler:_handlers": [
+            {
+              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler"
+            }
+          ]
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:PkceTokenRequestHandler",
+        "@type": "PkceTokenRequestHandler",
+        "PkceTokenRequestHandler:_httpHandler": {
+          "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler"
+        },
+        "PkceTokenRequestHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:PkceStore"
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
+        "@type": "DpopTokenRequestHandler",
+        "DpopTokenRequestHandler:_handler": {
+          "@id": "urn:dgt-id-proxy:default:PkceTokenRequestHandler"
+        },
+        "DpopTokenRequestHandler:_keyValueStore": {
+          "@type": "InMemoryStore"
+        },
+        "DpopTokenRequestHandler:_pathToJwks": "assets/jwks.json",
+        "DpopTokenRequestHandler:_proxyUrl": "http://localhost:3003"
+      },
+      {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
         "@type": "PassThroughHttpRequestHandler",
         "PassThroughHttpRequestHandler:_host": "localhost",
@@ -91,7 +159,14 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler",
+          "@type": "PkceAuthRequestHandler",
+          "PkceAuthRequestHandler:_codeHandler": {
+            "@id": "urn:dgt-id-proxy:default:PkceCodeRequestHandler"
+          },
+          "PkceAuthRequestHandler:_store": {
+            "@id": "urn:dgt-id-proxy:default:PkceStore"
+          }
         },
         "HttpHandlerRoute:_path": "/auth"
       },
@@ -106,7 +181,14 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          "@id": "urn:dgt-id-proxy:default:PkceCodeRequestHandler",
+          "@type": "PkceCodeRequestHandler",
+          "PkceCodeRequestHandler:_httpHandler": {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          },
+          "PkceCodeRequestHandler:_store": {
+            "@id": "urn:dgt-id-proxy:default:PkceStore"
+          }
         },
         "HttpHandlerRoute:_path": "/auth/:dynamic"
       },
@@ -197,23 +279,7 @@
             "@type": "PipeThroughHandler",
             "PipeThroughHandler:_handlers": [
               {
-                "@type": "DpopTokenRequestHandler",
-                "DpopTokenRequestHandler:_handler": {
-                  "@type": "PipeThroughHandler",
-                  "PipeThroughHandler:_handlers": [
-                    {
-                      "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-                    },
-                    {
-                      "@type": "OpaqueAccessTokenHandler"
-                    }
-                  ]
-                },
-                "DpopTokenRequestHandler:_keyValueStore": {
-                  "@type": "InMemoryStore"
-                },
-                "DpopTokenRequestHandler:_pathToJwks": "assets/jwks.json",
-                "DpopTokenRequestHandler:_proxyUrl": "http://localhost:3003"
+                "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
               },
               {
                 "@type": "SolidAudienceHandler"
@@ -221,12 +287,10 @@
               {
                 "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
                 "@type": "WebIDResponseHandler",
-                "WebIDResponseHandler:_webIdPattern": "https://solid.community.com/:uuid/profile/card#me"
+                "WebIDResponseHandler:_webIdPattern": "http://localhost:3002/:sub/profile/card#me"
               },
               {
-                "@type": "AccessTokenEncodeHandler",
-                "AccessTokenEncodeHandler:_pathToJwks": "assets/jwks.json",
-                "AccessTokenEncodeHandler:_proxyUrl": "http://localhost:3003"
+                "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler"
               }
             ]
         },
