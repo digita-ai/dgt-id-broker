@@ -80,13 +80,28 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
       zip(of(field), this.signJwtPayload(response.body[field].payload, type))
     ));
 
+    // Remove when http server does it for us.
+    const contentTypeHeader = response.headers['content-type'];
+
+    const charsetString = contentTypeHeader ? contentTypeHeader.split(';')
+      .filter((part) => part.includes('charset='))
+      .map((part) => part.split('=')[1].toLowerCase())[0]
+      ?? 'utf-8' : 'utf-8';
+
+    if (charsetString !== 'ascii' && charsetString !== 'utf8' && charsetString !== 'utf-8' && charsetString !== 'utf16le' && charsetString !== 'ucs2' && charsetString !== 'ucs-2' && charsetString !== 'base64' && charsetString !== 'latin1' && charsetString !== 'binary' && charsetString !== 'hex') {
+
+      return throwError(new Error('The specified charset is not supported'));
+
+    }
+
     return zip(...signedTokens).pipe(
       map((tokenAndFields) => tokenAndFields.forEach(([ field, token ]) => response.body[field] = token)),
       map(() => ({
         body: JSON.stringify(response.body),
         headers: {
-          'content-type':  'application/json',
           ...response.headers,
+          'content-type':  'application/json',
+          'content-length': Buffer.byteLength(JSON.stringify(response.body), charsetString).toString(),
         },
         status: 200,
       })),

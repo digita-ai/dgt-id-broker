@@ -214,7 +214,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     return of({
       body: response.body,
-      headers: {},
+      headers: response.headers,
       status: 200,
     });
 
