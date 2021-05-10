@@ -18,10 +18,6 @@ const store = new N3.Store();
 const { generateSecret } = require('jose/util/generate_secret')
 
 
-
-
-
-
 const Account = require('./account');
 const jwks = require('./jwks.json');
 const { write } = require('lowdb/adapters/memory');
