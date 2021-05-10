@@ -11,7 +11,9 @@ import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';
 
 export class JwtField {
+
   constructor(public field: string, public type: string) {}
+
 }
 
 export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
@@ -21,38 +23,57 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
     private pathToJwks: string,
     private proxyUrl: string,
   ) {
+
     super();
 
     if (!jwtFields || jwtFields.length === 0) {
+
       throw new Error('jwtFields must be defined and must contain at least 1 field');
+
     }
 
     if(!pathToJwks){
+
       throw new Error('A pathToJwks must be provided');
+
     }
 
     if(!proxyUrl){
+
       throw new Error('A proxyUrl must be provided');
+
     }
+
   }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
+
     if (!response) {
+
       return throwError(new Error('response cannot be null or undefined'));
+
     }
 
     if (response.status !== 200) {
+
       return of(response);
+
     }
 
     for (const { field } of this.jwtFields) {
+
       if (!response.body[field]) {
+
         return throwError(new Error(`the response body did not include the field "${field}"`));
+
       }
 
       if (!response.body[field].payload || !response.body[field].header) {
+
         return throwError(new Error(`the response body did not include a header and payload property for the field "${field}"`));
+
       }
+
     }
 
     const signedTokens: Observable<[string, string]>[] = this.jwtFields.map(({ field, type }) => (
@@ -70,6 +91,7 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
         status: 200,
       })),
     );
+
   }
 
   private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
@@ -90,8 +112,11 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
   );
 
   canHandle(response: HttpHandlerResponse) {
+
     return response
       ? of(true)
       : of(false);
+
   }
+
 }

@@ -9,29 +9,41 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
     private store: KeyValueStore<Code, ChallengeAndMethod>) {
+
     super();
 
     if (!httpHandler) {
+
       throw new Error('A HttpHandler must be provided');
+
     }
 
     if (!store) {
+
       throw new Error('A store must be provided');
+
     }
+
   }
 
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
+
       return throwError(new Error('Context cannot be null or undefined'));
+
     }
 
     if (!context.request) {
+
       return throwError(new Error('No request was included in the context'));
+
     }
 
     if (!context.request.body) {
+
       return throwError(new Error('No body was included in the request'));
+
     }
 
     const request = context.request;
@@ -40,19 +52,25 @@ export class PkceTokenRequestHandler extends HttpHandler {
     const encodedCode_verifier = params.get('code_verifier');
 
     if (!encodedCode_verifier) {
+
       return of(createErrorResponse('Code verifier is required.', 'invalid_request'));
+
     }
 
     const code =  params.get('code');
 
     if (!code) {
+
       return of(createErrorResponse('An authorization code is required.', 'invalid_request'));
+
     }
 
     const code_verifier = decodeURI(encodedCode_verifier);
 
     if (code_verifier.length < 43 || code_verifier.length > 128){
+
       return of(createErrorResponse('Code verifier must be between 43 and 128 characters.', 'invalid_request'));
+
     }
 
     params.delete('code_verifier');
@@ -61,16 +79,20 @@ export class PkceTokenRequestHandler extends HttpHandler {
     const contentTypeHeader = request.headers['content-type'];
 
     if (contentTypeHeader) {
+
       const charsetString  = contentTypeHeader.split(';')
         .filter((part) => part.includes('charset='))
         .map((part) => part.split('=')[1].toLowerCase())[0]
       ?? 'utf-8';
 
       if (charsetString !== 'ascii' && charsetString !== 'utf8' && charsetString !== 'utf-8' && charsetString !== 'utf16le' && charsetString !== 'ucs2' && charsetString !== 'ucs-2' && charsetString !== 'base64' && charsetString !== 'latin1' && charsetString !== 'binary' && charsetString !== 'hex') {
+
         return throwError(new Error('The specified charset is not supported'));
+
       }
 
       request.headers['content-length'] = Buffer.byteLength(request.body, charsetString).toString();
+
     }
 
     return from(this.store.get(code))
@@ -87,6 +109,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
     const params = context && context.request && context.request.body
       ? new URLSearchParams(context.request.body)
       : undefined;
@@ -99,27 +122,37 @@ export class PkceTokenRequestHandler extends HttpHandler {
       && params?.get('code')
       ? of(true)
       : of(false);
+
   }
 
   generateCodeChallenge (code_verifier: string, method: string): Observable<string> {
 
     if (method !== 'S256' && method !== 'plain') {
-      return throwError(createErrorResponse('Transform algorithm not supported.', 'invalid_request'));
-    }
-    switch (method) {
-    case 'S256': {
 
-      const hash = createHash('sha256');
-      hash.update(code_verifier);
-      return of(
-        hash.digest('base64')
-          .replace(/=/g, '')
-          .replace(/\+/g, '-')
-          .replace(/\//g, '_'),
-      );
+      return throwError(createErrorResponse('Transform algorithm not supported.', 'invalid_request'));
+
     }
-    case 'plain': return of(code_verifier);
+
+    switch (method) {
+
+      case 'S256': {
+
+        const hash = createHash('sha256');
+        hash.update(code_verifier);
+
+        return of(
+          hash.digest('base64')
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_'),
+        );
+
+      }
+
+      case 'plain': return of(code_verifier);
+
     }
+
   }
 
 }

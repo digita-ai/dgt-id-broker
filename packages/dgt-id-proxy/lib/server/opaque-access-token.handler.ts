@@ -8,6 +8,7 @@ import { map, switchMap, catchError } from 'rxjs/operators';
  * by turning them into valid JSON Web Tokens
  */
 export class OpaqueAccessTokenHandler extends HttpHandler {
+
   /**
    * Creates an {OpaqueAccessTokenHandler} which passes requests it receives through the given handler,
    * and uses the upstream url to verify the id token it receives.
@@ -15,11 +16,15 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * @param {HttpHandler} handler - the handler to pass requests to
    */
   constructor(private handler: HttpHandler){
+
     super();
 
     if (!handler) {
+
       throw Error('handler must be defined');
+
     }
+
   }
 
   /**
@@ -30,33 +35,49 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * @param {HttpHandlerContext} context
    */
   handle(context: HttpHandlerContext) {
+
     if (!context) {
+
       return throwError(new Error('Context cannot be null or undefined'));
+
     }
 
     if (!context.request) {
+
       return throwError(new Error('No request was included in the context'));
+
     }
 
     if (!context.request.method) {
+
       return throwError(new Error('No method was included in the request'));
+
     }
 
     if (!context.request.headers) {
+
       return throwError(new Error('No headers were included in the request'));
+
     }
 
     if (!context.request.url) {
+
       return throwError(new Error('No url was included in the request'));
+
     }
 
     if (!context.request.body) {
+
       return throwError(new Error('No body was included in the request'));
+
     }
 
     const client_id = new URLSearchParams(context.request.body).get('client_id');
+
     if (!client_id) {
+
       return throwError(new Error('Request body must contain a client_id claim'));
+
     }
 
     return this.getUpstreamResponse(context).pipe(
@@ -64,6 +85,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
       map(([ response, token ]) => this.createAccessTokenResponse(response, token)),
       catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
     );
+
   }
 
   private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
@@ -71,8 +93,11 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
   );
 
   private createJwtAccessToken(responseBody: any, client_id: string): Observable<{ header: any; payload: any }> {
+
     if (!responseBody.id_token) {
+
       return throwError(new Error('response body must be JSON and must contain an id_token'));
+
     }
 
     // get the sub, aud, iat and exp claims from the id token and create an access token with those claims as payload.
@@ -89,18 +114,22 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
     };
 
     return of(accessToken);
+
   }
 
   private createAccessTokenResponse(
     response: HttpHandlerResponse,
     accessToken: { header: any; payload: any },
   ) {
+
     response.body.access_token = accessToken;
+
     return {
       body: response.body,
       headers: response.headers,
       status: 200,
     };
+
   }
 
   /**
@@ -110,6 +139,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * @param {HttpHandlerContext} context
    */
   canHandle(context: HttpHandlerContext) {
+
     return context
         && context.request
         && context.request.method
@@ -118,6 +148,8 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
         && context.request.body
       ? of(true)
       : of(false);
+
   }
+
 }
 

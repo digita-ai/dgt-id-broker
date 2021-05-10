@@ -9,41 +9,60 @@ import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
 export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   constructor (private jwtFields: string[], private upstreamUrl: string, private verifyJwk: boolean) {
+
     super();
 
     if (!jwtFields || jwtFields.length === 0) {
+
       throw new Error('jwtFields must be defined and must contain at least 1 field');
+
     }
 
     if (!upstreamUrl) {
+
       throw new Error('upstreamUrl must be defined');
+
     }
 
     if (verifyJwk === null || verifyJwk === undefined) {
+
       throw new Error('verifyJwk must be defined');
+
     }
+
   }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
+
     if (!response) {
+
       return throwError(new Error('response cannot be null or undefined'));
+
     }
 
     if (response.status !== 200) {
+
       return of(response);
+
     }
 
     const parsedBody = JSON.parse(response.body);
 
     // check if the fields are present on the response body
     for (const field of this.jwtFields) {
+
       if (!parsedBody[field]) {
+
         return throwError(new Error(`the response body did not include the field "${field}"`));
+
       }
 
       if (typeof parsedBody[field] !== 'string' || parsedBody[field].split('.').length < 3) {
+
         return throwError(new Error(`the response body did not include a valid JWT for the field "${field}"`));
+
       }
+
     }
 
     // create a list of fields and the decoded token matching that field
@@ -68,11 +87,15 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
         status: 200,
       })),
     );
+
   }
 
   canHandle(response: HttpHandlerResponse) {
+
     return response
       ? of(true)
       : of(false);
+
   }
+
 }

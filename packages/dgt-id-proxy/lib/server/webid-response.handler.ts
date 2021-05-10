@@ -6,33 +6,47 @@ import { Observable, of, throwError } from 'rxjs';
 export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   constructor(private webIdPattern: string) {
+
     super();
 
     if (!webIdPattern) {
+
       throw new Error('A WebID pattern must be provided');
+
     }
+
   }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
     if (!response) {
+
       return throwError(new Error('A response must be provided'));
+
     }
 
     if (!response.body) {
+
       return throwError(new Error('The response did not contain a body'));
+
     }
 
     if (!response.body.access_token) {
+
       return throwError(new Error('The response body did not contain an access_token'));
+
     }
 
     if (!response.body.access_token.payload) {
+
       return throwError(new Error('The access_token did not contain a payload'));
+
     }
 
     if (!response.body.id_token) {
+
       return throwError(new Error('The response body did not contain an id_token'));
+
     }
 
     const access_token_payload = response.body.access_token.payload;
@@ -41,22 +55,33 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     const sub = access_token_payload.sub;
 
     if (!sub) {
+
       return throwError(new Error('No sub claim was included in the access token'));
+
     }
 
     if (!webID) {
+
       if (id_token_payload.webid) {
+
         access_token_payload.webid = id_token_payload.webid;
+
       } else {
+
         access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), sub);
+
       }
+
     }
 
     return of(response);
+
   }
 
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
     return response ? of(true) : of(false);
+
   }
 
 }

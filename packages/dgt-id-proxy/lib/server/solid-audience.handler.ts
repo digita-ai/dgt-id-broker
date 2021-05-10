@@ -15,29 +15,45 @@ export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandl
    * @param {HttpHandlerResponse} response
    */
   handle (response: HttpHandlerResponse) {
+
     if (!response) {
+
       return throwError(new Error('response cannot be null or undefined'));
+
     }
 
     if (response.status !== 200) {
+
       return of(response);
+
     }
 
     if (!response.body.access_token || !response.body.access_token.payload){
+
       return throwError(new Error('Response body must contain an access token with a payload in JSON format'));
+
     }
 
     if (response.body.access_token.payload.aud !== 'solid'){
+
       if (Array.isArray(response.body.access_token.payload.aud)) {
+
         if (!response.body.access_token.payload.aud.includes('solid')){
+
           response.body.access_token.payload.aud.push('solid');
+
         }
+
       } else {
+
         response.body.access_token.payload.aud = [ response.body.access_token.payload.aud, 'solid' ];
+
       }
+
     }
 
     return of(response);
+
   }
 
   /**
@@ -46,8 +62,11 @@ export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandl
    * @param {HttpHandlerResponse} response
    */
   canHandle(response: HttpHandlerResponse) {
+
     return response && response.body.access_token && response.body.access_token.payload
       ? of(true)
       : of(false);
+
   }
+
 }

@@ -8,6 +8,7 @@ import { NodeHttpServer } from '@digita-ai/handlersjs-http';
  * @param {Record<string, any>} variables - a record of values for the variables left open in the configuration.
  */
 export const launch: (variables: Record<string, any>) => Promise<void> = async (variables: Record<string, any>) => {
+
   const mainModulePath = variables['urn:dgt-id-proxy:variables:mainModulePath']
     ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath'])
     : path.join(__dirname, '../');
@@ -25,6 +26,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
   const server: NodeHttpServer = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
   server.start();
+
 };
 
 launch({});
