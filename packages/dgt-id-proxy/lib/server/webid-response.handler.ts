@@ -3,8 +3,16 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
 import { Observable, of, throwError } from 'rxjs';
 
+/**
+ * A {HttpHandler} that adds the webid claim to the payload of the access token field in the response body.
+ */
 export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  /**
+   * Creates a {WebIDResponseHandler}.
+   *
+   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':' that will be replaced by the sub claim in the access token.
+   */
   constructor(private webIdPattern: string) {
 
     super();
@@ -17,6 +25,13 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
   }
 
+  /**
+   * Handles the response. Checks if the access token already contains a webid. If it does not, it checks wether
+   * the id token already contains a webid. If it does not it uses the sub claim from the access token
+   * to create a webid and add it to the access token payload.
+   *
+   * @param {HttpHandlerResponse} response
+   */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
     if (!response) {
@@ -78,6 +93,11 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
   }
 
+  /**
+   * Returns true if the response is defined. Otherwise it returns false.
+   *
+   * @param {HttpHandlerResponse} response
+   */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
     return response ? of(true) : of(false);

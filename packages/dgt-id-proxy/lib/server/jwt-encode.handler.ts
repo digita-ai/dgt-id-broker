@@ -10,14 +10,35 @@ import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';
 
+/**
+ * A {JwtField} class, used to enforce the existance of a field and type in the jwtFields parameter of {JwtEncodeHandler}
+ */
 export class JwtField {
 
+  /**
+   * Creates a {JwtField}
+   *
+   * @param {string} field - the field that contains a jwt
+   * @param {string} type - the type that should be set in the encoded JWT header 'typ' claim.
+   */
   constructor(public field: string, public type: string) {}
 
 }
 
+/**
+ * A {Handler} that handles an {HttpHandlerResponse} by getting the decoded header and payload objects
+ * from the response body and creates a new JWT token with them. The tokens are signed and placed in the
+ * specified fields in the response body.
+ */
 export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  /**
+   * Creates a {JwtEncodeHandler}.
+   *
+   * @param {JwtField[]} jwtFields - the fields of the response body containing tokens to encode, and what type should be set in the token's header.
+   * @param {string} pathToJwks - the relative path to a json file containing JWKs to sign the tokens.
+   * @param {string} proxyUrl - the url of the proxy which should be set in the issuer claim of tokens.
+   */
   constructor(
     private jwtFields: JwtField[],
     private pathToJwks: string,
@@ -46,6 +67,12 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
   }
 
+  /**
+   * Handles the response. If the response body contains the specified fields, and the fiels contain a JSON header and payload object
+   * the payload is used to create a new signed JWT token and placed in the response body.
+   *
+   * @param {HttpHandlerResponse} response
+   */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
     if (!response) {
@@ -111,6 +138,9 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
     )),
   );
 
+  /**
+   * Specifies that if the response is defined this handler can handle the response.
+   */
   canHandle(response: HttpHandlerResponse) {
 
     return response

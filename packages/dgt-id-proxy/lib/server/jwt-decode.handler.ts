@@ -6,8 +6,19 @@ import { map } from 'rxjs/operators';
 import { decode } from 'jose/util/base64url';
 import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
 
+/**
+ * A {Handler} decoding JWTs for the specified fields of a {HttpHandlerResponse} body. Optionally verifies
+ * the keys that were used to sign the tokens by an upstream server.
+ */
 export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  /**
+   * Creates a {JwtDecodeHandler}.
+   *
+   * @param {string[]} jwtFields - the fields of the response body containing tokens to decode.
+   * @param {string} upstreamUrl - the url of the upstream server. Used to get the JWKs that were used to sign tokens.
+   * @param {boolean} verifyJwk - specifies wether or not JWKs should be verified.
+   */
   constructor (private jwtFields: string[], private upstreamUrl: string, private verifyJwk: boolean) {
 
     super();
@@ -32,6 +43,14 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
   }
 
+  /**
+   * Handles the response. Parses the response body to JSON, checks if the specified jwtFields exist on the response body,
+   * then, if it needs to verify the upstream JWKs it will do so and receive the decoded header and payload, otherwise it
+   * decodes the header and payload by itself, and sets them in the response body. The response body will then contain json
+   * objects with a header and payload object for each decoded token.
+   *
+   * @param {HttpHandlerResponse} response
+   */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
     if (!response) {
@@ -90,6 +109,9 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
   }
 
+  /**
+   * Specifies that if the response is defined this handler can handle the response.
+   */
   canHandle(response: HttpHandlerResponse) {
 
     return response

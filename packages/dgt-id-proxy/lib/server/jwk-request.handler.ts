@@ -6,12 +6,12 @@ import { map, switchMap } from 'rxjs/operators';
 import { JWK, parseJwk } from 'jose/jwk/parse';
 
 /**
- * A {JwkRequestHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
+ * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
  */
 export class JwkRequestHandler extends HttpHandler {
 
   /**
-   * Creates a { JwkRequestHandler } that returns a json response of the JWK keys from the file in the given path.
+   * Creates a {JwkRequestHandler} that returns a json response of the JWK keys from the file in the given path.
    *
    * @param {string} path - the relative path to the file containing JWK keys.
    */
@@ -21,6 +21,11 @@ export class JwkRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * handles a request by reading the json file containing JWKs specified by path,
+   * removing the private claims in the JWKs, and creating a response containing the public JWKs
+   * in the body.
+   */
   handle(context: HttpHandlerContext) {
 
     return of({ path: join(process.cwd(), this.path) })
@@ -57,6 +62,9 @@ export class JwkRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Specifies that this handler can handle any context.
+   */
   canHandle(context: HttpHandlerContext) {
 
     return of(true);

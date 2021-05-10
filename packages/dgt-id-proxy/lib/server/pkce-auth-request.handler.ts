@@ -6,8 +6,17 @@ import { createErrorResponse } from '../util/error-response-factory';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceCodeRequestHandler } from './pkce-code-request.handler';
 
+/**
+ * A {HttpHandler} that handles pkce requests to the authorization endpoint.
+ */
 export class PkceAuthRequestHandler extends HttpHandler {
 
+  /**
+   * Creates a {PkceAuthRequestHandler}
+   *
+   * @param {PkceCodeRequestHandler} - the handler that will handle the response from the upstream server containing a code.
+   * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method, code challenge, and wether or not the user sent state.
+   */
   constructor(
     private codeHandler: PkceCodeRequestHandler,
     private store: KeyValueStore<Code, ChallengeAndMethod>,
@@ -28,7 +37,15 @@ export class PkceAuthRequestHandler extends HttpHandler {
     }
 
   }
-
+  /**
+   * Handles the given context. Takes the code challenge, challenge method, and, if present, the state from the request.
+   * The store then saves the code challenge, challenge method and wether or not the user sent a state as the value,
+   * and the state as the key. If the user does not send a state in the request, one will be generated and put in the request to connect the code
+   * that is sent by the server and this request.
+   * The parameters code_challenge and challenge_method are then removed from the request so that it becomes a PKCE-less request.
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -82,6 +99,12 @@ export class PkceAuthRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or the request's method, headers, or url are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     return context
