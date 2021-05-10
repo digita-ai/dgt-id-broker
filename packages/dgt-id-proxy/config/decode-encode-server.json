@@ -196,10 +196,11 @@
             "@type": "PipeThroughHandler",
             "PipeThroughHandler:_handlers": [
               {
-                "@type": "OpaqueAccessTokenHandler",
-                "OpaqueAccessTokenHandler:_handler": {
-                  "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-                }
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+              },
+              {
+                "@type": "AccessTokenDecodeHandler",
+                "AccessTokenDecodeHandler:_upstreamUrl": "http://localhost:3000"
               },
               {
                 "@type": "AccessTokenEncodeHandler",
@@ -207,7 +208,7 @@
                 "AccessTokenEncodeHandler:_proxyUrl": "http://localhost:3003"
               }
             ]
-          }
+          } 
         },
         "HttpHandlerRoute:_path": "/token"
       },

@@ -36,7 +36,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     }
 
     const access_token_payload = response.body.access_token.payload;
-    const id_token_payload = JSON.parse(decode(response.body.id_token.split('.')[1]).toString());
+    const id_token_payload = response.body.id_token.payload;
     const webID = access_token_payload.webid;
     const sub = access_token_payload.sub;
 
@@ -48,7 +48,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
       if (id_token_payload.webid) {
         access_token_payload.webid = id_token_payload.webid;
       } else {
-        access_token_payload.webid = this.webIdPattern.replace(new RegExp(':+[^/.]+'), sub);
+        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), sub);
       }
     }
 
