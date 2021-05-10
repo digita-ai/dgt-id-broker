@@ -40,8 +40,12 @@
       {
         "@id": "urn:handlersjs-http:default:NodeHttpServer",
         "@type": "NodeHttpServer",
-        "NodeHttpServer:_port": "3003",
-        "NodeHttpServer:_host": "localhost",
+        "NodeHttpServer:_port": {
+          "@id": "urn:dgt-id-proxy:variables:proxyPort"
+        },
+        "NodeHttpServer:_host": {
+          "@id": "urn:dgt-id-proxy:variables:proxyHost"
+        },
         "NodeHttpServer:_nodeHttpStreamsHandler": {
           "@id": "urn:handlersjs-http:default:NodeHttpRequestResponseHandler",
           "@type": "NodeHttpRequestResponseHandler",

@@ -1,8 +1,36 @@
 import * as path from 'path';
-import { ComponentsManager, ParameterHandler } from 'componentsjs';
+import { readFileSync } from 'fs';
+import { ComponentsManager } from 'componentsjs';
 import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
+const checkUri = (uri: string) => {
+  const httpUri = uri.match(/^https?:\/\//g) ? uri : 'http://' + uri ;
+  try {
+    const url = new URL(httpUri);
+    const host = url.hostname;
+    const port = url.port !== '' ? url.port : undefined;
+
+    return ({
+      uri: httpUri,
+      host,
+      port,
+    });
+
+  } catch (e) {
+    throw new Error('upstreamUri must be a valid uri');
+  }
+};
+
+const checkFile = (filePath: string): void => {
+  try {
+    const file = readFileSync(filePath);
+    JSON.parse(file.toString());
+  } catch (e) {
+    throw new Error(`Reading file '${filePath}' failed with Error: ${e.message}`);
+  }
+};
 
 /**
  * Instantiates a server from the passed configuration and starts it.
@@ -29,7 +57,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
   server.start();
 };
 
-export const createVariables: (args: string[]) => Record<string, any> = (args: string[]): Record<string, any> => {
+const createVariables = (args: string[]): Record<string, any> => {
   const { argv: params } = yargs(hideBin(args))
     .usage('node ./dist/main.js [args]')
     .options({
@@ -41,42 +69,21 @@ export const createVariables: (args: string[]) => Record<string, any> = (args: s
       jwksFilePath: { type: 'string', alias: 'j' },
     })
     .help();
+  const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003', host: 'localhost', port: '3003' };
+  const { uri: upstreamUri, host: upstreamHost, port: upstreamPort } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000' };
 
-  if (params.proxyUri) {
-    if (!params.proxyUri.startsWith('http://') && !params.proxyUri.startsWith('https://')) {
-      params.proxyUri = 'http://' + params.proxyUri;
-    }
-    try {
-      const proxyUrl = new URL(params.proxyUri);
-      params.proxyHost = proxyUrl.hostname;
-      params.proxyPort = proxyUrl.port !== '' ? proxyUrl.port : undefined;
-    } catch (e) {
-      throw new Error('proxyUri must be a valid uri');
-    }
-  }
-
-  if (params.upstreamUri) {
-    if (!params.upstreamUri.startsWith('http://') && !params.upstreamUri.startsWith('https://')) {
-      params.upstreamUri = 'http://' + params.upstreamUri;
-    }
-    try {
-      const upstreamUrl = new URL(params.upstreamUri);
-      params.upstreamHost = upstreamUrl.hostname;
-      params.upstreamPort = upstreamUrl.port !== '' ? upstreamUrl.port : undefined;
-    } catch (e) {
-      throw new Error('upstreamUri must be a valid uri');
-    }
-  }
+  checkFile(params.openidConfigurationFilePath ?? 'assets/openid-configuration.json');
+  checkFile(params.jwksFilePath ?? 'jwks.json');
 
   return {
     'urn:dgt-id-proxy:variables:customConfigPath': params.config,
     'urn:dgt-id-proxy:variables:mainModulePath': params.mainModulePath,
-    'urn:dgt-id-proxy:variables:proxyUri': params.upstreamHost ? params.upstreamHost : 'http://localhost:3003',
-    'urn:dgt-id-proxy:variables:proxyHost': params.proxyHost ? params.proxyHost : 'localhost',
-    'urn:dgt-id-proxy:variables:proxyPort': params.proxyPort ? params.proxyPort : '3003',
-    'urn:dgt-id-proxy:variables:upstreamUri': params.upstreamHost ? params.upstreamHost : 'http://localhost:3000',
-    'urn:dgt-id-proxy:variables:upstreamHost': params.upstreamHost ? params.upstreamHost : 'localhost',
-    'urn:dgt-id-proxy:variables:upstreamPort': params.upstreamPort ? params.upstreamPort : '3000',
+    'urn:dgt-id-proxy:variables:proxyUri': proxyUri,
+    'urn:dgt-id-proxy:variables:proxyHost': proxyHost,
+    'urn:dgt-id-proxy:variables:proxyPort': proxyPort ?? '3003',
+    'urn:dgt-id-proxy:variables:upstreamUri': upstreamUri,
+    'urn:dgt-id-proxy:variables:upstreamHost': upstreamHost,
+    'urn:dgt-id-proxy:variables:upstreamPort': upstreamPort ??'3000',
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': params.openidConfigurationFilePath ? params.openidConfigurationFilePath : 'assets/openid-configuration.json',
     'urn:dgt-id-proxy:variables:jwksFilePath': params.jwksFilePath ? params.jwksFilePath : 'assets/jwks.json',
   };
