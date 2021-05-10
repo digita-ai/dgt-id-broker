@@ -69,13 +69,13 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:SolidClientDynamicRegistrationHandler",
-          "@type": "SolidClientDynamicRegistrationHandler",
-          "SolidClientDynamicRegistrationHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
+          "@type": "SolidClientDynamicAuthRegistrationHandler",
+          "SolidClientDynamicAuthRegistrationHandler:_store": {
             "@id": "urn:dgt-id-proxy:default:RegistrationStore",
             "@type": "InMemoryStore"
           },
-          "SolidClientDynamicRegistrationHandler:_httpHandler": {
+          "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
           }
         },

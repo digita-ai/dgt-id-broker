@@ -5,7 +5,7 @@ import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 
-export class SolidClientDynamicRegistrationHandler extends HttpHandler {
+export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   constructor(private store: KeyValueStore<string, HttpHandlerResponse>, private httpHandler: HttpHandler) {
     super();
@@ -73,7 +73,6 @@ export class SolidClientDynamicRegistrationHandler extends HttpHandler {
         }),
         tap((res) => this.store.set(client_id, res)),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
-        // tap(() => console.log(this.store.get(client_id))),
         switchMap(() => this.httpHandler.handle(context)),
       );
 
