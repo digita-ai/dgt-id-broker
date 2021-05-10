@@ -23,7 +23,7 @@ const checkUri = (uri: string) => {
 
   } catch (e) {
 
-    throw new Error('upstreamUri must be a valid uri');
+    throw new Error('Invalid uri parameter');
 
   }
 
