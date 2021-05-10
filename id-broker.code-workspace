@@ -1,7 +1,36 @@
 {
-    "folders": [
-        {
-            "path": "."
-        }
+  "folders": [
+    {
+      "name": "root",
+      "path": "."
+    },
+    {
+      "name": "docs",
+      "path": "docs"
+    },
+    {
+      "name": "dgt-id-proxy",
+      "path": "packages/dgt-id-proxy"
+    }
+  ],
+  "settings": {
+    "eslint.format.enable": true,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "files.eol": "\n",
+    "cSpell.words": [
+        "panva"
     ]
+  },
+  "extensions": {
+    "recommendations": [
+      "editorconfig.editorconfig",
+      "dbaeumer.vscode-eslint",
+      "folke.vscode-monorepo-workspace",
+      "humao.rest-client",
+    ]
+  }
 }

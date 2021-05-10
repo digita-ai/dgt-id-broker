@@ -1,20 +1,16 @@
 {
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-      "module": "commonjs",
-      "declaration": false,
-      "sourceMap": false,
-      "inlineSources": true,
-      "strict": false,
-      "target": "es2020",
-      "types": ["jest", "node"],
-      "allowJs": true,
-    },
-    "exclude": [
-      "node_modules", 
-      "dist"
-    ],
-    "include": [
-      "**/*.spec.ts"
-    ]
-  }
+  "extends": "@digita-ai/typescript-config/tsconfig.spec.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "module": "commonjs",
+    "strict": false
+  },
+  "include": [
+    "**/*.spec.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}

@@ -6,8 +6,11 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 const checkUri = (uri: string) => {
+
   const httpUri = uri.match(/^https?:\/\//g) ? uri : 'http://' + uri ;
+
   try {
+
     const url = new URL(httpUri);
     const host = url.hostname;
     const port = url.port !== '' ? url.port : undefined;
@@ -19,17 +22,26 @@ const checkUri = (uri: string) => {
     });
 
   } catch (e) {
+
     throw new Error('upstreamUri must be a valid uri');
+
   }
+
 };
 
 const checkFile = (filePath: string): void => {
+
   try {
+
     const file = readFileSync(filePath);
     JSON.parse(file.toString());
+
   } catch (e) {
+
     throw new Error(`Reading file '${filePath}' failed with Error: ${e.message}`);
+
   }
+
 };
 
 /**
@@ -38,6 +50,7 @@ const checkFile = (filePath: string): void => {
  * @param {Record<string, any>} variables - a record of values for the variables left open in the configuration.
  */
 export const launch: (variables: Record<string, any>) => Promise<void> = async (variables: Record<string, any>) => {
+
   const mainModulePath = variables['urn:dgt-id-proxy:variables:mainModulePath']
     ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath'])
     : path.join(__dirname, '../');
@@ -55,9 +68,11 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
   const server: NodeHttpServer = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
   server.start();
+
 };
 
 const createVariables = (args: string[]): Record<string, any> => {
+
   const { argv: params } = yargs(hideBin(args))
     .usage('node ./dist/main.js [args]')
     .options({
@@ -69,6 +84,7 @@ const createVariables = (args: string[]): Record<string, any> => {
       jwksFilePath: { type: 'string', alias: 'j' },
     })
     .help();
+
   const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003', host: 'localhost', port: '3003' };
   const { uri: upstreamUri, host: upstreamHost, port: upstreamPort } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000' };
 
@@ -87,6 +103,7 @@ const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': params.openidConfigurationFilePath ? params.openidConfigurationFilePath : 'assets/openid-configuration.json',
     'urn:dgt-id-proxy:variables:jwksFilePath': params.jwksFilePath ? params.jwksFilePath : 'assets/jwks.json',
   };
+
 };
 
 const vars = createVariables(process.argv);

@@ -34,30 +34,45 @@ export class InMemoryStore<K, V> implements KeyValueStore<K, V> {
   private readonly data: Map<K, V>;
 
   constructor() {
+
     this.data = new Map<K, V>();
+
   }
 
   async get(key: K): Promise<V | undefined> {
+
     return this.data.get(key);
+
   }
 
   async has(key: K): Promise<boolean> {
+
     return this.data.has(key);
+
   }
 
   async set(key: K, value: V): Promise<this> {
+
     this.data.set(key, value);
+
     return this;
+
   }
 
   async delete(key: K): Promise<boolean> {
+
     return this.data.delete(key);
+
   }
 
   async* entries(): AsyncIterableIterator<[K, V]> {
+
     for (const entry of this.data.entries()) {
+
       yield entry;
+
     }
+
   }
 
 }

@@ -9,13 +9,16 @@ import { JWK, parseJwk } from 'jose/jwk/parse';
  * A {JwkRequestHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
  */
 export class JwkRequestHandler extends HttpHandler {
+
   /**
    * Creates a { JwkRequestHandler } that returns a json response of the JWK keys from the file in the given path.
    *
    * @param {string} path - the relative path to the file containing JWK keys.
    */
   constructor(private path: string) {
+
     super();
+
   }
 
   handle(context: HttpHandlerContext) {
@@ -25,6 +28,7 @@ export class JwkRequestHandler extends HttpHandler {
         switchMap((data) => from(readFile(data.path))),
         map((file) => JSON.parse(file.toString())),
         switchMap((jwks) => {
+
           const jwksForResponse = {
             keys: jwks.keys.map((jwk: JWK) => ({
               kty: jwk.kty, // key type: defines thecryptographic algorithm family used with the key
@@ -41,16 +45,22 @@ export class JwkRequestHandler extends HttpHandler {
               y: jwk.y, // used by EC key types
             })),
           };
+
           return of({
             body: JSON.stringify(jwksForResponse),
             headers: { 'Content-Type': 'application/jwk-set+json' },
             status: 200,
           });
+
         }),
       );
+
   }
 
   canHandle(context: HttpHandlerContext) {
+
     return of(true);
+
   }
+
 }
