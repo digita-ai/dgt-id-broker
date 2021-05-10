@@ -22,7 +22,12 @@ describe('WebIDResponseHandler', () => {
             'sub': '23121d3c-84df-44ac-b458-3d63a9a05497',
           },
         },
-        id_token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IkI0dXNGWnBBeE1ZR3ZaZUpINnpQMEhCRHJrOHhuWE15V05UR1BhUHdPSmMifQ.eyJzdWIiOiIyMzEyMWQzYy04NGRmLTQ0YWMtYjQ1OC0zZDYzYTlhMDU0OTciLCJhdXRoX3RpbWUiOjE2MjAwMzY0MjIsImF0X2hhc2giOiJLdXdYTjRzZFVJRl9tSzNJVVY4SENBIiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDozMDAyL2phc3BlcnZhbmRlbmJlcmdoZW4vcHJvZmlsZS9jYXJkI21lIiwiZXhwIjoxNjIwMDQwMDg5LCJpYXQiOjE2MjAwMzY0ODksImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6MzAwMCJ9.ABTZQ9-RvuUG0StnmePRUGOp5BGuMghcqeUg-4Rlvour6wwCYmq2g7kZ9RUMrbuvMcHZzq5kjwUNiRlhj0s2GjzFxaOeKW9v1ttns4o_puNF2RTTLUF08zO_Ml0bBOLsehPSkYdPRBrWcm8YJAmbfqI_myi2aaKhYNTXBYf8a3ffJGuWUWQ-BzWsy8rwydULBJ46nmSuBdwlJw_peCsum_66BB8E6lORVHgTdI0LCutoNfOwxPkD1B9AyOnLp-tLDip_COhRs41pvVJynOGD0D-X2A_g6C4_VOJJD88OughWY4c1ffmd3R_9A2VytRDEXC6TutrpRhquwzKuyX4Rcg',
+        id_token: {
+          header: {},
+          payload: {
+            webid,
+          },
+        },
       },
       headers: {},
       status: 200,
@@ -79,23 +84,12 @@ describe('WebIDResponseHandler', () => {
 
     it('should add a webid claim based on the subclaim to the payload', async () => {
       delete response.body.access_token.payload.webid;
+      delete response.body.id_token.payload.webid;
       const responseGotten = await webIDResponseHandler.handle(response).toPromise();
       expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithSub);
     });
 
     it('should set webid claim from access_token to the same as the webid claim from id_token if one is present', async () => {
-      const keyPair = await generateKeyPair('ES256');
-      const mockIdToken = await new SignJWT(
-        {
-          webid,
-        },
-      )
-        .setProtectedHeader({ alg: 'ES256', kid: 'keyid', typ: 'jwt'  })
-        .setIssuedAt()
-        .setExpirationTime('2h')
-        .sign(keyPair.privateKey);
-
-      response.body.id_token = mockIdToken;
       delete response.body.access_token.payload.webid;
       const responseGotten = await webIDResponseHandler.handle(response).toPromise();
       expect(responseGotten.body.access_token.payload.webid).toEqual(webid);

@@ -14,7 +14,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
   const configPath = variables['urn:dgt-id-proxy:variables:customConfigPath']
     ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:customConfigPath'])
-    : path.join(__dirname, '../config/default.json');
+    : path.join(__dirname, '../config/presets/solid-compliant-jwt-access-tokens.json');
 
   const manager = await ComponentsManager.build({
     mainModulePath,
