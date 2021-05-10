@@ -1,5 +1,6 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { generateKeyPair } from 'jose/util/generate_key_pair';import { SignJWT } from 'jose/jwt/sign';
+import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { SignJWT } from 'jose/jwt/sign';
 import { WebIDResponseHandler } from './webid-response.handler';
 
 describe('WebIDResponseHandler', () => {

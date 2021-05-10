@@ -19,6 +19,7 @@
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
     },
+    "typescript.preferences.importModuleSpecifier": "relative",
     "files.eol": "\n",
     "cSpell.words": [
         "panva"
