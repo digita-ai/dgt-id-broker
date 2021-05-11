@@ -111,6 +111,8 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
   /**
    * Specifies that if the response is defined this handler can handle the response.
+   *
+   * @param {HttpHandlerResponse} response
    */
   canHandle(response: HttpHandlerResponse) {
 

@@ -11,7 +11,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   /**
    * Creates a {WebIDResponseHandler}.
    *
-   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':' 
+   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the sub claim in the access token.
    */
   constructor(private webIdPattern: string) {

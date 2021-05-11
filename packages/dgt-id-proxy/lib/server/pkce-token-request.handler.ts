@@ -152,6 +152,13 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Generates a code challenge from a code_verifier based on the method that is passed.
+   * This is used to verify the code verifier matches the code challenge.
+   *
+   * @param {string} code_verifier
+   * @param {string} method - the challenge method
+   */
   generateCodeChallenge (code_verifier: string, method: string): Observable<string> {
 
     if (method !== 'S256' && method !== 'plain') {
