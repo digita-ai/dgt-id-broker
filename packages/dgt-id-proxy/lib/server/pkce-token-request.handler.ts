@@ -18,8 +18,10 @@ export class PkceTokenRequestHandler extends HttpHandler {
    * @param {HttpHandler} httpHandler - the handler through which to pass requests
    * @param {KeyValueStore<Code, ChallengeAndMethod>} store - the store that contains the code challenge and challenge method used for each code
    */
-  constructor(private httpHandler: HttpHandler,
-    private store: KeyValueStore<Code, ChallengeAndMethod>) {
+  constructor(
+    private httpHandler: HttpHandler,
+    private store: KeyValueStore<Code, ChallengeAndMethod>
+  ) {
 
     super();
 
