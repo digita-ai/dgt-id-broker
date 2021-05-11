@@ -5,6 +5,7 @@ import { switchMap, catchError } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { createErrorResponse } from '../util/error-response-factory';
+import { recalculateContentLength } from '../util/recalculate-content-length';
 export class PkceTokenRequestHandler extends HttpHandler {
 
   constructor(private httpHandler: HttpHandler,
@@ -76,24 +77,7 @@ export class PkceTokenRequestHandler extends HttpHandler {
     params.delete('code_verifier');
     request.body = params.toString();
 
-    const contentTypeHeader = request.headers['content-type'];
-
-    if (contentTypeHeader) {
-
-      const charsetString  = contentTypeHeader.split(';')
-        .filter((part) => part.includes('charset='))
-        .map((part) => part.split('=')[1].toLowerCase())[0]
-      ?? 'utf-8';
-
-      if (charsetString !== 'ascii' && charsetString !== 'utf8' && charsetString !== 'utf-8' && charsetString !== 'utf16le' && charsetString !== 'ucs2' && charsetString !== 'ucs-2' && charsetString !== 'base64' && charsetString !== 'latin1' && charsetString !== 'binary' && charsetString !== 'hex') {
-
-        return throwError(new Error('The specified charset is not supported'));
-
-      }
-
-      request.headers['content-length'] = Buffer.byteLength(request.body, charsetString).toString();
-
-    }
+    request.headers['content-length'] = recalculateContentLength(request);
 
     return from(this.store.get(code))
       .pipe(
