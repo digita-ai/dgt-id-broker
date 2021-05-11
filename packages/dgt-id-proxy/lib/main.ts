@@ -89,7 +89,7 @@ const createVariables = (args: string[]): Record<string, any> => {
   const { uri: upstreamUri, host: upstreamHost, port: upstreamPort } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000' };
 
   checkFile(params.openidConfigurationFilePath ?? 'assets/openid-configuration.json');
-  checkFile(params.jwksFilePath ?? 'jwks.json');
+  checkFile(params.jwksFilePath ?? 'assets/jwks.json');
 
   return {
     'urn:dgt-id-proxy:variables:customConfigPath': params.config,
