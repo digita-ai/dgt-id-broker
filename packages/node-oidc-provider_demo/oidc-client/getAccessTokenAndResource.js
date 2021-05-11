@@ -28,7 +28,6 @@ let dpopJwtForResource = ""
 async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
     const response = await fetch(url, {
         method: 'POST',
-        mode: 'cors',
         // We add our DPoP proof to the headers.
         headers: {
             // 'DPoP': dpopJwtForToken

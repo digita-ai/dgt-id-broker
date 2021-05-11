@@ -17,13 +17,19 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @param {number} port - the port to connect to on the upstream server.
    */
   constructor(public host: string, public port: number) {
+
     super();
 
     if (!host) {
+
       throw new Error('No host was provided');
+
     }
+
     if (!port) {
+
       throw new Error('No port was provided');
+
     }
 
   }
@@ -35,24 +41,35 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
+
     if (!context) {
+
       return throwError(new Error('Context cannot be null or undefined'));
+
     }
 
     if (!context.request) {
+
       return throwError(new Error('No request was included in the context'));
+
     }
 
     if (!context.request.method) {
+
       return throwError(new Error('No method was included in the request'));
+
     }
 
     if (!context.request.headers) {
+
       return throwError(new Error('No headers were included in the request'));
+
     }
 
     if (!context.request.url) {
+
       return throwError(new Error('No url was included in the request'));
+
     }
 
     const req = context.request;
@@ -64,6 +81,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     return this.fetchRequest(reqUrl, reqMethod, reqHeaders, reqBody).pipe(
       tap((res) => assert(res)),
     );
+
   }
 
   /**
@@ -72,6 +90,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context - a {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
     return context
       && context.request
       && context.request.method
@@ -79,6 +98,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       && context.request.url
       ? of(true)
       : of(false);
+
   }
 
   /**
@@ -96,29 +116,43 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     headers: Record<string, string>,
     body?: any,
   ): Observable<HttpHandlerResponse>{
+
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
     const requestOpts: RequestOptions = { protocol: `http:`, hostname: this.host, port: this.port, path: url.pathname + url.search, method, headers: outgoingHttpHeaders };
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
+
       const req = request(requestOpts, (res) => {
+
         const buffer: any = [];
         res.on('data', (chunk) => buffer.push(chunk));
         res.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler')));
+
         res.on('end', () => {
+
           const httpHandlerResponse: HttpHandlerResponse = {
             body: Buffer.concat(buffer).toString(),
             headers: res.headers as { [key: string]: string },
             status: res.statusCode ? res.statusCode : 500,
           };
+
           resolve(httpHandlerResponse);
+
         });
+
       });
+
       if (body) {
+
         req.write(body);
+
       }
+
       req.end();
+
     }));
 
   }
+
 }

@@ -27,23 +27,33 @@ export class DpopTokenRequestHandler extends HttpHandler {
     private pathToJwks: string,
     private proxyUrl: string,
   ) {
+
     super();
 
     if(!handler){
+
       throw new Error('A HttpHandler must be provided');
+
     }
 
     if(!keyValueStore){
+
       throw new Error('A keyValueStore must be provided');
+
     }
 
     if(!pathToJwks){
+
       throw new Error('A pathToJwks must be provided');
+
     }
 
     if(!proxyUrl){
+
       throw new Error('A proxyUrl must be provided');
+
     }
+
   }
 
   /**
@@ -56,31 +66,43 @@ export class DpopTokenRequestHandler extends HttpHandler {
   handle(context: HttpHandlerContext) {
 
     if (!context) {
+
       return throwError(new Error('Context cannot be null or undefined'));
+
     }
 
     if (!context.request) {
+
       return throwError(new Error('No request was included in the context'));
+
     }
 
     if (!context.request.method) {
+
       return throwError(new Error('No method was included in the request'));
+
     }
 
     if (!context.request.headers) {
+
       return throwError(new Error('No headers were included in the request'));
+
     }
 
     if (!context.request.url) {
+
       return throwError(new Error('No url was included in the request'));
+
     }
 
     if (!context.request.headers.dpop) {
+
       return of({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
-        headers: { 'access-control-allow-origin': context.request.headers.origin },
+        headers: { },
         status: 400,
       });
+
     }
 
     const { dpop, ... noDpopHeaders } = context.request.headers;
@@ -128,32 +150,47 @@ export class DpopTokenRequestHandler extends HttpHandler {
     const jwk = header.jwk;
 
     if (!jwk) {
+
       return throwError(new Error('header must contain a jwk'));
+
     }
 
     if (!payload.jti || typeof payload.jti !== 'string') {
+
       return throwError(new Error('must have a jti string property'));
+
     }
 
     if (payload.htm !== method) {
+
       return throwError(new Error('htm does not match the request method'));
+
     }
 
     if (payload.htu !== this.proxyUrl + '/token') {
+
       return throwError(new Error('htu does not match'));
+
     }
 
     const jti = payload.jti;
 
     return from(this.keyValueStore.get('jtis')).pipe(
       switchMap((jtis) => {
+
         if (jtis?.includes(jti)) {
+
           return throwError(new Error('jti must be unique'));
+
         }
+
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
+
         return of({ payload, protectedHeader: { ... header, jwk } });
+
       }),
     );
+
   }
 
   private dpopError = (error_description: string, context: HttpHandlerContext) => ({
@@ -161,7 +198,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       error: 'invalid_dpop_proof',
       error_description,
     }),
-    headers: { 'access-control-allow-origin': context.request.headers.origin },
+    headers: { },
     status: 400,
   });
 
@@ -170,15 +207,17 @@ export class DpopTokenRequestHandler extends HttpHandler {
   );
 
   private createDpopResponse(response: HttpHandlerResponse, thumbprint: string) {
+
     // set the cnf claim to contain the thumbprint of the client's jwk
     response.body.access_token.payload.cnf = { 'jkt': thumbprint };
     response.body.token_type = 'DPoP';
 
     return of({
       body: response.body,
-      headers: {},
+      headers: response.headers,
       status: 200,
     });
+
   }
 
   /**
@@ -188,6 +227,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context
    */
   canHandle(context: HttpHandlerContext) {
+
     return context
       && context.request
       && context.request.method
@@ -195,6 +235,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       && context.request.url
       ? of(true)
       : of(false);
+
   }
 
 }

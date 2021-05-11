@@ -10,14 +10,6 @@
   "directories": {
     "lib": "lib"
   },
-  "eslintConfig": {
-    "extends": [
-      "../../.eslintrc.json"
-    ],
-    "ignorePatterns": [
-      "coverage"
-    ]
-  },
   "files": [
     "dist",
     "config",
@@ -32,9 +24,9 @@
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
-    "test": "jest --coverage",
-    "test:ci": "jest --runInBand --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test": "jest",
+    "test:ci": "jest --runInBand",
+    "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "lint:staged": "lint-staged",
@@ -42,13 +34,16 @@
     "generate:keys": "node dist/util/generate-keys.js"
   },
   "devDependencies": {
+    "@digita-ai/typescript-config": "^0.3.3",
     "@types/jest": "^26.0.22",
     "@types/node": "^14.14.37",
     "@types/node-fetch": "^2.5.10",
     "componentsjs-generator": "^2.1.0",
+    "eslint": "^7.26.0",
     "jest": "^26.6.3",
+    "jest-coverage-thresholds-bumper": "0.0.4",
+    "jest-fetch-mock": "^3.0.3",
     "jest-mock-extended": "^1.0.13",
-    "jose": "^3.11.4",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
     "ts-node": "^9.1.1",
@@ -58,11 +53,13 @@
     "@digita-ai/handlersjs-core": "^0.1.4",
     "@digita-ai/handlersjs-http": "^0.1.4",
     "@types/uuid": "^8.3.0",
+    "@types/yargs": "^16.0.1",
     "componentsjs": "^4.0.6",
-    "jose": "^3.11.5",
+    "jose": "^3.11.6",
     "lint-staged": "^10.5.4",
     "node-fetch": "^2.6.1",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "yargs": "^17.0.1"
   },
   "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy",
   "lsd:components": "dist/components/components.jsonld",
@@ -73,5 +70,21 @@
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/": "dist/components/",
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/config/": "config/",
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/dist/": "dist/"
+  },
+  "jest": {
+    "preset": "@digita-ai/jest-config",
+    "displayName": "proxy",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
+    },
+    "coverageThreshold": {
+      "global": {
+        "branches": 47.03,
+        "functions": 55.06,
+        "lines": 67.17,
+        "statements": 35.93
+      }
+    }
   }
 }

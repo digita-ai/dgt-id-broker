@@ -255,7 +255,6 @@ oidc.use(async (ctx, next) => {
 async function postDynamicClientRegister(url, data) {
     const response = await fetch(url, {
         method: 'POST',
-        mode: 'cors',
         headers: {
             "Content-Type": "application/json"
         },
