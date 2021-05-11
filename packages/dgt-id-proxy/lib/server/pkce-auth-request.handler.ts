@@ -14,7 +14,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
   /**
    * Creates a {PkceAuthRequestHandler}
    *
-   * @param {PkceCodeRequestHandler} - the handler that will handle the response from the upstream server containing a code.
+   * @param {PkceCodeRequestHandler} codeHandler - the handler that will handle the response from the upstream server containing a code.
    * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method, code challenge, and wether or not the user sent state.
    */
   constructor(
