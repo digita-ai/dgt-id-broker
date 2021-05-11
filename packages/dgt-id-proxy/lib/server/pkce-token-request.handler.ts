@@ -6,10 +6,23 @@ import { KeyValueStore } from '../storage/key-value-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { createErrorResponse } from '../util/error-response-factory';
 import { recalculateContentLength } from '../util/recalculate-content-length';
+
+/**
+ * A {HttpHandler} that handles pkce requests to the token endpoint. It checks that the code verifier that is sent
+ * in a request matches the code challenge of the authorization code in a {KeyValueStore}.
+ */
 export class PkceTokenRequestHandler extends HttpHandler {
 
-  constructor(private httpHandler: HttpHandler,
-    private store: KeyValueStore<Code, ChallengeAndMethod>) {
+  /**
+   * Creates a {PkceTokenRequestHandler}
+   *
+   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   * @param {KeyValueStore<Code, ChallengeAndMethod>} store - the store that contains the code challenge and challenge method used for each code
+   */
+  constructor(
+    private httpHandler: HttpHandler,
+    private store: KeyValueStore<Code, ChallengeAndMethod>
+  ) {
 
     super();
 
@@ -27,6 +40,16 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Handles the context. Checks that the request contains a code verifier. If it does,
+   * it checks that the request contains an authorization code. The authorization code is then
+   * used to retrieve the challenge method and code challenge with which the authorization code was
+   * first granted. The server then encodes the code verifier and checks that it matches the
+   * code challenge in the store. If they match, the code verifier is removed from the request to
+   * create a PKCE-less request and the request is passed on to the handler.
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -92,6 +115,12 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or request body are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     const params = context && context.request && context.request.body
@@ -109,6 +138,13 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Generates a code challenge from a code_verifier based on the method that is passed.
+   * This is used to verify the code verifier matches the code challenge.
+   *
+   * @param {string} code_verifier
+   * @param {string} method - the challenge method
+   */
   generateCodeChallenge (code_verifier: string, method: string): Observable<string> {
 
     if (method !== 'S256' && method !== 'plain') {
