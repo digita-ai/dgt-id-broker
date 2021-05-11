@@ -14,43 +14,67 @@
           "@id": "urn:handlersjs-http:default:NodeHttpRequestResponseHandler",
           "@type": "NodeHttpRequestResponseHandler",
           "NodeHttpRequestResponseHandler:_httpHandler":{
-            "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
-            "@type": "RoutedHttpRequestHandler",
-            "RoutedHttpRequestHandler:_handlerControllerList": [
-              {
-                "@id": "urn:handlersjs-http:default:HttpHandlerController",
-                "@type": "HttpHandlerController",
-                "HttpHandlerController:_label": "ControllerList",
-                "HttpHandlerController:_routes": [
-                  {
-                    "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
-                  }
-                ]
-              }
-            ]
+            "@type": "HttpCorsRequestHandler",
+            "HttpCorsRequestHandler:_handler": {
+              "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
+              "@type": "RoutedHttpRequestHandler",
+              "RoutedHttpRequestHandler:_handlerControllerList": [
+                {
+                  "@id": "urn:handlersjs-http:default:HttpHandlerController",
+                  "@type": "HttpHandlerController",
+                  "HttpHandlerController:_label": "ControllerList",
+                  "HttpHandlerController:_routes": [
+                    {
+                      "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
+                    }
+                  ]
+                }
+              ]
+            }
           }
         }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler",
+          "@type": "SolidClientDynamicTokenRegistrationHandler",
+          "SolidClientDynamicTokenRegistrationHandler:_store": {
+            "@id": "urn:dgt-id-proxy:default:RegistrationStore",
+            "@type": "InMemoryStore"
+          },
+          "SolidClientDynamicTokenRegistrationHandler:_httpHandler": {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
+          "@type": "SolidClientDynamicAuthRegistrationHandler",
+          "SolidClientDynamicAuthRegistrationHandler:_store": {
+            "@id": "urn:dgt-id-proxy:default:RegistrationStore"
+          },
+          "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          }
       },
       {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
@@ -69,15 +93,7 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
-          "@type": "SolidClientDynamicAuthRegistrationHandler",
-          "SolidClientDynamicAuthRegistrationHandler:_store": {
-            "@id": "urn:dgt-id-proxy:default:RegistrationStore",
-            "@type": "InMemoryStore"
-          },
-          "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-          }
+          "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
         },
         "HttpHandlerRoute:_path": "/auth"
       },
@@ -104,15 +120,10 @@
             "@type": "HttpHandlerOperation",
             "HttpHandlerOperation:_method": "POST",
             "HttpHandlerOperation:_publish": false
-          },
-          {
-            "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "OPTIONS",
-            "HttpHandlerOperation:_publish": false
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler"
         },
         "HttpHandlerRoute:_path": "/token"
       },

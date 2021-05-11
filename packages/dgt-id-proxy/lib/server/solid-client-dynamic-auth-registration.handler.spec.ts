@@ -14,7 +14,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
-  const store: KeyValueStore<string, HttpHandlerResponse> = new InMemoryStore();
+  const store: KeyValueStore<string, string> = new InMemoryStore();
   const referer = 'localhost:3001';
   const client_id = 'http://localhost:3002/jaspervandenberghen/profile/card#me';
   const different_client_id = 'http://localhost:3002/vandenberghenjasper/profile/card#me';
@@ -65,7 +65,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   });
 
   it('should be correctly instantiated', () => {
-    expect(SolidClientDynamicAuthRegistrationHandler).toBeTruthy();
+    expect(solidClientDynamicAuthRegistrationHandler).toBeTruthy();
   });
 
   it('should error when no handler was provided', () => {

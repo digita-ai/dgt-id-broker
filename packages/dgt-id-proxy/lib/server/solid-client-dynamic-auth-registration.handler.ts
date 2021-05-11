@@ -7,7 +7,7 @@ import { KeyValueStore } from '../storage/key-value-store';
 
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
-  constructor(private store: KeyValueStore<string, HttpHandlerResponse>, private httpHandler: HttpHandler) {
+  constructor(private store: KeyValueStore<string, any>, private httpHandler: HttpHandler) {
     super();
 
     if (!store) {
