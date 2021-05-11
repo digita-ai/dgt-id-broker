@@ -6,10 +6,46 @@
   ],
   "@graph": [
     {
+      "@id": "urn:dgt-id-proxy:variables:proxyUri",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:proxyHost",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:proxyPort",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:upstreamUri",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:upstreamHost",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:upstreamPort",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath",
+      "@type": "Variable"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:variables:jwksFilePath",
+      "@type": "Variable"
+    },
+    {
       "@id": "urn:handlersjs-http:default:NodeHttpServer",
       "@type": "NodeHttpServer",
-      "NodeHttpServer:_port": "3003",
-      "NodeHttpServer:_host": "localhost",
+      "NodeHttpServer:_port": {
+        "@id": "urn:dgt-id-proxy:variables:proxyPort"
+      },
+      "NodeHttpServer:_host": {
+        "@id": "urn:dgt-id-proxy:variables:proxyHost"
+      },
       "NodeHttpServer:_nodeHttpStreamsHandler": {
         "@id": "urn:handlersjs-http:default:NodeHttpRequestResponseHandler",
         "@type": "NodeHttpRequestResponseHandler",
@@ -47,6 +83,9 @@
                   },
                   {
                     "@id": "urn:dgt-id-proxy:default:OpenidConfigurationRoute"
+                  },
+                  {
+                    "@id": "urn:dgt-id-proxy:default:JwksRoute"
                   }
                 ]
               }
@@ -58,8 +97,12 @@
     {
       "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
       "@type": "PassThroughHttpRequestHandler",
-      "PassThroughHttpRequestHandler:_host": "localhost",
-      "PassThroughHttpRequestHandler:_port": "3000"
+      "PassThroughHttpRequestHandler:_host": {
+        "@id": "urn:dgt-id-proxy:variables:upstreamHost"
+      },
+      "PassThroughHttpRequestHandler:_port": {
+        "@id": "urn:dgt-id-proxy:variables:upstreamPort"
+      }
     },
     {
       "@id": "urn:dgt-id-proxy:default:GetOperation",
@@ -229,10 +272,28 @@
           "ConsoleLogger:_minimumLevel": 1,
           "ConsoleLogger:_minimumLevelPrintData": 1
         },
-        "HttpHandlerStaticAssetService:_path": "assets/openid-configuration.json",
+        "HttpHandlerStaticAssetService:_path": {
+          "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath"
+        },
         "HttpHandlerStaticAssetService:_contentType": "application/json"
       },
       "HttpHandlerRoute:_path": "/.well-known/openid-configuration"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:JwksRoute",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@type": "JwkRequestHandler",
+        "JwkRequestHandler:_path": {
+          "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
+        }
+      },
+      "HttpHandlerRoute:_path": "/jwks"
     }
   ]
 }
