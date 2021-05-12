@@ -1,6 +1,6 @@
 import { BadRequestHttpError, ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Store, Parser } from 'n3';
-import { Observable,  throwError, of, from } from 'rxjs';
+import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 
@@ -77,7 +77,8 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
         }),
         switchMap((text) => this.validateWebID(text, client_id, redirect_uri)),
-        switchMap((podData) => {
+        switchMap((text) => zip(of(text), from(this.store.get(client_id)))),
+        switchMap(([ podData, registerData ]) => {
 
           const reqData = {
             'redirect_uris': podData.redirect_uris,
@@ -92,7 +93,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
             'token_endpoint_auth_method' : 'none',
           };
 
-          return this.registerClient(reqData);
+          return registerData
+            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }))
+            : from(this.registerClient(reqData));
 
         }),
         tap((res) => this.store.set(client_id, res)),

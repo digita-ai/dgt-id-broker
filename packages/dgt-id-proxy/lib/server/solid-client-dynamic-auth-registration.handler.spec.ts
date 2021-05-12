@@ -9,13 +9,13 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const httpHandler: HttpHandler = {
     canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValueOnce(of()),
+    handle: jest.fn().mockReturnValue(of()),
     safeHandle: jest.fn(),
   };
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
-  const store: KeyValueStore<string, string> = new InMemoryStore();
+  const store: KeyValueStore<string, any> = new InMemoryStore();
   const referer = 'client.example.com';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
@@ -37,21 +37,32 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     application_type: 'web',
     grant_types: [ 'refresh_token', 'authorization_code' ],
     id_token_signed_response_alg: 'RS256',
-    post_logout_redirect_uris: [],
-    require_auth_time: true,
     response_types: [ 'code' ],
     subject_type: 'public',
     token_endpoint_auth_method: 'none',
-    require_signed_request_object: false,
-    request_uris: [],
-    client_id_issued_at: 1620809103,
     client_id: 'GMRBBg-KZ0jt6VI6LXfOy',
     client_uri: 'https://app.example/',
     default_max_age: 60000,
     logo_uri: 'https://app.example/logo.png',
     redirect_uris: [ 'http://client.example.com/requests.html' ],
     scope: 'openid offline_access',
-    tos_uri: 'https://app.example/tos.html',
+    registration_client_uri: 'http://server.example.com/reg/GMRBBg-KZ0jt6VI6LXfOy',
+    registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
+  };
+
+  const mockAlternativeRegisterResponse = {
+    application_type: 'web',
+    grant_types: [ 'refresh_token', 'authorization_code' ],
+    id_token_signed_response_alg: 'RS256',
+    response_types: [ 'code' ],
+    subject_type: 'public',
+    token_endpoint_auth_method: 'none',
+    client_id: 'GMRBBg-KZ0jt6VI6LXfOy',
+    client_uri: 'https://app.example/',
+    default_max_age: 60000,
+    logo_uri: 'https://app.example/logo.png',
+    redirect_uris: [ different_redirect_uri ],
+    scope: 'openid offline_access',
     registration_client_uri: 'http://server.example.com/reg/GMRBBg-KZ0jt6VI6LXfOy',
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
   };
@@ -73,14 +84,19 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       `;
 
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
+  const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
+
   const correctPodText = podText + ' ' + oidcRegistration;
+  const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
   const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
+  const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
 
   let context: HttpHandlerContext;
   let url: URL;
   let solidClientDynamicAuthRegistrationHandler: SolidClientDynamicAuthRegistrationHandler;
+
   beforeAll(() => fetchMock.enableMocks());
 
   beforeEach(async () => {
@@ -90,6 +106,8 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     solidClientDynamicAuthRegistrationHandler = new SolidClientDynamicAuthRegistrationHandler(store, httpHandler);
 
   });
+
+  afterEach(() => store.delete(client_id));
 
   it('should be correctly instantiated', () => {
 
@@ -173,7 +191,24 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
       await solidClientDynamicAuthRegistrationHandler.handle(context).toPromise();
-      store.get(client_id).then((data) => expect(data).toBeDefined());
+      await store.get(client_id).then((data) => expect(data).toBeDefined());
+
+    });
+
+    it('should register with new data if client_id is already registered in the store', async () => {
+
+      fetchMock.mockResponses([ differentRedirectUriPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
+      store.set(client_id, mockRegisterResponse);
+
+      await solidClientDynamicAuthRegistrationHandler
+        .handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } })
+        .toPromise();
+
+      await store.get(client_id).then((data) => {
+
+        expect(data.redirect_uris.includes(different_redirect_uri));
+
+      });
 
     });
 

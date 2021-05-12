@@ -24,23 +24,6 @@ async function postRegisterClient(url, data) {
   return response.json();
 }
 
-// let requestData = {
-//   "client_name": "My Client Application",
-//   "client_id": "http://localhost:3002/myclientapplication/profile/card#me",
-//   "redirect_uris": [
-//     `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`
-//   ],
-// };
-
-// // Dynamically register a test client
-// postRegisterClient(`http://localhost:${env.VITE_OIDC_PORT}/reg`, requestData)
-//   .then((data) => {
-//     console.log(data);
-//   })
-//   .catch((error) => {
-//     console.error("Error:", error);
-//   }); 
-
 // Redirect the user to the /auth endpoint of the identity provider to get an authentication code which will later be used to get an access token.
 // The necessary parameters are set in the url.
 // Note that you should change the client_id parameter in this url to fit the one you are using. Make sure it is URL-encoded.
