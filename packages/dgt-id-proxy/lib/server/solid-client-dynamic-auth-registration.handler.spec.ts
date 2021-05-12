@@ -3,6 +3,7 @@ import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
+import { validateWebID } from '../util/validate-webid';
 import { SolidClientDynamicAuthRegistrationHandler } from './solid-client-dynamic-auth-registration.handler';
 
 describe('SolidClientDynamicAuthRegistrationHandler', () => {
@@ -258,7 +259,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     it('should error when no oidcRegistration was found', async () => {
 
-      const responseGotten = solidClientDynamicAuthRegistrationHandler.validateWebID(podText, client_id, redirect_uri);
+      const responseGotten = validateWebID(podText, client_id, redirect_uri);
 
       await expect(responseGotten.toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
       await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(BadRequestHttpError);
@@ -267,14 +268,12 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     it('should error when request data does not match', async () => {
 
-      let responseGotten = solidClientDynamicAuthRegistrationHandler
-        .validateWebID(correctPodText, different_client_id, redirect_uri);
+      let responseGotten = validateWebID(correctPodText, different_client_id, redirect_uri);
 
       await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
       await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
 
-      responseGotten = solidClientDynamicAuthRegistrationHandler
-        .validateWebID(correctPodText, client_id, different_redirect_uri);
+      responseGotten = validateWebID(correctPodText, client_id, different_redirect_uri);
 
       await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
       await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
@@ -283,8 +282,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     it('should return a JSON of the podData if valid', async () => {
 
-      const responseGotten = solidClientDynamicAuthRegistrationHandler
-        .validateWebID(correctPodText,  client_id, redirect_uri);
+      const responseGotten = validateWebID(correctPodText,  client_id, redirect_uri);
 
       const podData = {
         client_id,

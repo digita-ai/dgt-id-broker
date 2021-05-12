@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, switchMapTo, mapTo, tap, map } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 
