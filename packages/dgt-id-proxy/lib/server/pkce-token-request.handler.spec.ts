@@ -141,10 +141,10 @@ describe('PkceTokenRequestHandler', () => {
 
     });
 
-    it('should error when no given charset not supported', async () => {
+    it('should error when given charset is not supported', async () => {
 
       const contextWithWrongCharset = { ...context, request: { ...context.request, headers: { ...context.request.headers, 'content-type': 'application/x-www-form-urlencoded;charset=ABC-1' } } };
-      await expect(pkceTokenRequestHandler.handle(contextWithWrongCharset).toPromise()).rejects.toThrow('The specified charset is not supported');
+      expect(() => pkceTokenRequestHandler.handle(contextWithWrongCharset).toPromise()).toThrow('The specified charset is not supported');
 
     });
 
