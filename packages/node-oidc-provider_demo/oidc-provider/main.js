@@ -40,7 +40,7 @@ const configuration = {
     conformIdTokenClaims: false,
     // Require PKCE as it is a must for Solid-OIDC
     pkce: {
-        required: () => true
+        required: () => false
     },
     interactions: {
         url(ctx, interaction) {
@@ -118,7 +118,7 @@ const configuration = {
         // Enable DPoP. This cannot be required, so if DPoP headers are not included, a user might still be able to get an Access Token. 
         // However, since the token won't be DPoP bound, it won't be valid to access a solid resource server, and should be rejected.S
         dPoP: {
-            enabled: true
+            enabled: false
         }
     },
     jwks,
@@ -251,7 +251,6 @@ oidc.use(async (ctx, next) => {
 async function postDynamicClientRegister(url, data) {
     const response = await fetch(url, {
         method: 'POST',
-        mode: 'cors',
         headers: {
             "Content-Type": "application/json"
         },

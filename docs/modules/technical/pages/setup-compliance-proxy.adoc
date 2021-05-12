@@ -79,7 +79,7 @@ The first one watches for the `code_challenge` and `code_challenge_method` param
 The second one watches for the `code_verifier` parameter. It rejects the request if this parameter is absent. Otherwise, it performs the check of the verifier with the stored data and, if valid, passes a PKCE-less request through its dependency handler and returns the response.
 
 
-=== WebIDs on the fly
+=== WebIDs on the fly &#10004;&#65039;
 
 If an identity provider does not allow WebIDs as identities, either because of technical reasons or because of legacy identities, the proxy will have to find a way to still return a WebID to the client. Let's do this by implementing a `WebIDResponseHandler` that already takes a response as input, checks if it contains a correct `webid` claim and, if not, build one from the `sub` claim according to a WebID pattern given to the constructor. Let this pattern be similar to how the dynamic url pattern in our router works: a URL string in which the subject will be inserted instead of a tag starting with `:`. Whenever the upstream server returns a response that is not a WebID, the handler can then create on based on the subject claim and the WebID pattern. 
 
@@ -90,7 +90,7 @@ In the config for non-compliant providers, exchange the `PassThroughHandler` by 
 As always: write and run test while coding, and check afterwards with a real setup.
 
 
-=== Extend responses with Solid claims
+=== Extend responses with Solid claims &#10004;&#65039;
 
 Regardless of the correct security measures, a token is only useful if it contains the right claims. Make sure the proxied response contains these, even if the upstream server left some out. Do this by implementing a basic `SolidTokensRequestHandler` which stores the necessary information from the request in a store, passes the request to a nested handler (given as dependency in the constructor), and based on the response and the initially stored information then adds all missing claims. Use your own comparison docs to decide what can be missing, and thus what checks to do and information to add. Be especially aware of the fact that the Solid specification has prescriptions for both the Access Token _and_ the ID Token, and that the Access Token in classic OIDC can be opaque.
 

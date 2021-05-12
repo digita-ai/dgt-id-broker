@@ -28,10 +28,9 @@ let dpopJwtForResource = ""
 async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
     const response = await fetch(url, {
         method: 'POST',
-        mode: 'cors',
         // We add our DPoP proof to the headers.
         headers: {
-            'DPoP': dpopJwtForToken
+            // 'DPoP': dpopJwtForToken
         },
         body: data
     });
@@ -44,9 +43,9 @@ async function getResource(url, access_token, dpopJwtForResource) {
         method: 'get',
         headers: {
             // Add the DPoP-bound Access Token we received from the /token endpoint to the Authorization header
-            'Authorization': 'DPoP ' + access_token,
+            'Authorization': 'Bearer ' + access_token,
             // Add our DPoP proof to the headers.
-            'DPoP': dpopJwtForResource
+            // 'DPoP': dpopJwtForResource
         }
     });
     return response.text();

@@ -105,3 +105,8 @@ dist
 
 # Error files
 componentsjs-error-state.json
+
+# Static assets
+assets
+
+coverage-summary.json
