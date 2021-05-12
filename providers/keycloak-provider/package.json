@@ -1,0 +1,10 @@
+{
+  "name": "keycloak-provider",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "license": "",
+  "scripts": {
+    "start": "docker-compose up"
+  }
+}
