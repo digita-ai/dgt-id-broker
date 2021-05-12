@@ -1,5 +1,6 @@
 import { BadRequestHttpError, ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
+import fetchMock from 'jest-fetch-mock';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { SolidClientDynamicAuthRegistrationHandler } from './solid-client-dynamic-auth-registration.handler';
@@ -15,9 +16,9 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
   const store: KeyValueStore<string, string> = new InMemoryStore();
-  const referer = 'localhost:3001';
-  const client_id = 'http://localhost:3002/jaspervandenberghen/profile/card#me';
-  const different_client_id = 'http://localhost:3002/vandenberghenjasper/profile/card#me';
+  const referer = 'client.example.com';
+  const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
+  const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const incorrectClient_id = 'jaspervandenberghen/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
   const different_redirect_uri = `http://${referer}/otherCallback.html`;
@@ -32,18 +33,41 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     'token_endpoint_auth_method' : 'none',
   };
 
+  const mockRegisterResponse = {
+    application_type: 'web',
+    grant_types: [ 'refresh_token', 'authorization_code' ],
+    id_token_signed_response_alg: 'RS256',
+    post_logout_redirect_uris: [],
+    require_auth_time: true,
+    response_types: [ 'code' ],
+    subject_type: 'public',
+    token_endpoint_auth_method: 'none',
+    require_signed_request_object: false,
+    request_uris: [],
+    client_id_issued_at: 1620809103,
+    client_id: 'GMRBBg-KZ0jt6VI6LXfOy',
+    client_uri: 'https://app.example/',
+    default_max_age: 60000,
+    logo_uri: 'https://app.example/logo.png',
+    redirect_uris: [ 'http://client.example.com/requests.html' ],
+    scope: 'openid offline_access',
+    tos_uri: 'https://app.example/tos.html',
+    registration_client_uri: 'http://server.example.com/reg/GMRBBg-KZ0jt6VI6LXfOy',
+    registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
+  };
+
   const podText = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
   @prefix solid: <http://www.w3.org/ns/solid/terms#>.
   
   <>
       a foaf:PersonalProfileDocument;
-      foaf:maker <http://localhost:3002/jaspervandenberghen/profile/card#me>;
-      foaf:primaryTopic <http://localhost:3002/jaspervandenberghen/profile/card#me>.
+      foaf:maker <http://solidpod.com/jaspervandenberghen/profile/card#me>;
+      foaf:primaryTopic <http://solidpod.com/jaspervandenberghen/profile/card#me>.
   
-  <http://localhost:3002/jaspervandenberghen/profile/card#me>
+  <http://solidpod.com/jaspervandenberghen/profile/card#me>
       a foaf:Person;
       foaf:name "Jasper Vandenberghen";
-      solid:oidcIssuer <http://localhost:3000/> ;
+      solid:oidcIssuer <http://server.example.com/> ;
       solid:oidcIssuerRegistrationToken "" .
       
       `;
@@ -57,39 +81,54 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   let context: HttpHandlerContext;
   let url: URL;
   let solidClientDynamicAuthRegistrationHandler: SolidClientDynamicAuthRegistrationHandler;
+  beforeAll(() => fetchMock.enableMocks());
 
   beforeEach(async () => {
-    context = { request: { headers: {}, body: {}, method: 'POST', url } };
+
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
+    context = { request: { headers: {}, body: {}, method: 'POST', url } };
     solidClientDynamicAuthRegistrationHandler = new SolidClientDynamicAuthRegistrationHandler(store, httpHandler);
+
   });
 
   it('should be correctly instantiated', () => {
+
     expect(solidClientDynamicAuthRegistrationHandler).toBeTruthy();
+
   });
 
   it('should error when no handler was provided', () => {
+
     expect(() => new SolidClientDynamicAuthRegistrationHandler(store, undefined)).toThrow('A HttpHandler must be provided');
     expect(() => new SolidClientDynamicAuthRegistrationHandler(store, null)).toThrow('A HttpHandler must be provided');
+
   });
 
   it('should error when no store was provided', () => {
+
     expect(() => new SolidClientDynamicAuthRegistrationHandler(undefined, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
     expect(() => new SolidClientDynamicAuthRegistrationHandler(null, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
+
   });
 
   describe('handle', () => {
+
     it('should error when no context was provided', async () => {
+
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+
     });
 
     it('should error when no context request is provided', async () => {
+
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+
     });
 
     it('should error when no client_id was provided', async () => {
+
       const noClientIdURL = new URL(url.href);
       const noClientIdContext = { ... context, request: { ...context.request, url: noClientIdURL } };
 
@@ -98,14 +137,18 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       noClientIdContext.request.url.searchParams.delete('client_id');
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+
     });
 
     it('should error when client_id is not a valid URL', async () => {
+
       const invalidClientIdURLContext = { ... context, request: { ...context.request, url: incorrectClientIdURL } };
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle(invalidClientIdURLContext).toPromise()).rejects.toThrow('The provided client_id is not a valid URL');
+
     });
 
     it('should error when no redirect_uri was provided', async () => {
+
       const noRedirectUriURL = new URL(url.href);
       const noRedirectUriContext = { ... context, request: { ...context.request, url: noRedirectUriURL } };
 
@@ -114,80 +157,81 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       noRedirectUriContext.request.url.searchParams.delete('redirect_uri');
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
-    });
 
-    it('should call the getPod', async () => {
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.getPod(client_id);
-      solidClientDynamicAuthRegistrationHandler.getPod = jest.fn().mockReturnValueOnce(of(responseGotten));
-      await solidClientDynamicAuthRegistrationHandler.handle(context).toPromise();
-
-      expect(solidClientDynamicAuthRegistrationHandler.getPod).toHaveBeenCalledTimes(1);
-      expect(solidClientDynamicAuthRegistrationHandler.getPod).toHaveBeenCalledWith(client_id);
     });
 
     it('should error when return type is not turtle', async () => {
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.getPod(different_client_id);
-      solidClientDynamicAuthRegistrationHandler.getPod = jest.fn().mockReturnValueOnce(of(responseGotten));
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
+
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got something else`);
+      await expect(solidClientDynamicAuthRegistrationHandler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
 
-    });
-
-    it('should call validateWebID', async () => {
-      solidClientDynamicAuthRegistrationHandler.validateWebID = jest.fn().mockReturnValueOnce(of());
-      await solidClientDynamicAuthRegistrationHandler.handle(context).toPromise();
-      expect(solidClientDynamicAuthRegistrationHandler.validateWebID).toHaveBeenCalledTimes(1);
-    });
-
-    it('should call registerClient', async () => {
-      solidClientDynamicAuthRegistrationHandler.registerClient = jest.fn().mockReturnValueOnce(of());
-      await solidClientDynamicAuthRegistrationHandler.handle(context).toPromise();
-      expect(solidClientDynamicAuthRegistrationHandler.registerClient).toHaveBeenCalledTimes(1);
     });
 
     it('should save the registered client data in the store', async () => {
-      solidClientDynamicAuthRegistrationHandler.validateWebID = jest.fn().mockReturnValueOnce(of());
-      solidClientDynamicAuthRegistrationHandler.registerClient = jest.fn().mockReturnValueOnce(of());
+
+      fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
       await solidClientDynamicAuthRegistrationHandler.handle(context).toPromise();
       store.get(client_id).then((data) => expect(data).toBeDefined());
+
     });
+
   });
 
   describe('canHandle', () => {
+
     it('should return true if correct context was provided', async () => {
+
       await expect(solidClientDynamicAuthRegistrationHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+
     });
 
     it('should return false if no context was provided', async () => {
+
       await expect(solidClientDynamicAuthRegistrationHandler.canHandle(null).toPromise()).resolves.toEqual(false);
       await expect(solidClientDynamicAuthRegistrationHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+
     });
 
     it('should return false if no request was provided', async () => {
+
       await expect(solidClientDynamicAuthRegistrationHandler.canHandle({ ...context, request: null })
         .toPromise()).resolves.toEqual(false);
+
       await expect(solidClientDynamicAuthRegistrationHandler.canHandle({ ...context, request: undefined })
         .toPromise()).resolves.toEqual(false);
+
     });
+
   });
 
   describe('registerClient', () => {
+
     it('should successfully return a response with register info', async () => {
+
+      fetchMock.once(JSON.stringify(mockRegisterResponse), { status: 200 });
 
       const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData);
       expect(responseGotten.registration_access_token).toBeDefined();
+
     });
+
   });
 
   describe('validateWebID', () => {
+
     it('should error when no oidcRegistration was found', async () => {
+
       const responseGotten = solidClientDynamicAuthRegistrationHandler.validateWebID(podText, client_id, redirect_uri);
 
       await expect(responseGotten.toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
       await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(BadRequestHttpError);
+
     });
 
     it('should error when request data does not match', async () => {
+
       let responseGotten = solidClientDynamicAuthRegistrationHandler
         .validateWebID(correctPodText, different_client_id, redirect_uri);
 
@@ -199,6 +243,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
       await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
+
     });
 
     it('should return a JSON of the podData if valid', async () => {
@@ -207,8 +252,8 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
         .validateWebID(correctPodText,  client_id, redirect_uri);
 
       const podData = {
-        client_id: 'http://localhost:3002/jaspervandenberghen/profile/card#me',
-        redirect_uris: [ 'http://localhost:3001/requests.html' ],
+        client_id,
+        redirect_uris: [ redirect_uri ],
         client_name: 'My Panva Application',
         client_uri: 'https://app.example/',
         logo_uri: 'https://app.example/logo.png',
@@ -221,7 +266,9 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       };
 
       await expect(responseGotten.toPromise()).resolves.toEqual(podData);
+
     });
+
   });
 
 });
