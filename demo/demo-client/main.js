@@ -17,6 +17,8 @@ const code_challenge = generateCodeChallenge(code_verifier);
 // Note that you should change the client_id parameter in this url to fit the one you are using. Make sure it is URL-encoded.
 
 // window.location = `http://localhost:${env.VITE_OIDC_PORT}/${env.VITE_AUTH_ENDPOINT}?response_type=code&code_challenge=${code_challenge}&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Ftonypaillard%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2F${env.VITE_IP}:${env.VITE_PORT}%2Frequests.html`
+
+// this link is specific to auth0. Once the dynamic or static client id handlers are implemented this should be removed.
 window.location = `http://localhost:${env.VITE_OIDC_PORT}/${env.VITE_AUTH_ENDPOINT}?response_type=code&code_challenge=${code_challenge}&code_challenge_method=S256&scope=openid&client_id=v0mugB6Y5JdUbhq7tt23SgntseaYxeRb&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html`
 
 // PKCE HELPER FUNCTIONS

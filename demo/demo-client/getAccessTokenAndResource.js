@@ -74,7 +74,7 @@ instantiateJWTsForDPoP()
             .then(data => {
                 // The "data" object now contains our access_token if the request was successful. We can send it on to the resource server to get the requested resource,
                 // along with a new DPoP-proof.
-                getResource("http://localhost:3002/tonypaillard/profile/", data.access_token, dpopJwtForResource)
+                getResource(`${env.VITE_RESOURCE_URI}`, data.access_token, dpopJwtForResource)
                     .then(data => {
                         // In this case we simply get the profile of our solid pod. The rest of this function simply preserves the formatting of the html we receive.
                         data = data.replace(/</g, "&lt;")
@@ -120,7 +120,7 @@ async function instantiateJWTsForDPoP() {
     // Create the DPoP-proof for the resource server request.
     dpopJwtForResource = await new SignJWT({
         'htm': 'GET',
-        'htu': 'http://localhost:3002/tonypaillard/profile/',
+        'htu': `${env.VITE_RESOURCE_URI}`,
     })
         .setProtectedHeader({
             alg: 'ES256',
