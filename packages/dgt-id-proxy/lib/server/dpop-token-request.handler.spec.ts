@@ -4,7 +4,6 @@ import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
 import { SignJWT } from 'jose/jwt/sign';
 import { v4 as uuid } from 'uuid';
-import { decode } from 'jose/util/base64url';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { DpopTokenRequestHandler } from './dpop-token-request.handler';
@@ -103,7 +102,7 @@ describe('DpopTokenRequestHandler', () => {
     };
 
     keyValueStore = new InMemoryStore();
-    handler = new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'assets/jwks.json', 'http://localhost:3003');
+    handler = new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token');
 
   });
 
@@ -113,16 +112,14 @@ describe('DpopTokenRequestHandler', () => {
 
   });
 
-  it('should error when no handler, keyValueStore, pathToJwks or proxyUrl is provided', () => {
+  it('should error when no handler, keyValueStore, or proxyUrl is provided', () => {
 
-    expect(() => new DpopTokenRequestHandler(undefined, keyValueStore, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A HttpHandler must be provided');
-    expect(() => new DpopTokenRequestHandler(null, keyValueStore, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A HttpHandler must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, undefined, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A keyValueStore must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, null, 'assets/jwks.json', 'http://localhost:3003')).toThrow('A keyValueStore must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, undefined, 'http://localhost:3003')).toThrow('A pathToJwks must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, null, 'http://localhost:3003')).toThrow('A pathToJwks must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
+    expect(() => new DpopTokenRequestHandler(undefined, keyValueStore, 'http://localhost:3003/token')).toThrow('A HttpHandler must be provided');
+    expect(() => new DpopTokenRequestHandler(null, keyValueStore, 'http://localhost:3003/token')).toThrow('A HttpHandler must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, undefined, 'http://localhost:3003/token')).toThrow('A keyValueStore must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, null, 'http://localhost:3003/token')).toThrow('A keyValueStore must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, undefined)).toThrow('A proxyTokenUrl must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, null)).toThrow('A proxyTokenUrl must be provided');
 
   });
 

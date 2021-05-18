@@ -1,4 +1,4 @@
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
@@ -18,14 +18,12 @@ export class DpopTokenRequestHandler extends HttpHandler {
    *
    * @param {HttpHandler} handler - the handler through which to pass incoming requests.
    * @param {InMemoryStore<string, string[]>} keyValueStore - the KeyValueStore in which to save jti's.
-   * @param {string} pathToJwks - the path to a json file containing jwks.
-   * @param {string} proxyUrl - the url of the upstream server.
+   * @param {string} proxyTokenUrl - the url of the proxy server's token endpoint.
    */
   constructor(
     private handler: HttpHandler,
     private keyValueStore: InMemoryStore<string, string[]>,
-    private pathToJwks: string,
-    private proxyUrl: string,
+    private proxyTokenUrl: string,
   ) {
 
     super();
@@ -42,15 +40,9 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     }
 
-    if(!pathToJwks){
+    if(!proxyTokenUrl){
 
-      throw new Error('A pathToJwks must be provided');
-
-    }
-
-    if(!proxyUrl){
-
-      throw new Error('A proxyUrl must be provided');
+      throw new Error('A proxyTokenUrl must be provided');
 
     }
 
@@ -132,7 +124,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates thumbprint or errors
       switchMap((verified) => from(calculateThumbprint(verified.protectedHeader.jwk))),
       // builds error body around previous errors
-      catchError((error) => throwError(this.dpopError(error?.message ?? 'could not create thumbprint from dpop proof', context))),
+      catchError((error) => throwError(this.dpopError(error?.message ?? 'could not create thumbprint from dpop proof'))),
       // gets successful response or errors with body
       switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
       // creates dpop response
@@ -167,7 +159,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     }
 
-    if (payload.htu !== this.proxyUrl + '/token') {
+    if (payload.htu !== this.proxyTokenUrl) {
 
       return throwError(new Error('htu does not match'));
 
@@ -193,7 +185,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
   }
 
-  private dpopError = (error_description: string, context: HttpHandlerContext) => ({
+  private dpopError = (error_description: string) => ({
     body: JSON.stringify({
       error: 'invalid_dpop_proof',
       error_description,
