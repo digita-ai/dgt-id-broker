@@ -15,6 +15,20 @@ Content-Type: application/json
 
 ########
 
+# @name createPod
+POST {{baseUrl}}/pods HTTP/1.1
+Content-Type: application/json
+
+{
+  "login": "auth0609be5ed22684f0067d64174",
+  "webId": "http://localhost:3002/auth0609be5ed22684f0067d64174/profile/card#me",
+  "name": "Lea Peeters",
+  "email": "auth0609be5ed22684f0067d64174@digita.ai"
+}
+
+
+########
+
 # @name getProfileAsTurtle
 GET {{baseUrl}}/tonypaillard/profile/card HTTP/1.1
 Accept: text/turtle
