@@ -6,7 +6,7 @@ describe('WebIDResponseHandler', () => {
   let response: HttpHandlerResponse;
 
   const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
-  const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497%2F%7C%3A%24%5E/profile/card#me';
+  const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
   const webIDResponseHandler = new WebIDResponseHandler(webIdPattern);
 
@@ -18,7 +18,7 @@ describe('WebIDResponseHandler', () => {
           header: {},
           payload: {
             webid,
-            'sub': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^',
+            'sub': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
           },
         },
         id_token: {
