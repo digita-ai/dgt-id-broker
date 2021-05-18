@@ -1,5 +1,5 @@
 import { assert } from 'console';
-import { RequestOptions, request } from 'https';
+import { RequestOptions, request } from 'http';
 import { OutgoingHttpHeaders } from 'http2';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
@@ -120,8 +120,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     headers.host = this.host + ':' + this.port;
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
-    const requestOpts: RequestOptions = { protocol: `https:`, hostname: this.host, port: this.port, path: url.pathname + url.search, method, headers: outgoingHttpHeaders };
-    delete headers['accept-encoding'];
+    const requestOpts: RequestOptions = { protocol: `http:`, hostname: this.host, port: this.port, path: url.pathname + url.search, method, headers: outgoingHttpHeaders };
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
 
