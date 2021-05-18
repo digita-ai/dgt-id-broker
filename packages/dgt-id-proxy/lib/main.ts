@@ -13,7 +13,7 @@ const checkUri = (uri: string) => {
 
     const url = new URL(httpUri);
     const host = url.hostname;
-    const port = url.port !== '' ? url.port : undefined;
+    const port = url.port !== '' ? url.port : (url.protocol === 'http:' ? '80' : '443');
 
     return ({
       uri: httpUri,
