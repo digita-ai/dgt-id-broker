@@ -57,7 +57,7 @@ formDataForAccessToken.append('grant_type', 'authorization_code');
 formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
 // Client secret is not set for the WebID flow. Uncomment this if you need it.
-//formDataForAccessToken.append('client_secret', client_secret);
+formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
 // Get our code verifier from session storage, because we need to send it again for PKCE validation.
 const code_verifier = sessionStorage.getItem("pkce_code_verifier")
@@ -70,7 +70,7 @@ const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
 instantiateJWTsForDPoP()
     .then(() => {
         // Send the post request to get a token, along with our data encoded as formdata, and our DPoP-proof
-        postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/token`, formDataToSendForAccessToken, dpopJwtForToken)
+        postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/${env.VITE_TOKEN_ENDPOINT}`, formDataToSendForAccessToken, dpopJwtForToken)
             .then(data => {
                 // The "data" object now contains our access_token if the request was successful. We can send it on to the resource server to get the requested resource,
                 // along with a new DPoP-proof.
@@ -104,7 +104,7 @@ async function instantiateJWTsForDPoP() {
     dpopJwtForToken = await new SignJWT({
         // Each DPoP-proof needs to say what type of request it is making and to where to be valid.
         'htm': 'POST',
-        'htu': 'http://localhost:3003/token',
+        'htu': `http://localhost:3003/${env.VITE_TOKEN_ENDPOINT}`,
     })
         // set the necessary headers and body of our JWT with the necessary components as prescribed by the spec.
         .setProtectedHeader({
