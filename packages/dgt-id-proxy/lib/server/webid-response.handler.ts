@@ -1,6 +1,7 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
+import slugify from 'slugify';
 
 /**
  * A {HttpHandler} that adds the webid claim to the payload of the access token field in the response body.
@@ -29,6 +30,11 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * Handles the response. Checks if the access token already contains a webid. If it does not, it checks wether
    * the id token already contains a webid. If it does not it uses the sub claim from the access token
    * to create a webid and add it to the access token payload.
+   *
+   * The sub claim is 'slugified' using the following library: https://www.npmjs.com/package/slugify
+   * Special characters are replaced according to this charmap: https://github.com/simov/slugify/blob/master/config/charmap.json
+   * Special characters that are not in the charmap are removed (this includes '?', '#', '^', '{', '}', '[', ']', etc.).
+   * We also remove the character '|', and the character ':'.
    *
    * @param {HttpHandlerResponse} response
    */
@@ -66,16 +72,14 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     const access_token_payload = response.body.access_token.payload;
     const id_token_payload = response.body.id_token.payload;
-    const webID = access_token_payload.webid;
-    const sub = access_token_payload.sub;
 
-    if (!sub) {
+    if (!access_token_payload.sub) {
 
       return throwError(new Error('No sub claim was included in the access token'));
 
     }
 
-    if (!webID) {
+    if (!access_token_payload.webid) {
 
       if (id_token_payload.webid) {
 
@@ -83,7 +87,8 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
       } else {
 
-        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), encodeURIComponent(sub));
+        const sub = access_token_payload.sub.replace(/[|:]/g, '');
+        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(sub));
 
       }
 
