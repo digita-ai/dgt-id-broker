@@ -1,15 +1,12 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { SignJWT } from 'jose/jwt/sign';
 import { WebIDResponseHandler } from './webid-response.handler';
 
 describe('WebIDResponseHandler', () => {
 
   let response: HttpHandlerResponse;
-  let badResponse: HttpHandlerResponse;
 
   const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
-  const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497/profile/card#me';
+  const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497%2F%7C%3A%24%5E/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
   const webIDResponseHandler = new WebIDResponseHandler(webIdPattern);
 
@@ -21,7 +18,7 @@ describe('WebIDResponseHandler', () => {
           header: {},
           payload: {
             webid,
-            'sub': '23121d3c-84df-44ac-b458-3d63a9a05497',
+            'sub': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^',
           },
         },
         id_token: {
@@ -33,13 +30,7 @@ describe('WebIDResponseHandler', () => {
       },
       headers: {},
       status: 200,
-    } as HttpHandlerResponse;
-
-    badResponse = {
-      body: '',
-      headers: {},
-      status: 400,
-    } as HttpHandlerResponse;
+    };
 
   });
 
@@ -96,12 +87,11 @@ describe('WebIDResponseHandler', () => {
     it('should error when no sub claim was found in the payload', async () => {
 
       delete response.body.access_token.payload.sub;
-      badResponse.body = JSON.stringify({ error: 'bad_request', error_description: 'No sub claim was included' });
       await expect(webIDResponseHandler.handle(response).toPromise()).rejects.toThrow('No sub claim was included in the access token');
 
     });
 
-    it('should add a webid claim based on the subclaim to the payload', async () => {
+    it('should add a webid claim based on the uri encoded sub claim to the payload', async () => {
 
       delete response.body.access_token.payload.webid;
       delete response.body.id_token.payload.webid;

@@ -1,6 +1,5 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { decode } from 'jose/util/base64url';
 import { Observable, of, throwError } from 'rxjs';
 
 /**
@@ -84,7 +83,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
       } else {
 
-        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), sub);
+        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), encodeURIComponent(sub));
 
       }
 
