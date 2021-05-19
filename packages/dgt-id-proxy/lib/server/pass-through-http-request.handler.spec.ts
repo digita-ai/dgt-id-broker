@@ -9,11 +9,12 @@ describe('PassThroughHttpRequestHandler', () => {
   let handler: PassThroughHttpRequestHandler;
   let context: HttpHandlerContext;
   const httpRequest = new http.ClientRequest('http://digita.ai');
+  httpRequest.write = jest.fn();
+  const resp = new http.IncomingMessage(new Socket());
+  resp.statusCode = 200;
 
   const mockRequestImplementation = (body: string, callback: (response: IncomingMessage) => void) => {
 
-    const resp = new http.IncomingMessage(new Socket());
-    resp.statusCode = 200;
     callback(resp);
     resp.emit('data', Buffer.from(body));
     resp.emit('end');
@@ -113,6 +114,21 @@ describe('PassThroughHttpRequestHandler', () => {
       const httpsHandler = new PassThroughHttpRequestHandler('localhost', 3000, 'https:');
       await expect(httpsHandler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttps', status: 200, headers: {} });
       expect(https.request).toHaveBeenCalledTimes(1);
+
+    });
+
+    it('should call write on the request when the request includes a body', async () => {
+
+      context.request.body = 'mockBody';
+      await handler.handle(context).toPromise();
+      expect(httpRequest.write).toHaveBeenCalledTimes(1);
+
+    });
+
+    it('should return a 500 statuscode if the upstream did not provide a statuscode itself', async () => {
+
+      resp.statusCode = undefined;
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 500, headers: {} });
 
     });
 
