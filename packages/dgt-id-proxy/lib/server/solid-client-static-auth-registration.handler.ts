@@ -1,5 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of } from 'rxjs';
+import { Observable,  throwError, of, from } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { getPod } from '../util/get-pod';
 import { recalculateContentLength } from '../util/recalculate-content-length';
@@ -55,25 +56,59 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    if (!context.request.body) {
+    const client_id = context.request.url.searchParams.get('client_id');
+    const redirect_uri = context.request.url.searchParams.get('redirect_uri');
 
-      return throwError(new Error('No body was included in the request'));
+    if (!client_id) {
+
+      return throwError(new Error('No client_id was provided'));
 
     }
 
-    // getPod(clientID)
-    // validateWebID(text, client_id, redirect_uri)
+    try {
 
-    context.request.url.searchParams.set('client_id', this.clientID);
-    context.request.headers['content-length'] = recalculateContentLength(context.request);
+      const url = new URL(client_id);
 
-    return this.httpHandler.handle(context);
+    } catch (error) {
+
+      return throwError(new Error('The provided client_id is not a valid URL'));
+
+    }
+
+    if (!redirect_uri) {
+
+      return throwError(new Error('No redirect_uri was provided'));
+
+    }
+
+    return from(getPod(client_id))
+      .pipe(
+        switchMap((response) => {
+
+          if (response.headers.get('content-type') !== 'text/turtle') {
+
+            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
+
+          }
+
+          return from(response.text());
+
+        }),
+        switchMap((text) => validateWebID(text, client_id, redirect_uri)),
+        tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
+        tap(() => context.request.headers['content-length'] = recalculateContentLength(context.request)),
+        switchMap(() => this.httpHandler.handle(context)),
+      );
 
   }
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
-    return context ? of(true) : of(false);
+    return context
+    && context.request
+    && context.request.url
+      ? of(true)
+      : of(false);
 
   }
 

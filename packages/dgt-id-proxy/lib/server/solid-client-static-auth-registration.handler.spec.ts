@@ -67,13 +67,6 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     });
 
-    it('should error when no context request body is provided', async () => {
-
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
-
-    });
-
   });
 
 });
