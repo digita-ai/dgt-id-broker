@@ -1,9 +1,10 @@
 import { assert } from 'console';
-import { RequestOptions, request } from 'http';
+import { request as httpRequest } from 'http';
+import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 
 /**
  * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
@@ -11,12 +12,13 @@ import { switchMap, tap } from 'rxjs/operators';
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
   /**
-   * Creates a PassThroughRequestHandler with an upstream server on the provided location.
+   * Creates a PassThroughHttpRequestHandler with an upstream server on the provided location.
    *
    * @param {string} host - the host of the upstream server without scheme (is always http).
    * @param {number} port - the port to connect to on the upstream server.
+   * @param {string} scheme - either 'http' or 'https'
    */
-  constructor(public host: string, public port: number) {
+  constructor(private host: string, private port: number, private scheme: string) {
 
     super();
 
@@ -29,6 +31,18 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     if (!port) {
 
       throw new Error('No port was provided');
+
+    }
+
+    if (!scheme) {
+
+      throw new Error('No scheme was provided');
+
+    }
+
+    if (scheme !== 'http:' && scheme !== 'https:') {
+
+      throw new Error('Scheme should be "http:" or "https:"');
 
     }
 
@@ -72,14 +86,11 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     }
 
-    const req = context.request;
-    const reqMethod = req.method;
-    const reqHeaders = req.headers;
-    const reqBody = req.body;
-    const reqUrl = req.url;
-
-    return this.fetchRequest(reqUrl, reqMethod, reqHeaders, reqBody).pipe(
-      tap((res) => assert(res)),
+    return this.fetchRequest(
+      context.request.url,
+      context.request.method,
+      context.request.headers,
+      context.request.body
     );
 
   }
@@ -120,11 +131,25 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     headers.host = this.host + ':' + this.port;
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
-    const requestOpts: RequestOptions = { protocol: `http:`, hostname: this.host, port: this.port, path: url.pathname + url.search, method, headers: outgoingHttpHeaders };
+    // We don't support encoding currently. Remove this when encoding is implemented.
+    if (this.scheme === 'https:') {
+
+      delete headers['accept-encoding'];
+
+    }
+
+    const requestOpts = {
+      protocol: this.scheme,
+      hostname: this.host,
+      port: this.port,
+      path: url.pathname + url.search,
+      method,
+      headers: outgoingHttpHeaders,
+    };
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
 
-      const req = request(requestOpts, (res) => {
+      const responseCallback = (res) => {
 
         const buffer: any = [];
 
@@ -144,7 +169,9 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
         });
 
-      });
+      };
+
+      const req = this.scheme === 'http:' ? httpRequest(requestOpts, responseCallback) : httpsRequest(requestOpts, responseCallback);
 
       if (body) {
 

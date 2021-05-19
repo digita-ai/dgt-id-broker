@@ -25,6 +25,16 @@ jest.mock('fs/promises', () => {
 
 });
 
+describe('JwtField', () => {
+
+  it('should be correctly instantiated', () => {
+
+    expect(new JwtField('id_token', 'JWT')).toBeTruthy();
+
+  });
+
+});
+
 describe('JwtEncodeHandler', () => {
 
   let handler: JwtEncodeHandler;

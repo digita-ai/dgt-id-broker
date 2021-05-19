@@ -30,6 +30,10 @@
       "@type": "Variable"
     },
     {
+      "@id": "urn:dgt-id-proxy:variables:upstreamScheme",
+      "@type": "Variable"
+    },
+    {
       "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath",
       "@type": "Variable"
     },
@@ -102,6 +106,9 @@
       },
       "PassThroughHttpRequestHandler:_port": {
         "@id": "urn:dgt-id-proxy:variables:upstreamPort"
+      },
+      "PassThroughHttpRequestHandler:_scheme": {
+        "@id": "urn:dgt-id-proxy:variables:upstreamScheme"
       }
     },
     {
