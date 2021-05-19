@@ -1,12 +1,6 @@
-export const  getPod = async (webID: string): Promise<Response> => {
-
-  const response = await fetch(webID, {
-    method: 'GET',
-    headers: {
-      Accept: 'text/turtle',
-    },
-  });
-
-  return response;
-
-};
+export const getPod = (webID: string): Promise<Response> => fetch(webID, {
+  method: 'GET',
+  headers: {
+    Accept: 'text/turtle',
+  },
+});

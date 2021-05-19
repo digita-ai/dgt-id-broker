@@ -68,21 +68,21 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
   };
 
-  const podText = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-  @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-  
-  <>
+  const podText = `
+    @prefix foaf: <http://xmlns.com/foaf/0.1/>.
+    @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+
+    <>
       a foaf:PersonalProfileDocument;
       foaf:maker <http://solidpod.com/jaspervandenberghen/profile/card#me>;
       foaf:primaryTopic <http://solidpod.com/jaspervandenberghen/profile/card#me>.
-  
-  <http://solidpod.com/jaspervandenberghen/profile/card#me>
+
+    <http://solidpod.com/jaspervandenberghen/profile/card#me>
       a foaf:Person;
       foaf:name "Jasper Vandenberghen";
       solid:oidcIssuer <http://server.example.com/> ;
       solid:oidcIssuerRegistrationToken "" .
-      
-      `;
+  `;
 
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
   const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
@@ -90,9 +90,9 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   const correctPodText = podText + ' ' + oidcRegistration;
   const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
-  const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
-  const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
-  const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
+  const incorrectClientIdURL = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
+  const differentClientIdURL = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
+  const differentRedirectUriURL = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
 
   let context: HttpHandlerContext;
   let url: URL;
@@ -305,4 +305,3 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   });
 
 });
-
