@@ -35,7 +35,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * Takes the necessary parameters out of the {HttpHandlerRequest} ffrom the {HttpHandlerContext} and passes them to fetchRequest.
+   * Takes the necessary parameters out of the {HttpHandlerRequest} from the {HttpHandlerContext} and passes them to fetchRequest.
    * Returns the response as an {Observable<HttpHandlerResponse>}.
    *
    * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute

@@ -1,4 +1,6 @@
 export * from './server/pass-through-http-request.handler';
+export * from './server/solid-client-dynamic-auth-registration.handler';
+export * from './server/solid-client-dynamic-token-registration.handler';
 export * from './server/pkce-auth-request.handler';
 export * from './server/pkce-token-request.handler';
 export * from './server/pkce-code-request.handler';
