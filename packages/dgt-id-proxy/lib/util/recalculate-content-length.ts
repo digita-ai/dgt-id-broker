@@ -1,4 +1,3 @@
-
 import { HttpHandlerRequest } from '@digita-ai/handlersjs-http';
 
 export const recalculateContentLength = (request: HttpHandlerRequest): string => {
@@ -19,4 +18,3 @@ export const recalculateContentLength = (request: HttpHandlerRequest): string =>
   return Buffer.byteLength(request.body, charsetString).toString();
 
 };
-
