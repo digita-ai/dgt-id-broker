@@ -9,10 +9,10 @@ import { tap } from 'rxjs/operators';
 /**
  * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
  */
-export class PassThroughRequestHandler extends HttpHandler {
+export class PassThroughHttpRequestHandler extends HttpHandler {
 
   /**
-   * Creates a PassThroughRequestHandler with an upstream server on the provided location.
+   * Creates a PassThroughHttpRequestHandler with an upstream server on the provided location.
    *
    * @param {string} host - the host of the upstream server without scheme (is always http).
    * @param {number} port - the port to connect to on the upstream server.

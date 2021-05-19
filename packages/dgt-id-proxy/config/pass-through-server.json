@@ -100,14 +100,14 @@
     },
     {
       "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
-      "@type": "PassThroughRequestHandler",
-      "PassThroughRequestHandler:_host": {
+      "@type": "PassThroughHttpRequestHandler",
+      "PassThroughHttpRequestHandler:_host": {
         "@id": "urn:dgt-id-proxy:variables:upstreamHost"
       },
-      "PassThroughRequestHandler:_port": {
+      "PassThroughHttpRequestHandler:_port": {
         "@id": "urn:dgt-id-proxy:variables:upstreamPort"
       },
-      "PassThroughRequestHandler:_scheme": {
+      "PassThroughHttpRequestHandler:_scheme": {
         "@id": "urn:dgt-id-proxy:variables:upstreamScheme"
       }
     },
