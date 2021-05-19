@@ -1,16 +1,13 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
 import { getPod } from '../util/get-pod';
-import { recalculateContentLength } from '../util/recalculate-content-length';
 import { validateWebID } from '../util/validate-webid';
 
 export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
   constructor(
     private clientID: string,
-    private store: KeyValueStore<string, string>,
     private httpHandler: HttpHandler,
   ) {
 
@@ -19,12 +16,6 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     if (!clientID) {
 
       throw new Error('No clientID was provided');
-
-    }
-
-    if (!store) {
-
-      throw new Error('No store was provided');
 
     }
 
@@ -41,12 +32,6 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     if (!context) {
 
       return throwError(new Error('A context must be provided'));
-
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
 
     }
 
@@ -96,7 +81,6 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
         }),
         switchMap((text) => validateWebID(text, client_id, redirect_uri)),
         tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
-        tap(() => context.request.headers['content-length'] = recalculateContentLength(context.request)),
         switchMap(() => this.httpHandler.handle(context)),
       );
 
