@@ -91,8 +91,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       context.request.method,
       context.request.headers,
       context.request.body
-    ).pipe(
-      tap((res) => assert(res)),
     );
 
   }

@@ -1,4 +1,4 @@
-import http from 'http';
+import http, { IncomingMessage } from 'http';
 import https from 'https';
 import { Socket } from 'net';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
@@ -10,29 +10,21 @@ describe('PassThroughHttpRequestHandler', () => {
   let context: HttpHandlerContext;
   const httpRequest = new http.ClientRequest('http://digita.ai');
 
-  http.request = jest.fn().mockImplementation((options, callback) => {
+  const mockRequestImplementation = (body: string, callback: (response: IncomingMessage) => void) => {
 
     const resp = new http.IncomingMessage(new Socket());
     resp.statusCode = 200;
     callback(resp);
-    resp.emit('data', Buffer.from('mockHttp'));
+    resp.emit('data', Buffer.from(body));
     resp.emit('end');
 
     return httpRequest;
 
-  });
+  };
 
-  https.request = jest.fn().mockImplementation((options, callback) => {
+  http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation('mockHttp', callback));
 
-    const resp = new http.IncomingMessage(new Socket());
-    resp.statusCode = 200;
-    callback(resp);
-    resp.emit('data', Buffer.from('mockHttps'));
-    resp.emit('end');
-
-    return httpRequest;
-
-  });
+  https.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation('mockHttps', callback));
 
   beforeEach(async () => {
 

@@ -44,7 +44,6 @@
     "jest-coverage-thresholds-bumper": "0.0.4",
     "jest-fetch-mock": "^3.0.3",
     "jest-mock-extended": "^1.0.13",
-    "nock": "^13.0.11",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.4",
     "ts-node": "^9.1.1",
