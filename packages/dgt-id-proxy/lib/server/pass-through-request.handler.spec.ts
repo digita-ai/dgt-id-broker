@@ -1,15 +1,43 @@
+import http from 'http';
+import https from 'https';
+import { Socket } from 'net';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
+import { PassThroughRequestHandler } from './pass-through-request.handler';
 
-describe('PassThroughHttpRequestHandler', () => {
+describe('PassThroughRequestHandler', () => {
 
-  let handler: PassThroughHttpRequestHandler;
+  let handler: PassThroughRequestHandler;
   let context: HttpHandlerContext;
+  const httpRequest = new http.ClientRequest('http://digita.ai');
+
+  http.request = jest.fn().mockImplementation((options, callback) => {
+
+    const resp = new http.IncomingMessage(new Socket());
+    resp.statusCode = 200;
+    callback(resp);
+    resp.emit('data', Buffer.from('mockHttp'));
+    resp.emit('end');
+
+    return httpRequest;
+
+  });
+
+  https.request = jest.fn().mockImplementation((options, callback) => {
+
+    const resp = new http.IncomingMessage(new Socket());
+    resp.statusCode = 200;
+    callback(resp);
+    resp.emit('data', Buffer.from('mockHttps'));
+    resp.emit('end');
+
+    return httpRequest;
+
+  });
 
   beforeEach(async () => {
 
     context = { request: { headers: {}, method: 'GET', url: new URL('http://localhost:3000/') } };
-    handler = new PassThroughHttpRequestHandler('localhost', 3000);
+    handler = new PassThroughRequestHandler('localhost', 3000, 'http:');
 
   });
 
@@ -21,10 +49,18 @@ describe('PassThroughHttpRequestHandler', () => {
 
   it('should error when no host or port is provided', () => {
 
-    expect(() => new PassThroughHttpRequestHandler(undefined, 3000)).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler(null, 3000)).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler('localhost', undefined)).toThrow('No port was provided');
-    expect(() => new PassThroughHttpRequestHandler('localhost', null)).toThrow('No port was provided');
+    expect(() => new PassThroughRequestHandler(undefined, 3000, 'http:')).toThrow('No host was provided');
+    expect(() => new PassThroughRequestHandler(null, 3000, 'http:')).toThrow('No host was provided');
+    expect(() => new PassThroughRequestHandler('localhost', undefined, 'http:')).toThrow('No port was provided');
+    expect(() => new PassThroughRequestHandler('localhost', null, 'http:')).toThrow('No port was provided');
+    expect(() => new PassThroughRequestHandler('localhost', 3000, undefined)).toThrow('No scheme was provided');
+    expect(() => new PassThroughRequestHandler('localhost', 3000, null)).toThrow('No scheme was provided');
+
+  });
+
+  it('should error when scheme is not http: or https:', () => {
+
+    expect(() => new PassThroughRequestHandler('localhost', 3000, 'unsupportedScheme')).toThrow('Scheme should be "http:" or "https:"');
 
   });
 
@@ -73,9 +109,20 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
-    // it('should return a 200 response code', async () => {
-    //   await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
-    // });
+    it('should call http.request when scheme is http', async () => {
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: {} });
+      expect(http.request).toHaveBeenCalledTimes(1);
+
+    });
+
+    it('should call https.request when scheme is https', async () => {
+
+      const httpsHandler = new PassThroughRequestHandler('localhost', 3000, 'https:');
+      await expect(httpsHandler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttps', status: 200, headers: {} });
+      expect(https.request).toHaveBeenCalledTimes(1);
+
+    });
 
   });
 
