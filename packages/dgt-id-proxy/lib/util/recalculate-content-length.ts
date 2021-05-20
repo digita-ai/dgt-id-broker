@@ -1,6 +1,6 @@
 import { HttpHandlerRequest } from '@digita-ai/handlersjs-http';
 
-export const recalculateContentLength = (request: HttpHandlerRequest) => {
+export const recalculateContentLength = (request: HttpHandlerRequest): string => {
 
   const contentTypeHeader = request.headers['content-type'];
 
