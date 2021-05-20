@@ -16,7 +16,10 @@
     "lint:staged": "lerna run lint:staged --since HEAD --stream --concurrency 1",
     "test": "lerna run test --since HEAD --parallel",
     "test:all": "lerna run test --parallel",
-    "test:ci": "lerna run test:ci"
+    "test:ci": "lerna run test:ci",
+    "demo:auth0": "concurrently \"cross-env VITE_OIDC_PORT=3003 VITE_PORT=3001 VITE_IP=localhost VITE_CLIENT_ID=http://localhost:3002/tonypaillard/profile/card#me VITE_RESOURCE_URI=http://localhost:3002/auth0609be5ed22684f0067d64174/profile/ VITE_AUTH_ENDPOINT=authorize VITE_TOKEN_ENDPOINT=oauth/token npm --prefix ./demo/demo-client run dev -- --port 3001\" \"npm --prefix ./demo/demo-pods run start\" \"npm --prefix ./packages/dgt-id-proxy run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/\"",
+    "demo:panva": "concurrently \"cross-env VITE_OIDC_PORT=3003 VITE_PORT=3001 VITE_IP=localhost VITE_CLIENT_ID=http://localhost:3002/tonypaillard/profile/card#me VITE_RESOURCE_URI=http://localhost:3002/tonypaillard/profile/ VITE_AUTH_ENDPOINT=auth VITE_TOKEN_ENDPOINT=token npm --prefix ./demo/demo-client run dev -- --port 3001\" \"npm --prefix ./demo/demo-pods run start\" \"npm --prefix ./packages/dgt-id-proxy run start\" \"cross-env VITE_PORT=3001 OIDC_PORT=3000 VITE_IP=localhost CLIENT_ID=test_app CLIENT_SECRET=super_secret npm --prefix ./providers/classic-oidc-provider run start\"",
+    "demo:solidpanva": "concurrently \"cross-env VITE_OIDC_PORT=3003 VITE_PORT=3001 VITE_IP=localhost VITE_CLIENT_ID=http://localhost:3002/tonypaillard/profile/card#me VITE_RESOURCE_URI=http://localhost:3002/tonypaillard/profile/ VITE_AUTH_ENDPOINT=auth VITE_TOKEN_ENDPOINT=token npm --prefix ./demo/demo-client run dev -- --port 3001\" \"npm --prefix ./demo/demo-pods run start\" \"npm --prefix ./packages/dgt-id-proxy run start -- -c config/pass-through-server.json\""
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",
@@ -27,6 +30,8 @@
     "@types/jest": "^26.0.22",
     "@types/node": "^14.14.41",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "concurrently": "^6.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^7.22.0",
     "eslint-import-resolver-typescript": "^2.4.0",
     "eslint-plugin-import": "^2.22.1",
