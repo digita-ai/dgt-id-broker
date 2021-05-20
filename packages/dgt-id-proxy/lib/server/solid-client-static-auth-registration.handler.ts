@@ -8,6 +8,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
   constructor(
     private clientID: string,
+    private clientSecret: string,
     private httpHandler: HttpHandler,
   ) {
 
@@ -16,6 +17,12 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     if (!clientID) {
 
       throw new Error('No clientID was provided');
+
+    }
+
+    if (!clientSecret) {
+
+      throw new Error('No clientSecret was provided');
 
     }
 
@@ -68,19 +75,12 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     return from(getPod(client_id))
       .pipe(
-        switchMap((response) => {
-
-          if (response.headers.get('content-type') !== 'text/turtle') {
-
-            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
-
-          }
-
-          return from(response.text());
-
-        }),
+        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+          : from(response.text())),
         switchMap((text) => validateWebID(text, client_id, redirect_uri)),
         tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
+        tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
         switchMap(() => this.httpHandler.handle(context)),
       );
 

@@ -1,18 +1,35 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of, from } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { Observable,  throwError, of, from, zip } from 'rxjs';
+import { switchMap, tap, map } from 'rxjs/operators';
 import { getPod } from '../util/get-pod';
+import { recalculateContentLength } from '../util/recalculate-content-length';
 import { validateWebID } from '../util/validate-webid';
 
 export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
-  constructor(private httpHandler: HttpHandler){
+  constructor(
+    private httpHandler: HttpHandler,
+    private clientID: string,
+    private clientSecret: string,
+  ){
 
     super();
 
     if (!httpHandler) {
 
       throw new Error('No handler was provided');
+
+    }
+
+    if (!clientID) {
+
+      throw new Error('No clientID was provided');
+
+    }
+
+    if (!clientSecret) {
+
+      throw new Error('No clientSecret was provided');
 
     }
 
@@ -63,29 +80,24 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
     return from(getPod(client_id))
       .pipe(
-        switchMap((response) => {
-
-          if (response.headers.get('content-type') !== 'text/turtle') {
-
-            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
-
-          }
-
-          return from(response.text());
-
-        }),
+        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+          : from(response.text())),
         switchMap((text) => validateWebID(text, client_id, redirect_uri)),
-        switchMap((text) => {
+        switchMap((text) => (text.grant_types.includes(grant_type))
+          ? of(text)
+          : throwError(new Error('The grant type in the request is not included in the WebId'))),
+        map(() => {
 
-          if (!text.grant_types.includes(grant_type)) {
+          params.set('client_id', this.clientID);
+          params.set('client_secret', this.clientSecret);
 
-            return throwError(new Error('The grant type in the request is not included in the WebId'));
-
-          }
-
-          return this.httpHandler.handle(context);
+          return { ...context, request: { ...context.request, body: params.toString() } };
 
         }),
+        switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
+        tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
+        switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
       );
 
   }

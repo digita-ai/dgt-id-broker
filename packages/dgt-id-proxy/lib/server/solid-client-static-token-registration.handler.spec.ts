@@ -1,6 +1,7 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
+import { recalculateContentLength } from '../util/recalculate-content-length';
 import { SolidClientStaticTokenRegistrationHandler } from './solid-client-static-token-registration.handler';
 
 describe('SolidClientStaticTokenRegistrationHandler', () => {
@@ -9,7 +10,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
   const httpHandler = {
     canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValueOnce(of()),
+    handle: jest.fn().mockReturnValue(of()),
     safeHandle: jest.fn(),
   } as HttpHandler;
 
@@ -19,12 +20,15 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
   const redirect_uri = 'http://client.example.com/requests.html';
   const client_id = 'http://solidpod./jaspervandenberghen/profile/card#me';
+  const client_id_constructor = 'static_client';
+  const client_secret = 'static_secret';
   const noClientIDRequestBody = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`;
   const noGrantTypeRequestBody = `code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const noRedirectUriRequestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
   const requestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const requestBodyWithOtherGrantType = `grant_type=implicit&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+  const requestBodyWithStaticClient = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id_constructor)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}&client_secret=${client_secret}`;
 
   const context = { request: { headers, body: requestBody, method: 'POST', url } } as HttpHandlerContext;
 
@@ -46,7 +50,9 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const correctPodText = podText + ' ' + oidcRegistration;
 
   const solidClientStaticTokenRegistrationHandler = new SolidClientStaticTokenRegistrationHandler(
-    httpHandler
+    httpHandler,
+    client_id_constructor,
+    client_secret,
   );
 
   it('should be correctly instantiated', () => {
@@ -57,8 +63,22 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
   it('should error when no handler was provided', () => {
 
-    expect(() => new SolidClientStaticTokenRegistrationHandler(undefined)).toThrow('No handler was provided');
-    expect(() => new SolidClientStaticTokenRegistrationHandler(null)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticTokenRegistrationHandler(undefined, client_id_constructor, client_secret)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticTokenRegistrationHandler(null, client_id_constructor, client_secret)).toThrow('No handler was provided');
+
+  });
+
+  it('should error when no clientID was provided', () => {
+
+    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, undefined, client_secret)).toThrow('No clientID was provided');
+    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, null, client_secret)).toThrow('No clientID was provided');
+
+  });
+
+  it('should error when no handler was provided', () => {
+
+    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, client_id_constructor, undefined)).toThrow('No clientSecret was provided');
+    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, client_id_constructor, null)).toThrow('No clientSecret was provided');
 
   });
 
@@ -137,7 +157,20 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
       await solidClientStaticTokenRegistrationHandler.handle(context).toPromise();
 
       expect(httpHandler.handle).toHaveBeenCalledTimes(1);
-      expect(httpHandler.handle).toHaveBeenCalledWith(context);
+
+      expect(httpHandler.handle)
+        .toHaveBeenCalledWith({ ...context, request: { ...context.request, body: requestBodyWithStaticClient } });
+
+    });
+
+    it('should replace the client_id with the registered one & change the content length', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      const newContext = { request: { headers, body: requestBodyWithStaticClient, method: 'POST', url } } as HttpHandlerContext;
+      const length = recalculateContentLength(newContext.request);
+      await solidClientStaticTokenRegistrationHandler.handle(context).toPromise();
+
+      expect(httpHandler.handle).toHaveBeenCalledWith({ ...newContext, request: { ...newContext.request, headers: { 'content-length': length, 'content-type': 'application/json;charset=utf-8' } } });
 
     });
 

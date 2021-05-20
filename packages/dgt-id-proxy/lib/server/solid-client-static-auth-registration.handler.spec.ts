@@ -15,7 +15,8 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   const code_challenge_method_value = 'S256';
   const referer = 'client.example.com';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
-  const client_id_constructor = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
+  const client_id_constructor = 'static_client';
+  const client_secret = 'static_secret';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const incorrectClient_id = 'jaspervandenberghen/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
@@ -27,7 +28,9 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
   const solidClientStaticAuthRegistrationHandler = new SolidClientStaticAuthRegistrationHandler(
     client_id_constructor,
-    httpHandler
+    client_secret,
+    httpHandler,
+
   );
 
   const podText = `
@@ -66,15 +69,22 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
   it('should error when no handler was provided', () => {
 
-    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, undefined)).toThrow('No handler was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, null)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, client_secret, undefined)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, client_secret, null)).toThrow('No handler was provided');
 
   });
 
   it('should error when no client_id was provided', () => {
 
-    expect(() => new SolidClientStaticAuthRegistrationHandler(undefined, httpHandler)).toThrow('No clientID was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(null, httpHandler)).toThrow('No clientID was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(undefined, client_secret, httpHandler)).toThrow('No clientID was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(null, client_secret, httpHandler)).toThrow('No clientID was provided');
+
+  });
+
+  it('should error when no client_secret was provided', () => {
+
+    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, undefined, httpHandler)).toThrow('No clientSecret was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, null, httpHandler)).toThrow('No clientSecret was provided');
 
   });
 
@@ -144,13 +154,14 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     });
 
-    it('should switch the context client id with the one given in the constructor', async () => {
+    it('should switch the context client id & add the secret given in the constructor', async () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
       await solidClientStaticAuthRegistrationHandler.handle(context).toPromise();
 
       expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
+      expect(context.request.url.searchParams.get('client_secret')).toEqual(client_secret);
 
     });
 
