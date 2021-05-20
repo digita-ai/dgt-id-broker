@@ -57,7 +57,7 @@ formDataForAccessToken.append('grant_type', 'authorization_code');
 formDataForAccessToken.append('code', code);
 formDataForAccessToken.append('client_id', client);
 // Client secret is not set for the WebID flow. Uncomment this if you need it.
-formDataForAccessToken.append('client_secret', client_secret);
+// formDataForAccessToken.append('client_secret', client_secret);
 formDataForAccessToken.append('redirect_uri', redirect_uri);
 // Get our code verifier from session storage, because we need to send it again for PKCE validation.
 const code_verifier = sessionStorage.getItem("pkce_code_verifier")
