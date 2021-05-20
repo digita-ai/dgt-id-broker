@@ -8,9 +8,19 @@ import { validateWebID } from '../util/validate-webid';
 
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
-  constructor(private store: KeyValueStore<string, any>, private httpHandler: HttpHandler) {
+  constructor(
+    private registration_uri: string,
+    private store: KeyValueStore<string, any>,
+    private httpHandler: HttpHandler
+  ) {
 
     super();
+
+    if (!registration_uri) {
+
+      throw new Error('A registration_uri must be provided');
+
+    }
 
     if (!store) {
 
@@ -96,8 +106,8 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           };
 
           return registerData
-            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }))
-            : from(this.registerClient(reqData));
+            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }, this.registration_uri))
+            : from(this.registerClient(reqData, this.registration_uri));
 
         }),
         tap((res) => this.store.set(client_id, res)),
@@ -117,8 +127,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  // async readClientRegistration(client_id: string, context: HttpHandlerContext) {
-  //   const url = `http://localhost:3000/reg/${client_id}`;
+  // async readClientRegistration(client_id: string, context: HttpHandlerContext, url: string) {
   //   const response = await fetch(url, {
   //     method: 'GET',
   //     headers: {
@@ -128,9 +137,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   //   return response;
   // }
 
-  async registerClient(data: any) {
-
-    const url = `http://localhost:3000/reg`;
+  async registerClient(data: any, url: string) {
 
     const response = await fetch(url, {
       method: 'POST',
