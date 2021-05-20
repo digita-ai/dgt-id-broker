@@ -18,4 +18,3 @@ export const recalculateContentLength = (request: HttpHandlerRequest): string =>
   return Buffer.byteLength(request.body, charsetString).toString();
 
 };
-

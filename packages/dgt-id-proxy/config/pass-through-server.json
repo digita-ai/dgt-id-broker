@@ -30,6 +30,10 @@
       "@type": "Variable"
     },
     {
+      "@id": "urn:dgt-id-proxy:variables:upstreamScheme",
+      "@type": "Variable"
+    },
+    {
       "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath",
       "@type": "Variable"
     },
@@ -102,6 +106,9 @@
       },
       "PassThroughHttpRequestHandler:_port": {
         "@id": "urn:dgt-id-proxy:variables:upstreamPort"
+      },
+      "PassThroughHttpRequestHandler:_scheme": {
+        "@id": "urn:dgt-id-proxy:variables:upstreamScheme"
       }
     },
     {
@@ -239,7 +246,7 @@
       "HttpHandlerRoute:_path": "/token"
     },
     {
-      "@id": "urn:dgt-id-proxy:default:OpenidConfigurationRoute",
+      "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint",
       "@type": "HttpHandlerRoute",
       "HttpHandlerRoute:_operations": [
         {
@@ -261,7 +268,7 @@
       "HttpHandlerRoute:_path": "/.well-known/openid-configuration"
     },
     {
-      "@id": "urn:dgt-id-proxy:default:JwksRoute",
+      "@id": "urn:dgt-id-proxy:default:JwksEndpoint",
       "@type": "HttpHandlerRoute",
       "HttpHandlerRoute:_operations": [
         {

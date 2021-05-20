@@ -14,11 +14,13 @@ const checkUri = (uri: string) => {
     const url = new URL(httpUri);
     const host = url.hostname;
     const port = url.port !== '' ? url.port : undefined;
+    const scheme = url.protocol;
 
     return ({
       uri: httpUri,
       host,
       port,
+      scheme,
     });
 
   } catch (e) {
@@ -86,7 +88,7 @@ const createVariables = (args: string[]): Record<string, any> => {
     .help();
 
   const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003', host: 'localhost', port: '3003' };
-  const { uri: upstreamUri, host: upstreamHost, port: upstreamPort } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000' };
+  const { uri: upstreamUri, host: upstreamHost, port: upstreamPort, scheme: upstreamScheme } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000', scheme: 'http:' };
 
   checkFile(params.openidConfigurationFilePath ?? 'assets/openid-configuration.json');
   checkFile(params.jwksFilePath ?? 'assets/jwks.json');
@@ -100,6 +102,7 @@ const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:upstreamUri': upstreamUri,
     'urn:dgt-id-proxy:variables:upstreamHost': upstreamHost,
     'urn:dgt-id-proxy:variables:upstreamPort': upstreamPort ??'3000',
+    'urn:dgt-id-proxy:variables:upstreamScheme': upstreamScheme,
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': params.openidConfigurationFilePath ? params.openidConfigurationFilePath : 'assets/openid-configuration.json',
     'urn:dgt-id-proxy:variables:jwksFilePath': params.jwksFilePath ? params.jwksFilePath : 'assets/jwks.json',
   };

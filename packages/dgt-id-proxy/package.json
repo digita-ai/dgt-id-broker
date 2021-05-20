@@ -58,6 +58,7 @@
     "jose": "^3.11.6",
     "lint-staged": "^10.5.4",
     "node-fetch": "^2.6.1",
+    "slugify": "^1.5.3",
     "uuid": "^8.3.2",
     "yargs": "^17.0.1"
   },
@@ -80,10 +81,10 @@
     },
     "coverageThreshold": {
       "global": {
-        "branches": 51.84,
-        "functions": 62.75,
-        "lines": 71.92,
-        "statements": 43.58
+        "branches": 86.58,
+        "functions": 84.68,
+        "lines": 81.62,
+        "statements": 81.94
       }
     }
   }

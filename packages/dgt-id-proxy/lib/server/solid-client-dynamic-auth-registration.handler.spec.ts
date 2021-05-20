@@ -1,4 +1,4 @@
-import { BadRequestHttpError, ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { BadRequestHttpError, ForbiddenHttpError, HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { InMemoryStore } from '../storage/in-memory-store';
@@ -81,7 +81,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       foaf:name "Jasper Vandenberghen";
       solid:oidcIssuer <http://server.example.com/> ;
       solid:oidcIssuerRegistrationToken "" .
-      
       `;
 
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
@@ -305,4 +304,3 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   });
 
 });
-
