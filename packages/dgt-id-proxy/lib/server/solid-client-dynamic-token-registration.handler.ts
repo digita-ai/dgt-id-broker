@@ -67,6 +67,7 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
       switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
       tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
+      tap((response) => response.body.access_token.payload.client_id = client_id)
     );
 
   }
