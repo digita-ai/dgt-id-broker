@@ -1,6 +1,10 @@
 services:
   keycloak:
       image: quay.io/keycloak/keycloak:latest
+      volumes:
+        - ./imports:/opt/jboss/keycloak/imports
+      command: 
+        - "-b 0.0.0.0 -Dkeycloak.import=/opt/jboss/keycloak/imports/realm.json"
       environment:
         KEYCLOAK_USER: admin
         KEYCLOAK_PASSWORD: admin

@@ -1,0 +1,102 @@
+{
+    "realm": "digita",
+    "id": "digita",
+    "enabled": "true",
+    "accessTokenLifespan" : 7200,
+    "passwordPolicy": "length(1)",
+    "components": {
+      "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
+        {
+        "id": "1a6c3a33-046a-4e29-b2b3-hf",
+        "name": "Allowed Protocol Mapper Types",
+        "providerId": "allowed-protocol-mappers",
+        "subType": "authenticated",
+        "subComponents": {},
+        "config": {
+          "allowed-protocol-mapper-types": [
+            "oidc-usermodel-attribute-mapper",
+            "saml-user-property-mapper",
+            "saml-role-list-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "saml-user-attribute-mapper",
+            "oidc-usermodel-property-mapper",
+            "oidc-full-name-mapper",
+            "oidc-address-mapper"
+            ]
+          }
+        },
+        {
+          "id": "41313780-cd21-43ec-b9a6-das",
+          "name": "Allowed Client Scopes",
+          "providerId": "allowed-client-templates",
+          "subType": "authenticated",
+          "subComponents": {},
+          "config": {
+            "allow-default-scopes": [
+              "true"
+            ]
+          }
+        },
+        {
+          "id": "784ad611-33b3-4572-bbf8-asdfga",
+          "name": "Full Scope Disabled",
+          "providerId": "scope",
+          "subType": "anonymous",
+          "subComponents": {},
+          "config": {}
+        },
+        {
+          "id": "11acb132-bb2a-47fd-b4f3-143f1",
+          "name": "Allowed Client Scopes",
+          "providerId": "allowed-client-templates",
+          "subType": "anonymous",
+          "subComponents": {},
+          "config": {
+            "allow-default-scopes": [
+              "true"
+            ]
+          }
+        },
+        {
+          "id": "d26d8dd1-9850-424a-884e-d6de61d",
+          "name": "Consent Required",
+          "providerId": "consent-required",
+          "subType": "anonymous",
+          "subComponents": {},
+          "config": {}
+        },
+        {
+          "id": "f198d61a-4290-41ce-9ef4-hdsfhf",
+          "name": "Max Clients Limit",
+          "providerId": "max-clients",
+          "subType": "anonymous",
+          "subComponents": {},
+          "config": {
+            "max-clients": [
+              "200"
+            ]
+          }
+        }
+      ]
+    },
+    "roles" : {
+     "realm" : [ {
+           "id": "admin-id",
+           "name": "admin",
+           "description" : "admin role",
+           "scopeParamRequired": false,
+           "composite": false,
+           "clientRole": false,
+           "containerId": "digita"
+       }, {
+         "id" : "user-id",
+         "name" : "user",
+         "description" : "user role",
+         "scopeParamRequired" : false,
+         "composite" : false,
+         "clientRole" : false,
+         "containerId" : "digita"
+       }
+      ]
+    }
+}
