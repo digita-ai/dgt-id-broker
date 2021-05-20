@@ -30,6 +30,10 @@
         "@type": "Variable"
       },
       {
+        "@id": "urn:dgt-id-proxy:variables:upstreamScheme",
+        "@type": "Variable"
+      },
+      {
         "@id": "urn:dgt-id-proxy:variables:basePath",
         "@type": "Variable"
       },
@@ -65,7 +69,7 @@
                   "HttpHandlerController:_label": "ControllerList",
                   "HttpHandlerController:_routes": [
                     {
-                      "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
+                      "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
                     },
                     {
                       "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
@@ -99,6 +103,30 @@
         }
       },
       {
+        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore",
+        "@type": "InMemoryStore"
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
+        "@type": "SolidClientDynamicAuthRegistrationHandler",
+        "SolidClientDynamicAuthRegistrationHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
+        },
+        "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
+          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler",
+        "@type": "SolidClientDynamicTokenRegistrationHandler",
+        "SolidClientDynamicTokenRegistrationHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
+        },
+        "SolidClientDynamicTokenRegistrationHandler:_httpHandler": {
+          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        }
+      },
+      {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
         "@type": "PassThroughHttpRequestHandler",
         "PassThroughHttpRequestHandler:_host": {
@@ -107,8 +135,8 @@
         "PassThroughHttpRequestHandler:_port": {
           "@id": "urn:dgt-id-proxy:variables:upstreamPort"
         },
-        "PassThroughHttpRequestHandler:_basePath": {
-          "@id": "urn:dgt-id-proxy:variables:basePath"
+        "PassThroughHttpRequestHandler:_scheme": {
+          "@id": "urn:dgt-id-proxy:variables:upstreamScheme"
         }
       },
       {
@@ -130,7 +158,7 @@
         "HttpHandlerOperation:_publish": false
       },
       {
-        "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
+        "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint",
         "@type": "HttpHandlerRoute",
         "HttpHandlerRoute:_operations": [
           {
@@ -138,9 +166,9 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
         },
-        "HttpHandlerRoute:_path": "/auth"
+        "HttpHandlerRoute:_path": "/auth/realms/master/protocol/openid-connect/auth"
       },
       {
         "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint",
