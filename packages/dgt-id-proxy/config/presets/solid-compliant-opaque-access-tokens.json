@@ -206,6 +206,9 @@
         },
         "PassThroughHttpRequestHandler:_scheme": {
           "@id": "urn:dgt-id-proxy:variables:upstreamScheme"
+        },
+        "PassThroughHttpRequestHandler:_proxyUrl": {
+          "@id": "urn:dgt-id-proxy:variables:proxyUri"
         }
       },
       {
