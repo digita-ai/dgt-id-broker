@@ -10,8 +10,7 @@ describe('PassThroughHttpRequestHandler', () => {
   let context: HttpHandlerContext;
   const httpRequest = new http.ClientRequest('http://digita.ai');
   httpRequest.write = jest.fn();
-  const resp = new http.IncomingMessage(new Socket());
-  resp.statusCode = 200;
+  let resp: IncomingMessage;
 
   const mockRequestImplementation = (body: string, callback: (response: IncomingMessage) => void) => {
 
@@ -30,7 +29,9 @@ describe('PassThroughHttpRequestHandler', () => {
   beforeEach(async () => {
 
     context = { request: { headers: {}, method: 'GET', url: new URL('http://localhost:3000/') } };
-    handler = new PassThroughHttpRequestHandler('localhost', 3000, 'http:');
+    handler = new PassThroughHttpRequestHandler('localhost', 3000, 'http:', 'http://urlofproxy.com');
+    resp = new http.IncomingMessage(new Socket());
+    resp.statusCode = 200;
 
   });
 
@@ -42,18 +43,26 @@ describe('PassThroughHttpRequestHandler', () => {
 
   it('should error when no host or port is provided', () => {
 
-    expect(() => new PassThroughHttpRequestHandler(undefined, 3000, 'http:')).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler(null, 3000, 'http:')).toThrow('No host was provided');
-    expect(() => new PassThroughHttpRequestHandler('localhost', undefined, 'http:')).toThrow('No port was provided');
-    expect(() => new PassThroughHttpRequestHandler('localhost', null, 'http:')).toThrow('No port was provided');
-    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, undefined)).toThrow('No scheme was provided');
-    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, null)).toThrow('No scheme was provided');
+    expect(() => new PassThroughHttpRequestHandler(undefined, 3000, 'http:', 'http://urlofproxy.com')).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler(null, 3000, 'http:', 'http://urlofproxy.com')).toThrow('No host was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', undefined, 'http:', 'http://urlofproxy.com')).toThrow('No port was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', null, 'http:', 'http://urlofproxy.com')).toThrow('No port was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, undefined, 'http://urlofproxy.com')).toThrow('No scheme was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, null, 'http://urlofproxy.com')).toThrow('No scheme was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, 'http:', undefined)).toThrow('No proxyUrl was provided');
+    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, 'http:', null)).toThrow('No proxyUrl was provided');
 
   });
 
   it('should error when scheme is not http: or https:', () => {
 
-    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, 'unsupportedScheme')).toThrow('Scheme should be "http:" or "https:"');
+    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, 'unsupportedScheme', 'http://urlofproxy.com')).toThrow('Scheme should be "http:" or "https:"');
+
+  });
+
+  it('should error when proxyUrl is not a valid URL', () => {
+
+    expect(() => new PassThroughHttpRequestHandler('localhost', 3000, 'http:', 'invalidurl')).toThrow('proxyUrl must be a valid URL');
 
   });
 
@@ -111,7 +120,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
     it('should call https.request when scheme is https', async () => {
 
-      const httpsHandler = new PassThroughHttpRequestHandler('localhost', 3000, 'https:');
+      const httpsHandler = new PassThroughHttpRequestHandler('localhost', 3000, 'https:', 'http://urlofproxy.com');
       await expect(httpsHandler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttps', status: 200, headers: {} });
       expect(https.request).toHaveBeenCalledTimes(1);
 
@@ -122,6 +131,26 @@ describe('PassThroughHttpRequestHandler', () => {
       context.request.body = 'mockBody';
       await handler.handle(context).toPromise();
       expect(httpRequest.write).toHaveBeenCalledTimes(1);
+
+    });
+
+    it('should replace the upstream url with the proxyUrl in the location header', async () => {
+
+      resp.headers = {
+        location: 'http://localhost:3000/mock/path',
+      };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: { location: 'http://urlofproxy.com/mock/path' } });
+
+    });
+
+    it('should leave location unchanged if it does not match upstream url', async () => {
+
+      resp.headers = {
+        location: 'http://notupstream.com/mock/path',
+      };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: { location: 'http://notupstream.com/mock/path' } });
 
     });
 
