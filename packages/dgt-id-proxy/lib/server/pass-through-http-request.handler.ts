@@ -1,24 +1,25 @@
-import { assert } from 'console';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
-import { tap } from 'rxjs/operators';
 
 /**
  * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
  */
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
+  private proxyURL: URL;
+
   /**
    * Creates a PassThroughHttpRequestHandler with an upstream server on the provided location.
    *
    * @param {string} host - the host of the upstream server without scheme (is always http).
    * @param {number} port - the port to connect to on the upstream server.
-   * @param {string} scheme - either 'http' or 'https'
+   * @param {string} scheme - either 'http' or 'https'.
+   * @param {string} proxyUrl - the url of the proxy server.
    */
-  constructor(private host: string, private port: number, private scheme: string) {
+  constructor(private host: string, private port: number, private scheme: string, private proxyUrl: string) {
 
     super();
 
@@ -43,6 +44,22 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     if (scheme !== 'http:' && scheme !== 'https:') {
 
       throw new Error('Scheme should be "http:" or "https:"');
+
+    }
+
+    if (!proxyUrl) {
+
+      throw new Error('No proxyUrl was provided');
+
+    }
+
+    try {
+
+      this.proxyURL = new URL(proxyUrl);
+
+    } catch (e) {
+
+      throw new Error('proxyUrl must be a valid URL');
 
     }
 
@@ -158,6 +175,18 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
         res.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
 
         res.on('end', () => {
+
+          try {
+
+            const location = new URL(res.headers.location);
+            location.host = this.proxyURL.host;
+            location.protocol = this.proxyURL.protocol;
+            location.port = this.proxyURL.port;
+            res.headers.location = location.toString();
+
+          } catch (e) {
+            // do nothing
+          }
 
           const httpHandlerResponse: HttpHandlerResponse = {
             body: Buffer.concat(buffer).toString(),
