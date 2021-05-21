@@ -4,81 +4,95 @@
     "enabled": "true",
     "accessTokenLifespan" : 7200,
     "passwordPolicy": "length(1)",
-    "components": {
-      "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
-        {
-        "id": "1a6c3a33-046a-4e29-b2b3-hf",
-        "name": "Allowed Protocol Mapper Types",
-        "providerId": "allowed-protocol-mappers",
-        "subType": "authenticated",
-        "subComponents": {},
-        "config": {
-          "allowed-protocol-mapper-types": [
-            "oidc-usermodel-attribute-mapper",
-            "saml-user-property-mapper",
-            "saml-role-list-mapper",
-            "oidc-sha256-pairwise-sub-mapper",
-            "saml-user-attribute-mapper",
-            "oidc-usermodel-property-mapper",
-            "oidc-full-name-mapper",
-            "oidc-address-mapper"
-            ]
-          }
+    "clients": [
+      {
+        "id": "74b4e5ce-421d-450d-b6f3-3ec7c62a67cb",
+        "clientId": "static-client",
+        "rootUrl": "http://localhost:8080/static-client",
+        "adminUrl": "http://localhost:8080/static-client",
+        "surrogateAuthRequired": false,
+        "enabled": true,
+        "alwaysDisplayInConsole": false,
+        "clientAuthenticatorType": "client-secret",
+        "secret": "0422604a-41a8-4fc3-b4f0-d4b30256296e",
+        "redirectUris": [
+          "http://localhost:3001/requests.html"
+        ],
+        "webOrigins": [
+          "http://localhost:8080"
+        ],
+        "notBefore": 0,
+        "bearerOnly": false,
+        "consentRequired": false,
+        "standardFlowEnabled": true,
+        "implicitFlowEnabled": false,
+        "directAccessGrantsEnabled": true,
+        "serviceAccountsEnabled": false,
+        "publicClient": false,
+        "frontchannelLogout": false,
+        "protocol": "openid-connect",
+        "attributes": {
+          "saml.assertion.signature": "false",
+          "saml.force.post.binding": "false",
+          "saml.multivalued.roles": "false",
+          "saml.encrypt": "false",
+          "backchannel.logout.revoke.offline.tokens": "false",
+          "saml.server.signature": "false",
+          "saml.server.signature.keyinfo.ext": "false",
+          "exclude.session.state.from.auth.response": "false",
+          "backchannel.logout.session.required": "true",
+          "client_credentials.use_refresh_token": "false",
+          "saml_force_name_id_format": "false",
+          "saml.client.signature": "false",
+          "tls.client.certificate.bound.access.tokens": "false",
+          "saml.authnstatement": "false",
+          "display.on.consent.screen": "false",
+          "saml.onetimeuse.condition": "false"
         },
-        {
-          "id": "41313780-cd21-43ec-b9a6-das",
-          "name": "Allowed Client Scopes",
-          "providerId": "allowed-client-templates",
-          "subType": "authenticated",
-          "subComponents": {},
-          "config": {
-            "allow-default-scopes": [
-              "true"
-            ]
-          }
-        },
-        {
-          "id": "784ad611-33b3-4572-bbf8-asdfga",
-          "name": "Full Scope Disabled",
-          "providerId": "scope",
-          "subType": "anonymous",
-          "subComponents": {},
-          "config": {}
-        },
-        {
-          "id": "11acb132-bb2a-47fd-b4f3-143f1",
-          "name": "Allowed Client Scopes",
-          "providerId": "allowed-client-templates",
-          "subType": "anonymous",
-          "subComponents": {},
-          "config": {
-            "allow-default-scopes": [
-              "true"
-            ]
-          }
-        },
-        {
-          "id": "d26d8dd1-9850-424a-884e-d6de61d",
-          "name": "Consent Required",
-          "providerId": "consent-required",
-          "subType": "anonymous",
-          "subComponents": {},
-          "config": {}
-        },
-        {
-          "id": "f198d61a-4290-41ce-9ef4-hdsfhf",
-          "name": "Max Clients Limit",
-          "providerId": "max-clients",
-          "subType": "anonymous",
-          "subComponents": {},
-          "config": {
-            "max-clients": [
-              "200"
-            ]
-          }
-        }
-      ]
-    },
+        "authenticationFlowBindingOverrides": {},
+        "fullScopeAllowed": true,
+        "nodeReRegistrationTimeout": -1,
+        "defaultClientScopes": [
+          "web-origins",
+          "role_list",
+          "roles",
+          "profile",
+          "email"
+        ],
+        "optionalClientScopes": [
+          "address",
+          "phone",
+          "offline_access",
+          "microprofile-jwt"
+        ]
+      }
+    ],
+    "users" : [ {
+      "id" : "944e0f16-b053-48df-b7d3-2371b680b2f3",
+      "createdTimestamp" : 1621596323038,
+      "username" : "tony.paillard",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "firstName" : "Tony",
+      "lastName" : "Paillard",
+      "email" : "tony.paillard@digita.ai",
+      "credentials" : [ {
+        "id" : "tonypaillard",
+        "type" : "password",
+        "createdDate" : 1621596335578,
+        "secretData" : "{\"value\":\"YAwS0Q5c0ZjQqlCIB45UkXV8f9rzfsFgy4v7Kthr8dE862QrJttXBdUq7RR2cE/Rhwuk5rBbWVLXo61hSU8veA==\",\"salt\":\"Wx9gbQi1Ifu7n3Q37wqaRg==\",\"additionalParameters\":{}}",
+        "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+      } ],
+      "disableableCredentialTypes" : [ ],
+      "requiredActions" : [ ],
+      "realmRoles" : [ "uma_authorization", "offline_access" ],
+      "clientRoles" : {
+        "account" : [ "view-profile", "manage-account" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    } ],
     "roles" : {
      "realm" : [ {
            "id": "admin-id",

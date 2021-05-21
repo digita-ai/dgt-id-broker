@@ -1,6 +1,7 @@
 services:
   keycloak:
       image: quay.io/keycloak/keycloak:latest
+      container_name: "keycloak"
       volumes:
         - ./imports:/opt/jboss/keycloak/imports
       command: 
