@@ -62,6 +62,10 @@ Accept: application/json
   "client_secret_expires_at": 0 
 }
 
+###
+GET http://localhost:3000/reg/12F77eK7STijj2KfjAQNC HTTP/1.1
+Authorization: Bearer xsTFEvcWOnm6hUmKkzV9S5pKF6_HBwQSudx2mbo1UA0
+
 
 ### Register client dynamically
 POST http://localhost:3000/reg HTTP/1.1

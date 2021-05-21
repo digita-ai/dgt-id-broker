@@ -95,6 +95,8 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
             'token_endpoint_auth_method' : 'none',
           };
 
+          this.compareData(podData, context);
+
           return registerData
             ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }))
             : from(this.registerClient(reqData));
@@ -117,17 +119,6 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  // async readClientRegistration(client_id: string, context: HttpHandlerContext) {
-  //   const url = `http://localhost:3000/reg/${client_id}`;
-  //   const response = await fetch(url, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Accept': 'application/json',
-  //     },
-  //   });
-  //   return response;
-  // }
-
   async registerClient(data: any) {
 
     const url = `http://localhost:3000/reg`;
@@ -142,6 +133,56 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
     });
 
     return response.json();
+
+  }
+
+  compareData(podData: any, context: HttpHandlerContext){
+
+    const metadata = [ 'response_types', 'grant_types', 'application_type', 'contacts', 'client_name', 'logo_uri', 'client_uri', 'policy_uri', 'tos_uri', 'jwks_uri', 'jwks', 'sector_identifier_uri', 'subject_type', 'id_token_signed_response_alg', 'id_token_encrypted_response_alg', 'id_token_encrypted_response_enc', 'userinfo_signed_response_alg', 'userinfo_encrypted_response_alg', 'userinfo_encrypted_response_enc', 'request_object_signing_alg', 'request_object_encryption_alg', 'request_object_encryption_enc', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'default_max_age', 'require_auth_time', 'default_acr_values', 'initiate_login_uri', 'request_uris' ];
+
+    const reqData = {
+      'token_endpoint_auth_method' : 'none',
+    };
+
+    metadata.map((item) => {
+
+      reqData[item] = podData[item];
+
+    });
+
+    // for(const item in context.request.url.searchParams.keys()){
+
+    //   if (metadata.includes(item)) {
+
+    //     if (context.request.url.searchParams.get(item) && podData[item]) {
+
+    //       return podData[item] !== context.request.url.searchParams.get(item)
+    //         ? throwError(new Error('The request parameters do not match the pod'))
+    //         : of(reqData);
+
+    //     }
+
+    //   }
+
+    // }
+
+    // Object.keys(podData).map((item) => {
+
+    //   const param = context.request.url.searchParams.get(item);
+
+    //   if (param) {
+
+    //     console.log(podData[item], 'vs', param);
+
+    //     if(podData[item] !== param){
+
+    //       throw new Error('Data does not match');
+
+    //     }
+
+    //   }
+
+    // });
 
   }
 
