@@ -22,6 +22,16 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
+    try {
+
+      const url = new URL(registration_uri);
+
+    } catch (error) {
+
+      throw new Error('The provided registration_uri is not a valid URL');
+
+    }
+
     if (!store) {
 
       throw new Error('A store must be provided');
@@ -106,8 +116,8 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           };
 
           return registerData
-            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }, this.registration_uri))
-            : from(this.registerClient(reqData, this.registration_uri));
+            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }))
+            : from(this.registerClient(reqData));
 
         }),
         tap((res) => this.store.set(client_id, res)),
@@ -137,9 +147,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   //   return response;
   // }
 
-  async registerClient(data: any, url: string) {
+  async registerClient(data: any) {
 
-    const response = await fetch(url, {
+    const response = await fetch(this.registration_uri, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

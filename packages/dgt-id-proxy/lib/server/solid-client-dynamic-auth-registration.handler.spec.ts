@@ -143,6 +143,12 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   });
 
+  it('should error when no registration uri was provided', () => {
+
+    expect(() => new SolidClientDynamicAuthRegistrationHandler('htp//:incorrecturi.com', store, solidClientDynamicAuthRegistrationHandler)).toThrow('The provided registration_uri is not a valid URL');
+
+  });
+
   describe('handle', () => {
 
     it('should error when no context was provided', async () => {
@@ -261,7 +267,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(JSON.stringify(mockRegisterResponse), { status: 200 });
 
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData, registration_uri);
+      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData);
       expect(responseGotten.registration_access_token).toBeDefined();
 
     });
