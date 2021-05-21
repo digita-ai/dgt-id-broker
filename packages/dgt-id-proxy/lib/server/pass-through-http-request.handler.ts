@@ -177,10 +177,16 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
           try {
 
             const location = new URL(res.headers.location);
-            location.host = this.proxyURL.host;
-            location.protocol = this.proxyURL.protocol;
-            location.port = this.proxyURL.port;
-            res.headers.location = location.toString();
+            const upstreamURL = new URL(this.scheme + '//' + this.host + ':' + this.port);
+
+            if (upstreamURL.host === location.host) {
+
+              location.host = this.proxyURL.host;
+              location.protocol = this.proxyURL.protocol;
+              location.port = this.proxyURL.port;
+              res.headers.location = location.toString();
+
+            }
 
           } catch (e) {
             // do nothing

@@ -144,6 +144,16 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
+    it('should leave location unchanged if it does not match upstream url', async () => {
+
+      resp.headers = {
+        location: 'http://notupstream.com/mock/path',
+      };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: { location: 'http://notupstream.com/mock/path' } });
+
+    });
+
     it('should return a 500 statuscode if the upstream did not provide a statuscode itself', async () => {
 
       resp.statusCode = undefined;
