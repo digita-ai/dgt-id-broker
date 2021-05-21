@@ -15,7 +15,7 @@ Content-Type: application/json
 
 ########
 
-# @name createPod
+# @name createPodAuth0
 POST {{baseUrl}}/pods HTTP/1.1
 Content-Type: application/json
 
@@ -26,6 +26,18 @@ Content-Type: application/json
   "email": "auth0609be5ed22684f0067d64174@digita.ai"
 }
 
+########
+
+# @name createPodKeycloak
+POST {{baseUrl}}/pods HTTP/1.1
+Content-Type: application/json
+
+{
+  "login": "944e0f16-b053-48df-b7d3-2371b680b2f3",
+  "webId": "http://localhost:3002/944e0f16-b053-48df-b7d3-2371b680b2f3/profile/card#me",
+  "name": "Keycloak User",
+  "email": "944e0f16-b053-48df-b7d3-2371b680b2f3@digita.ai"
+}
 
 ########
 
