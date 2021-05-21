@@ -195,7 +195,10 @@
         "@type": "PassThroughHttpRequestHandler",
         "PassThroughHttpRequestHandler:_host": "localhost",
         "PassThroughHttpRequestHandler:_port": "3000",
-        "PassThroughHttpRequestHandler:_scheme": "http:"
+        "PassThroughHttpRequestHandler:_scheme": "http:",
+        "PassThroughHttpRequestHandler:_proxyUrl": {
+          "@id": "urn:dgt-id-proxy:variables:proxyUri"
+        }
       },
       {
         "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
