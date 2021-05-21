@@ -164,6 +164,7 @@
       {
         "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
           "@type": "SolidClientDynamicAuthRegistrationHandler",
+          "SolidClientDynamicAuthRegistrationHandler:_registration_uri": "http://localhost:3000/reg",
           "SolidClientDynamicAuthRegistrationHandler:_store": {
             "@id": "urn:dgt-id-proxy:default:RegistrationStore"
           },

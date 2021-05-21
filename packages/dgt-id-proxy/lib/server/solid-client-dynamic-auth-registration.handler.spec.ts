@@ -25,6 +25,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   const different_redirect_uri = `http://${referer}/otherCallback.html`;
   const endpoint = 'auth';
   const host = 'server.example.com';
+  const registration_uri = 'http://oidc.com/reg';
 
   const reqData = {
     'redirect_uris': [ redirect_uri ],
@@ -103,7 +104,12 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
-    solidClientDynamicAuthRegistrationHandler = new SolidClientDynamicAuthRegistrationHandler(store, httpHandler);
+
+    solidClientDynamicAuthRegistrationHandler = new SolidClientDynamicAuthRegistrationHandler(
+      registration_uri,
+      store,
+      httpHandler
+    );
 
   });
 
@@ -117,15 +123,28 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   it('should error when no handler was provided', () => {
 
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(store, undefined)).toThrow('A HttpHandler must be provided');
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(store, null)).toThrow('A HttpHandler must be provided');
+    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, store, undefined)).toThrow('A HttpHandler must be provided');
+    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, store, null)).toThrow('A HttpHandler must be provided');
 
   });
 
   it('should error when no store was provided', () => {
 
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(undefined, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(null, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
+    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, undefined, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
+    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, null, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
+
+  });
+
+  it('should error when no registration uri was provided', () => {
+
+    expect(() => new SolidClientDynamicAuthRegistrationHandler(undefined, store, solidClientDynamicAuthRegistrationHandler)).toThrow('A registration_uri must be provided');
+    expect(() => new SolidClientDynamicAuthRegistrationHandler(null, store, solidClientDynamicAuthRegistrationHandler)).toThrow('A registration_uri must be provided');
+
+  });
+
+  it('should error when no registration uri was provided', () => {
+
+    expect(() => new SolidClientDynamicAuthRegistrationHandler('htp//:incorrecturi.com', store, solidClientDynamicAuthRegistrationHandler)).toThrow('The provided registration_uri is not a valid URL');
 
   });
 
