@@ -6,6 +6,10 @@
     ],
     "@graph": [
       {
+        "@id": "urn:dgt-id-proxy:variables:proxyUri",
+        "@type": "Variable"
+      },
+      {
         "@id": "urn:handlersjs-http:default:NodeHttpServer",
         "@type": "NodeHttpServer",
         "NodeHttpServer:_port": "3003",
@@ -69,6 +73,7 @@
       {
         "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
           "@type": "SolidClientDynamicAuthRegistrationHandler",
+          "SolidClientDynamicAuthRegistrationHandler:_registration_uri": "http://localhost:3000/reg",
           "SolidClientDynamicAuthRegistrationHandler:_store": {
             "@id": "urn:dgt-id-proxy:default:RegistrationStore"
           },
@@ -99,7 +104,11 @@
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
         "@type": "PassThroughHttpRequestHandler",
         "PassThroughHttpRequestHandler:_host": "localhost",
-        "PassThroughHttpRequestHandler:_port": "3000"
+        "PassThroughHttpRequestHandler:_port": "3000",
+        "PassThroughHttpRequestHandler:_scheme": "http:",
+        "PassThroughHttpRequestHandler:_proxyUrl": {
+          "@id": "urn:dgt-id-proxy:variables:proxyUri"
+        }
       },
       {
         "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
