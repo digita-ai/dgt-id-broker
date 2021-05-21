@@ -5,6 +5,7 @@
   "author": "",
   "license": "",
   "scripts": {
-    "start": "docker-compose up"
+    "start": "docker-compose up",
+    "demo:keycloak": "npm run start"
   }
 }

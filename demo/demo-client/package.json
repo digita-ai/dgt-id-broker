@@ -4,12 +4,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "demo:auth0": "cross-env VITE_OIDC_PORT=3003 VITE_PORT=3001 VITE_IP=localhost VITE_CLIENT_ID=http://localhost:3002/tonypaillard/profile/card#me VITE_RESOURCE_URI=http://localhost:3002/auth0609be5ed22684f0067d64174/profile/ VITE_AUTH_ENDPOINT=authorize VITE_TOKEN_ENDPOINT=oauth/token npm run dev -- --port 3001",
+    "demo:panva": "cross-env VITE_OIDC_PORT=3003 VITE_PORT=3001 VITE_IP=localhost VITE_CLIENT_ID=http://localhost:3002/tonypaillard/profile/card#me VITE_RESOURCE_URI=http://localhost:3002/tonypaillard/profile/ VITE_AUTH_ENDPOINT=auth VITE_TOKEN_ENDPOINT=token npm run dev -- --port 3001",
+    "demo:keycloak": "cross-env VITE_OIDC_PORT=3003 VITE_PORT=3001 VITE_IP=localhost VITE_CLIENT_ID=http://localhost:3002/tonypaillard/profile/card#me VITE_RESOURCE_URI=http://localhost:3002/944e0f16-b053-48df-b7d3-2371b680b2f3/profile/ VITE_AUTH_ENDPOINT=auth/realms/digita/protocol/openid-connect/auth VITE_TOKEN_ENDPOINT=auth/realms/digita/protocol/openid-connect/token npm run dev -- --port 3001"
   },
   "devDependencies": {
     "vite": "^2.1.0"
   },
   "dependencies": {
+    "cross-env": "^7.0.3",
     "crypto-js": "^4.0.0",
     "dotenv": "^8.2.0",
     "esbuild": "^0.9.6",
