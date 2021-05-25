@@ -110,7 +110,8 @@
         },
         "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:PkceCodeRequestHandler"
-        }
+        },
+        "SolidClientDynamicAuthRegistrationHandler:_registration_uri": "http://localhost:3000/reg"
       },
       {
         "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler",
