@@ -82,27 +82,11 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
         switchMap((text) => zip(of(text), from(this.store.get(client_id)))),
         switchMap(([ podData, registerData ]) => {
 
-          const reqData = {
-            'redirect_uris': podData.redirect_uris,
-            'client_uri': podData.client_uri,
-            'logo_uri': podData.logo_uri,
-            'tos_uri': podData.tos_uri,
-            'scope': podData.scope,
-            'default_max_age': podData.default_max_age,
-            'require_auth_time': podData.require_auth_time,
-            'grant_types': podData.grant_types,
-            'response_types': podData.response_types,
-            'token_endpoint_auth_method' : 'none',
-          };
+          this.comparePodDataWithRequest(podData, context);
 
-          this.compareData(podData, context);
-
-          return registerData
-            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }))
-            : from(this.registerClient(reqData));
+          return this.compareWithStoreAndRegister(podData, registerData, client_id);
 
         }),
-        tap((res) => this.store.set(client_id, res)),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
         switchMap(() => this.httpHandler.handle(context)),
       );
@@ -136,53 +120,83 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  compareData(podData: any, context: HttpHandlerContext){
+  createRequestData(podData: any) {
 
     const metadata = [ 'response_types', 'grant_types', 'application_type', 'contacts', 'client_name', 'logo_uri', 'client_uri', 'policy_uri', 'tos_uri', 'jwks_uri', 'jwks', 'sector_identifier_uri', 'subject_type', 'id_token_signed_response_alg', 'id_token_encrypted_response_alg', 'id_token_encrypted_response_enc', 'userinfo_signed_response_alg', 'userinfo_encrypted_response_alg', 'userinfo_encrypted_response_enc', 'request_object_signing_alg', 'request_object_encryption_alg', 'request_object_encryption_enc', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'default_max_age', 'require_auth_time', 'default_acr_values', 'initiate_login_uri', 'request_uris' ];
 
     const reqData = {
+      'redirect_uris':  podData.redirect_uris,
+      'scope': podData.scope,
       'token_endpoint_auth_method' : 'none',
     };
 
     metadata.map((item) => {
 
-      reqData[item] = podData[item];
+      if (podData[item]) {
+
+        reqData[item] = podData[item];
+
+      }
 
     });
 
-    // for(const item in context.request.url.searchParams.keys()){
+    return reqData;
 
-    //   if (metadata.includes(item)) {
+  }
 
-    //     if (context.request.url.searchParams.get(item) && podData[item]) {
+  comparePodDataWithRequest(podData: any, context: HttpHandlerContext): void{
 
-    //       return podData[item] !== context.request.url.searchParams.get(item)
-    //         ? throwError(new Error('The request parameters do not match the pod'))
-    //         : of(reqData);
+    for(const key of context.request.url.searchParams.keys()){
 
-    //     }
+      if (podData[key]){
 
-    //   }
+        if (podData[key] !== context.request.url.searchParams.get(key)) {
 
-    // }
+          throw new Error('Data does not match');
 
-    // Object.keys(podData).map((item) => {
+        }
 
-    //   const param = context.request.url.searchParams.get(item);
+      }
 
-    //   if (param) {
+      if (key === 'response_type' && !podData.response_types.includes(context.request.url.searchParams.get(key)))  {
 
-    //     console.log(podData[item], 'vs', param);
+        throw new Error('Response types do not match');
 
-    //     if(podData[item] !== param){
+      }
 
-    //       throw new Error('Data does not match');
+    }
 
-    //     }
+  }
 
-    //   }
+  async compareWithStoreAndRegister(podData: any, registerData: any, client_id: string) {
 
-    // });
+    const reqData = this.createRequestData(podData);
+
+    if (!registerData) {
+
+      const regResponse = await this.registerClient(reqData);
+      this.store.set(client_id, regResponse);
+
+      return regResponse;
+
+    }
+
+    Object.keys(podData).map(async (item) => {
+
+      if(item !== 'client_id'){
+
+        if (JSON.stringify(registerData[item]) !== JSON.stringify(podData[item])){
+
+          const alteredRegResponse = await this.registerClient(reqData);
+          this.store.set(client_id, alteredRegResponse);
+
+          return alteredRegResponse;
+
+        }
+
+      }
+
+    });
 
   }
 
