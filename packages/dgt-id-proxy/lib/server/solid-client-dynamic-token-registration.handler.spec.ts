@@ -7,14 +7,6 @@ import { SolidClientDynamicTokenRegistrationHandler } from './solid-client-dynam
 
 describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
-  const httpHandler = {
-    canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValueOnce(of()),
-    safeHandle: jest.fn(),
-  };
-
-  const store: KeyValueStore<string, any> = new InMemoryStore();
-  const solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
   const referer = 'http://client.example.com';
   const url =  new URL(`${referer}/token`);
   const code_verifier = 'hmWgQqnBMBeK23cGJvJko9rdIZrNfuvCsZ43uNzdMQhs3HVU6Q4yWvVji3pftn9rz3xDwcPTYgtwi2SXBrvfsrlP4xcQftpd1Yj23ocpTRMAYUU6ptqmsTCRV6Q8DtkT';
@@ -27,6 +19,35 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
   const context = { request: { headers, body: requestBody, method: 'POST', url } } as HttpHandlerContext;
   const newContext = { request: { headers, body: swappedBody, method: 'POST', url } } as HttpHandlerContext;
+
+  const response = {
+    body: {
+      access_token: {
+        header: {},
+        payload: {
+          webid: client_id,
+          'sub': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
+        },
+      },
+      id_token: {
+        header: {},
+        payload: {
+          webid: client_id,
+        },
+      },
+    },
+    headers: {},
+    status: 200,
+  };
+
+  const httpHandler = {
+    canHandle: jest.fn(),
+    handle: jest.fn().mockReturnValue(of(response)),
+    safeHandle: jest.fn(),
+  };
+
+  const store: KeyValueStore<string, any> = new InMemoryStore();
+  const solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
 
   const registerInfo = {
     application_type: 'web',
@@ -127,6 +148,14 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
     it('should error when the provided charset is not supported', async () => {
 
       await expect(solidClientDynamicTokenRegistrationHandler.handle({ ...context, request: { ...context.request, headers: { 'content-type': 'application/json;charset=123' } } }).toPromise()).rejects.toThrow('The specified charset is not supported');
+
+    });
+
+    it('should swap the client id of the response with the client_id given in the request', async () => {
+
+      const responseGotten = await solidClientDynamicTokenRegistrationHandler.handle(context).toPromise();
+
+      expect(responseGotten.body.access_token.payload.client_id).toEqual(client_id);
 
     });
 

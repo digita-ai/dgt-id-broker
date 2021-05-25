@@ -8,9 +8,29 @@ import { validateWebID } from '../util/validate-webid';
 
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
-  constructor(private store: KeyValueStore<string, any>, private httpHandler: HttpHandler) {
+  constructor(
+    private registration_uri: string,
+    private store: KeyValueStore<string, any>,
+    private httpHandler: HttpHandler
+  ) {
 
     super();
+
+    if (!registration_uri) {
+
+      throw new Error('A registration_uri must be provided');
+
+    }
+
+    try {
+
+      const url = new URL(registration_uri);
+
+    } catch (error) {
+
+      throw new Error('The provided registration_uri is not a valid URL');
+
+    }
 
     if (!store) {
 
@@ -105,9 +125,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   async registerClient(data: any) {
 
-    const url = `http://localhost:3000/reg`;
-
-    const response = await fetch(url, {
+    const response = await fetch(this.registration_uri, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',

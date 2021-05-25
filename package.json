@@ -16,7 +16,10 @@
     "lint:staged": "lerna run lint:staged --since HEAD --stream --concurrency 1",
     "test": "lerna run test --since HEAD --parallel",
     "test:all": "lerna run test --parallel",
-    "test:ci": "lerna run test:ci"
+    "test:ci": "lerna run test:ci",
+    "demo:auth0": "lerna run demo:auth0 --parallel",
+    "demo:panva": "lerna run demo:panva --parallel",
+    "demo:keycloak": "lerna run demo:keycloak --parallel"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",

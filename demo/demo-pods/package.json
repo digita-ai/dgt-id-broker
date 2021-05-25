@@ -1,0 +1,17 @@
+{
+  "name": "demo-pods",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "license": "",
+  "scripts": {
+    "start": "shx rm -rf rundata && shx cp -r data rundata && community-solid-server -p 3002 --rootFilePath ./rundata -c config/config-file.json",
+    "demo:auth0": "npm run start",
+    "demo:panva": "npm run start",
+    "demo:keycloak": "npm run start"
+  },
+  "dependencies": {
+    "@solid/community-server": "0.8.1",
+    "shx": "^0.3.3"
+  }
+}
