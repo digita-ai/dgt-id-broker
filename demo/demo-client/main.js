@@ -4,6 +4,8 @@ import CryptoJS from 'crypto-js'
 // Importing the environment variables defined in the .env file.
 const env = import.meta.env
 
+console.log('mode: ', env.MODE, ' - token endpoint: ', env.VITE_TOKEN_ENDPOINT)
+
 // Generating a code_verifier for PKCE
 const code_verifier = generateRandomString(128);
 // Storing the code_verifier in sessionStorage as defined in solid oidc primer: https://solid.github.io/authentication-panel/solid-oidc-primer/#authorization-code-pkce-flow

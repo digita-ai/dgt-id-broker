@@ -17,6 +17,8 @@ COPY . /usr/src/app
 
 # Copy initial data
 COPY data/tonypaillard/ /tmp/css/tonypaillard/
+COPY data/944e0f16-b053-48df-b7d3-2371b680b2f3/ /tmp/css/944e0f16-b053-48df-b7d3-2371b680b2f3/
+COPY data/auth0609be5ed22684f0067d64174/ /tmp/css/auth0609be5ed22684f0067d64174/
 
 # Expose ports.
 EXPOSE ${PORT}

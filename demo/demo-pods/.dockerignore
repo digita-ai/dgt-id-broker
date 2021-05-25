@@ -34,3 +34,6 @@ lerna-debug.log*
 
 yarn-error.log
 yarn.lock
+
+# pod data
+/rundata
