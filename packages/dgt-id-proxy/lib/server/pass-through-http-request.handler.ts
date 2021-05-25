@@ -169,8 +169,10 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       const responseCallback = (res) => {
 
         const buffer: any = [];
+
         res.on('data', (chunk) => buffer.push(chunk));
-        res.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler')));
+
+        res.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
 
         res.on('end', () => {
 
@@ -211,6 +213,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
         req.write(body);
 
       }
+
+      req.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
 
       req.end();
 

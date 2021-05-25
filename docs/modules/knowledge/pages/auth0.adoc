@@ -1,0 +1,12 @@
+= Auth0
+
+== Useful links
+
+* https://auth0.com/docs/login/adopt-oidc-conformant-authentication
+* https://auth0.com/docs/protocols/configure-applications-with-oidc-discovery
+
+== User info
+
+=== User 1
+* email: foo@example.com
+* password: Digita1234!

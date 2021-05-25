@@ -1,0 +1,116 @@
+{
+    "realm": "digita",
+    "id": "digita",
+    "enabled": "true",
+    "accessTokenLifespan" : 7200,
+    "passwordPolicy": "length(1)",
+    "clients": [
+      {
+        "id": "74b4e5ce-421d-450d-b6f3-3ec7c62a67cb",
+        "clientId": "static-client",
+        "rootUrl": "http://localhost:8080/static-client",
+        "adminUrl": "http://localhost:8080/static-client",
+        "surrogateAuthRequired": false,
+        "enabled": true,
+        "alwaysDisplayInConsole": false,
+        "clientAuthenticatorType": "client-secret",
+        "secret": "0422604a-41a8-4fc3-b4f0-d4b30256296e",
+        "redirectUris": [
+          "http://localhost:3001/requests.html"
+        ],
+        "webOrigins": [
+          "http://localhost:8080"
+        ],
+        "notBefore": 0,
+        "bearerOnly": false,
+        "consentRequired": false,
+        "standardFlowEnabled": true,
+        "implicitFlowEnabled": false,
+        "directAccessGrantsEnabled": true,
+        "serviceAccountsEnabled": false,
+        "publicClient": false,
+        "frontchannelLogout": false,
+        "protocol": "openid-connect",
+        "attributes": {
+          "saml.assertion.signature": "false",
+          "saml.force.post.binding": "false",
+          "saml.multivalued.roles": "false",
+          "saml.encrypt": "false",
+          "backchannel.logout.revoke.offline.tokens": "false",
+          "saml.server.signature": "false",
+          "saml.server.signature.keyinfo.ext": "false",
+          "exclude.session.state.from.auth.response": "false",
+          "backchannel.logout.session.required": "true",
+          "client_credentials.use_refresh_token": "false",
+          "saml_force_name_id_format": "false",
+          "saml.client.signature": "false",
+          "tls.client.certificate.bound.access.tokens": "false",
+          "saml.authnstatement": "false",
+          "display.on.consent.screen": "false",
+          "saml.onetimeuse.condition": "false"
+        },
+        "authenticationFlowBindingOverrides": {},
+        "fullScopeAllowed": true,
+        "nodeReRegistrationTimeout": -1,
+        "defaultClientScopes": [
+          "web-origins",
+          "role_list",
+          "roles",
+          "profile",
+          "email"
+        ],
+        "optionalClientScopes": [
+          "address",
+          "phone",
+          "offline_access",
+          "microprofile-jwt"
+        ]
+      }
+    ],
+    "users" : [ {
+      "id" : "944e0f16-b053-48df-b7d3-2371b680b2f3",
+      "createdTimestamp" : 1621596323038,
+      "username" : "tony.paillard",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "firstName" : "Tony",
+      "lastName" : "Paillard",
+      "email" : "tony.paillard@digita.ai",
+      "credentials" : [ {
+        "id" : "tonypaillard",
+        "type" : "password",
+        "createdDate" : 1621596335578,
+        "secretData" : "{\"value\":\"YAwS0Q5c0ZjQqlCIB45UkXV8f9rzfsFgy4v7Kthr8dE862QrJttXBdUq7RR2cE/Rhwuk5rBbWVLXo61hSU8veA==\",\"salt\":\"Wx9gbQi1Ifu7n3Q37wqaRg==\",\"additionalParameters\":{}}",
+        "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+      } ],
+      "disableableCredentialTypes" : [ ],
+      "requiredActions" : [ ],
+      "realmRoles" : [ "uma_authorization", "offline_access" ],
+      "clientRoles" : {
+        "account" : [ "view-profile", "manage-account" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
+    } ],
+    "roles" : {
+     "realm" : [ {
+           "id": "admin-id",
+           "name": "admin",
+           "description" : "admin role",
+           "scopeParamRequired": false,
+           "composite": false,
+           "clientRole": false,
+           "containerId": "digita"
+       }, {
+         "id" : "user-id",
+         "name" : "user",
+         "description" : "user role",
+         "scopeParamRequired" : false,
+         "composite" : false,
+         "clientRole" : false,
+         "containerId" : "digita"
+       }
+      ]
+    }
+}

@@ -109,4 +109,8 @@ componentsjs-error-state.json
 # Static assets
 assets
 
+# jest coverage files
 coverage-summary.json
+
+# pod data
+rundata

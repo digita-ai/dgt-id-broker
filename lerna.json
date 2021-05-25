@@ -1,7 +1,9 @@
 {
   "extends": "@digita-ai/lerna-config",
   "packages": [
-    "packages/*"
+    "packages/*",
+    "providers/*",
+    "demo/*"
   ],
   "version": "0.1.0"
 }
