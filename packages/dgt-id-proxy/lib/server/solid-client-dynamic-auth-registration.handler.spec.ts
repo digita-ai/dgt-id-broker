@@ -38,6 +38,9 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   const mockRegisterResponse = {
     application_type: 'web',
     grant_types: [ 'refresh_token', 'authorization_code' ],
+    client_name: 'My Panva Application',
+    tos_uri : 'https://app.example/tos.html',
+    require_auth_time : true,
     id_token_signed_response_alg: 'RS256',
     response_types: [ 'code' ],
     subject_type: 'public',
@@ -54,6 +57,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const mockAlternativeRegisterResponse = {
     application_type: 'web',
+    client_name: 'My Panva Application',
     grant_types: [ 'refresh_token', 'authorization_code' ],
     id_token_signed_response_alg: 'RS256',
     response_types: [ 'code' ],
@@ -87,12 +91,14 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
   const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
 
-  const correctPodText = podText + ' ' + oidcRegistration;
+  const correctPodText = podText + '\n' + oidcRegistration;
   const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
   const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
+  const otherScopeURL = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=profile&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
+  const otherResponseTypeURL = new URL(`http://${host}/${endpoint}?response_type=plain&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
 
   let context: HttpHandlerContext;
   let url: URL;
@@ -203,6 +209,38 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
       await expect(solidClientDynamicAuthRegistrationHandler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
+
+    });
+
+    it('should error when provided scope is not found in the pod', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      const badScopeContext = { ...context, request: { ...context.request, url: otherScopeURL } };
+      await expect(solidClientDynamicAuthRegistrationHandler.handle(badScopeContext).toPromise()).rejects.toThrow(`Scope not found in pod`);
+
+    });
+
+    it('should error when response types do not match', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      const badResponseTypeContext = { ...context, request: { ...context.request, url: otherResponseTypeURL } };
+      await expect(solidClientDynamicAuthRegistrationHandler.handle(badResponseTypeContext).toPromise()).rejects.toThrow(`Response types do not match`);
+
+    });
+
+    it('should not register if already registered and nothing changed', async () => {
+
+      store.set(client_id, mockRegisterResponse);
+
+      httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
+      fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ]);
+
+      await expect(solidClientDynamicAuthRegistrationHandler
+        .handle(context)
+        .toPromise()).resolves
+        .toEqual(mockRegisterResponse);
 
     });
 

@@ -168,9 +168,19 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
       if (podData[key]){
 
-        if (podData[key] !== context.request.url.searchParams.get(key)) {
+        if (key === 'scope') {
 
-          throw new Error('Data does not match');
+          context.request.url.searchParams.get(key)
+            .split(' ')
+            .map((scope) => {
+
+              if (!podData[key].split(' ').includes(scope)) {
+
+                throw new Error('Scope not found in pod');
+
+              }
+
+            });
 
         }
 
@@ -199,7 +209,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    Object.keys(podData).map(async (item) => {
+    for(const item of Object.keys(podData)){
 
       if(item !== 'client_id'){
 
@@ -214,7 +224,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
       }
 
-    });
+    }
+
+    return registerData;
 
   }
 
