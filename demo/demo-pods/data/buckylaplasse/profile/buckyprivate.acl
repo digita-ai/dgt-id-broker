@@ -6,5 +6,11 @@
     a acl:Authorization;
     acl:agent <http://localhost:3002/buckylaplasse/profile/card#me>;
     acl:accessTo <./buckyprivate>;
-    acl:default <./>;
     acl:mode acl:Read, acl:Write, acl:Control.
+
+<#authorization1>
+    a acl:Authorization;
+    acl:agent <http://localhost:3002/tonypaillard/profile/card#me>;
+    acl:accessTo <./buckyprivate>;
+    acl:mode        acl:Read.
+    
