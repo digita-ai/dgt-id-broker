@@ -3,6 +3,7 @@ import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 /**
  * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
@@ -16,10 +17,17 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    *
    * @param {string} host - the host of the upstream server without scheme (is always http).
    * @param {number} port - the port to connect to on the upstream server.
-   * @param {string} scheme - either 'http' or 'https'.
+   * @param {string} scheme - either 'http:' or 'https:'.
    * @param {string} proxyUrl - the url of the proxy server.
+   * @param {boolean} errorHandling - toggles whether the handler should create it's own error response or use the upstream's
    */
-  constructor(private host: string, private port: number, private scheme: string, private proxyUrl: string) {
+  constructor(
+    private host: string,
+    private port: number,
+    private scheme: string,
+    private proxyUrl: string,
+    private errorHandling: boolean = false
+  ) {
 
     super();
 
@@ -108,6 +116,18 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       context.request.method,
       context.request.headers,
       context.request.body
+    ).pipe(
+      switchMap((response) => {
+
+        if (this.errorHandling && response.status >= 400) {
+
+          return throwError({ headers: response.headers, status: response.status });
+
+        }
+
+        return of(response);
+
+      }),
     );
 
   }
