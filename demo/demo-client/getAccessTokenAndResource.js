@@ -76,16 +76,11 @@ instantiateJWTsForDPoP()
                 // along with a new DPoP-proof.
                 getResource(`${env.VITE_RESOURCE_URI}`, data.access_token, dpopJwtForResource)
                     .then(data => {
-                        // In this case we simply get the profile of our solid pod. The rest of this function simply preserves the formatting of the html we receive.
-                        data = data.replace(/</g, "&lt;")
-                        data = data.replace(/>/g, "&gt;")
+                        // In this case we simply get the profile of our solid pod. The rest of this function simply preserves the formatting of the html we receive
                         const div = document.getElementById("app");
                         div.textContent = ""
-                        const h1 = document.createElement("h1")
-                        h1.innerHTML = "Your profile:";
                         const p = document.createElement("pre");
                         p.innerHTML = data;
-                        div.appendChild(h1);
                         div.appendChild(p);
                         // Clear our sessionStorage when we are done as prescribed by the solid oidc primer.
                         sessionStorage.clear();
