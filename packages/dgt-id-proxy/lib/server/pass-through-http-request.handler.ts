@@ -149,11 +149,13 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
     // We don't support encoding currently. Remove this when encoding is implemented.
-    if (this.scheme === 'https:') {
+    // if (this.scheme === 'https:') {
 
-      delete headers['accept-encoding'];
+    //   delete headers['accept-encoding'];
 
-    }
+    // }
+
+    delete headers['accept-encoding'];
 
     const requestOpts = {
       protocol: this.scheme,

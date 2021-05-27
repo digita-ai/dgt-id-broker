@@ -97,7 +97,10 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "RoutedHttpRequestHandler:_defaultHandler": {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+              }
             }
           }
         }
