@@ -172,13 +172,13 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
           context.request.url.searchParams.get(key).split(' ').map((scope) => {
 
-              if (!podData[key].split(' ').includes(scope)) {
+            if (!podData[key].split(' ').includes(scope)) {
 
-                throw new Error('Scope not found in pod');
+              throw new Error('Scope not found in pod');
 
-              }
+            }
 
-            });
+          });
 
         }
 
