@@ -12,7 +12,7 @@ db.defaults({
   users: [
     {
       id: 'tonypaillard',
-      email: 'foo@example.com',
+      email: 'tonypaillard@digita.ai',
       email_verified: true,
     },
   ],
