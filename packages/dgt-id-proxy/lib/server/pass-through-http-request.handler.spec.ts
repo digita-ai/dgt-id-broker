@@ -161,6 +161,15 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
+    it('should reject the observable with an object containing status and headers when errorHandling is true and statuscode is more than 400', async () => {
+
+      resp.statusCode = 400;
+      const errorHandlingHandler = new PassThroughHttpRequestHandler('digita.ai', 80, 'http:', 'http://urlofproxy.com', true);
+
+      await expect(errorHandlingHandler.handle(context).toPromise()).rejects.toEqual({ headers: {}, status: 400 });
+
+    });
+
   });
 
   describe('canHandle', () => {
