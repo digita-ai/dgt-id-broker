@@ -164,15 +164,13 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   comparePodDataWithRequest(podData: any, context: HttpHandlerContext): void{
 
-    for(const key of context.request.url.searchParams.keys()){
+    for (const key of context.request.url.searchParams.keys()) {
 
       if (podData[key]){
 
         if (key === 'scope') {
 
-          context.request.url.searchParams.get(key)
-            .split(' ')
-            .map((scope) => {
+          context.request.url.searchParams.get(key).split(' ').map((scope) => {
 
               if (!podData[key].split(' ').includes(scope)) {
 
@@ -209,9 +207,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    for(const item of Object.keys(podData)){
+    for (const item of Object.keys(podData)) {
 
-      if(item !== 'client_id'){
+      if (item !== 'client_id') {
 
         if (JSON.stringify(registerData[item]) !== JSON.stringify(podData[item])){
 
