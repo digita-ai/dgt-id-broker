@@ -168,13 +168,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     headers.host = this.host + ':' + this.port;
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
-    // We don't support encoding currently. Remove this when encoding is implemented.
-    if (this.scheme === 'https:') {
-
-      delete headers['accept-encoding'];
-
-    }
-
     const requestOpts = {
       protocol: this.scheme,
       hostname: this.host,
@@ -215,7 +208,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
           }
 
           const httpHandlerResponse: HttpHandlerResponse = {
-            body: Buffer.concat(buffer).toString(),
+            body: Buffer.concat(buffer),
             headers: res.headers as { [key: string]: string },
             status: res.statusCode ? res.statusCode : 500,
           };

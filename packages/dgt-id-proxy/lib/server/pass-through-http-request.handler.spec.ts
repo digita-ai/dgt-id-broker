@@ -9,8 +9,9 @@ describe('PassThroughHttpRequestHandler', () => {
   let handler: PassThroughHttpRequestHandler;
   let context: HttpHandlerContext;
   const httpRequest = new http.ClientRequest('http://digita.ai');
-  httpRequest.write = jest.fn();
   let resp: IncomingMessage;
+  httpRequest.write = jest.fn();
+  const mockHttpBuffer = Buffer.from('mockHttp');
 
   const mockRequestImplementation = (body: string, callback: (response: IncomingMessage) => void) => {
 
@@ -113,7 +114,9 @@ describe('PassThroughHttpRequestHandler', () => {
 
     it('should call http.request when scheme is http', async () => {
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: {} });
+      await expect(handler.handle(context).toPromise()).resolves
+        .toEqual({ body: mockHttpBuffer, status: 200, headers: {} });
+
       expect(http.request).toHaveBeenCalledTimes(1);
 
     });
@@ -121,13 +124,14 @@ describe('PassThroughHttpRequestHandler', () => {
     it('should call https.request when scheme is https', async () => {
 
       const httpsHandler = new PassThroughHttpRequestHandler('localhost', 3000, 'https:', 'http://urlofproxy.com');
-      await expect(httpsHandler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttps', status: 200, headers: {} });
+      await expect(httpsHandler.handle(context).toPromise()).resolves.toEqual({ body: Buffer.from('mockHttps'), status: 200, headers: {} });
       expect(https.request).toHaveBeenCalledTimes(1);
 
     });
 
     it('should call write on the request when the request includes a body', async () => {
 
+      httpRequest.write = jest.fn();
       context.request.body = 'mockBody';
       await handler.handle(context).toPromise();
       expect(httpRequest.write).toHaveBeenCalledTimes(1);
@@ -140,7 +144,7 @@ describe('PassThroughHttpRequestHandler', () => {
         location: 'http://localhost:3000/mock/path',
       };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: { location: 'http://urlofproxy.com/mock/path' } });
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: mockHttpBuffer, status: 200, headers: { location: 'http://urlofproxy.com/mock/path' } });
 
     });
 
@@ -150,14 +154,16 @@ describe('PassThroughHttpRequestHandler', () => {
         location: 'http://notupstream.com/mock/path',
       };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 200, headers: { location: 'http://notupstream.com/mock/path' } });
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: mockHttpBuffer, status: 200, headers: { location: 'http://notupstream.com/mock/path' } });
 
     });
 
     it('should return a 500 statuscode if the upstream did not provide a statuscode itself', async () => {
 
       resp.statusCode = undefined;
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: 'mockHttp', status: 500, headers: {} });
+
+      await expect(handler.handle(context).toPromise()).resolves
+        .toEqual({ body: mockHttpBuffer, status: 500, headers: {} });
 
     });
 
@@ -167,6 +173,23 @@ describe('PassThroughHttpRequestHandler', () => {
       const errorHandlingHandler = new PassThroughHttpRequestHandler('digita.ai', 80, 'http:', 'http://urlofproxy.com', true);
 
       await expect(errorHandlingHandler.handle(context).toPromise()).rejects.toEqual({ headers: {}, status: 400 });
+
+    });
+
+    it('should throw an error when the response receives an error event', async () => {
+
+      const mockErrorResponseImplementation = (body: string, callback: (response: IncomingMessage) => void) => {
+
+        callback(resp);
+        resp.emit('error', new Error('mock error'));
+        resp.emit('end');
+
+        return httpRequest;
+
+      };
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockErrorResponseImplementation('mockHttp', callback));
+      await expect(handler.handle(context).toPromise()).rejects.toThrow('Error resolving the response in the PassThroughHandler: mock error');
 
     });
 
