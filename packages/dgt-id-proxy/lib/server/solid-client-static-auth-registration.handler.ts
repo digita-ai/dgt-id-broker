@@ -1,9 +1,8 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
-import { getPod } from '../util/get-pod';
-import { validateWebID } from '../util/validate-webid';
-
+import { switchMap, tap, map } from 'rxjs/operators';
+import { getWebID } from '../util/get-webid';
+import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
 export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
   constructor(
@@ -73,12 +72,13 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    return from(getPod(client_id))
+    return from(getWebID(client_id))
       .pipe(
         switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
           ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
           : from(response.text())),
-        switchMap((text) => validateWebID(text, client_id, redirect_uri)),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
         tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
         tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
         switchMap(() => this.httpHandler.handle(context)),

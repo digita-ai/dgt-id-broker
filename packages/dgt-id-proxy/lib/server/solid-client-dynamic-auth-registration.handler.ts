@@ -1,10 +1,10 @@
 
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { getPod } from '../util/get-pod';
-import { validateWebID } from '../util/validate-webid';
+import { getWebID } from '../util/get-webid';
+import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
 
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
@@ -85,7 +85,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    return from(getPod(client_id))
+    return from(getWebID(client_id))
       .pipe(
         switchMap((response) => {
 
@@ -98,15 +98,18 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           return from(response.text());
 
         }),
-        switchMap((text) => validateWebID(text, client_id, redirect_uri)),
-        switchMap((text) => zip(of(text), from(this.store.get(client_id)))),
-        switchMap(([ podData, registerData ]) => {
-
-          this.comparePodDataWithRequest(podData, context);
-
-          return this.compareWithStoreAndRegister(podData, registerData, client_id);
-
-        }),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+        switchMap(((clientData) => zip(
+          this.compareClientDataWithRequest(clientData, context.request.url.searchParams),
+          from(this.store.get(client_id))
+        ))),
+        switchMap(([ clientData, registerData ]) => this.compareWithStoreAndRegister(
+          clientData,
+          registerData,
+          client_id,
+          this.createRequestData(clientData)
+        )),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
         switchMap(() => this.httpHandler.handle(context)),
       );
@@ -138,21 +141,50 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  createRequestData(podData: any) {
+  createRequestData(clientData: any) {
 
-    const metadata = [ 'response_types', 'grant_types', 'application_type', 'contacts', 'client_name', 'logo_uri', 'client_uri', 'policy_uri', 'tos_uri', 'jwks_uri', 'jwks', 'sector_identifier_uri', 'subject_type', 'id_token_signed_response_alg', 'id_token_encrypted_response_alg', 'id_token_encrypted_response_enc', 'userinfo_signed_response_alg', 'userinfo_encrypted_response_alg', 'userinfo_encrypted_response_enc', 'request_object_signing_alg', 'request_object_encryption_alg', 'request_object_encryption_enc', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'default_max_age', 'require_auth_time', 'default_acr_values', 'initiate_login_uri', 'request_uris' ];
+    const metadata = [
+      'response_types',
+      'grant_types',
+      'application_type',
+      'contacts',
+      'client_name',
+      'logo_uri',
+      'client_uri',
+      'policy_uri',
+      'tos_uri',
+      'jwks_uri',
+      'jwks',
+      'sector_identifier_uri',
+      'subject_type',
+      'id_token_signed_response_alg',
+      'id_token_encrypted_response_alg',
+      'id_token_encrypted_response_enc',
+      'userinfo_signed_response_alg',
+      'userinfo_encrypted_response_alg',
+      'userinfo_encrypted_response_enc',
+      'request_object_signing_alg',
+      'request_object_encryption_alg',
+      'request_object_encryption_enc',
+      'token_endpoint_auth_method',
+      'token_endpoint_auth_signing_alg',
+      'default_max_age',
+      'require_auth_time',
+      'default_acr_values',
+      'initiate_login_uri',
+      'request_uris',
+    ];
 
     const reqData = {
-      'redirect_uris':  podData.redirect_uris,
-      'scope': podData.scope,
+      'redirect_uris':  clientData.redirect_uris,
       'token_endpoint_auth_method' : 'none',
     };
 
     metadata.map((item) => {
 
-      if (podData[item]) {
+      if (clientData[item]) {
 
-        reqData[item] = podData[item];
+        reqData[item] = clientData[item];
 
       }
 
@@ -162,63 +194,70 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  comparePodDataWithRequest(podData: any, context: HttpHandlerContext): void{
+  compareClientDataWithRequest(clientData: any, searchParams: URLSearchParams): Observable<any>{
 
-    for (const key of context.request.url.searchParams.keys()) {
+    if (clientData.client_id !== searchParams.get('client_id')) {
 
-      if (podData[key]){
+      return throwError(new ForbiddenHttpError('The client id in the request does not match the one in the WebId'));
 
-        if (key === 'scope') {
+    }
 
-          context.request.url.searchParams.get(key).split(' ').map((scope) => {
+    if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
 
-            if (!podData[key].split(' ').includes(scope)) {
+      return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the WebId'));
 
-              throw new Error('Scope not found in pod');
+    }
 
-            }
+    if (!clientData.response_types.includes(searchParams.get('response_type')))  {
 
-          });
+      return throwError(new ForbiddenHttpError('Response types do not match'));
+
+    }
+
+    if (clientData.scope) {
+
+      const clientScopes = clientData.scope.split(' ');
+
+      for (const scope of searchParams.get('scope').split(' ')) {
+
+        if (!clientScopes.includes(scope)) {
+
+          return throwError(new ForbiddenHttpError('The provided scope was not found in your webid'));
 
         }
 
       }
 
-      if (key === 'response_type' && !podData.response_types.includes(context.request.url.searchParams.get(key)))  {
+    } else {
 
-        throw new Error('Response types do not match');
-
-      }
+      return throwError(new ForbiddenHttpError('No scope defined in the webid'));
 
     }
 
+    return of(clientData);
+
   }
 
-  async compareWithStoreAndRegister(podData: any, registerData: any, client_id: string) {
-
-    const reqData = this.createRequestData(podData);
+  async compareWithStoreAndRegister(clientData: any, registerData: any, client_id: string, reqData: any) {
 
     if (!registerData) {
 
       const regResponse = await this.registerClient(reqData);
+      regResponse.scope = clientData.scope;
       this.store.set(client_id, regResponse);
 
       return regResponse;
 
     }
 
-    for (const item of Object.keys(podData)) {
+    for (const item of Object.keys(clientData)) {
 
-      if (item !== 'client_id') {
+      if (item !== 'client_id' && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
 
-        if (JSON.stringify(registerData[item]) !== JSON.stringify(podData[item])){
+        const alteredRegResponse = await this.registerClient(reqData);
+        this.store.set(client_id, alteredRegResponse);
 
-          const alteredRegResponse = await this.registerClient(reqData);
-          this.store.set(client_id, alteredRegResponse);
-
-          return alteredRegResponse;
-
-        }
+        return alteredRegResponse;
 
       }
 
