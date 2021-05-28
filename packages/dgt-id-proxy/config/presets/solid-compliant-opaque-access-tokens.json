@@ -54,46 +54,49 @@
           "@id": "urn:handlersjs-http:default:NodeHttpRequestResponseHandler",
           "@type": "NodeHttpRequestResponseHandler",
           "NodeHttpRequestResponseHandler:_httpHandler": {
-              "@type": "HttpCorsRequestHandler",
-              "HttpCorsRequestHandler:_handler": {
-                "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
-                "@type": "RoutedHttpRequestHandler",
-                "RoutedHttpRequestHandler:_handlerControllerList": [
-                  {
-                    "@id": "urn:handlersjs-http:default:HttpHandlerController",
-                    "@type": "HttpHandlerController",
-                    "HttpHandlerController:_label": "ControllerList",
-                    "HttpHandlerController:_routes": [
-                      {
-                        "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:OpenidConfigurationRoute"
-                      },
-                      {
-                        "@id": "urn:dgt-id-proxy:default:JwksRoute"
-                      }
-                    ]
-                  }
-                ]
+            "@type": "HttpCorsRequestHandler",
+            "HttpCorsRequestHandler:_handler": {
+              "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
+              "@type": "RoutedHttpRequestHandler",
+              "RoutedHttpRequestHandler:_handlerControllerList": [
+                {
+                  "@id": "urn:handlersjs-http:default:HttpHandlerController",
+                  "@type": "HttpHandlerController",
+                  "HttpHandlerController:_label": "ControllerList",
+                  "HttpHandlerController:_routes": [
+                    {
+                      "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:OpenidConfigurationRoute"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:JwksRoute"
+                    }
+                  ]
+                }
+              ],
+              "RoutedHttpRequestHandler:_defaultHandler": {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+              }
             }
           }
         }
