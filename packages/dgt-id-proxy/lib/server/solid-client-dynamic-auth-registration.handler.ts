@@ -4,13 +4,15 @@ import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { getWebID } from '../util/get-webid';
+import { OidcRegistrationJSON } from '../util/oidc-registration-json';
 import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
+import { RegistrationResponseJSON } from '../util/registration-response-json';
 
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, any>,
+    private store: KeyValueStore<string, Partial<OidcRegistrationJSON>>,
     private httpHandler: HttpHandler
   ) {
 
@@ -126,7 +128,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  async registerClient(data: any) {
+  async registerClient(data: Partial<OidcRegistrationJSON>): Promise<Partial<RegistrationResponseJSON>> {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -141,7 +143,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  createRequestData(clientData: any) {
+  createRequestData(clientData: Partial<OidcRegistrationJSON>): Partial<OidcRegistrationJSON> {
 
     const metadata = [
       'response_types',
@@ -177,6 +179,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     const reqData = {
       'redirect_uris':  clientData.redirect_uris,
+      'scope': clientData.scope,
       'token_endpoint_auth_method' : 'none',
     };
 
@@ -194,7 +197,10 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  compareClientDataWithRequest(clientData: any, searchParams: URLSearchParams): Observable<any>{
+  compareClientDataWithRequest(
+    clientData: Partial<OidcRegistrationJSON>,
+    searchParams: URLSearchParams
+  ): Observable<Partial<OidcRegistrationJSON>>{
 
     if (clientData.client_id !== searchParams.get('client_id')) {
 
@@ -238,12 +244,16 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  async compareWithStoreAndRegister(clientData: any, registerData: any, client_id: string, reqData: any) {
+  async compareWithStoreAndRegister(
+    clientData: Partial<OidcRegistrationJSON>,
+    registerData: Partial<RegistrationResponseJSON>,
+    client_id: string,
+    reqData: Partial<OidcRegistrationJSON>
+  ): Promise<Partial<RegistrationResponseJSON>>  {
 
     if (!registerData) {
 
       const regResponse = await this.registerClient(reqData);
-      regResponse.scope = clientData.scope;
       this.store.set(client_id, regResponse);
 
       return regResponse;

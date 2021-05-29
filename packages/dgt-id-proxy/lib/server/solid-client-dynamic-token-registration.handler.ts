@@ -3,10 +3,14 @@ import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { recalculateContentLength } from '../util/recalculate-content-length';
+import { RegistrationResponseJSON } from '../util/registration-response-json';
 
 export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
-  constructor(private store: KeyValueStore<string, any>, private httpHandler: HttpHandler) {
+  constructor(
+    private store: KeyValueStore<string, Partial<RegistrationResponseJSON>>,
+    private httpHandler: HttpHandler
+  ) {
 
     super();
 

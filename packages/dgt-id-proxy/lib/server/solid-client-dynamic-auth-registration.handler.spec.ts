@@ -1,9 +1,9 @@
-import { BadRequestHttpError, ForbiddenHttpError, HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { ForbiddenHttpError, HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
+import { RegistrationResponseJSON } from '../util/registration-response-json';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
-import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
 import { SolidClientDynamicAuthRegistrationHandler } from './solid-client-dynamic-auth-registration.handler';
 
 describe('SolidClientDynamicAuthRegistrationHandler', () => {
@@ -16,7 +16,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
-  const store: KeyValueStore<string, any> = new InMemoryStore();
+  const store: KeyValueStore<string, Partial<RegistrationResponseJSON>> = new InMemoryStore();
   const referer = 'client.example.com';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
@@ -341,54 +341,5 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     });
 
   });
-
-  // describe('validateWebID', () => {
-
-  //   it('should error when no oidcRegistration was found', async () => {
-
-  //     const responseGotten = validateWebID(podText, client_id, redirect_uri);
-
-  //     await expect(responseGotten.toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
-  //     await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(BadRequestHttpError);
-
-  //   });
-
-  //   it('should error when request data does not match', async () => {
-
-  //     let responseGotten = validateWebID(correctPodText, different_client_id, redirect_uri);
-
-  //     await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
-  //     await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
-
-  //     responseGotten = validateWebID(correctPodText, client_id, different_redirect_uri);
-
-  //     await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
-  //     await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
-
-  //   });
-
-  //   it('should return a JSON of the podData if valid', async () => {
-
-  //     const responseGotten = validateWebID(correctPodText,  client_id, redirect_uri);
-
-  //     const podData = {
-  //       client_id,
-  //       redirect_uris: [ redirect_uri ],
-  //       client_name: 'My Panva Application',
-  //       client_uri: 'https://app.example/',
-  //       logo_uri: 'https://app.example/logo.png',
-  //       tos_uri: 'https://app.example/tos.html',
-  //       scope: 'openid offline_access',
-  //       grant_types: [ 'refresh_token', 'authorization_code' ],
-  //       response_types: [ 'code' ],
-  //       default_max_age: 60000,
-  //       require_auth_time: true,
-  //     };
-
-  //     await expect(responseGotten.toPromise()).resolves.toEqual(podData);
-
-  //   });
-
-  // });
 
 });
