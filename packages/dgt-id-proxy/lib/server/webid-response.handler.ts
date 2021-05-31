@@ -14,13 +14,19 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the sub claim in the access token.
    */
-  constructor(private webIdPattern: string) {
+  constructor(private webIdPattern: string, private claim: string = 'sub') {
 
     super();
 
     if (!webIdPattern) {
 
       throw new Error('A WebID pattern must be provided');
+
+    }
+
+    if (!claim) {
+
+      throw new Error('A claim id must be provided');
 
     }
 
@@ -73,28 +79,24 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     const access_token_payload = response.body.access_token.payload;
     const id_token_payload = response.body.id_token.payload;
 
-    if (!access_token_payload.sub) {
+    if (!id_token_payload[this.claim]){
 
-      return throwError(new Error('No sub claim was included in the access token'));
-
-    }
-
-    if (!access_token_payload.webid) {
-
-      if (id_token_payload.webid) {
-
-        access_token_payload.webid = id_token_payload.webid;
-
-      } else {
-
-        const sub = access_token_payload.sub.replace(/[|:]/g, '');
-        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(sub));
-
-      }
+      return throwError(new Error('The custom claim provided was not found in the id token payload'));
 
     }
 
-    return of(response);
+    if (id_token_payload.webid) {
+
+      access_token_payload.webid = id_token_payload.webid;
+
+    } else {
+
+      const custom_claim = id_token_payload[this.claim].replace(/[|:]/g, '');
+      access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
+
+    }
+
+    { return of(response); }
 
   }
 
