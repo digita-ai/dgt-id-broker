@@ -1,4 +1,4 @@
-import { ForbiddenHttpError, HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { InMemoryStore } from '../storage/in-memory-store';
@@ -40,7 +40,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     application_type: 'web',
     grant_types: [ 'refresh_token', 'authorization_code' ],
     client_name: 'My Panva Application',
-    scope: 'openid offline_access',
     tos_uri : 'https://app.example/tos.html',
     require_auth_time : true,
     id_token_signed_response_alg: 'RS256',
@@ -60,7 +59,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     application_type: 'web',
     client_name: 'My Panva Application',
     grant_types: [ 'refresh_token', 'authorization_code' ],
-    scope: 'openid offline_access',
     id_token_signed_response_alg: 'RS256',
     response_types: [ 'code' ],
     subject_type: 'public',
@@ -90,17 +88,14 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       `;
 
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
-  const noScopeOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html", "grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
   const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
 
   const correctPodText = podText + '\n' + oidcRegistration;
-  const noScopePodText = podText + '\n' + noScopeOidcRegistration;
   const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
   const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
-  const otherScopeURL = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=profile&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const otherResponseTypeURL = new URL(`http://${host}/${endpoint}?response_type=plain&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
 
   let context: HttpHandlerContext;
@@ -215,15 +210,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     });
 
-    it('should error when provided scope is not found in the pod', async () => {
-
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
-
-      const badScopeContext = { ...context, request: { ...context.request, url: otherScopeURL } };
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(badScopeContext).toPromise()).rejects.toThrow(new ForbiddenHttpError(`The provided scope was not found in your webid`));
-
-    });
-
     it('should error when response types do not match', async () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
@@ -239,6 +225,10 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
+
+      // const responseGotten = await solidClientDynamicAuthRegistrationHandler
+      //   .handle(context)
+      //   .toPromise();
 
       await expect(solidClientDynamicAuthRegistrationHandler
         .handle(context)
@@ -260,14 +250,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
       await expect(solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }).toPromise()).rejects.toThrow('The redirect_uri in the request is not included in the WebId');
-
-    });
-
-    it('should error if no scope was defined in the webid', async () => {
-
-      fetchMock.once(noScopePodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
-
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No scope defined in the webid');
 
     });
 

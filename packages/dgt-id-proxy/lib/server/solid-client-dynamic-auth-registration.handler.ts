@@ -133,12 +133,15 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           this.compareClientDataWithRequest(clientData, context.request.url.searchParams),
           from(this.store.get(client_id))
         ))),
-        switchMap(([ clientData, registerData ]) => this.compareWithStoreAndRegister(
-          clientData,
-          registerData,
-          client_id,
-          this.createRequestData(clientData)
-        )),
+        switchMap(([ clientData, registerData ]) =>
+          registerData
+            ? this.compareWithStoreAndRegisterIfChanged(
+              clientData,
+              registerData,
+              client_id,
+              this.createRequestData(clientData)
+            )
+            : this.registerNewClient(client_id, this.createRequestData(clientData))),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
         switchMap(() => this.httpHandler.handle(context)),
       );
@@ -219,7 +222,6 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     const reqData = {
       'redirect_uris':  clientData.redirect_uris,
-      'scope': clientData.scope,
       'token_endpoint_auth_method' : 'none',
     };
 
@@ -260,49 +262,32 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    if (clientData.scope) {
-
-      const clientScopes = clientData.scope.split(' ');
-
-      for (const scope of searchParams.get('scope').split(' ')) {
-
-        if (!clientScopes.includes(scope)) {
-
-          return throwError(new ForbiddenHttpError('The provided scope was not found in your webid'));
-
-        }
-
-      }
-
-    } else {
-
-      return throwError(new ForbiddenHttpError('No scope defined in the webid'));
-
-    }
-
     return of(clientData);
 
   }
 
-  async compareWithStoreAndRegister(
+  async registerNewClient(
+    client_id: string,
+    reqData: Partial<OidcClientMetadata>
+  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>>{
+
+    const regResponse = await this.registerClient(reqData);
+    this.store.set(client_id, regResponse);
+
+    return regResponse;
+
+  }
+
+  async compareWithStoreAndRegisterIfChanged(
     clientData: Partial<OidcClientMetadata>,
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
     client_id: string,
     reqData: Partial<OidcClientMetadata>
   ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>>  {
 
-    if (!registerData) {
-
-      const regResponse = await this.registerClient(reqData);
-      this.store.set(client_id, regResponse);
-
-      return regResponse;
-
-    }
-
     for (const item of Object.keys(clientData)) {
 
-      if (item !== 'client_id' && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+      if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
 
         const alteredRegResponse = await this.registerClient(reqData);
         this.store.set(client_id, alteredRegResponse);
