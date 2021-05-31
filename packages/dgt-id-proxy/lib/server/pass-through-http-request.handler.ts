@@ -1,6 +1,7 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
+import { gunzipSync, gzipSync, brotliDecompressSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -163,7 +164,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     method: string,
     headers: Record<string, string>,
     body?: any,
-  ): Observable<HttpHandlerResponse>{
+  ): Observable<HttpHandlerResponse> {
 
     headers.host = this.host + ':' + this.port;
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
@@ -176,6 +177,12 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       method,
       headers: outgoingHttpHeaders,
     };
+
+    // if (requestOpts.path === '/oauth/token') {
+
+    //   delete requestOpts.headers['accept-encoding'];
+
+    // }
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
 
@@ -212,6 +219,36 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
             headers: res.headers as { [key: string]: string },
             status: res.statusCode ? res.statusCode : 500,
           };
+
+          // Check only html files
+          if(httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].search('text/html') !== -1) {
+
+            // decompress the data if it's compressed
+            if (httpHandlerResponse.headers['content-encoding'] === 'gzip') {
+
+              httpHandlerResponse.body = gunzipSync(httpHandlerResponse.body).toString();
+
+            }
+
+            // replace any instance of the upstream's url with the proxy's url
+            httpHandlerResponse.body = Buffer.from(
+              httpHandlerResponse.body.toString().replace(new RegExp(new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), this.proxyURL.toString())
+            );
+
+            // compress the data again
+            if (httpHandlerResponse.headers['content-encoding'] === 'gzip') {
+
+              httpHandlerResponse.body = gzipSync(httpHandlerResponse.body);
+
+            }
+
+          }
+
+          if (requestOpts.path === '/oauth/token') {
+
+            // console logging here but removed for eslint
+            // Need to add brotli decompression for token JSON data
+          }
 
           resolve(httpHandlerResponse);
 
