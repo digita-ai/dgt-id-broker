@@ -51,6 +51,12 @@ describe('WebIDResponseHandler', () => {
 
   });
 
+  it('should error when no claim is provided', () => {
+
+    expect(() => new WebIDResponseHandler(webIdPattern, null)).toThrow('A claim id must be provided');
+
+  });
+
   describe('handle', () => {
 
     it('should set the claim as sub if no clain was provided', async () => {

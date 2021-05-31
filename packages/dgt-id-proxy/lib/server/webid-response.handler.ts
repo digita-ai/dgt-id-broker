@@ -24,6 +24,12 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     }
 
+    if (!claim) {
+
+      throw new Error('A claim id must be provided');
+
+    }
+
   }
 
   /**
