@@ -6,7 +6,7 @@ describe('WebIDResponseHandler', () => {
   let response: HttpHandlerResponse;
 
   const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
-  const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
+  const webIdWithCustomClaim = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
   const claim = 'username';
   const webIDResponseHandler = new WebIDResponseHandler(webIdPattern, claim);
@@ -100,12 +100,12 @@ describe('WebIDResponseHandler', () => {
 
     });
 
-    it('should add a webid claim based on the uri encoded sub claim to the payload', async () => {
+    it('should add a webid claim based on the uri encoded custom claim, to the payload', async () => {
 
       delete response.body.access_token.payload.webid;
       delete response.body.id_token.payload.webid;
       const responseGotten = await webIDResponseHandler.handle(response).toPromise();
-      expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithSub);
+      expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithCustomClaim);
 
     });
 
