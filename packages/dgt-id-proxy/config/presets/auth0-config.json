@@ -77,6 +77,12 @@
                     "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
                   },
                   {
+                    "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
+                  },
+                  {
+                    "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
+                  },
+                  {
                     "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
                   },
                   {
@@ -240,6 +246,38 @@
       "HttpHandlerRoute:_path": "/u/login"
     },
     {
+      "@id": "urn:dgt-id-proxy:default:ConsentEndpoint",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        },
+        {
+          "@id": "urn:dgt-id-proxy:default:PostOperation"
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "HttpHandlerRoute:_path": "/u/consent"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint",
+      "@type": "HttpHandlerRoute",
+      "HttpHandlerRoute:_operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        },
+        {
+          "@id": "urn:dgt-id-proxy:default:PostOperation"
+        }
+      ],
+      "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "HttpHandlerRoute:_path": "/userinfo"
+    },
+    {
       "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
       "@type": "HttpHandlerRoute",
       "HttpHandlerRoute:_operations": [
@@ -262,7 +300,8 @@
           {
             "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
             "@type": "WebIDResponseHandler",
-            "WebIDResponseHandler:_webIdPattern": "http://localhost:3002/:sub/profile/card#me"
+            "WebIDResponseHandler:_webIdPattern": "http://localhost:3002/:sub/profile/card#me",
+            "WebIDResponseHandler:_claim": "http://digita.ai/nickname"
           },
           {
             "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler"

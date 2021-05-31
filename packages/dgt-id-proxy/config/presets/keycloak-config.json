@@ -228,9 +228,10 @@
         "@type": "HttpHandlerRoute",
         "HttpHandlerRoute:_operations": [
           {
-            "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "@id": "urn:dgt-id-proxy:default:GetOperation"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:PostOperation"
           }
         ],
         "HttpHandlerRoute:_handler": {
