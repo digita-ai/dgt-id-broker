@@ -7,6 +7,7 @@ describe('WebIDResponseHandler', () => {
 
   const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
   const webIdWithCustomClaim = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
+  const webIdWithSubClaim = 'http://solid.community.com/123456789/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
   const claim = 'username';
   const webIDResponseHandler = new WebIDResponseHandler(webIdPattern, claim);
@@ -19,13 +20,14 @@ describe('WebIDResponseHandler', () => {
           header: {},
           payload: {
             webid,
-            'sub': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
+            'sub': '123456789',
           },
         },
         id_token: {
           header: {},
           payload: {
             webid,
+            'sub': '123456789',
             'username': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
           },
         },
@@ -49,14 +51,16 @@ describe('WebIDResponseHandler', () => {
 
   });
 
-  it('should error when no webIDPattern is provided', () => {
-
-    expect(() => new WebIDResponseHandler(webIdPattern, null)).toThrow('No custom claim name was provided');
-    expect(() => new WebIDResponseHandler(webIdPattern, undefined)).toThrow('No custom claim name was provided');
-
-  });
-
   describe('handle', () => {
+
+    it('should set the claim as sub if no clain was provided', async () => {
+
+      delete response.body.id_token.payload.webid;
+      const handler = new WebIDResponseHandler(webIdPattern);
+      const responseGotten = await handler.handle(response).toPromise();
+      expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithSubClaim);
+
+    });
 
     it('should error when no response was provided', async () => {
 

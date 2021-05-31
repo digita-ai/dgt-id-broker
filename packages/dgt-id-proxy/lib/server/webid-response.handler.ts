@@ -14,19 +14,13 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the sub claim in the access token.
    */
-  constructor(private webIdPattern: string, private claim: string) {
+  constructor(private webIdPattern: string, private claim: string = 'sub') {
 
     super();
 
     if (!webIdPattern) {
 
       throw new Error('A WebID pattern must be provided');
-
-    }
-
-    if (!claim) {
-
-      throw new Error('No custom claim name was provided');
 
     }
 
