@@ -1,9 +1,8 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
-import { getWebID } from '../util/get-webid';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
+import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 
 export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 

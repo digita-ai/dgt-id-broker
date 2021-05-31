@@ -3,16 +3,30 @@ import { ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerRespons
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { getWebID } from '../util/get-webid';
-import { OidcRegistrationJSON } from '../util/oidc-registration-json';
-import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
-import { RegistrationResponseJSON } from '../util/registration-response-json';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
+/**
+ * A { HttpHandler } that
+ * - checks if a client is already registered
+ * - compares the data of the webid with the request data
+ * - compares the store data with the webid data
+ * - registers if not registered or information is updated
+ * - stores the registration in the keyvalue store
+ */
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
+  /**
+   * Creates a { SolidClientDynamicAuthRegistrationHandler }.
+   *
+   * @param {string} registration_uri - the registration endpoint for the currently used provider.
+   * @param { KeyValueStore } store - the store used to save a clients register data.
+   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, Partial<OidcRegistrationJSON>>,
+    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
     private httpHandler: HttpHandler
   ) {
 
@@ -48,6 +62,19 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Handles the context. Checks that the request contains a client id and redirect uri. If it does,
+   * it checks that the redirect uri is a valid uri.
+   * It retrieves the information from the webid of the given client id.
+   * Checks if the response is of the expected turtle type.
+   * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
+   * Compares the webid data with the request data and checks if the client id is already registered
+   * Compares the webid with the register data in the store and if not the same registers again with the new data.
+   * If nothing changed it doesn't register.
+   * It replaces the given client id in the context with the random client id it retrieved from the registration endpoint
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -118,6 +145,12 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or request url are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     return context
@@ -128,7 +161,14 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  async registerClient(data: Partial<OidcRegistrationJSON>): Promise<Partial<RegistrationResponseJSON>> {
+  /**
+   * Creates a fetch request to the registration endpoint
+   * to register the client with the given data
+   * and returns a JSON of the response.
+   *
+   * @param {HttpHandlerContext} context
+   */
+  async registerClient(data: any) {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -143,7 +183,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  createRequestData(clientData: Partial<OidcRegistrationJSON>): Partial<OidcRegistrationJSON> {
+  createRequestData(clientData: Partial<OidcClientMetadata>): Partial<OidcClientMetadata> {
 
     const metadata = [
       'response_types',
@@ -198,9 +238,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   }
 
   compareClientDataWithRequest(
-    clientData: Partial<OidcRegistrationJSON>,
+    clientData: Partial<OidcClientMetadata>,
     searchParams: URLSearchParams
-  ): Observable<Partial<OidcRegistrationJSON>>{
+  ): Observable<Partial<OidcClientMetadata>>{
 
     if (clientData.client_id !== searchParams.get('client_id')) {
 
@@ -245,11 +285,11 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   }
 
   async compareWithStoreAndRegister(
-    clientData: Partial<OidcRegistrationJSON>,
-    registerData: Partial<RegistrationResponseJSON>,
+    clientData: Partial<OidcClientMetadata>,
+    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
     client_id: string,
-    reqData: Partial<OidcRegistrationJSON>
-  ): Promise<Partial<RegistrationResponseJSON>>  {
+    reqData: Partial<OidcClientMetadata>
+  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>>  {
 
     if (!registerData) {
 

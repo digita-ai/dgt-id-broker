@@ -1,9 +1,10 @@
 import { ForbiddenHttpError, HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
-import { RegistrationResponseJSON } from '../util/registration-response-json';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { SolidClientDynamicAuthRegistrationHandler } from './solid-client-dynamic-auth-registration.handler';
 
 describe('SolidClientDynamicAuthRegistrationHandler', () => {
@@ -16,7 +17,10 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
-  const store: KeyValueStore<string, Partial<RegistrationResponseJSON>> = new InMemoryStore();
+
+  const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+  = new InMemoryStore();
+
   const referer = 'client.example.com';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';

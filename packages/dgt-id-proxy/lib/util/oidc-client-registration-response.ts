@@ -1,4 +1,4 @@
-export interface RegistrationResponseJSON {
+export interface OidcClientRegistrationResponse {
   client_id: string;
   client_sceret: string;
   registration_access_token: string;

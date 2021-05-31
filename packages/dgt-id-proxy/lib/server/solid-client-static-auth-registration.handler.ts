@@ -1,10 +1,24 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
-import { getWebID } from '../util/get-webid';
-import { parseQuads, getOidcRegistrationTriple } from '../util/process-webid';
+import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+
+/**
+ * A {HttpHandler} that
+ * - gets the webid data and retrieves oidcRegistration
+ * - replaces the client id in the request with a  static client id that was given in to the constructor
+ * - registers if not registered or information is updated
+ * - stores the registration in the keyvalue store
+ */
 export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
+  /**
+   * Creates a { SolidClientStaticAuthRegistrationHandler }.
+   *
+   * @param { string } clientID - the registration endpoint for the currently used provider.
+   * @param { string} clientSecret - the client secret used to authenticate the user
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   */
   constructor(
     private clientID: string,
     private clientSecret: string,

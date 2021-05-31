@@ -2,13 +2,27 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { RegistrationResponseJSON } from '../util/registration-response-json';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
+/**
+ * A {HttpHandler} that
+ * - gets the registered data from the store and if not errors
+ * - replaces the client id in the body with the registered random client id in the store
+ * - recalculates the content length because the body has changed
+ * - handles the request
+ */
 export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
+  /**
+   * Creates a { SolidClientDynamicTokenRegistrationHandler }.
+   *
+   * @param { KeyValueStore } store - the store used to retrieve a clients register data.
+   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   */
   constructor(
-    private store: KeyValueStore<string, Partial<RegistrationResponseJSON>>,
+    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
     private httpHandler: HttpHandler
   ) {
 
@@ -28,6 +42,16 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Handles the context. Checks that the request contains a body with a client id.
+   * If it does it get the register store data of that given client id from the store.
+   * It replaces the given client id in the body with the random registered client id in the store.
+   * It recalculates the content-length because the body has changed
+   * handles the request and catches the response, if the response is successful and
+   * contains a access token the it's client id in the payload is switched again the to original given client id
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -82,6 +106,12 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or request body are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     return context

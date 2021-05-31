@@ -1,4 +1,4 @@
-export interface OidcRegistrationJSON {
+export interface OidcClientMetadata {
   client_id: string;
   scope: string;
   response_types: string[];

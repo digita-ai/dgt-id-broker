@@ -2,8 +2,9 @@ import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import {  of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { RegistrationResponseJSON } from '../util/registration-response-json';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { SolidClientDynamicTokenRegistrationHandler } from './solid-client-dynamic-token-registration.handler';
 
 describe('SolidClientDynamicTokenRegistrationHandler', () => {
@@ -47,7 +48,9 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
     safeHandle: jest.fn(),
   };
 
-  const store: KeyValueStore<string, Partial<RegistrationResponseJSON>> = new InMemoryStore();
+  const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+  = new InMemoryStore();
+
   const solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
 
   const registerInfo = {
