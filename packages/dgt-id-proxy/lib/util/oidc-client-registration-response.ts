@@ -1,3 +1,6 @@
+/**
+ * An interface that presents all data that is unique to a registration request response
+ */
 export interface OidcClientRegistrationResponse {
   client_id: string;
   client_secret: string;

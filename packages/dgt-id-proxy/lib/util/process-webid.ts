@@ -3,6 +3,11 @@ import { Store, Parser, Quad } from 'n3';
 import {  throwError, of, Observable } from 'rxjs';
 import { OidcClientMetadata } from './oidc-client-metadata';
 
+/**
+ * Performs a get request to retrieve the webid turtle file
+ *
+ * @param { string } webID
+ */
 export const getWebID = (webID: string): Promise<Response> => fetch(webID, {
   method: 'GET',
   headers: {
@@ -10,6 +15,11 @@ export const getWebID = (webID: string): Promise<Response> => fetch(webID, {
   },
 });
 
+/**
+ * Parses the turtle text into Quad objects
+ *
+ * @param { string } text
+ */
 export const parseQuads = (text: string): Quad[] => {
 
   const n3Store = new Store();
@@ -21,6 +31,13 @@ export const parseQuads = (text: string): Quad[] => {
 
 };
 
+/**
+ * Reads the quads and finds the oidcRegistration triple.
+ * If it is not present it errors.
+ * If it is it returns a JSON of the oidcRegistration triple
+ *
+ * @param { Quad[] } quads
+ */
 export const getOidcRegistrationTriple = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
 
   const foundQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');

@@ -63,8 +63,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   }
 
   /**
-   * Handles the context. Checks that the request contains a client id and redirect uri. If it does,
-   * it checks that the redirect uri is a valid uri.
+   * Handles the context. Checks that the request contains a client id and redirect uri.
    * It retrieves the information from the webid of the given client id.
    * Checks if the response is of the expected turtle type.
    * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
@@ -169,9 +168,11 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
    * to register the client with the given data
    * and returns a JSON of the response.
    *
-   * @param {HttpHandlerContext} context
+   * @param { Partial<OidcClientMetadata> } data
    */
-  async registerClient(data: any) {
+  async registerClient(
+    data: Partial<OidcClientMetadata>
+  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -186,6 +187,13 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Creates a the request data to send to the registration endpoint.
+   * It combines all the parameters that are possible for a register request
+   * that are present in the webid.
+   *
+   * @param { Partial<OidcClientMetadata> } clientData
+   */
   createRequestData(clientData: Partial<OidcClientMetadata>): Partial<OidcClientMetadata> {
 
     const metadata = [
@@ -239,6 +247,13 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Compares the data from the webid with the data given in the requests URLSearchParams.
+   * It returns a 403 error when crucial parameters do not match
+   *
+   * @param { Partial<OidcClientMetadata> } clientData
+   * @param { URLSearchParams } searchParams
+   */
   compareClientDataWithRequest(
     clientData: Partial<OidcClientMetadata>,
     searchParams: URLSearchParams
@@ -266,6 +281,13 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Calls registerClient if the client is not yet registered with the provided request data.
+   * Saves the register data from the response into the KeyValue store with the client id as a key.
+   *
+   * @param { string } client_id
+   * @param { Partial<OidcClientMetadata> } reqData
+   */
   async registerNewClient(
     client_id: string,
     reqData: Partial<OidcClientMetadata>
@@ -278,6 +300,15 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Compares the data in the store with one in the webid, to check if the webid is not updated.
+   * If the in the webid is changed the client registers again with the new data.
+   * If registered again it saves the new register data in the KeyValue store.
+   * If nothing changed, there is no new registration and the registerData is straight returned.
+   *
+   * @param { string } client_id
+   * @param { Partial<OidcClientMetadata> } reqData
+   */
   async compareWithStoreAndRegisterIfChanged(
     clientData: Partial<OidcClientMetadata>,
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,

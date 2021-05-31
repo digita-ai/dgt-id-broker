@@ -226,10 +226,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
 
-      // const responseGotten = await solidClientDynamicAuthRegistrationHandler
-      //   .handle(context)
-      //   .toPromise();
-
       await expect(solidClientDynamicAuthRegistrationHandler
         .handle(context)
         .toPromise()).resolves

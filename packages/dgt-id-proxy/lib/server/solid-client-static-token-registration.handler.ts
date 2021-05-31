@@ -4,8 +4,21 @@ import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 
+/**
+ * A {HttpHandler} that
+ * - gets the webid data and retrieves oidcRegistration
+ * - checks the if it's a valid webid and compares the grant types
+ * - replaces the client id in the client secret in the context
+ */
 export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
+  /**
+   * Creates a { SolidClientStaticTokenRegistrationHandler }.
+   *
+   * @param { string } clientID - the registration endpoint for the currently used provider.
+   * @param { string} clientSecret - the client secret used to authenticate the user
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   */
   constructor(
     private httpHandler: HttpHandler,
     private clientID: string,
@@ -34,6 +47,17 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Handles the context. Checks that the request contains a client id, grant type and redirect uri.
+   * It retrieves the information from the webid of the given client id.
+   * Checks if the response is of the expected turtle type.
+   * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
+   * so it knows if it's a valid webid.
+   * It replaces the client id and client secret in the context with the one given to the constructor.
+   * and recalculates the content length because the body has changed
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -102,6 +126,12 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or request body are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     return context

@@ -47,6 +47,15 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Handles the context. Checks that the request contains a client id and redirect uri.
+   * It retrieves the information from the webid of the given client id.
+   * Checks if the response is of the expected turtle type.
+   * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
+   * It replaces the client id and client secret in the context with the one given to the constructor.
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -100,6 +109,12 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or request url are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     return context
