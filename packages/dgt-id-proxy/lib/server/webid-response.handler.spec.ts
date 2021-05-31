@@ -8,7 +8,8 @@ describe('WebIDResponseHandler', () => {
   const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
   const webIdWithSub = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
-  const webIDResponseHandler = new WebIDResponseHandler(webIdPattern);
+  const claim = 'username';
+  const webIDResponseHandler = new WebIDResponseHandler(webIdPattern, claim);
 
   beforeEach(() => {
 
@@ -25,6 +26,7 @@ describe('WebIDResponseHandler', () => {
           header: {},
           payload: {
             webid,
+            'username': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
           },
         },
       },
@@ -42,8 +44,15 @@ describe('WebIDResponseHandler', () => {
 
   it('should error when no webIDPattern is provided', () => {
 
-    expect(() => new WebIDResponseHandler(null)).toThrow('A WebID pattern must be provided');
-    expect(() => new WebIDResponseHandler(undefined)).toThrow('A WebID pattern must be provided');
+    expect(() => new WebIDResponseHandler(null, claim)).toThrow('A WebID pattern must be provided');
+    expect(() => new WebIDResponseHandler(undefined, claim)).toThrow('A WebID pattern must be provided');
+
+  });
+
+  it('should error when no webIDPattern is provided', () => {
+
+    expect(() => new WebIDResponseHandler(webIdPattern, null)).toThrow('No custom claim name was provided');
+    expect(() => new WebIDResponseHandler(webIdPattern, undefined)).toThrow('No custom claim name was provided');
 
   });
 
@@ -84,10 +93,10 @@ describe('WebIDResponseHandler', () => {
 
     });
 
-    it('should error when no sub claim was found in the payload', async () => {
+    it('should error when no custom claim was found in the id token payload', async () => {
 
-      delete response.body.access_token.payload.sub;
-      await expect(webIDResponseHandler.handle(response).toPromise()).rejects.toThrow('No sub claim was included in the access token');
+      delete response.body.id_token.payload[claim];
+      await expect(webIDResponseHandler.handle(response).toPromise()).rejects.toThrow('The custom claim provided was not found in the id token payload');
 
     });
 
