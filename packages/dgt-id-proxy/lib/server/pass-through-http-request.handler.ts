@@ -1,7 +1,7 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
-import { gunzipSync, gzipSync, brotliDecompressSync } from 'zlib';
+import { gunzipSync, gzipSync, brotliDecompressSync, brotliCompressSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -220,19 +220,25 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
             status: res.statusCode ? res.statusCode : 500,
           };
 
+          // DECODING AND ENCODING LOGIC SHOULD BE MOVED TO A SEPERATE MODULE - SEE: https://github.com/digita-ai/dgt-id-broker/issues/85#issuecomment-851438022
+
           // Check only html files
           if(httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].search('text/html') !== -1) {
 
             // decompress the data if it's compressed
             if (httpHandlerResponse.headers['content-encoding'] === 'gzip') {
 
-              httpHandlerResponse.body = gunzipSync(httpHandlerResponse.body).toString();
+              httpHandlerResponse.body = gunzipSync(httpHandlerResponse.body);
+
+            } else if (httpHandlerResponse.headers['content-encoding'] === 'br') {
+
+              httpHandlerResponse.body = brotliDecompressSync(httpHandlerResponse.body);
 
             }
 
             // replace any instance of the upstream's url with the proxy's url
             httpHandlerResponse.body = Buffer.from(
-              httpHandlerResponse.body.toString().replace(new RegExp(new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), this.proxyURL.toString())
+              httpHandlerResponse.body.toString().replace(new RegExp('(action="|src="|href=")' + new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), '$1' + this.proxyURL.toString())
             );
 
             // compress the data again
@@ -240,14 +246,24 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
               httpHandlerResponse.body = gzipSync(httpHandlerResponse.body);
 
+            } else if (httpHandlerResponse.headers['content-encoding'] === 'br') {
+
+              httpHandlerResponse.body = brotliCompressSync(httpHandlerResponse.body);
+
             }
 
           }
 
-          if (requestOpts.path === '/oauth/token') {
+          if (httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].search('application/json') !== -1) {
 
-            // console logging here but removed for eslint
-            // Need to add brotli decompression for token JSON data
+            if (httpHandlerResponse.headers['content-encoding'] === 'br') {
+
+              httpHandlerResponse.body = brotliDecompressSync(httpHandlerResponse.body);
+
+            }
+
+            delete httpHandlerResponse.headers['content-encoding'];
+
           }
 
           resolve(httpHandlerResponse);

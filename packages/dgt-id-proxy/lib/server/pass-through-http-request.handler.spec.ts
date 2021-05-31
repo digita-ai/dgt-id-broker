@@ -1,6 +1,7 @@
 import http, { IncomingMessage } from 'http';
 import https from 'https';
 import { Socket } from 'net';
+import { gunzipSync, gzipSync, brotliDecompressSync, brotliCompressSync } from 'zlib';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 
@@ -13,19 +14,19 @@ describe('PassThroughHttpRequestHandler', () => {
   httpRequest.write = jest.fn();
   const mockHttpBuffer = Buffer.from('mockHttp');
 
-  const mockRequestImplementation = (body: string, callback: (response: IncomingMessage) => void) => {
+  const mockRequestImplementation = (body: Buffer, callback: (response: IncomingMessage) => void) => {
 
     callback(resp);
-    resp.emit('data', Buffer.from(body));
+    resp.emit('data', body);
     resp.emit('end');
 
     return httpRequest;
 
   };
 
-  http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation('mockHttp', callback));
+  http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('mockHttp'), callback));
 
-  https.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation('mockHttps', callback));
+  https.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('mockHttps'), callback));
 
   beforeEach(async () => {
 
@@ -190,6 +191,53 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockErrorResponseImplementation('mockHttp', callback));
       await expect(handler.handle(context).toPromise()).rejects.toThrow('Error resolving the response in the PassThroughHandler: mock error');
+
+    });
+
+    it('should replace the upstream url with the proxy url in html files if they are preceded by "action=\"", "href=\"", or "src=\""', async () => {
+
+      resp.headers = {
+        'content-type': 'text/html',
+      };
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('<src="http://localhost:3000/test"\><action="http://localhost:3000/test"\><href="http://localhost:3000/test"\><value="http://localhost:3000/test"\>'), callback));
+      const response = await handler.handle(context).toPromise();
+
+      expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><action="http://urlofproxy.com/test"\><href="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
+
+    });
+
+    it('should replace the upstream url with the proxy url in html files when content encoding is gzip', async () => {
+
+      resp.headers = {
+        'content-type': 'text/html',
+        'content-encoding': 'gzip',
+      };
+
+      const body = gzipSync('<src="http://localhost:3000/test"\><value="http://localhost:3000/test"\>');
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+
+      const response = await handler.handle(context).toPromise();
+
+      expect(gunzipSync(response.body).toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
+
+    });
+
+    it('should replace the upstream url with the proxy url in html files when content encoding is br', async () => {
+
+      resp.headers = {
+        'content-type': 'text/html',
+        'content-encoding': 'br',
+      };
+
+      const body = brotliCompressSync('<src="http://localhost:3000/test"\><value="http://localhost:3000/test"\>');
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+
+      const response = await handler.handle(context).toPromise();
+
+      expect(brotliDecompressSync(response.body).toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
     });
 
