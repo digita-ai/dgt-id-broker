@@ -1,6 +1,5 @@
 export interface OidcRegistrationJSON {
   client_id: string;
-  scope: string;
   response_types: string[];
   redirect_uris: string[];
   grant_types: string[];
