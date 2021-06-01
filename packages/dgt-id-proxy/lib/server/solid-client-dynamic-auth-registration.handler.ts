@@ -286,7 +286,8 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
    * If registered again it saves the new register data in the KeyValue store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
-   * @param { string } client_id
+   * @param { Partial<OidcClientMetadata> } clientData - the data retrieved from the webid.
+   * @param { Partial<OidcClientMetadata & OidcClientRegistrationResponse> } registerData - the data retrieved from the store.
    */
   compareWebIdDataWithStore(
     clientData: Partial<OidcClientMetadata>,
