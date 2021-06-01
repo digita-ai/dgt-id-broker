@@ -241,6 +241,24 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
+    it('should decompress json when the encoding is br and remove the content-encodign header', async () => {
+
+      resp.headers = {
+        'content-type': 'application/json',
+        'content-encoding': 'br',
+      };
+
+      const body = brotliCompressSync(JSON.stringify({ mockKey: 'mockValue' }));
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+
+      const response = await handler.handle(context).toPromise();
+
+      expect(JSON.parse((response.body).toString())).toEqual({ mockKey: 'mockValue' });
+      expect(resp.headers).toEqual({ 'content-type': 'application/json' });
+
+    });
+
   });
 
   describe('canHandle', () => {
