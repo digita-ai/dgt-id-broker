@@ -1,0 +1,108 @@
+= Getting Started
+
+The Identity Proxy works by utilising a library called https://componentsjs.readthedocs.io/en/latest/[componentsjs]. This library allows you to use and not use certain features of the Proxy simply by adding the handlers that enable those features to a JSON config file.
+
+[[passthrough]]
+== PassThroughHttpRequestHandler
+
+The foundation of the Proxy rests on the `PassThroughHttpRequestHandler`. This is a handler that takes any request, simply sends it on to a given upstream server, and returns the response. By adding handlers to a chain, you can make changes to the request before it is sent to the upstream, and also add things to the response before sending it back to the client.
+
+The `PassThroughHttpRequestHandler` can be configured as follows:
+```
+{
+    "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
+    "@type": "PassThroughHttpRequestHandler",
+    "PassThroughHttpRequestHandler:_host": "upstreamhost.com"
+    "PassThroughHttpRequestHandler:_port": 80,
+    "PassThroughHttpRequestHandler:_scheme": "http:",
+    "PassThroughHttpRequestHandler:_proxyUrl": "http://proxyhost.com"
+}
+```
+Note that the scheme `https:` is supported aswell.
+
+== Encoding and Decoding Tokens
+
+If you plan on adding handlers to the token endpoint other than the `PassThroughHttpRequestHandler`, you will need to add a `JwtDecodeHandler` and a 'JwtEncodeHandler' to the chain of handlers on the token endpoint.
+
+This is because, internally, the handlers expect a JSON object for the certain tokens. This is is because claims need to be added or changed in, for example, the Access Token. If each handler would have to consistently decode, change, and then encode the token again that would be inefficient. So it's only done once.
+
+=== JwtDecodeHandler
+
+The config for the `JwtDecodeHandler` is as follows:
+```
+{
+    "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
+    "@type": "JwtDecodeHandler",
+    "JwtDecodeHandler:_jwtFields": [
+        "token_field"
+    ],
+    "JwtDecodeHandler:_upstreamUrl": "http://urlofupstream.com",
+    "JwtDecodeHandler:_verifyJwk": true
+}
+```
+
+Where `jwtFields` is a list of fields containing a JWT token that should be decoded (most commonly this will be `access_token` and/or `id_token`), and `verifyJwk` is boolean that tells the proxy to verify the JWK that was used to sign the tokens.
+
+=== JwtEncodeHandler
+
+The config for the `JwtEncodeHandler` is as follows:
+```
+{
+    "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
+    "@type": "JwtEncodeHandler",
+    "JwtEncodeHandler:_jwtFields":[
+        { 
+            "@type": "JwtField",
+            "JwtField:_field": "token_field", 
+            "JwtField:_type": "at+jwt" 
+        }
+    ],
+    "JwtEncodeHandler:_pathToJwks": /path/to/jwk-file.json,
+    "JwtEncodeHandler:_proxyUrl": "http://urlofproxy.com"
+}
+```
+
+Where `jwtFields` is a list of objects of the type `JwtField` and include a `field` pointing to a token that should be encoded and a `type` that should be set as the token's `typ` claim (commonly `JWT`, or for Access Tokens `at+jwt`)
+
+== Putting them together
+
+We can put all of these handlers together on an endpoint (the token endpoint) as follows:
+```
+{
+    "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "POST",
+            "HttpHandlerOperation:_publish": false
+        },
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "OPTIONS",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
+            }
+        ]
+    },
+    "HttpHandlerRoute:_path": "/token"
+}
+```
+
+Because we gave our handlers id's, we can reference them by their ids, which makes the endpoints a lot more readable. Notice that we are using a `PipeThroughHandler`. This handler will execute the request on the first handler, and then pass the response to each subsequent handler. The decoder and encoder only need the response containing the JWTs.
+
+So with this config when a request is sent to the /token endpoint of the proxy it would send the request to the upstream server, and when it responds with a token response the given tokens will be decoded and subsequently encoded. With these basics in order, we can start adding handlers to these endpoints.
+
+Take a look at our xref:features.adoc[Features] to see how other handlers can be configured to fill in the gaps for an upstream Identity Provider and allow for Solid compliant OIDC requests.

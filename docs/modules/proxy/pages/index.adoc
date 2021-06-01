@@ -1,0 +1,3 @@
+= Proxy documentation
+
+This module contains documentation of all the features of the Identity Proxy and how they can be configured.

@@ -1,0 +1,22 @@
+= Demonstrating Proof-of-Possession (DPoP)
+
+Enabling DPoP only requires one handler: the `DpopTokenRequestHandler`.
+
+It can be configured as follows:
+```
+{
+    "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
+    "@type": "DpopTokenRequestHandler",
+    "DpopTokenRequestHandler:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+    },
+    "DpopTokenRequestHandler:_keyValueStore": {
+        "@type": "InMemoryStore"
+    },
+    "DpopTokenRequestHandler:_proxyTokenUrl": "http://urlofproxy.com/token"
+}
+```
+
+The `DpopTokenRequestHandler` takes 3 arguments:
+* `handler`: the handler can be any HttpHandler. This allows you to add other functionality to the chain on the token endpoint. In this example a `PassThroughHandler` is used as explained in the xref:attribute: valuegetting_started.adoc#passthrough[PassThroughHandler section] of the "Getting Started" page.
+
