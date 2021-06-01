@@ -12,7 +12,9 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * Creates a {WebIDResponseHandler}.
    *
    * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
-   * that will be replaced by the sub claim in the access token.
+   * that will be replaced by the custom claim in the id token.
+   * @param {string} claim - the name of the custom claim that needs to be retrieved from the id token
+   * and added to the webIdPattern above.
    */
   constructor(private webIdPattern: string, private claim: string = 'sub') {
 
@@ -33,11 +35,13 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   }
 
   /**
-   * Handles the response. Checks if the access token already contains a webid. If it does not, it checks wether
-   * the id token already contains a webid. If it does not it uses the sub claim from the access token
+   * Handles the response. Checks if the id token contains the custom claim provided to the constructor.
+   * If not it returns an error. It checks if the id tokens payload contains a webid.
+   * If the id token contains a webid it sets the web id in the access tokens payload to said webid.
+   * If it does not it uses the custom claim from the id token
    * to create a webid and add it to the access token payload.
    *
-   * The sub claim is 'slugified' using the following library: https://www.npmjs.com/package/slugify
+   * The custom claim is 'slugified' using the following library: https://www.npmjs.com/package/slugify
    * Special characters are replaced according to this charmap: https://github.com/simov/slugify/blob/master/config/charmap.json
    * Special characters that are not in the charmap are removed (this includes '?', '#', '^', '{', '}', '[', ']', etc.).
    * We also remove the character '|', and the character ':'.
