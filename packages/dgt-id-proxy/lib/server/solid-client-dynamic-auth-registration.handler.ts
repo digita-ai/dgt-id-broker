@@ -128,17 +128,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
         }),
         map((text) => parseQuads(text)),
         switchMap((quads) => getOidcRegistrationTriple(quads)),
-        switchMap(((clientData) => zip(
-          this.compareClientDataWithRequest(clientData, context.request.url.searchParams),
-          from(this.store.get(client_id))
-        ))),
-        switchMap(([ clientData, registerData ]) =>
-          zip(
-            of(clientData),
-            this.compareWithStoreIfChanged(clientData, registerData),
-            of(registerData)
-          )),
-        switchMap(([ clientData, changed, registerData ]) => (registerData && changed || !registerData)
+        switchMap((clientData) => this.compareClientDataWithRequest(clientData, context.request.url.searchParams)),
+        switchMap((clientData) => zip(of(clientData), from(this.store.get(client_id)))),
+        switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
           ? this.registerClient(client_id, this.createRequestData(clientData))
           : of(registerData)),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
@@ -296,28 +288,24 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
    *
    * @param { string } client_id
    */
-  compareWithStoreIfChanged(
+  compareWebIdDataWithStore(
     clientData: Partial<OidcClientMetadata>,
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
-  ): Observable<boolean>  {
+  ): boolean {
 
-    if (!registerData) {
-
-      return of(true);
-
-    }
+    if (!registerData) { return true; }
 
     for (const item of Object.keys(clientData)) {
 
       if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
 
-        return of(true);
+        return true;
 
       }
 
     }
 
-    return of(false);
+    return false;
 
   }
 
