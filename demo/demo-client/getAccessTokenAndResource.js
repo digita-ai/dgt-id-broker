@@ -48,7 +48,7 @@ async function getResource(url, access_token, dpopJwtForResource) {
             'DPoP': dpopJwtForResource
         }
     });
-    return response.text();
+    return response;
 } 
 
 // Build our form data with all the necessary parameters, which we will send in our post request.
@@ -75,18 +75,19 @@ instantiateJWTsForDPoP()
                 // The "data" object now contains our access_token if the request was successful. We can send it on to the resource server to get the requested resource,
                 // along with a new DPoP-proof.
                 getResource(`${env.VITE_RESOURCE_URI}`, data.access_token, dpopJwtForResource)
-                    .then(data => {
+                    .then(async data => {
                         // In this case we simply get the profile of our solid pod. The rest of this function simply preserves the formatting of the html we receive.
-                        data = data.replace(/</g, "&lt;")
-                        data = data.replace(/>/g, "&gt;")
+                        let text = await data.text();
+                        if (data.headers.get('content-type') === 'text/turtle'){
+                            text = text.replace(/</g, "&lt;")
+                            text = text.replace(/>/g, "&gt;")                      
+                        }
                         const div = document.getElementById("app");
                         div.textContent = ""
-                        const h1 = document.createElement("h1")
-                        h1.innerHTML = "Your profile:";
                         const p = document.createElement("pre");
-                        p.innerHTML = data;
-                        div.appendChild(h1);
+                        p.innerHTML = text;
                         div.appendChild(p);
+                        
                         // Clear our sessionStorage when we are done as prescribed by the solid oidc primer.
                         sessionStorage.clear();
                     })

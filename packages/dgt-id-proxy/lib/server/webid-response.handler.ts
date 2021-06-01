@@ -12,9 +12,11 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * Creates a {WebIDResponseHandler}.
    *
    * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
-   * that will be replaced by the sub claim in the access token.
+   * that will be replaced by the custom claim in the id token.
+   * @param {string} claim - the name of the custom claim that needs to be retrieved from the id token
+   * and added to the webIdPattern above.
    */
-  constructor(private webIdPattern: string) {
+  constructor(private webIdPattern: string, private claim: string = 'sub') {
 
     super();
 
@@ -24,14 +26,22 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     }
 
+    if (!claim) {
+
+      throw new Error('A claim id must be provided');
+
+    }
+
   }
 
   /**
-   * Handles the response. Checks if the access token already contains a webid. If it does not, it checks wether
-   * the id token already contains a webid. If it does not it uses the sub claim from the access token
+   * Handles the response. Checks if the id token contains the custom claim provided to the constructor.
+   * If not it returns an error. It checks if the id tokens payload contains a webid.
+   * If the id token contains a webid it sets the web id in the access tokens payload to said webid.
+   * If it does not it uses the custom claim from the id token
    * to create a webid and add it to the access token payload.
    *
-   * The sub claim is 'slugified' using the following library: https://www.npmjs.com/package/slugify
+   * The custom claim is 'slugified' using the following library: https://www.npmjs.com/package/slugify
    * Special characters are replaced according to this charmap: https://github.com/simov/slugify/blob/master/config/charmap.json
    * Special characters that are not in the charmap are removed (this includes '?', '#', '^', '{', '}', '[', ']', etc.).
    * We also remove the character '|', and the character ':'.
@@ -73,28 +83,24 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     const access_token_payload = response.body.access_token.payload;
     const id_token_payload = response.body.id_token.payload;
 
-    if (!access_token_payload.sub) {
+    if (!id_token_payload[this.claim]){
 
-      return throwError(new Error('No sub claim was included in the access token'));
-
-    }
-
-    if (!access_token_payload.webid) {
-
-      if (id_token_payload.webid) {
-
-        access_token_payload.webid = id_token_payload.webid;
-
-      } else {
-
-        const sub = access_token_payload.sub.replace(/[|:]/g, '');
-        access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(sub));
-
-      }
+      return throwError(new Error('The custom claim provided was not found in the id token payload'));
 
     }
 
-    return of(response);
+    if (id_token_payload.webid) {
+
+      access_token_payload.webid = id_token_payload.webid;
+
+    } else {
+
+      const custom_claim = id_token_payload[this.claim].replace(/[|:]/g, '');
+      access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
+
+    }
+
+    { return of(response); }
 
   }
 

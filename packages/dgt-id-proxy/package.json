@@ -53,8 +53,8 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "^0.1.4",
-    "@digita-ai/handlersjs-http": "^0.1.4",
+    "@digita-ai/handlersjs-core": "^0.2.1",
+    "@digita-ai/handlersjs-http": "^0.2.1",
     "@types/uuid": "^8.3.0",
     "@types/yargs": "^16.0.1",
     "componentsjs": "^4.0.6",
@@ -84,10 +84,10 @@
     },
     "coverageThreshold": {
       "global": {
-        "branches": 88.96,
-        "functions": 88.24,
-        "lines": 86.45,
-        "statements": 86.54
+        "branches": 91.43,
+        "functions": 94.74,
+        "lines": 89.02,
+        "statements": 89.1
       }
     }
   }

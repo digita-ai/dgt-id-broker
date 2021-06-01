@@ -3,11 +3,11 @@
 
 <>
     a foaf:PersonalProfileDocument;
-    foaf:maker <http://localhost:3002/tonypaillard/profile/card#me>;
-    foaf:primaryTopic <http://localhost:3002/tonypaillard/profile/card#me>.
+    foaf:maker <http://localhost:3002/buckylaplasse/profile/card#me>;
+    foaf:primaryTopic <http://localhost:3002/buckylaplasse/profile/card#me>.
 
-<http://localhost:3002/tonypaillard/profile/card#me>
+<http://localhost:3002/buckylaplasse/profile/card#me>
     a foaf:Person;
-    foaf:name "Tony Paillard";
+    foaf:name "Bucky Laplasse";
     solid:oidcIssuer <http://localhost:3003/> ;
     solid:oidcIssuerRegistrationToken "" .
