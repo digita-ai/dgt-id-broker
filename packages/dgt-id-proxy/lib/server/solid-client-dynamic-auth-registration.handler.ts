@@ -132,15 +132,14 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           this.compareClientDataWithRequest(clientData, context.request.url.searchParams),
           from(this.store.get(client_id))
         ))),
-        switchMap(([ clientData, registerData ]) =>
-          registerData
-            ? this.compareWithStoreAndRegisterIfChanged(
-              clientData,
-              registerData,
-              client_id,
-              this.createRequestData(clientData)
-            )
-            : this.registerNewClient(client_id, this.createRequestData(clientData))),
+        switchMap(([ clientData, registerData ]) => zip(
+          of(clientData),
+          of(this.compareWithStoreIfChanged(clientData, registerData)),
+          of(registerData)
+        )),
+        switchMap(([ clientData, changed, registerData ]) => changed
+          ? this.registerClient(client_id, this.createRequestData(clientData))
+          : of(registerData)),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
         switchMap(() => this.httpHandler.handle(context)),
       );
@@ -164,14 +163,18 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   }
 
   /**
+   *
    * Creates a fetch request to the registration endpoint
    * to register the client with the given data
-   * and returns a JSON of the response.
+   * and returns a JSON of the response and saves
+   * this response in the KeyValue store with the client id as key.
    *
    * @param { Partial<OidcClientMetadata> } data
+   * @param { string } client_id
    */
   async registerClient(
-    data: Partial<OidcClientMetadata>
+    client_id: string,
+    data: Partial<OidcClientMetadata>,
   ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
     const response = await fetch(this.registration_uri, {
@@ -183,7 +186,10 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
       body: JSON.stringify(data),
     });
 
-    return response.json();
+    const regResponse = await response.json();
+    this.store.set(client_id, regResponse);
+
+    return regResponse;
 
   }
 
@@ -282,54 +288,33 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   }
 
   /**
-   * Calls registerClient if the client is not yet registered with the provided request data.
-   * Saves the register data from the response into the KeyValue store with the client id as a key.
-   *
-   * @param { string } client_id
-   * @param { Partial<OidcClientMetadata> } reqData
-   */
-  async registerNewClient(
-    client_id: string,
-    reqData: Partial<OidcClientMetadata>
-  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>>{
-
-    const regResponse = await this.registerClient(reqData);
-    this.store.set(client_id, regResponse);
-
-    return regResponse;
-
-  }
-
-  /**
    * Compares the data in the store with one in the webid, to check if the webid is not updated.
    * If the in the webid is changed the client registers again with the new data.
    * If registered again it saves the new register data in the KeyValue store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
    * @param { string } client_id
-   * @param { Partial<OidcClientMetadata> } reqData
    */
-  async compareWithStoreAndRegisterIfChanged(
+  compareWithStoreIfChanged(
     clientData: Partial<OidcClientMetadata>,
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
-    client_id: string,
-    reqData: Partial<OidcClientMetadata>
-  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>>  {
+  ): boolean  {
 
-    for (const item of Object.keys(clientData)) {
+    if (registerData){
 
-      if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+      for (const item of Object.keys(clientData)) {
 
-        const alteredRegResponse = await this.registerClient(reqData);
-        this.store.set(client_id, alteredRegResponse);
+        if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
 
-        return alteredRegResponse;
+          return true;
+
+        }
 
       }
 
     }
 
-    return registerData;
+    return false;
 
   }
 
