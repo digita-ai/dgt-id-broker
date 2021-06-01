@@ -18,5 +18,5 @@ It can be configured as follows:
 ```
 
 The `DpopTokenRequestHandler` takes 3 arguments:
-* `handler`: the handler can be any HttpHandler. This allows you to add other functionality to the chain on the token endpoint. In this example a `PassThroughHandler` is used as explained in the xref:attribute: valuegetting_started.adoc#passthrough[PassThroughHandler section] of the "Getting Started" page.
+* `handler`: the handler can be any HttpHandler. This allows you to add other functionality to the chain on the token endpoint. In this example a `PassThroughHandler` is used as explained in the xref:getting_started.adoc#passthrough[PassThroughHandler section] of the "Getting Started" page.
 
