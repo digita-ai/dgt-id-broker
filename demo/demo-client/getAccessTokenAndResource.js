@@ -2,6 +2,7 @@ import { generateKeyPair } from 'jose/util/generate_key_pair'
 import { fromKeyLike } from 'jose/jwk/from_key_like'
 import { SignJWT } from 'jose/jwt/sign'
 import { v4 as uuid } from 'uuid'
+import CryptoJS from 'crypto-js'
 
 // Importing the environment variables defined in the .env file.
 const env = import.meta.env
@@ -21,11 +22,33 @@ const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
 // Global variables that are instantiated in instantiateJWTsForDPoP()
-let dpopJwtForToken = ""
-let dpopJwtForResource = ""
+let publicJwk;
+let privateKey;
+
+// function we need to create the 'ath' claim in the dpop proof we send to the resource server.
+function base64URL(string) {
+  return string.toString(CryptoJS.enc.Base64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
 
 // Post request to get an access token
-async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
+async function postDataToGetAccessToken(url, data) {
+    // Create the DPoP-proof for the token request.
+    const dpopJwtForToken = await new SignJWT({
+        // Each DPoP-proof needs to say what type of request it is making and to where to be valid.
+        'htm': 'POST',
+        'htu': `http://localhost:3003/${env.VITE_TOKEN_ENDPOINT}`,
+    })
+        // set the necessary headers and body of our JWT with the necessary components as prescribed by the spec.
+        .setProtectedHeader({
+            alg: 'ES256',
+            typ: 'dpop+jwt',
+            jwk: publicJwk
+        })
+        .setJti(uuid())
+        .setIssuedAt()
+        // Sign the JWT with our private key. Since we add our public key as a jwk in the headers, this can be used to verify we are making the request.
+        .sign(privateKey)
+
     const response = await fetch(url, {
         method: 'POST',
         // We add our DPoP proof to the headers.
@@ -38,7 +61,24 @@ async function postDataToGetAccessToken(url, data, dpopJwtForToken) {
 }
 
 // Get request to the resource we are attempting to view.
-async function getResource(url, access_token, dpopJwtForResource) {
+async function getResource(url, access_token) {
+
+    // Create the DPoP-proof for the resource server request.
+    const dpopJwtForResource = await new SignJWT({
+        'htm': 'GET',
+        'htu': `${env.VITE_RESOURCE_URI}`,
+        'ath': base64URL(CryptoJS.SHA256(access_token))
+    })
+        .setProtectedHeader({
+            alg: 'ES256',
+            typ: 'dpop+jwt',
+            jwk: publicJwk
+        })
+        .setJti(uuid())
+        .setIssuedAt()
+        .sign(privateKey)
+
+
     const response = await fetch(url, {
         method: 'get',
         headers: {
@@ -66,15 +106,16 @@ formDataForAccessToken.append('code_verifier', code_verifier);
 // Adding a FormData object to the body of a post request does not work, so we convert it here.
 const formDataToSendForAccessToken = new URLSearchParams(formDataForAccessToken)
 
-// Call to instantiate our JWT DPoP proofs. Only necessary due to Vite not allowing "await" calls at the top-level.
-instantiateJWTsForDPoP()
+// Call to instantiate our key pair which will be used to sign our DPoP proofs. Needs to be in a function because vite does not allow top level
+// await calls.
+createKeyPair()
     .then(() => {
-        // Send the post request to get a token, along with our data encoded as formdata, and our DPoP-proof
-        postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/${env.VITE_TOKEN_ENDPOINT}`, formDataToSendForAccessToken, dpopJwtForToken)
+        // Create our dpop proof and send the post request to get a token, along with our data encoded as formdata
+        postDataToGetAccessToken(`http://localhost:${env.VITE_OIDC_PORT}/${env.VITE_TOKEN_ENDPOINT}`, formDataToSendForAccessToken)
             .then(data => {
                 // The "data" object now contains our access_token if the request was successful. We can send it on to the resource server to get the requested resource,
                 // along with a new DPoP-proof.
-                getResource(`${env.VITE_RESOURCE_URI}`, data.access_token, dpopJwtForResource)
+                getResource(`${env.VITE_RESOURCE_URI}`, data.access_token)
                     .then(async data => {
                         // In this case we simply get the profile of our solid pod. The rest of this function simply preserves the formatting of the html we receive.
                         let text = await data.text();
@@ -94,41 +135,11 @@ instantiateJWTsForDPoP()
             })
     });
 
-// The lines in this function used to be on the top-level, however Vite does not allow top-level usage of "await", so this function was created to fix that.
-async function instantiateJWTsForDPoP() {
+
+async function createKeyPair() {
     // Generate a public and private key, which we will use to sign our JWTs.
-    const {publicKey, privateKey} = await generateKeyPair('ES256');
+    const keyPair = await generateKeyPair('ES256');
+    privateKey = keyPair.privateKey
     // Create a JWK of our public key, which we will need for our JWT DPoP-proof.
-    const publicJwk = await fromKeyLike(publicKey)
-
-    // Create the DPoP-proof for the token request.
-    dpopJwtForToken = await new SignJWT({
-        // Each DPoP-proof needs to say what type of request it is making and to where to be valid.
-        'htm': 'POST',
-        'htu': `http://localhost:3003/${env.VITE_TOKEN_ENDPOINT}`,
-    })
-        // set the necessary headers and body of our JWT with the necessary components as prescribed by the spec.
-        .setProtectedHeader({
-            alg: 'ES256',
-            typ: 'dpop+jwt',
-            jwk: publicJwk
-        })
-        .setJti(uuid())
-        .setIssuedAt()
-        // Sign the JWT with our private key. Since we add our public key as a jwk in the headers, this can be used to verify we are making the request.
-        .sign(privateKey)
-
-    // Create the DPoP-proof for the resource server request.
-    dpopJwtForResource = await new SignJWT({
-        'htm': 'GET',
-        'htu': `${env.VITE_RESOURCE_URI}`,
-    })
-        .setProtectedHeader({
-            alg: 'ES256',
-            typ: 'dpop+jwt',
-            jwk: publicJwk
-        })
-        .setJti(uuid())
-        .setIssuedAt()
-        .sign(privateKey)
+    publicJwk = await fromKeyLike(keyPair.publicKey)
 }
