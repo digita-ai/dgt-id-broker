@@ -27,8 +27,8 @@ let privateKey;
 
 // function we need to create the 'ath' claim in the dpop proof we send to the resource server.
 function base64URL(string) {
-    return string.toString(CryptoJS.enc.Base64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-  }
+  return string.toString(CryptoJS.enc.Base64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
 
 // Post request to get an access token
 async function postDataToGetAccessToken(url, data) {
@@ -143,4 +143,3 @@ async function createKeyPair() {
     // Create a JWK of our public key, which we will need for our JWT DPoP-proof.
     publicJwk = await fromKeyLike(keyPair.publicKey)
 }
-
