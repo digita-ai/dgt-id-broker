@@ -132,12 +132,13 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           this.compareClientDataWithRequest(clientData, context.request.url.searchParams),
           from(this.store.get(client_id))
         ))),
-        switchMap(([ clientData, registerData ]) => zip(
-          of(clientData),
-          of(this.compareWithStoreIfChanged(clientData, registerData)),
-          of(registerData)
-        )),
-        switchMap(([ clientData, changed, registerData ]) => changed
+        switchMap(([ clientData, registerData ]) =>
+          zip(
+            of(clientData),
+            this.compareWithStoreIfChanged(clientData, registerData),
+            of(registerData)
+          )),
+        switchMap(([ clientData, changed, registerData ]) => (registerData && changed || !registerData)
           ? this.registerClient(client_id, this.createRequestData(clientData))
           : of(registerData)),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
@@ -298,23 +299,25 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
   compareWithStoreIfChanged(
     clientData: Partial<OidcClientMetadata>,
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
-  ): boolean  {
+  ): Observable<boolean>  {
 
-    if (registerData){
+    if (!registerData) {
 
-      for (const item of Object.keys(clientData)) {
+      return of(true);
 
-        if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+    }
 
-          return true;
+    for (const item of Object.keys(clientData)) {
 
-        }
+      if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+
+        return of(true);
 
       }
 
     }
 
-    return false;
+    return of(false);
 
   }
 
