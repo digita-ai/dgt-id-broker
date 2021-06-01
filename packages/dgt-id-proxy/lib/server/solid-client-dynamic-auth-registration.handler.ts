@@ -1,16 +1,32 @@
 
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { getPod } from '../util/get-pod';
-import { validateWebID } from '../util/validate-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
+/**
+ * A { HttpHandler } that
+ * - checks if a client is already registered
+ * - compares the data of the webid with the request data
+ * - compares the store data with the webid data
+ * - registers if not registered or information is updated
+ * - stores the registration in the keyvalue store
+ */
 export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
+  /**
+   * Creates a { SolidClientDynamicAuthRegistrationHandler }.
+   *
+   * @param {string} registration_uri - the registration endpoint for the currently used provider.
+   * @param { KeyValueStore } store - the store used to save a clients register data.
+   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, any>,
+    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
     private httpHandler: HttpHandler
   ) {
 
@@ -46,6 +62,18 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
+  /**
+   * Handles the context. Checks that the request contains a client id and redirect uri.
+   * It retrieves the information from the webid of the given client id.
+   * Checks if the response is of the expected turtle type.
+   * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
+   * Compares the webid data with the request data and checks if the client id is already registered
+   * Compares the webid with the register data in the store and if not the same registers again with the new data.
+   * If nothing changed it doesn't register.
+   * It replaces the given client id in the context with the random client id it retrieved from the registration endpoint
+   *
+   * @param {HttpHandlerContext} context
+   */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
@@ -85,7 +113,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    return from(getPod(client_id))
+    return from(getWebID(client_id))
       .pipe(
         switchMap((response) => {
 
@@ -98,35 +126,25 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
           return from(response.text());
 
         }),
-        switchMap((text) => validateWebID(text, client_id, redirect_uri)),
-        switchMap((text) => zip(of(text), from(this.store.get(client_id)))),
-        switchMap(([ podData, registerData ]) => {
-
-          const reqData = {
-            'redirect_uris': podData.redirect_uris,
-            'client_uri': podData.client_uri,
-            'logo_uri': podData.logo_uri,
-            'tos_uri': podData.tos_uri,
-            'scope': podData.scope,
-            'default_max_age': podData.default_max_age,
-            'require_auth_time': podData.require_auth_time,
-            'grant_types': podData.grant_types,
-            'response_types': podData.response_types,
-            'token_endpoint_auth_method' : 'none',
-          };
-
-          return registerData
-            ? from(this.registerClient({ ...reqData, 'redirect_uris': [ redirect_uri ], 'scope':  context.request.url.searchParams.get('scope'), 'response_types': [ context.request.url.searchParams.get('response_type') ] }))
-            : from(this.registerClient(reqData));
-
-        }),
-        tap((res) => this.store.set(client_id, res)),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+        switchMap((clientData) => this.compareClientDataWithRequest(clientData, context.request.url.searchParams)),
+        switchMap((clientData) => zip(of(clientData), from(this.store.get(client_id)))),
+        switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
+          ? this.registerClient(client_id, this.createRequestData(clientData))
+          : of(registerData)),
         tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
         switchMap(() => this.httpHandler.handle(context)),
       );
 
   }
 
+  /**
+   * Returns true if the context is valid.
+   * Returns false if the context, it's request, or request url are not included.
+   *
+   * @param {HttpHandlerContext} context
+   */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     return context
@@ -137,17 +155,20 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  // async readClientRegistration(client_id: string, context: HttpHandlerContext, url: string) {
-  //   const response = await fetch(url, {
-  //     method: 'GET',
-  //     headers: {
-  //       'Accept': 'application/json',
-  //     },
-  //   });
-  //   return response;
-  // }
-
-  async registerClient(data: any) {
+  /**
+   *
+   * Creates a fetch request to the registration endpoint
+   * to register the client with the given data
+   * and returns a JSON of the response and saves
+   * this response in the KeyValue store with the client id as key.
+   *
+   * @param { Partial<OidcClientMetadata> } data
+   * @param { string } client_id
+   */
+  async registerClient(
+    client_id: string,
+    data: Partial<OidcClientMetadata>,
+  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -158,7 +179,134 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
       body: JSON.stringify(data),
     });
 
-    return response.json();
+    const regResponse = await response.json();
+    this.store.set(client_id, regResponse);
+
+    return regResponse;
+
+  }
+
+  /**
+   * Creates a the request data to send to the registration endpoint.
+   * It combines all the parameters that are possible for a register request
+   * that are present in the webid.
+   *
+   * @param { Partial<OidcClientMetadata> } clientData
+   */
+  createRequestData(clientData: Partial<OidcClientMetadata>): Partial<OidcClientMetadata> {
+
+    const metadata = [
+      'response_types',
+      'grant_types',
+      'application_type',
+      'contacts',
+      'client_name',
+      'logo_uri',
+      'client_uri',
+      'policy_uri',
+      'tos_uri',
+      'jwks_uri',
+      'jwks',
+      'sector_identifier_uri',
+      'subject_type',
+      'id_token_signed_response_alg',
+      'id_token_encrypted_response_alg',
+      'id_token_encrypted_response_enc',
+      'userinfo_signed_response_alg',
+      'userinfo_encrypted_response_alg',
+      'userinfo_encrypted_response_enc',
+      'request_object_signing_alg',
+      'request_object_encryption_alg',
+      'request_object_encryption_enc',
+      'token_endpoint_auth_method',
+      'token_endpoint_auth_signing_alg',
+      'default_max_age',
+      'require_auth_time',
+      'default_acr_values',
+      'initiate_login_uri',
+      'request_uris',
+    ];
+
+    const reqData = {
+      'redirect_uris':  clientData.redirect_uris,
+      'token_endpoint_auth_method' : 'none',
+    };
+
+    metadata.map((item) => {
+
+      if (clientData[item]) {
+
+        reqData[item] = clientData[item];
+
+      }
+
+    });
+
+    return reqData;
+
+  }
+
+  /**
+   * Compares the data from the webid with the data given in the requests URLSearchParams.
+   * It returns a 403 error when crucial parameters do not match
+   *
+   * @param { Partial<OidcClientMetadata> } clientData
+   * @param { URLSearchParams } searchParams
+   */
+  compareClientDataWithRequest(
+    clientData: Partial<OidcClientMetadata>,
+    searchParams: URLSearchParams
+  ): Observable<Partial<OidcClientMetadata>>{
+
+    if (clientData.client_id !== searchParams.get('client_id')) {
+
+      return throwError(new ForbiddenHttpError('The client id in the request does not match the one in the WebId'));
+
+    }
+
+    if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
+
+      return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the WebId'));
+
+    }
+
+    if (!clientData.response_types.includes(searchParams.get('response_type')))  {
+
+      return throwError(new ForbiddenHttpError('Response types do not match'));
+
+    }
+
+    return of(clientData);
+
+  }
+
+  /**
+   * Compares the data in the store with one in the webid, to check if the webid is not updated.
+   * If the in the webid is changed the client registers again with the new data.
+   * If registered again it saves the new register data in the KeyValue store.
+   * If nothing changed, there is no new registration and the registerData is straight returned.
+   *
+   * @param { Partial<OidcClientMetadata> } clientData - the data retrieved from the webid.
+   * @param { Partial<OidcClientMetadata & OidcClientRegistrationResponse> } registerData - the data retrieved from the store.
+   */
+  compareWebIdDataWithStore(
+    clientData: Partial<OidcClientMetadata>,
+    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
+  ): boolean {
+
+    if (!registerData) { return true; }
+
+    for (const item of Object.keys(clientData)) {
+
+      if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+
+        return true;
+
+      }
+
+    }
+
+    return false;
 
   }
 

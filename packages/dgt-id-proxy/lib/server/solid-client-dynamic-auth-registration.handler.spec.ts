@@ -1,9 +1,10 @@
-import { BadRequestHttpError, ForbiddenHttpError, HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
-import { validateWebID } from '../util/validate-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { SolidClientDynamicAuthRegistrationHandler } from './solid-client-dynamic-auth-registration.handler';
 
 describe('SolidClientDynamicAuthRegistrationHandler', () => {
@@ -16,7 +17,10 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
-  const store: KeyValueStore<string, any> = new InMemoryStore();
+
+  const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+  = new InMemoryStore();
+
   const referer = 'client.example.com';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
@@ -29,15 +33,15 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const reqData = {
     'redirect_uris': [ redirect_uri ],
-    'client_uri': 'https://app.example/',
-    'scope': 'openid offline_access',
-    'grant_types': [ 'refresh_token', 'authorization_code' ],
     'token_endpoint_auth_method' : 'none',
   };
 
   const mockRegisterResponse = {
     application_type: 'web',
     grant_types: [ 'refresh_token', 'authorization_code' ],
+    client_name: 'My Panva Application',
+    tos_uri : 'https://app.example/tos.html',
+    require_auth_time : true,
     id_token_signed_response_alg: 'RS256',
     response_types: [ 'code' ],
     subject_type: 'public',
@@ -47,13 +51,13 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     default_max_age: 60000,
     logo_uri: 'https://app.example/logo.png',
     redirect_uris: [ 'http://client.example.com/requests.html' ],
-    scope: 'openid offline_access',
     registration_client_uri: 'http://server.example.com/reg/GMRBBg-KZ0jt6VI6LXfOy',
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
   };
 
   const mockAlternativeRegisterResponse = {
     application_type: 'web',
+    client_name: 'My Panva Application',
     grant_types: [ 'refresh_token', 'authorization_code' ],
     id_token_signed_response_alg: 'RS256',
     response_types: [ 'code' ],
@@ -64,7 +68,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     default_max_age: 60000,
     logo_uri: 'https://app.example/logo.png',
     redirect_uris: [ different_redirect_uri ],
-    scope: 'openid offline_access',
     registration_client_uri: 'http://server.example.com/reg/GMRBBg-KZ0jt6VI6LXfOy',
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
   };
@@ -87,12 +90,13 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
   const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
 
-  const correctPodText = podText + ' ' + oidcRegistration;
+  const correctPodText = podText + '\n' + oidcRegistration;
   const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
   const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
+  const otherResponseTypeURL = new URL(`http://${host}/${endpoint}?response_type=plain&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
 
   let context: HttpHandlerContext;
   let url: URL;
@@ -206,6 +210,53 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     });
 
+    it('should error when response types do not match', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      const badResponseTypeContext = { ...context, request: { ...context.request, url: otherResponseTypeURL } };
+      await expect(solidClientDynamicAuthRegistrationHandler.handle(badResponseTypeContext).toPromise()).rejects.toThrow(`Response types do not match`);
+
+    });
+
+    it('should not register if already registered and nothing changed', async () => {
+
+      store.set(client_id, mockRegisterResponse);
+
+      httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
+      fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
+
+      await expect(solidClientDynamicAuthRegistrationHandler
+        .handle(context)
+        .toPromise()).resolves
+        .toEqual(mockRegisterResponse);
+
+    });
+
+    it('should error if client id is not the same as in the webid', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      await expect(solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: { ...context.request, url: differentClientIdURL } }).toPromise()).rejects.toThrow('The client id in the request does not match the one in the WebId');
+
+    });
+
+    it('should error if redirect uri is not the same as in the webid', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      await expect(solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }).toPromise()).rejects.toThrow('The redirect_uri in the request is not included in the WebId');
+
+    });
+
+    it('should error when no oidcRegistration was found', async () => {
+
+      fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      await expect(solidClientDynamicAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
+
+    });
+
     it('should save the registered client data in the store', async () => {
 
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
@@ -266,57 +317,8 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(JSON.stringify(mockRegisterResponse), { status: 200 });
 
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData);
+      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(client_id, reqData);
       expect(responseGotten.registration_access_token).toBeDefined();
-
-    });
-
-  });
-
-  describe('validateWebID', () => {
-
-    it('should error when no oidcRegistration was found', async () => {
-
-      const responseGotten = validateWebID(podText, client_id, redirect_uri);
-
-      await expect(responseGotten.toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
-      await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(BadRequestHttpError);
-
-    });
-
-    it('should error when request data does not match', async () => {
-
-      let responseGotten = validateWebID(correctPodText, different_client_id, redirect_uri);
-
-      await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
-      await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
-
-      responseGotten = validateWebID(correctPodText, client_id, different_redirect_uri);
-
-      await expect(responseGotten.toPromise()).rejects.toThrow('The data in the request does not match the one in the WebId');
-      await expect(responseGotten.toPromise()).rejects.toBeInstanceOf(ForbiddenHttpError);
-
-    });
-
-    it('should return a JSON of the podData if valid', async () => {
-
-      const responseGotten = validateWebID(correctPodText,  client_id, redirect_uri);
-
-      const podData = {
-        client_id,
-        redirect_uris: [ redirect_uri ],
-        client_name: 'My Panva Application',
-        client_uri: 'https://app.example/',
-        logo_uri: 'https://app.example/logo.png',
-        tos_uri: 'https://app.example/tos.html',
-        scope: 'openid offline_access',
-        grant_types: [ 'refresh_token', 'authorization_code' ],
-        response_types: [ 'code' ],
-        default_max_age: 60000,
-        require_auth_time: true,
-      };
-
-      await expect(responseGotten.toPromise()).resolves.toEqual(podData);
 
     });
 

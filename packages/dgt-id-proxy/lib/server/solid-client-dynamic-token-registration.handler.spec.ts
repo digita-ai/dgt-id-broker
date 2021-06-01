@@ -2,7 +2,9 @@ import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import {  of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
+import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { SolidClientDynamicTokenRegistrationHandler } from './solid-client-dynamic-token-registration.handler';
 
 describe('SolidClientDynamicTokenRegistrationHandler', () => {
@@ -46,7 +48,9 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
     safeHandle: jest.fn(),
   };
 
-  const store: KeyValueStore<string, any> = new InMemoryStore();
+  const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+  = new InMemoryStore();
+
   const solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
 
   const registerInfo = {
@@ -156,6 +160,23 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
       const responseGotten = await solidClientDynamicTokenRegistrationHandler.handle(context).toPromise();
 
       expect(responseGotten.body.access_token.payload.client_id).toEqual(client_id);
+      expect(responseGotten.status).toEqual(200);
+
+    });
+
+    it('should return the response if status is not 200', async () => {
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of({
+        body: {},
+        headers: {},
+        status: 400,
+      }));
+
+      await expect(solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).resolves.toEqual({
+        body: {},
+        headers: {},
+        status: 400,
+      });
 
     });
 
