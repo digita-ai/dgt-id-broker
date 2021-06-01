@@ -317,7 +317,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(JSON.stringify(mockRegisterResponse), { status: 200 });
 
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData);
+      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(client_id, reqData);
       expect(responseGotten.registration_access_token).toBeDefined();
 
     });
