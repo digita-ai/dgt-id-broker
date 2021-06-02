@@ -31,7 +31,7 @@ Client ID :: An identifier used to register the *Client* with the *Identity Prov
 
 Client secret :: A credential for the *Client* registered with the *Identity Provider*.
 
-Redirect URL | Callback URL :: A URL to which the *Identity Provider* will redirect the user agent during the authentication flow.
+Redirect URI | Callback URL :: A URL to which the *Identity Provider* will redirect the user agent during the authentication flow.
 
 Scope :: An indication of the *Claims* the *Client* would like the *Identity Provider* to provide.
 
@@ -78,35 +78,32 @@ Dynamic Client Registration :: A mechanism for the *Client* to register and pres
 Traditionally, registration of a client with an *Authorization Server* is performed manually. It can be used either for a *Client* to dynamically register itself with authorization servers or for a client developer to programmatically register the *Client* with authorization servers.
 
 
-== Classic OIDC 
-
 === Example
 
-Imagine Alice wants to use a web service called Daily Pictures that posts a beautiful picture every day to her social feed on her behalf. Alice wants to provide this service access to her social feed and grant permissions to create posts on her behalf. 
+Imagine Alice wants to use a web service called Daily Pictures that posts a picture every day to her social feed on her behalf. Alice wants to provide this service access to her social feed and grant permissions to create posts on her behalf. Alice wants to use the pictures stored in her personal photo collection. 
+She has given consent to Daily Pictures to let it access her photo collection and use her photos.
+
+== Classic OIDC 
 
 ==== Flow
 
-. Alice is logged on to the *Client* and selects her choice of *Identity Provider*, for example, this could be a mail service like Gmail.
-. The *Client* redirects Alice's her browser to the *Authorization Server*. This request contains the *Client ID*, *Redirect URI*, *Response type* and the *Scopes* that are needed. 
+. Alice browses to the *Client* _(Daily Pictures)_ web page.
+. She selects her choice of *Identity Provider*. This could for example, be a mail service like Gmail.
+. The *Client* redirects Alice's browser to the *Authorization Server*. This request contains the *Client ID*, *Redirect URI*, *Response type* and the *Scopes* that are needed. 
 Among these there is a specific  OpenID *Scope* that lets the *Authorization Server* know this will be a an OIDC exchange.
 . The *Authorization Server* verifies Alice's identity, and if necessary prompts for a login.
-. The *Authorization Server* presents Alice with a *Consent* form that is based on the *Scopes* the *Client* requested in the previous request. Alice can grant or deny any of these permissions.
+. The *Authorization Server* presents Alice with a *Consent* form that is based on the *Scopes* the *Client* requested in the previous request. Alice can grant or deny any of these permissions. She grants Daily Pictures access to her photo collection store in her personal Solid Data Pod.
 . The *Authorization Server* redirects the browser back to the *Client* using the *Redirect URI* that was included in the initial request along with an *Authorization code*.
-. The *Client* directly contacts the *Authorization Server* and securely sends it's *Client ID*, *Client secret* and the *Authorization code*.
+. The *Client* contacts the *Authorization Server* and securely sends it's *Client ID*, *Client secret* and the *Authorization code*.
 . The *Authorization server* verifies this data and responds with an *Access Token* along side an *ID Token*.
-. The *Client* can now use these tokens to send requests to the *Resource Server* in order to post pictures daily on Alice's social feed.
+. The *Client*, in our case Daily Pictures, can now use these tokens to send requests to the *Resource Server*, in our case Alice's Solid Data Pod, in order to daily post pictures on her social feed.
 
-// TODO: add a sequence diagram 
 
+[#img-classic-oidc]
+.A Classic OIDC Flow Chart
+image::classic-oidc-flow.jpg[Solid Flow,800,400]
 
 == Solid OIDC
-
-=== Example
-
-Alice's photo collection is stored in his personal Solid Data Pod. 
-Alice has previously given consent to Daily Pictures to let it use her pictures if it wanted to. 
-Alice would now like Daily Pictures to access her photo collection and her photos. 
-
 
 ==== Flow
 
@@ -148,8 +145,8 @@ The responses body will look somewhat like this:
 The *OP*'s URL we are looking for is located here: me -> solid:oidcIssuer
 
 +
-//Ephemeral Clients MAY use the identifier http://www.w3.org/ns/solid/terms#PublicOidcClient. If the Client uses this identifier then the IdP MAY accept any redirect_uri as valid. Since it is public, the Client is effectively anonymous to the RS. ADD THIS? BUT REWRITE FIRST
 
+An ephemeral client could use *_'http://www.w3.org/ns/solid/terms#PublicOidcClient'_* as it's *Client ID*. In this case the *OP* may accept any *Redirect URI* as valid. The *Client* thus is anonymous since this WebID is public.
 
 . Now that we have Alice's *OP*'s URL, the *Client* must retrieve the *OP*'s configuration.
 This configuration describes everything the *Client* needs to know to authorize Alice's specific *OP*.
@@ -568,9 +565,9 @@ CAUTION: Make sure to save this token into a persistent store.
 
 Finally the *Client* can start making requests to Alice's *Solid Data Pod* to retrieve pictures and post one daily on her social feed.
 
-// TODO: add sequence diagram here
-
-
+[#img-solid-oidc]
+.B Solid OIDC Flow Chart
+image::solid-oidc-chart.jpg[Solid Flow,800,400]
 
 == Summary
 
