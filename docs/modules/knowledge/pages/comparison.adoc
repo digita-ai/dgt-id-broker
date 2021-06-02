@@ -101,7 +101,7 @@ Among these there is a specific  OpenID *Scope* that lets the *Authorization Ser
 
 [#img-classic-oidc]
 .A Classic OIDC Flow Chart
-image::classic-oidc-flow.jpg[Solid Flow,1400,500]
+image::classic-oidc-flow.jpg[Solid Flow]
 
 == Solid OIDC
 
@@ -567,7 +567,7 @@ Finally the *Client* can start making requests to Alice's *Solid Data Pod* to re
 
 [#img-solid-oidc]
 .B Solid OIDC Flow Chart
-image::solid-oidc-chart.jpg[Solid Flow,1400,500]
+image::solid-oidc-chart.jpg[Solid Flow]
 
 == Summary
 
