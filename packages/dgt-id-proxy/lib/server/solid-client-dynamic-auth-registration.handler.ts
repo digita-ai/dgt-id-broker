@@ -113,6 +113,24 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
+    if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient') {
+
+      const clientData = {
+        'redirect_uris': [ redirect_uri ],
+        'token_endpoint_auth_method' : 'none',
+      };
+
+      return from(this.store.get(redirect_uri)).pipe(
+        switchMap((registerData) => registerData
+          ? of(registerData)
+          : this.registerClient(clientData, client_id, redirect_uri)),
+        tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
+        tap(() => context.request.url.search = context.request.url.searchParams.toString()),
+        switchMap(() => this.httpHandler.handle(context)),
+      );
+
+    }
+
     return from(getWebID(client_id))
       .pipe(
         switchMap((response) => {
@@ -131,9 +149,10 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
         switchMap((clientData) => this.compareClientDataWithRequest(clientData, context.request.url.searchParams)),
         switchMap((clientData) => zip(of(clientData), from(this.store.get(client_id)))),
         switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
-          ? this.registerClient(client_id, this.createRequestData(clientData))
+          ? this.registerClient(this.createRequestData(clientData), client_id)
           : of(registerData)),
-        tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
+        tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
+        tap(() => context.request.url.search = context.request.url.searchParams.toString()),
         switchMap(() => this.httpHandler.handle(context)),
       );
 
@@ -166,8 +185,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
    * @param { string } client_id
    */
   async registerClient(
-    client_id: string,
     data: Partial<OidcClientMetadata>,
+    client_id: string,
+    redirect_uri?: string,
   ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
     const response = await fetch(this.registration_uri, {
@@ -180,7 +200,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
     });
 
     const regResponse = await response.json();
-    this.store.set(client_id, regResponse);
+    redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);
 
     return regResponse;
 
@@ -228,7 +248,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
     ];
 
     const reqData = {
-      'redirect_uris':  clientData.redirect_uris,
+      'redirect_uris': clientData.redirect_uris,
       'token_endpoint_auth_method' : 'none',
     };
 

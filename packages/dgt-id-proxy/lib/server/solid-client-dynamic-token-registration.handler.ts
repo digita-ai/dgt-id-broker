@@ -74,6 +74,7 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
+    const redirect_uri = params.get('redirect_uri');
 
     if (!client_id) {
 
@@ -81,7 +82,13 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
     }
 
-    return from(this.store.get(client_id)).pipe(
+    if (!redirect_uri) {
+
+      return throwError(new Error('No redirect_uri was provided'));
+
+    }
+
+    return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? redirect_uri : client_id)).pipe(
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)
         : throwError(new Error('No data was found in the store'))),

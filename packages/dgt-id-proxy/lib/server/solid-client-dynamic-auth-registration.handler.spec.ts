@@ -23,6 +23,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   const referer = 'client.example.com';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
+  const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const incorrectClient_id = 'jaspervandenberghen/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
@@ -53,6 +54,24 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     redirect_uris: [ 'http://client.example.com/requests.html' ],
     registration_client_uri: 'http://server.example.com/reg/GMRBBg-KZ0jt6VI6LXfOy',
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
+  };
+
+  const mockPublicRegisterResponse = {
+    application_type: 'web',
+    grant_types: [ 'authorization_code' ],
+    id_token_signed_response_alg: 'RS256',
+    post_logout_redirect_uris: [],
+    require_auth_time: false,
+    response_types: [ 'code' ],
+    subject_type: 'public',
+    token_endpoint_auth_method: 'none',
+    require_signed_request_object: false,
+    request_uris: [],
+    client_id_issued_at: 1622625548,
+    client_id: 'tDbuaFL4qlr2OqxgeSbUQ',
+    redirect_uris: [ 'http://localhost:3001/requests.html' ],
+    registration_client_uri: 'http://localhost:3000/reg/tDbuaFL4qlr2OqxgeSbUQ',
+    registration_access_token: 'rDKH3mSAdtUoHXTOVvtVANRavkGbaFKExsPe_88Ycpn',
   };
 
   const mockAlternativeRegisterResponse = {
@@ -100,12 +119,14 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   let context: HttpHandlerContext;
   let url: URL;
+  let publicClientURL: URL;
   let solidClientDynamicAuthRegistrationHandler: SolidClientDynamicAuthRegistrationHandler;
 
   beforeAll(() => fetchMock.enableMocks());
 
   beforeEach(async () => {
 
+    publicClientURL = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(public_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
 
@@ -114,6 +135,8 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       store,
       httpHandler
     );
+
+    httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
 
   });
 
@@ -219,11 +242,56 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     });
 
+    it('should use the redirect_uri as key for the store if a public webid is used', async () => {
+
+      const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+      = new InMemoryStore();
+
+      const solidClientDynamicAuthRegistrationHandler2
+      = new SolidClientDynamicAuthRegistrationHandler(registration_uri, public_store, httpHandler);
+
+      fetchMock.once(JSON.stringify(mockPublicRegisterResponse), { status: 200 });
+
+      public_store.set = jest.fn();
+
+      await solidClientDynamicAuthRegistrationHandler2
+        .handle({ ...context, request: { ...context.request, url: publicClientURL } })
+        .toPromise();
+
+      expect(public_store.set).toHaveBeenCalledWith(redirect_uri, mockPublicRegisterResponse);
+
+    });
+
+    it('should not register', async () => {
+
+      const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+      = new InMemoryStore();
+
+      const solidClientDynamicAuthRegistrationHandler3
+      = new SolidClientDynamicAuthRegistrationHandler(registration_uri, public_store, httpHandler);
+
+      const newContext: HttpHandlerContext = { request: { headers: {}, body: {}, method: 'POST', url: publicClientURL } };
+      public_store.set(redirect_uri, mockPublicRegisterResponse);
+
+      const registeredInfo = public_store.get(redirect_uri);
+
+      solidClientDynamicAuthRegistrationHandler3.registerClient
+       = jest.fn().mockReturnValueOnce(mockPublicRegisterResponse);
+
+      public_store.get = jest.fn().mockReturnValueOnce(registeredInfo);
+
+      await solidClientDynamicAuthRegistrationHandler3
+        .handle({ ...newContext, request: { ...newContext.request, url: publicClientURL } })
+        .toPromise();
+
+      expect(solidClientDynamicAuthRegistrationHandler3.registerClient).toHaveBeenCalledTimes(0);
+
+    });
+
     it('should not register if already registered and nothing changed', async () => {
 
       store.set(client_id, mockRegisterResponse);
 
-      httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
 
       await expect(solidClientDynamicAuthRegistrationHandler
@@ -317,7 +385,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(JSON.stringify(mockRegisterResponse), { status: 200 });
 
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(client_id, reqData);
+      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData, client_id);
       expect(responseGotten.registration_access_token).toBeDefined();
 
     });
