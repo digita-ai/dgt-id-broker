@@ -69,6 +69,8 @@ A handler doesn't do anything unless it's added to an endpoint. So let's put tog
 }
 ```
 
+NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
+
 The flow of our token endpoint would be:
 
 . A DPoP request is sent to the proxy's token endpoint

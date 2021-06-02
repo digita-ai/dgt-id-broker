@@ -1,0 +1,216 @@
+= WebIDs as clientIDs
+
+As explained in https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1] of the Solid-OIDC specification, webIDs containing a `solid:oidcRegistration` property should be able to be used as clientIDs. But what if an Identity Provider does not support this? Our proxy provides two possible solutions for such cases.
+
+== Use of a static client
+
+One solution consists of configuring a static client in the Identity Provider which you want to proxy. The proxy has a `SolidClientStaticAuthRegistrationHandler` and a `SolidClientStaticTokenRegistrationHandler` for the `authorization` and `token` endpoints respectively. When a request is sent to the proxy with a webID when one of these handlers is configured the handler will validate the webID and it's `oidcRegistatrion` property. If it is deemed valid, the `client_id` will simply be replaced in the request with that of the statically configured client of the upstream server, along with the `client_secret`. 
+
+=== Configuring the handlers
+
+The `SolidClientStaticAuthRegistrationHandler` can be configured as follows:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:SolidClientStaticAuthRegistrationHandler",
+    "@type": "SolidClientStaticAuthRegistrationHandler",
+    "SolidClientStaticAuthRegistrationHandler:_clientID": "upstreamStaticClientID",
+    "SolidClientStaticAuthRegistrationHandler:_clientSecret": "upstreamStaticClientSecret",
+    "SolidClientStaticAuthRegistrationHandler:_httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+    }
+}
+```
+
+The `SolidClientStaticTokenRegistrationHandler` can be configured as follows:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:SolidClientStaticTokenRegistrationHandler",
+    "@type": "SolidClientStaticTokenRegistrationHandler",
+    "SolidClientStaticTokenRegistrationHandler:_clientID": "upstreamStaticClientID",,
+    "SolidClientStaticTokenRegistrationHandler:_clientSecret": "upstreamStaticClientSecret",
+    "SolidClientStaticTokenRegistrationHandler:_httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+    }
+}
+```
+
+Both handlers take the same constructor parameters:
+
+* a `clientID`, which is simply the clientID of the static client that is configured on the upstream server.
+* a `clientSecret`, which is simply the client secret of the static client that is configured on the upstream server.
+* a `httpHandler` which is the handler to which the request will be passed on. In this case we are using a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
+
+=== Configuring the endpoints
+
+We will configure two endpoints, an `authorization` and a `token` endpoint:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "GET",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:SolidClientStaticAuthRegistrationHandler"
+    },
+    "HttpHandlerRoute:_path": "/auth"
+},
+{
+    "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "POST",
+            "HttpHandlerOperation:_publish": false
+        },
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "OPTIONS",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:SolidClientStaticTokenRegistrationHandler"
+    },
+    "HttpHandlerRoute:_path": "/token"
+}
+```
+
+NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
+
+The flow here will be the same for both endpoints:
+
+. A request is sent to the endpoint and passed on to the respective `StaticClient` handler.
+. The handler verifies that the webID is a valid webID, and that it returns a document in rdf format.
+. The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
+. If they match, the request is valid. The handler then replaces the `client_id` in the request with the `clientID` that was passed to it in the constructor and also adds the `client_secret` request parameter with the `clientSecret` passed in the constructor to the request before sending it on the its `httpHandler`.
+. In this case the httpHandler is a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which sends the request to the upstream, and returns the response.
+. Finally, the response is returned back to the client.
+
+== Use of dynamic registration
+
+In some cases it may not be possible to add a static client to an Identity Provider. If the Identity Provider provides https://datatracker.ietf.org/doc/html/rfc7591[Dynamic Client Registration] the proxy can leverage this instead. The proxy provides two handlers: a `SolidClientDynamicAuthRegistrationHandler` and a `SolidClientDynamicTokenRegistrationHandler`. When a client sends an authorization request containing a webID as a client_id, the `SolidClientDynamicAuthRegistrationHandler` will validate the `oidcRegistration` information in the webID and then check if it already has the registration information saved. If it does, it will replace the `client_id` and `client_secret` in the request with those in the store and send on the request. If it doesn't, it will use the dynamic registration endpoint of the upstream server to register the client and save the information in the store.
+
+This also means that if the `oidcRegistration` found via the webID changes and does not match that which is found in the store, the upstream server will dynamically register the client again and update the data in the store.
+
+NOTE: Because the time between an `authorization` request and a `token` request is generally very small, we only check the data in our store in the `SolidClientDynamicTokenRegistrationHandler`, and don't try to register the client.
+
+=== Configuring the handlers
+
+The handlers require a `KeyValueStore` of some sort that they both use, so one should be  configured:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore",
+    "@type": "InMemoryStore"
+}
+```
+
+NOTE: In this example we use an `InMemoryStore`, in production you should use a different store!
+
+The `SolidClientDynamicAuthRegistrationHandler` can be configured as follows:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
+    "@type": "SolidClientDynamicAuthRegistrationHandler",
+    "SolidClientDynamicAuthRegistrationHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
+    },
+    "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+    },
+    "SolidClientDynamicAuthRegistrationHandler:_registration_uri": "http://urlofupstream.com/registration_endpoint"
+}
+```
+
+This handler takes three arguments:
+
+* A `store`. This store will contain the data on all of the webIDs which have a matching dynamically registered client in the upstream.
+* A 'httpHandler'. This is the handler to which the `SolidClientDynamicAuthRegistrationHandler` will pass the request. In this example we are using a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
+* A `registration_uri`. This is the URI of the registration endpoint of the upstream server.
+
+
+The `SolidClientDynamicTokenRegistrationHandler` can be configured as follows:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler",
+    "@type": "SolidClientDynamicTokenRegistrationHandler",
+    "SolidClientDynamicTokenRegistrationHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
+    },
+    "SolidClientDynamicTokenRegistrationHandler:_httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+    }
+}
+```
+
+This handler takes two arguments:
+
+* A `store`. This store will contain the data on all of the webIDs which have a matching dynamically registered client in the upstream. It MUST be the same as on the `authorization` endpoint.
+* A 'httpHandler'. This is the handler to which the `SolidClientDynamicAuthRegistrationHandler` will pass the request. In this example we are using a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
+
+=== Configuring the endpoints
+
+We will configure two endpoints, an `authorization` and a `token` endpoint:
+
+```
+{
+    "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "GET",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
+    },
+    "HttpHandlerRoute:_path": "/auth"
+},
+{
+    "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "POST",
+            "HttpHandlerOperation:_publish": false
+        },
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "OPTIONS",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler"
+    },
+    "HttpHandlerRoute:_path": "/token"
+}
+```
+
+NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
+
+
+The flow here will be:
+
+. A request is sent to the `authorization` endpoint and passed on to the `SolidClientDynamicAuthRegistrationHandler`.
+. The handler verifies that the webID is a valid webID, and that it returns a document in rdf format.
+. The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
+. If they match, the request is valid. The handler then checks if it has the webID in its store. If it does, it checks that the data in its store matches the data in the `solid:oidcRegistration` property, and if they match it will replace the `client_id` in the request with the dynamically generated `client_id` in the store and add the `client_secret`. If the webID was not yet registered, it will dynamically register the client first and save the data in its store. Finally, it passes on the request to its `httpHandler`
+. In this case the httpHandler is a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which sends the request to the upstream, and returns the response.
+. The response is returned back to the client, who can now make a request for a token.
+. The `SolidClientDynamicTokenRegistrationHandler` carries out the checks on the webID again, which should be registered in its store, and will also replace the `client_id` and add a `client_secret` to the request before passing it on.
+. The client should receive a response containing an Access Token if the request was succesful!
