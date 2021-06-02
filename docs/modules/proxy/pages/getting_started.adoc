@@ -26,6 +26,7 @@ If you plan on adding handlers to the token endpoint other than the `PassThrough
 
 This is because, internally, the handlers expect a JSON object for the certain tokens. This is is because claims need to be added or changed in, for example, the Access Token. If each handler would have to consistently decode, change, and then encode the token again that would be inefficient. So it's only done once.
 
+[[decode]]
 === JwtDecodeHandler
 
 The config for the `JwtDecodeHandler` is as follows:
@@ -43,6 +44,7 @@ The config for the `JwtDecodeHandler` is as follows:
 
 Where `jwtFields` is a list of fields containing a JWT token that should be decoded (most commonly this will be `access_token` and/or `id_token`), and `verifyJwk` is boolean that tells the proxy to verify the JWK that was used to sign the tokens.
 
+[[encode]]
 === JwtEncodeHandler
 
 The config for the `JwtEncodeHandler` is as follows:
@@ -64,6 +66,7 @@ The config for the `JwtEncodeHandler` is as follows:
 
 Where `jwtFields` is a list of objects of the type `JwtField` and include a `field` pointing to a token that should be encoded and a `type` that should be set as the token's `typ` claim (commonly `JWT`, or for Access Tokens `at+jwt`)
 
+[[together]]
 == Putting them together
 
 We can put all of these handlers together on an endpoint (the token endpoint) as follows:
@@ -93,7 +96,7 @@ We can put all of these handlers together on an endpoint (the token endpoint) as
               "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
+              "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler"
             }
         ]
     },
