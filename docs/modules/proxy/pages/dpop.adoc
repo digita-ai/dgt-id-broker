@@ -27,7 +27,7 @@ It can be configured as follows:
 
 The `DpopTokenRequestHandler` takes 3 arguments:
 
-* `handler`: the handler can be any HttpHandler. This allows you to add other functionality to the chain on the token endpoint. In this example a `PipeThroughHandler` is used as explained in the xref:getting_started.adoc#together[Putting it together section] of the "Getting Started" page. To that we add a xref:getting_started.adoc#passthrough[PassThroughHandler] and a xref:getting_started.adoc#decode[JwtDecodeHandler] with the "access_token" in the `jwtFields`, because the `DpopTokenRequestHandler` relies on a decoded access_token.
+* `handler`: the handler can be any HttpHandler. This allows you to add other functionality to the chain on the token endpoint. In this example a `PipeThroughHandler` is used as explained in the xref:getting_started.adoc#together[Putting it together section] of the "Getting Started" page. To that we add a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler] and a xref:getting_started.adoc#decode[JwtDecodeHandler] with the "access_token" in the `jwtFields`, because the `DpopTokenRequestHandler` relies on a decoded access_token.
 
 * `keyValueStore`: A key value store of any kind. For this example we are using an InMemoryStore, but you can use any store.
 
@@ -75,7 +75,7 @@ The flow of our token endpoint would be:
 . A `PipeThroughHandler` passes the request on to it's first handler.
 . The `DpopTokenRequestHandler` checks that the request is valid, and if it is it strips the DPoP parts from the request and passes a DPoP-less request on to it's `handler`, a `PipeThroughHandler` in this case.
 . The `PipeThroughHandler` passes the request on to the first handler in it's list.
-. The `PassThroughHandler` takes the request and sends it to the upstream server, then returns the response.
+. The `PassThroughHttpRequestHandler` takes the request and sends it to the upstream server, then returns the response.
 . The response is passed to the `JwtDecodeHandler` which knows to decode the `access_token` field of the response body, and then returns the response.
 . The response is returned back to the `DpopTokenRequestHandler` by the `PipeThroughHandler`, and the necessary claims are added to the access_token to create a DPoP-bound Access Token.
 . Finally, the `DpopTokenRequestHandler` returns it's response, which is then passed onto the xref:getting_started.adoc#encode[JwtEncodeHandler] which has a `JwtField` with a `field` of `access_token` and a `typ` of `at+jwt`. The `JwtEncodeHandler` then signs the `access_token` after which it is returned to the client.

@@ -24,7 +24,7 @@ Note that the scheme `https:` is supported aswell.
 
 If you plan on adding handlers to the token endpoint other than the `PassThroughHttpRequestHandler`, you will need to add a `JwtDecodeHandler` and a 'JwtEncodeHandler' to the chain of handlers on the token endpoint.
 
-This is because, internally, the handlers expect a JSON object for the certain tokens. This is is because claims need to be added or changed in, for example, the Access Token. If each handler would have to consistently decode, change, and then encode the token again that would be inefficient. So it's only done once.
+This is because, internally, the handlers expect a JSON object for certain tokens. This is is because claims need to be added or changed in, for example, the Access Token. If each handler would have to consistently decode, change, and then encode the token again that would be inefficient. So it's only done once.
 
 [[decode]]
 === JwtDecodeHandler
