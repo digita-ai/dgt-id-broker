@@ -1,4 +1,4 @@
-import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import {  of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
@@ -42,16 +42,12 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
     status: 200,
   };
 
-  const httpHandler = {
-    canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValue(of(response)),
-    safeHandle: jest.fn(),
-  };
+  let httpHandler: HttpHandler;
 
   const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
   = new InMemoryStore();
 
-  const solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
+  let solidClientDynamicTokenRegistrationHandler: SolidClientDynamicTokenRegistrationHandler;
 
   const registerInfo = {
     application_type: 'web',
@@ -79,6 +75,14 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
   beforeEach(async() => {
 
     store.set(client_id, registerInfo);
+
+    httpHandler = {
+      canHandle: jest.fn(),
+      handle: jest.fn().mockReturnValue(of(response)),
+      safeHandle: jest.fn(),
+    };
+
+    solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
 
   });
 
@@ -129,6 +133,17 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
       const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody } };
       await expect(() => solidClientDynamicTokenRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+
+    });
+
+    it('should pass the request on to the nested handler if the client_id is not a valid URL', async () => {
+
+      const resp = { body: 'mockBody', status: 200, headers: {} };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
+
+      const body = `grant_type=authorization_code&code=${code}&client_id=static_client&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+      const testContext = { ...context, request: { ...context.request, body } };
+      await expect(solidClientDynamicTokenRegistrationHandler.handle(testContext).toPromise()).resolves.toEqual(resp);
 
     });
 
