@@ -15,14 +15,16 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
   /**
    * Creates a { SolidClientStaticTokenRegistrationHandler }.
    *
-   * @param { string } clientID - the registration endpoint for the currently used provider.
-   * @param { string} clientSecret - the client secret used to authenticate the user
-   * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests.
+   * @param { string } clientID - the client_id of the static client configured on the upstream server.
+   * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
+   * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
    */
   constructor(
     private httpHandler: HttpHandler,
     private clientID: string,
     private clientSecret: string,
+    private redirectUri: string,
   ){
 
     super();
@@ -42,6 +44,22 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
     if (!clientSecret) {
 
       throw new Error('No clientSecret was provided');
+
+    }
+
+    if (!redirectUri) {
+
+      throw new Error('No redirectUri was provided');
+
+    }
+
+    try {
+
+      new URL(redirectUri);
+
+    } catch (e) {
+
+      throw new Error('redirectUri must be a valid URI');
 
     }
 
@@ -115,6 +133,7 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
           params.set('client_id', this.clientID);
           params.set('client_secret', this.clientSecret);
+          params.set('redirect_uri', this.redirectUri);
 
           return { ...context, request: { ...context.request, body: params.toString() } };
 

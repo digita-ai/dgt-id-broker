@@ -15,14 +15,16 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
   /**
    * Creates a { SolidClientStaticAuthRegistrationHandler }.
    *
-   * @param { string } clientID - the registration endpoint for the currently used provider.
-   * @param { string} clientSecret - the client secret used to authenticate the user
-   * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests.
+   * @param { string } clientID - the client_id of the static client configured on the upstream server.
+   * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
+   * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
    */
   constructor(
+    private httpHandler: HttpHandler,
     private clientID: string,
     private clientSecret: string,
-    private httpHandler: HttpHandler,
+    private redirectUri: string,
   ) {
 
     super();
@@ -42,6 +44,22 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     if (!httpHandler) {
 
       throw new Error('No handler was provided');
+
+    }
+
+    if (!redirectUri) {
+
+      throw new Error('No redirectUri was provided');
+
+    }
+
+    try {
+
+      new URL(redirectUri);
+
+    } catch (e) {
+
+      throw new Error('redirectUri must be a valid URI');
 
     }
 
@@ -104,6 +122,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
         switchMap((quads) => getOidcRegistrationTriple(quads)),
         tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
         tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
+        tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
         switchMap(() => this.httpHandler.handle(context)),
       );
 

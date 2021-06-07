@@ -17,6 +17,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const client_id_constructor = 'static_client';
   const client_secret = 'static_secret';
+  const redirect_uri_constructor = 'http://digita.ai/redirect';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const incorrectClient_id = 'jaspervandenberghen/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
@@ -27,10 +28,10 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
 
   const solidClientStaticAuthRegistrationHandler = new SolidClientStaticAuthRegistrationHandler(
+    httpHandler,
     client_id_constructor,
     client_secret,
-    httpHandler,
-
+    redirect_uri_constructor
   );
 
   const podText = `
@@ -67,24 +68,22 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
   });
 
-  it('should error when no handler was provided', () => {
+  it('should error when no handler, clientId, clientSecret or redirectUri are provided', () => {
 
-    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, client_secret, undefined)).toThrow('No handler was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, client_secret, null)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(undefined, client_id_constructor, client_secret, redirect_uri_constructor)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(null, client_id_constructor, client_secret, redirect_uri_constructor)).toThrow('No handler was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, undefined, client_secret, redirect_uri_constructor)).toThrow('No clientID was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, null, client_secret, redirect_uri_constructor)).toThrow('No clientID was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, undefined, redirect_uri_constructor)).toThrow('No clientSecret was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, null, redirect_uri_constructor)).toThrow('No clientSecret was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, undefined)).toThrow('No redirectUri was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, null)).toThrow('No redirectUri was provided');
 
   });
 
-  it('should error when no client_id was provided', () => {
+  it('should error when redirectUri is not a valid URI', () => {
 
-    expect(() => new SolidClientStaticAuthRegistrationHandler(undefined, client_secret, httpHandler)).toThrow('No clientID was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(null, client_secret, httpHandler)).toThrow('No clientID was provided');
-
-  });
-
-  it('should error when no client_secret was provided', () => {
-
-    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, undefined, httpHandler)).toThrow('No clientSecret was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(client_id, null, httpHandler)).toThrow('No clientSecret was provided');
+    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, 'notAValidURI')).toThrow('redirectUri must be a valid URI');
 
   });
 
