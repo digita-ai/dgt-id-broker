@@ -1,6 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
+import { KeyValueStore } from '../storage/key-value-store';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 
 /**
@@ -11,6 +12,8 @@ import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process
  * - stores the registration in the keyvalue store
  */
 export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
+
+  private redirectURL: URL;
 
   /**
    * Creates a { SolidClientStaticAuthRegistrationHandler }.
@@ -25,6 +28,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     private clientID: string,
     private clientSecret: string,
     private redirectUri: string,
+    private store: KeyValueStore<string, URL>
   ) {
 
     super();
@@ -55,7 +59,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     try {
 
-      new URL(redirectUri);
+      this.redirectURL = new URL(redirectUri);
 
     } catch (e) {
 
@@ -90,6 +94,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
+    const state = context.request.url.searchParams.get('state');
 
     if (!client_id) {
 
@@ -112,6 +117,14 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
       return throwError(new Error('No redirect_uri was provided'));
 
     }
+
+    if (!state) {
+
+      return throwError(new Error('No state was provided in the request'));
+
+    }
+
+    this.store.set(state, this.redirectURL);
 
     return from(getWebID(client_id))
       .pipe(
