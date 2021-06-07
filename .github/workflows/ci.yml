@@ -74,106 +74,40 @@ jobs:
           draft: false
           prerelease: false
 
-  # publish-npm:
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/')
-  #   needs: release
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #    
-  #     - uses: actions/setup-node@v1
-  #       with:
-  #         node-version: 14
-  #         registry-url: https://npm.pkg.github.com/
-  #
-  #     - run: npm run bootstrap
-  #
-  #     - run: npm run build:dev
-  #
-  #     - run: npm publish packages/dgt-id-proxy
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-  # publish-docker:
-  #   name: Publish Docker image
-  #   needs: release
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/')
-  #
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #
-  #     - name: Extract tag
-  #       id: extract-tag
-  #       run: echo "::set-output name=tag::${GITHUB_REF/refs\/tags\//}"
-  #
-  #     - name: Set up QEMU
-  #       uses: docker/setup-qemu-action@v1
-  #
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v1
-  #
-  #     - name: Login to GitHub Container Registry
-  #       uses: docker/login-action@v1
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GA_TOKEN }}
-  #
-  #     - name: Build and push platform api
-  #       id: docker_build_api
-  #       uses: docker/build-push-action@v2
-  #       with:
-  #         context: packages/dgt-platform-api/
-  #         push: true
-  #         tags: digita-ai/dgt-platform-api:${{ steps.extract-tag.outputs.tag }}
-  #         build-args: |
-  #           NPM_TOKEN=${{secrets.GA_TOKEN}}
-  #     - name: Build and push platform web
-  #       id: docker_build_web
-  #       uses: docker/build-push-action@v2
-  #       with:
-  #         context: packages/dgt-platform-web/
-  #         push: true
-  #         tags: digita-ai/dgt-platform-web:${{ steps.extract-tag.outputs.tag }}
-  #         build-args: |
-  #           NPM_TOKEN=${{secrets.GA_TOKEN}}
-
-  # deploy-develop:
-  #   name: Deploy to develop
-  #   needs: publish-docker
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/')
-  #
-  #   steps:
-  #     - uses: actions/checkout@v2
-
-  #     - name: Extract tag
-  #       id: extract-tag
-  #       run: echo "::set-output name=tag::${GITHUB_REF/refs\/tags\//}"
-  #
-  #     - name: 'Login via Azure CLI'
-  #       uses: azure/login@v1
-  #       with:
-  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
-  #
-  #     - name: Login to GitHub Container Registry
-  #       uses: docker/login-action@v1
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GA_TOKEN }}
-  #
-  #     - name: Deploy platform api
-  #       uses: 'azure/aci-deploy@v1'
-  #       with:
-  #         resource-group: ${{ secrets.RESOURCE_GROUP }}
-  #         dns-name-label: dgt-platform-api-develop
-  #         image: ghcr.io/digita-ai/dgt-platform-api:${{ steps.extract-tag.outputs.tag }}
-  #         registry-login-server: ghcr.io
-  #         registry-username: ${{ secrets.GA_USERNAME }}
-  #         registry-password: ${{ secrets.GA_TOKEN }}
-  #         name: dgt-platform-api-develop
-  #         location: 'west europe'
-  #         ports: 3000
-  #         # ip-address: 'Private'
+  publish-docker:
+    name: Publish Docker image
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+  
+    steps:
+      - uses: actions/checkout@v2
+  
+      - name: Extract tag
+        id: extract-tag
+        run: echo "::set-output name=tag::${GITHUB_REF/refs\/tags\//}"
+  
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+  
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+  
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GA_TOKEN }}
+  
+      - name: Build and push id proxy
+        id: docker_build_id_proxy
+        uses: docker/build-push-action@v2
+        with:
+          context: packages/dgt-id-proxy/
+          push: true
+          tags: |
+            digita-ai/dgt-id-proxy:latest
+            digita-ai/dgt-id-proxy:${{ steps.extract-tag.outputs.tag }}
+          build-args: |
+            NPM_TOKEN=${{secrets.GA_TOKEN}}
