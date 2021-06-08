@@ -101,6 +101,16 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
     }
 
+    try {
+
+      new URL(client_id);
+
+    } catch (error) {
+
+      return this.httpHandler.handle(context);
+
+    }
+
     return from(getWebID(client_id))
       .pipe(
         switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
