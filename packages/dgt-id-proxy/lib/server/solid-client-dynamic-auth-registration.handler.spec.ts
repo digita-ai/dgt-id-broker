@@ -204,13 +204,6 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     });
 
-    it('should error when client_id is not a valid URL', async () => {
-
-      const invalidClientIdURLContext = { ... context, request: { ...context.request, url: incorrectClientIdURL } };
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(invalidClientIdURLContext).toPromise()).rejects.toThrow('The provided client_id is not a valid URL');
-
-    });
-
     it('should error when no redirect_uri was provided', async () => {
 
       const noRedirectUriURL = new URL(url.href);
@@ -221,6 +214,17 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       noRedirectUriContext.request.url.searchParams.delete('redirect_uri');
       await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+
+    });
+
+    it('should pass the request on to the nested handler if the client_id is not a valid URL', async () => {
+
+      const response = { body: 'mockBody', status: 200, headers: {} };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      url.searchParams.set('client_id', 'static_client');
+      context = { ...context, request: { ...context.request, url } };
+      await expect(solidClientDynamicAuthRegistrationHandler.handle(context).toPromise()).resolves.toEqual(response);
 
     });
 

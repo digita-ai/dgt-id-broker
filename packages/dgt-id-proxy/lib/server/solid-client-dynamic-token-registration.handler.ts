@@ -88,6 +88,16 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
     }
 
+    try {
+
+      new URL(client_id);
+
+    } catch (error) {
+
+      return this.httpHandler.handle(context);
+
+    }
+
     return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? redirect_uri : client_id)).pipe(
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)

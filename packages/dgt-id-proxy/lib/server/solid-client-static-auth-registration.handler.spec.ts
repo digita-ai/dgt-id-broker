@@ -5,11 +5,7 @@ import { SolidClientStaticAuthRegistrationHandler } from './solid-client-static-
 
 describe('SolidClientStaticAuthRegistrationHandler', () => {
 
-  const httpHandler = {
-    canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValueOnce(of()),
-    safeHandle: jest.fn(),
-  } as HttpHandler;
+  let httpHandler: HttpHandler;
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
@@ -18,20 +14,13 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   const client_id_constructor = 'static_client';
   const client_secret = 'static_secret';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
-  const incorrectClient_id = 'jaspervandenberghen/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
   const endpoint = 'auth';
   const host = 'server.example.com';
-  const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
 
-  const solidClientStaticAuthRegistrationHandler = new SolidClientStaticAuthRegistrationHandler(
-    client_id_constructor,
-    client_secret,
-    httpHandler,
-
-  );
+  let solidClientStaticAuthRegistrationHandler: SolidClientStaticAuthRegistrationHandler;
 
   const podText = `
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -55,6 +44,19 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   beforeAll(() => fetchMock.enableMocks());
 
   beforeEach(async () => {
+
+    httpHandler = {
+      canHandle: jest.fn(),
+      handle: jest.fn().mockReturnValueOnce(of()),
+      safeHandle: jest.fn(),
+    };
+
+    solidClientStaticAuthRegistrationHandler  = new SolidClientStaticAuthRegistrationHandler(
+      client_id_constructor,
+      client_secret,
+      httpHandler,
+
+    );
 
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers, body: {}, method: 'POST', url } };
@@ -117,10 +119,14 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     });
 
-    it('should error when client_id is not a valid URL', async () => {
+    it('should pass the request on to the nested handler if the client_id is not a valid URL', async () => {
 
-      const invalidClientIdURLContext = { ... context, request: { ...context.request, url: incorrectClientIdURL } };
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(invalidClientIdURLContext).toPromise()).rejects.toThrow('The provided client_id is not a valid URL');
+      const response = { body: 'mockBody', status: 200, headers: {} };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      url.searchParams.set('client_id', 'static_client');
+      context = { ...context, request: { ...context.request, url } };
+      await expect(solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).resolves.toEqual(response);
 
     });
 
