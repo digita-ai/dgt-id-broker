@@ -22,4 +22,5 @@ RUN chmod +x ./dist/main.js
 
 # Expose ports.
 EXPOSE 3003
-CMD './dist/main.js'
+ENTRYPOINT [ "./dist/main.js" ]
+CMD [ "-u", "http://0.0.0.0:3003" ]
