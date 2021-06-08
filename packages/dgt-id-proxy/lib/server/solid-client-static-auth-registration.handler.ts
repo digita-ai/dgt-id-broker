@@ -95,6 +95,14 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     }
 
+    if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient') {
+
+      context.request.url.searchParams.set('client_id', this.clientID);
+
+      return this.httpHandler.handle(context);
+
+    }
+
     return from(getWebID(client_id))
       .pipe(
         switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
@@ -103,7 +111,6 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
         map((text) => parseQuads(text)),
         switchMap((quads) => getOidcRegistrationTriple(quads)),
         tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
-        tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
         switchMap(() => this.httpHandler.handle(context)),
       );
 

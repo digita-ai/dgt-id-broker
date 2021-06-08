@@ -111,6 +111,19 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
     }
 
+    if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient') {
+
+      params.set('client_id', this.clientID);
+      params.set('client_secret', this.clientSecret);
+
+      const newContext = { ...context, request: { ...context.request, body: params.toString() } };
+      const length = recalculateContentLength(newContext.request);
+      newContext.request.headers['content-length'] = length;
+
+      return this.httpHandler.handle(newContext);
+
+    }
+
     return from(getWebID(client_id))
       .pipe(
         switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
