@@ -96,7 +96,9 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     } else {
 
       const custom_claim = id_token_payload[this.claim].replace(/[|:]/g, '');
-      access_token_payload.webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
+      const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
+      access_token_payload.webid = minted_webid;
+      id_token_payload.webid = minted_webid;
 
     }
 

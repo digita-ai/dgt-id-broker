@@ -110,12 +110,13 @@ describe('WebIDResponseHandler', () => {
 
     });
 
-    it('should add a webid claim based on the uri encoded custom claim, to the payload', async () => {
+    it('should add a webid claim based on the uri encoded custom claim, to the payload of the access token and id token', async () => {
 
       delete response.body.access_token.payload.webid;
       delete response.body.id_token.payload.webid;
       const responseGotten = await webIDResponseHandler.handle(response).toPromise();
       expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithCustomClaim);
+      expect(responseGotten.body.id_token.payload.webid).toEqual(webIdWithCustomClaim);
 
     });
 
