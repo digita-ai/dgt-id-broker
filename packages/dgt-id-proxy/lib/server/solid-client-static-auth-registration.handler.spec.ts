@@ -21,12 +21,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
 
-  const solidClientStaticAuthRegistrationHandler = new SolidClientStaticAuthRegistrationHandler(
-    httpHandler,
-    client_id_constructor,
-    client_secret,
-    redirect_uri_constructor
-  );
+  let solidClientStaticAuthRegistrationHandler: SolidClientStaticAuthRegistrationHandler;
 
   const podText = `
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -56,6 +51,13 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
       handle: jest.fn().mockReturnValueOnce(of()),
       safeHandle: jest.fn(),
     };
+
+    solidClientStaticAuthRegistrationHandler  = new SolidClientStaticAuthRegistrationHandler(
+      httpHandler,
+      client_id_constructor,
+      client_secret,
+      redirect_uri_constructor
+    );
 
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers, body: {}, method: 'POST', url } };

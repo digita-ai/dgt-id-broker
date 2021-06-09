@@ -110,7 +110,6 @@ export class PkceCodeRequestHandler extends HttpHandler {
     url: URL,
   ): Observable<HttpHandlerResponse> {
 
-    url.searchParams.delete('state');
     response.headers.location = url.toString();
     response.body = '';
 
