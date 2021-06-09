@@ -81,6 +81,16 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
     }
 
+    try {
+
+      new URL(client_id);
+
+    } catch (error) {
+
+      return this.httpHandler.handle(context);
+
+    }
+
     return from(this.store.get(client_id)).pipe(
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)

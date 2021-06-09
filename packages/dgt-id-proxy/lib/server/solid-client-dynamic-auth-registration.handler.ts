@@ -40,7 +40,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     try {
 
-      const url = new URL(registration_uri);
+      new URL(registration_uri);
 
     } catch (error) {
 
@@ -97,19 +97,19 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    try {
-
-      const url = new URL(client_id);
-
-    } catch (error) {
-
-      return throwError(new Error('The provided client_id is not a valid URL'));
-
-    }
-
     if (!redirect_uri) {
 
       return throwError(new Error('No redirect_uri was provided'));
+
+    }
+
+    try {
+
+      new URL(client_id);
+
+    } catch (error) {
+
+      return this.httpHandler.handle(context);
 
     }
 

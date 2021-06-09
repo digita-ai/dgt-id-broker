@@ -8,11 +8,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
   beforeAll(() => fetchMock.enableMocks());
 
-  const httpHandler = {
-    canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValue(of()),
-    safeHandle: jest.fn(),
-  } as HttpHandler;
+  let httpHandler: HttpHandler;
 
   const referer = 'http://client.example.com';
   const url =  new URL(`${referer}/token`);
@@ -50,12 +46,24 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
   const correctPodText = podText + ' ' + oidcRegistration;
 
-  const solidClientStaticTokenRegistrationHandler = new SolidClientStaticTokenRegistrationHandler(
-    httpHandler,
-    client_id_constructor,
-    client_secret,
-    redirect_uri_constructor,
-  );
+  let solidClientStaticTokenRegistrationHandler: SolidClientStaticTokenRegistrationHandler;
+
+  beforeEach(() => {
+
+    httpHandler = {
+      canHandle: jest.fn(),
+      handle: jest.fn().mockReturnValue(of()),
+      safeHandle: jest.fn(),
+    };
+
+    solidClientStaticTokenRegistrationHandler = new SolidClientStaticTokenRegistrationHandler(
+      httpHandler,
+      client_id_constructor,
+      client_secret,
+      redirect_uri_constructor,
+    );
+
+  });
 
   it('should be correctly instantiated', () => {
 
@@ -123,6 +131,17 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       const noRedirectUriContext = { ... context, request: { ...context.request, body:  noRedirectUriRequestBody } };
       await expect(() => solidClientStaticTokenRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+
+    });
+
+    it('should pass the request on to the nested handler if the client_id is not a valid URL', async () => {
+
+      const resp = { body: 'mockBody', status: 200, headers: {} };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
+
+      const body = `grant_type=authorization_code&code=${code}&client_id=static_client&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+      const testContext = { ...context, request: { ...context.request, body } };
+      await expect(solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise()).resolves.toEqual(resp);
 
     });
 
