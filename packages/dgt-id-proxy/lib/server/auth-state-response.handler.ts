@@ -49,7 +49,7 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     }
 
-    try{
+    try {
 
       const url = new URL(response.headers.location);
       const state = url.searchParams.get('state') ?? '';

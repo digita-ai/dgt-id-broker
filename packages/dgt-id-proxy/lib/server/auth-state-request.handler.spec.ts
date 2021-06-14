@@ -1,30 +1,20 @@
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { of } from 'rxjs';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { AuthStateRequestHandler } from './auth-state-request.handler';
 
 describe('AuthStateRequestHandler', () => {
 
   let handler: AuthStateRequestHandler;
-  let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
-  let response: HttpHandlerResponse;
 
   let store: InMemoryStore<string, boolean>;
 
   beforeEach(() => {
 
     context = { request: { headers: { }, method: 'GET', url: new URL('http://digita.ai/') } };
-    response = { body: 'mockBody', headers: {}, status:200 };
     store = new InMemoryStore<string, boolean>();
 
-    nestedHandler = {
-      handle: jest.fn().mockReturnValue(of(response)),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
-    };
-
-    handler = new AuthStateRequestHandler(nestedHandler, store);
+    handler = new AuthStateRequestHandler(store);
 
   });
 
@@ -34,12 +24,10 @@ describe('AuthStateRequestHandler', () => {
 
   });
 
-  it('should error when no handler, keyValueStore is provided', () => {
+  it('should error when no keyValueStore is provided', () => {
 
-    expect(() => new AuthStateRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
-    expect(() => new AuthStateRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
-    expect(() => new AuthStateRequestHandler(nestedHandler, undefined)).toThrow('A keyValueStore must be provided');
-    expect(() => new AuthStateRequestHandler(nestedHandler, null)).toThrow('A keyValueStore must be provided');
+    expect(() => new AuthStateRequestHandler(undefined)).toThrow('A keyValueStore must be provided');
+    expect(() => new AuthStateRequestHandler(null)).toThrow('A keyValueStore must be provided');
 
   });
 
@@ -84,16 +72,18 @@ describe('AuthStateRequestHandler', () => {
       context.request.url = new URL('http://digita.ai/?state=1234');
       await expect(store.get('1234')).resolves.toBeUndefined();
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(response);
+      await handler.handle(context).toPromise();
       await expect(store.get('1234')).resolves.toEqual(true);
 
     });
 
-    it('should add a generated state to the store with value false when the user does not send state', async () => {
+    it('should add a generated state to the store with value false when the user does not send state and add state to the url', async () => {
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(response);
+      await handler.handle(context).toPromise();
       const entries = await store.entries();
       const generatedState = await entries.next();
+
+      expect(context.request.url.searchParams.has('state')).toEqual(true);
       // entries are stored as an object, { value: [ key, value ], done: value }
       expect(generatedState.done).toEqual(false);
 
