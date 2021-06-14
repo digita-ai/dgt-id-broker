@@ -155,6 +155,13 @@
         "@type": "InMemoryStore"
       },
       {
+        "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
+        "@type": "AuthStateRequestHandler",
+        "AuthStateRequestHandler:_keyValueStore": {
+          "@id": "urn:dgt-id-proxy:default:StateStore"
+        }
+      },
+      {
         "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler",
         "@type": "AuthStateResponseHandler",
         "AuthStateResponseHandler:_keyValueStore": {
@@ -285,14 +292,15 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
-          "@type": "AuthStateRequestHandler",
-          "AuthStateRequestHandler:_handler": {
-            "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
-          },
-          "AuthStateRequestHandler:_keyValueStore": {
-            "@id": "urn:dgt-id-proxy:default:StateStore"
-          }
+          "@type": "PipeThroughHandler",
+          "PipeThroughHandler:_handlers": [
+            {
+              "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
+            }
+          ]
         },
         "HttpHandlerRoute:_path": "/auth"
       },
