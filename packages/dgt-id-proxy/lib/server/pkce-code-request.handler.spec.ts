@@ -100,20 +100,6 @@ describe('PkceCodeRequestHandler', () => {
 
     });
 
-    it('should remove state from the url if no state is included in the store and set the body empty', async () => {
-
-      const responseGotten = await pkceCodeRequestHandler.handle(context).toPromise();
-      expect(responseGotten).toEqual({ 'body': '', 'headers': { 'location': `http://${referer}/requests.html?code=${code}` }, 'status': 302 });
-
-    });
-
-    it('should set the headers location to a URL without state if no state is included in the store', async () => {
-
-      const responseGotten = await pkceCodeRequestHandler.handle(context).toPromise();
-      expect(responseGotten.headers.location).toEqual(`http://${referer}/requests.html?code=${code}`);
-
-    });
-
     it('should delete the inMemory data with the state as key from the store if no state was included in the value', async () => {
 
       await pkceCodeRequestHandler.handle(context).toPromise();

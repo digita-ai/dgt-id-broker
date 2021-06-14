@@ -15,7 +15,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
    * Creates a {PkceAuthRequestHandler}
    *
    * @param {PkceCodeRequestHandler} codeHandler - the handler that will handle the response from the upstream server containing a code.
-   * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method, code challenge, and wether or not the user sent state.
+   * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method and code challenge.
    */
   constructor(
     private codeHandler: PkceCodeRequestHandler,
@@ -39,9 +39,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
   }
   /**
    * Handles the given context. Takes the code challenge, challenge method, and, if present, the state from the request.
-   * The store then saves the code challenge, challenge method and wether or not the user sent a state as the value,
-   * and the state as the key. If the user does not send a state in the request, one will be generated and put in the request to connect the code
-   * that is sent by the server and this request.
+   * The store then saves the code challenge, challenge method with the state as the key.
    * The parameters code_challenge and challenge_method are then removed from the request so that it becomes a PKCE-less request.
    *
    * @param {HttpHandlerContext} context
@@ -70,6 +68,12 @@ export class PkceAuthRequestHandler extends HttpHandler {
     const method = context.request.url.searchParams.get('code_challenge_method');
     const state = context.request.url.searchParams.get('state');
 
+    if (!state) {
+
+      return throwError(new Error('Request must contain a state. Add state handlers to the proxy.'));
+
+    }
+
     if (!challenge) {
 
       return of(createErrorResponse('A code challenge must be provided.', 'invalid_request'));
@@ -82,15 +86,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
 
     }
 
-    const generatedState = state ? '' : uuidv4();
-
-    if (generatedState) {
-
-      context.request.url.searchParams.append('state', generatedState);
-
-    }
-
-    this.store.set(state ?? generatedState, { challenge, method, initialState: !!state });
+    this.store.set(state, { challenge, method });
 
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
