@@ -112,11 +112,23 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
       switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
       tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
-      map((response) => {
+      switchMap((response) => {
 
-        if (response.body.access_token) { response.body.access_token.payload.client_id = client_id; }
+        if (!response.body.access_token) {
 
-        return response;
+          return throwError(new Error('response body did not contain an access_token'));
+
+        }
+
+        if (!response.body.access_token.payload) {
+
+          return throwError(new Error('Access token in response body did not contain a decoded payload'));
+
+        }
+
+        response.body.access_token.payload.client_id = client_id;
+
+        return of(response);
 
       })
     );

@@ -17,12 +17,14 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const redirect_uri = 'http://client.example.com/requests.html';
   const client_id = 'http://solidpod./jaspervandenberghen/profile/card#me';
   const client_id_constructor = 'static_client';
+  const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const client_secret = 'static_secret';
   const noClientIDRequestBody = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`;
   const noGrantTypeRequestBody = `code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const noRedirectUriRequestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
   const requestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+  const publicClientRequestBody = `grant_type=authorization_code&code=${code}&client_id=http://www.w3.org/ns/solid/terms#PublicOidcClient&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const requestBodyWithOtherGrantType = `grant_type=implicit&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const requestBodyWithStaticClient = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id_constructor)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}&client_secret=${client_secret}`;
   let context: HttpHandlerContext = { request: { headers, body: requestBody, method: 'POST', url } } as HttpHandlerContext;
@@ -146,16 +148,11 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
     });
 
-    it('should change the client_id and add client_secret in the request and pass the request to the nested handler if the client is public', async () => {
+    it('should change the client_id and add client_secret in the request if the client is public', async () => {
 
-      const body = `grant_type=authorization_code&code=${code}&client_id=http://www.w3.org/ns/solid/terms#PublicOidcClient&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
-      const testContext = { ...context, request: { ...context.request, body } };
+      const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
 
-      const response = { body: 'mockBody', status: 200, headers: {} };
-      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
-
-      await expect(solidClientStaticTokenRegistrationHandler.handle(testContext)
-        .toPromise()).resolves.toEqual(response);
+      await solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise();
 
       const bodyAsSearchParams = new URLSearchParams(testContext.request.body);
       bodyAsSearchParams.set('client_id', client_id_constructor);
@@ -170,6 +167,51 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
           headers: { 'content-length': recalculateContentLength(testContext.request), 'content-type': 'application/json;charset=utf-8' },
         },
       });
+
+    });
+
+    it('should add the client_id to the access_token payload when the client is public', async () => {
+
+      const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
+
+      const response = {
+        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(solidClientStaticTokenRegistrationHandler.handle(testContext)
+        .toPromise()).resolves.toEqual({
+        ...response, body: { access_token: { payload: { client_id: public_id } } },
+      });
+
+    });
+
+    it('should error if the response does not contain an access_token when the client_id is public', async () => {
+
+      const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
+
+      const response = {
+        body: { }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(() => solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise()).rejects.toThrow('response body did not contain an access_token');
+
+    });
+
+    it('should error if the access_token in the response body does not contain a payload when the client_id is not public', async () => {
+
+      const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
+
+      const response = {
+        body: { access_token: 'mockToken' }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(() => solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 
@@ -222,6 +264,51 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
       expect(httpHandler.handle).toHaveBeenCalledWith({ ...newContext, request: { ...newContext.request, headers: { 'content-length': length, 'content-type': 'application/json;charset=utf-8' } } });
       await expect(bodyAsSearchParams.get('client_id')).toEqual(client_id_constructor);
       await expect(bodyAsSearchParams.get('client_secret')).toEqual(client_secret);
+
+    });
+
+    it('should add the client_id to the access_token payload when the client is not public', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      const response = {
+        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(solidClientStaticTokenRegistrationHandler.handle(context)
+        .toPromise()).resolves.toEqual({
+        ...response, body: { access_token: { payload: { client_id } } },
+      });
+
+    });
+
+    it('should error if the response does not contain an access_token when the client_id is not public', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      const response = {
+        body: { }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(() => solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
+
+    });
+
+    it('should error if the access_token in the response body does not contain a payload when the client_id is not public', async () => {
+
+      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      const response = {
+        body: { access_token: 'mockToken' }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(() => solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 

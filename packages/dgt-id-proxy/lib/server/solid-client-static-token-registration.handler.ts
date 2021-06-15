@@ -120,7 +120,9 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
       const length = recalculateContentLength(newContext.request);
       newContext.request.headers['content-length'] = length;
 
-      return this.httpHandler.handle(newContext);
+      return this.httpHandler.handle(newContext).pipe(
+        switchMap((response) => this.setClientIdInAccesstoken(response, client_id))
+      );
 
     }
 
@@ -145,6 +147,7 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
         switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
         tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
         switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
+        switchMap((response) => this.setClientIdInAccesstoken(response, client_id))
       );
 
   }
@@ -162,6 +165,26 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
     && context.request.body
       ? of(true)
       : of(false);
+
+  }
+
+  private setClientIdInAccesstoken(response: HttpHandlerResponse, client_id: string): Observable<HttpHandlerResponse> {
+
+    if(!response.body.access_token) {
+
+      return throwError(new Error('response body did not contain an access_token'));
+
+    }
+
+    if(!response.body.access_token.payload) {
+
+      return throwError(new Error('Access token in response body did not contain a decoded payload'));
+
+    }
+
+    response.body.access_token.payload.client_id = client_id;
+
+    return of(response);
 
   }
 

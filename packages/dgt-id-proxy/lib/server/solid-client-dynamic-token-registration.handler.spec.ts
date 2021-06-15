@@ -201,7 +201,7 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
     });
 
-    it('should swap the client id of the response with the client_id given in the request', async () => {
+    it('should swap the client id in the access_token with the client_id given in the request', async () => {
 
       const responseGotten = await solidClientDynamicTokenRegistrationHandler.handle(context).toPromise();
 
@@ -210,19 +210,23 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
     });
 
-    it('should return the response if status is not 200', async () => {
+    it('should error when the response does not contain an access_token', async () => {
 
-      httpHandler.handle = jest.fn().mockReturnValueOnce(of({
-        body: {},
-        headers: {},
-        status: 400,
-      }));
+      const resp = { body: {}, headers: {}, status: 200 };
 
-      await expect(solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).resolves.toEqual({
-        body: {},
-        headers: {},
-        status: 400,
-      });
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
+
+      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
+
+    });
+
+    it('should error when the response body access_token does not contain a payload', async () => {
+
+      const resp = { body: { access_token: 'mockToken' }, headers: {}, status: 200 };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
+
+      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 

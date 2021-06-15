@@ -143,7 +143,17 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     });
 
-    it('should change the client_id in the request and pass the request to the nested handler if the client is public', async () => {
+    it('should change the client_id in the request if the client is public', async () => {
+
+      url.searchParams.set('client_id', 'http://www.w3.org/ns/solid/terms#PublicOidcClient');
+      context = { ... context, request: { ...context.request, url } };
+
+      await solidClientStaticAuthRegistrationHandler.handle(context).toPromise();
+      expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
+
+    });
+
+    it('should pass the request to the nested handler if the client is public', async () => {
 
       url.searchParams.set('client_id', 'http://www.w3.org/ns/solid/terms#PublicOidcClient');
       context = { ... context, request: { ...context.request, url } };
@@ -152,7 +162,6 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
       await expect(solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).resolves.toEqual(response);
-      expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
 
     });
 
