@@ -5,11 +5,11 @@ import { KeyValueStore } from '../storage/key-value-store';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 
 /**
- * A {HttpHandler} that
- * - gets the webid data and retrieves oidcRegistration
- * - replaces the client id in the request with a  static client id that was given in to the constructor
- * - registers if not registered or information is updated
- * - stores the registration in the keyvalue store
+ * A {HttpHandler} that gets the webid data and retrieves oidcRegistration. If the info is
+ * valid, it replaces the client id and redirect uri in the request with those that were given
+ * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
+ * with the state as key so that it can be replaced later when the redirect response is
+ * sent by teh upstream.
  */
 export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
@@ -22,13 +22,14 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
    * @param { string } clientID - the client_id of the static client configured on the upstream server.
    * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
    * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
+   * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
    */
   constructor(
     private httpHandler: HttpHandler,
     private clientID: string,
     private clientSecret: string,
     private redirectUri: string,
-    private store: KeyValueStore<string, URL>
+    private keyValueStore: KeyValueStore<string, URL>
   ) {
 
     super();
@@ -67,6 +68,12 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     }
 
+    if (!keyValueStore) {
+
+      throw new Error('No keyValueStore was provided');
+
+    }
+
   }
 
   /**
@@ -74,7 +81,8 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
    * It retrieves the information from the webid of the given client id.
    * Checks if the response is of the expected turtle type.
    * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
-   * It replaces the client id and client secret in the context with the one given to the constructor.
+   * It replaces the client id and redirect uri in the context with the one given to the constructor,
+   * and adds the client secret.
    *
    * @param {HttpHandlerContext} context
    */
@@ -110,6 +118,16 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     try {
 
+      new URL(redirect_uri);
+
+    } catch(error) {
+
+      return throwError(new Error('redirect_uri must be a valid URL'));
+
+    }
+
+    try {
+
       new URL(client_id);
 
     } catch (error) {
@@ -120,11 +138,11 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     if (!state) {
 
-      return throwError(new Error('No state was provided in the request'));
+      return throwError(new Error('Request must contain a state. Add state handlers to the proxy.'));
 
     }
 
-    this.store.set(state, this.redirectURL);
+    this.keyValueStore.set(state, new URL(redirect_uri));
 
     return from(getWebID(client_id))
       .pipe(

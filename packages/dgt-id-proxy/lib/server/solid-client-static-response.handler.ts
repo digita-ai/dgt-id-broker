@@ -6,18 +6,36 @@ import { KeyValueStore } from '../storage/key-value-store';
 
 export class SolidClientStaticResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  constructor(private store: KeyValueStore<string, URL>){
+  constructor(private keyValueStore: KeyValueStore<string, URL>){
 
     super();
+
+    if (!keyValueStore) {
+
+      throw new Error('No keyValueStore was provided');
+
+    }
 
   }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
+    if (!response) {
+
+      return throwError(new Error('No response was provided'));
+
+    }
+
     try{
 
       const locationUrl = new URL(response.headers.location);
-      const state = locationUrl.searchParams.get('state') ?? '';
+      const state = locationUrl.searchParams.get('state');
+
+      if (!state) {
+
+        return throwError(new Error('No state was found on the response. Cannot handle the response.'));
+
+      }
 
       return this.handleResponse(response, state, locationUrl);
 
@@ -50,13 +68,13 @@ export class SolidClientStaticResponseHandler extends Handler<HttpHandlerRespons
 
     response.body = '';
 
-    return from(this.store.get(state)).pipe(
+    return from(this.keyValueStore.get(state)).pipe(
       switchMap((redirectURL) => redirectURL
         ? of(redirectURL)
-        : throwError(new Error('No data was found in the store'))),
+        : throwError(new Error(`Response containing state '${state}' does not have a matching request`))),
       tap((redirectURL) => {
 
-        locationUrl.searchParams.forEach((key, value) => redirectURL.searchParams.set(key, value));
+        locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
         response.headers.location = redirectURL.toString();
 
       }),
