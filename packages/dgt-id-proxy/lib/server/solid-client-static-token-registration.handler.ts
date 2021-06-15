@@ -8,7 +8,7 @@ import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process
  * A {HttpHandler} that
  * - gets the webid data and retrieves oidcRegistration
  * - checks the if it's a valid webid and compares the grant types
- * - replaces the client id in the client secret in the context
+ * - replaces the client id, client secret and redirect url in the context
  */
 export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
@@ -71,7 +71,7 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
    * Checks if the response is of the expected turtle type.
    * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
    * so it knows if it's a valid webid.
-   * It replaces the client id and client secret in the context with the one given to the constructor.
+   * It replaces the client id, client secret and redirect url in the context with the one given to the constructor.
    * and recalculates the content length because the body has changed
    *
    * @param {HttpHandlerContext} context
