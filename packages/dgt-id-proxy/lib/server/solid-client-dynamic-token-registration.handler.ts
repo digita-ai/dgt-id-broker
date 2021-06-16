@@ -74,10 +74,17 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
+    const redirect_uri = params.get('redirect_uri');
 
     if (!client_id) {
 
       return throwError(new Error('No client_id was provided'));
+
+    }
+
+    if (!redirect_uri) {
+
+      return throwError(new Error('No redirect_uri was provided'));
 
     }
 
@@ -91,7 +98,7 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
 
     }
 
-    return from(this.store.get(client_id)).pipe(
+    return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? redirect_uri : client_id)).pipe(
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)
         : throwError(new Error('No data was found in the store'))),
@@ -105,11 +112,23 @@ export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
       switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
       tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
-      map((response) => {
+      switchMap((response) => {
 
-        if (response.body.access_token) { response.body.access_token.payload.client_id = client_id; }
+        if (!response.body.access_token) {
 
-        return response;
+          return throwError(new Error('response body did not contain an access_token'));
+
+        }
+
+        if (!response.body.access_token.payload) {
+
+          return throwError(new Error('Access token in response body did not contain a decoded payload'));
+
+        }
+
+        response.body.access_token.payload.client_id = client_id;
+
+        return of(response);
 
       })
     );

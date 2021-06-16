@@ -2,6 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
  * A {HttpHandler} that
@@ -95,17 +96,11 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    return from(getWebID(client_id))
-      .pipe(
-        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-          : from(response.text())),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
-        tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
-        switchMap(() => this.httpHandler.handle(context)),
-      );
+    return of(client_id).pipe(
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebID(clientId)),
+      tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
+      switchMap(() => this.httpHandler.handle(context)),
+    );
 
   }
 
@@ -122,6 +117,19 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     && context.request.url
       ? of(true)
       : of(false);
+
+  }
+
+  private checkWebID(clientId: string): Observable<Partial<OidcClientMetadata>> {
+
+    return from(getWebID(clientId))
+      .pipe(
+        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+          : from(response.text())),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+      );
 
   }
 

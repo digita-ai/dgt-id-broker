@@ -30,8 +30,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "lint:staged": "lint-staged",
-    "generate:oidc": "node dist/util/generate-openid-configuration.js",
-    "generate:keys": "node dist/util/generate-keys.js",
+    "generate:oidc": "node dist/scripts/generate-openid-configuration.js",
+    "generate:keys": "node dist/scripts/generate-keys.js",
     "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/",
     "demo:panva": "npm run start",
     "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita"
@@ -82,12 +82,18 @@
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/scripts"
+    ],
     "coverageThreshold": {
       "global": {
-        "branches": 92.41,
-        "functions": 95.21,
-        "lines": 90.36,
-        "statements": 90.43
+        "branches": 94.06,
+        "functions": 97.11,
+        "lines": 92.93,
+        "statements": 92.91
       }
     }
   }

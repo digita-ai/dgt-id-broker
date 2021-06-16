@@ -143,6 +143,28 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     });
 
+    it('should change the client_id in the request if the client is public', async () => {
+
+      url.searchParams.set('client_id', 'http://www.w3.org/ns/solid/terms#PublicOidcClient');
+      context = { ... context, request: { ...context.request, url } };
+
+      await solidClientStaticAuthRegistrationHandler.handle(context).toPromise();
+      expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
+
+    });
+
+    it('should pass the request to the nested handler if the client is public', async () => {
+
+      url.searchParams.set('client_id', 'http://www.w3.org/ns/solid/terms#PublicOidcClient');
+      context = { ... context, request: { ...context.request, url } };
+
+      const response = { body: 'mockBody', status: 200, headers: {} };
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await expect(solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).resolves.toEqual(response);
+
+    });
+
     it('should error when return type is not turtle', async () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
@@ -160,14 +182,13 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     });
 
-    it('should switch the context client id & add the secret given in the constructor', async () => {
+    it('should switch the context client id given in the constructor', async () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
       await solidClientStaticAuthRegistrationHandler.handle(context).toPromise();
 
       expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
-      expect(context.request.url.searchParams.get('client_secret')).toEqual(client_secret);
 
     });
 

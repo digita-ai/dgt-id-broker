@@ -98,8 +98,8 @@
     {
       "@id": "urn:dgt-id-proxy:default:SolidClientStaticAuthRegistrationHandler",
       "@type": "SolidClientStaticAuthRegistrationHandler",
-      "SolidClientStaticAuthRegistrationHandler:_clientID": "v0mugB6Y5JdUbhq7tt23SgntseaYxeRb",
-      "SolidClientStaticAuthRegistrationHandler:_clientSecret": "kZC1PBfQKJkY-czL1hgAfO3Bn-vkS4AX3ZSpLSF5syD2_PsNsorZm2KGKvlDe9yM",
+      "SolidClientStaticAuthRegistrationHandler:_clientID": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+      "SolidClientStaticAuthRegistrationHandler:_clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
       "SolidClientStaticAuthRegistrationHandler:_httpHandler": {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       }
@@ -107,8 +107,8 @@
     {
       "@id": "urn:dgt-id-proxy:default:SolidClientStaticTokenRegistrationHandler",
       "@type": "SolidClientStaticTokenRegistrationHandler",
-      "SolidClientStaticTokenRegistrationHandler:_clientID": "v0mugB6Y5JdUbhq7tt23SgntseaYxeRb",
-      "SolidClientStaticTokenRegistrationHandler:_clientSecret": "kZC1PBfQKJkY-czL1hgAfO3Bn-vkS4AX3ZSpLSF5syD2_PsNsorZm2KGKvlDe9yM",
+      "SolidClientStaticTokenRegistrationHandler:_clientID": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+      "SolidClientStaticTokenRegistrationHandler:_clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
       "SolidClientStaticTokenRegistrationHandler:_httpHandler": {
         "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
       }
