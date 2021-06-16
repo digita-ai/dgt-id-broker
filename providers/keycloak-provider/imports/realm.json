@@ -16,7 +16,7 @@
         "clientAuthenticatorType": "client-secret",
         "secret": "0422604a-41a8-4fc3-b4f0-d4b30256296e",
         "redirectUris": [
-          "http://localhost:3001/requests.html"
+          "http://localhost:3003/redirect"
         ],
         "webOrigins": [
           "http://localhost:8080"

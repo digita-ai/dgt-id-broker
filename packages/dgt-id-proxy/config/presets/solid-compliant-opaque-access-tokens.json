@@ -106,23 +106,23 @@
         "@type": "InMemoryStore"
       },
       {
-        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
-        "@type": "SolidClientDynamicAuthRegistrationHandler",
-        "SolidClientDynamicAuthRegistrationHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthHandler",
+        "@type": "ClientIdDynamicAuthHandler",
+        "ClientIdDynamicAuthHandler:_store": {
           "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
         },
-        "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
+        "ClientIdDynamicAuthHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler"
         },
-        "SolidClientDynamicAuthRegistrationHandler:_registration_uri": "http://localhost:3000/reg"
+        "ClientIdDynamicAuthHandler:_registration_uri": "http://localhost:3000/reg"
       },
       {
-        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler",
-        "@type": "SolidClientDynamicTokenRegistrationHandler",
-        "SolidClientDynamicTokenRegistrationHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler",
+        "@type": "ClientIdDynamicTokenHandler",
+        "ClientIdDynamicTokenHandler:_store": {
           "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
         },
-        "SolidClientDynamicTokenRegistrationHandler:_httpHandler": {
+        "ClientIdDynamicTokenHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
         }
       },
@@ -298,7 +298,7 @@
               "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
+              "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthHandler"
             }
           ]
         },
@@ -406,7 +406,7 @@
             "@type": "PipeThroughHandler",
             "PipeThroughHandler:_handlers": [
               {
-                "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler"
+                "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler"
               },
               {
                 "@type": "SolidAudienceHandler"

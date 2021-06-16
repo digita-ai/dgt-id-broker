@@ -2,9 +2,9 @@ import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { SolidClientStaticTokenRegistrationHandler } from './solid-client-static-token-registration.handler';
+import { ClientIdStaticTokenHandler } from './client-id-static-token.handler';
 
-describe('SolidClientStaticTokenRegistrationHandler', () => {
+describe('ClientIdStaticTokenHandler', () => {
 
   beforeAll(() => fetchMock.enableMocks());
 
@@ -19,6 +19,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const client_id_constructor = 'static_client';
   const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const client_secret = 'static_secret';
+  const redirect_uri_constructor = 'http://digita.ai/redirect';
   const noClientIDRequestBody = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`;
   const noGrantTypeRequestBody = `code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const noRedirectUriRequestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
@@ -26,8 +27,8 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const requestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const publicClientRequestBody = `grant_type=authorization_code&code=${code}&client_id=http://www.w3.org/ns/solid/terms#PublicOidcClient&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const requestBodyWithOtherGrantType = `grant_type=implicit&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
-  const requestBodyWithStaticClient = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id_constructor)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}&client_secret=${client_secret}`;
-  let context: HttpHandlerContext = { request: { headers, body: requestBody, method: 'POST', url } } as HttpHandlerContext;
+  const requestBodyWithStaticClient = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id_constructor)}&redirect_uri=${encodeURIComponent(redirect_uri_constructor)}&code_verifier=${code_verifier}&client_secret=${client_secret}`;
+  let context: HttpHandlerContext;
 
   const podText = `
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -46,7 +47,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
   const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
   const correctPodText = podText + ' ' + oidcRegistration;
 
-  let solidClientStaticTokenRegistrationHandler: SolidClientStaticTokenRegistrationHandler;
+  let handler: ClientIdStaticTokenHandler;
 
   beforeEach(() => {
 
@@ -56,10 +57,11 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
       safeHandle: jest.fn(),
     };
 
-    solidClientStaticTokenRegistrationHandler = new SolidClientStaticTokenRegistrationHandler(
+    handler = new ClientIdStaticTokenHandler(
       httpHandler,
       client_id_constructor,
       client_secret,
+      redirect_uri_constructor,
     );
 
     context = { request: { headers, body: requestBody, method: 'POST', url } };
@@ -68,28 +70,26 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
   it('should be correctly instantiated', () => {
 
-    expect(solidClientStaticTokenRegistrationHandler).toBeTruthy();
+    expect(handler).toBeTruthy();
 
   });
 
-  it('should error when no handler was provided', () => {
+  it('should error when no handler, clientId, clientSecret or redirectUri are provided', () => {
 
-    expect(() => new SolidClientStaticTokenRegistrationHandler(undefined, client_id_constructor, client_secret)).toThrow('No handler was provided');
-    expect(() => new SolidClientStaticTokenRegistrationHandler(null, client_id_constructor, client_secret)).toThrow('No handler was provided');
+    expect(() => new ClientIdStaticTokenHandler(undefined, client_id_constructor, client_secret, redirect_uri_constructor)).toThrow('No handler was provided');
+    expect(() => new ClientIdStaticTokenHandler(null, client_id_constructor, client_secret, redirect_uri_constructor)).toThrow('No handler was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, undefined, client_secret, redirect_uri_constructor)).toThrow('No clientId was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, null, client_secret, redirect_uri_constructor)).toThrow('No clientId was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, client_id_constructor, undefined, redirect_uri_constructor)).toThrow('No clientSecret was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, client_id_constructor, null, redirect_uri_constructor)).toThrow('No clientSecret was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, client_id_constructor, client_secret, undefined)).toThrow('No redirectUri was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, client_id_constructor, client_secret, null)).toThrow('No redirectUri was provided');
 
   });
 
-  it('should error when no clientID was provided', () => {
+  it('should error when redirectUri is not a valid URI', () => {
 
-    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, undefined, client_secret)).toThrow('No clientID was provided');
-    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, null, client_secret)).toThrow('No clientID was provided');
-
-  });
-
-  it('should error when no handler was provided', () => {
-
-    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, client_id_constructor, undefined)).toThrow('No clientSecret was provided');
-    expect(() => new SolidClientStaticTokenRegistrationHandler(httpHandler, client_id_constructor, null)).toThrow('No clientSecret was provided');
+    expect(() => new ClientIdStaticTokenHandler(httpHandler, client_id_constructor, client_secret, 'notAValidURI')).toThrow('redirectUri must be a valid URI');
 
   });
 
@@ -97,43 +97,43 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no request body is provided', async () => {
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
 
     });
 
     it('should error when no client_id was provided', async () => {
 
       const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody } };
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
 
     });
 
     it('should error when no grant_type was provided', async () => {
 
       const noGrantTypeContext = { ... context, request: { ...context.request, body:  noGrantTypeRequestBody } };
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(noGrantTypeContext).toPromise()).rejects.toThrow('No grant_type was provided');
+      await expect(() => handler.handle(noGrantTypeContext).toPromise()).rejects.toThrow('No grant_type was provided');
 
     });
 
     it('should error when no redirect_uri was provided', async () => {
 
       const noRedirectUriContext = { ... context, request: { ...context.request, body:  noRedirectUriRequestBody } };
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
 
     });
 
@@ -144,19 +144,20 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       const body = `grant_type=authorization_code&code=${code}&client_id=static_client&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
       context = { ...context, request: { ...context.request, body } };
-      await expect(solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).resolves.toEqual(resp);
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(resp);
 
     });
 
-    it('should change the client_id and add client_secret in the request if the client is public', async () => {
+    it('should change the client_id, redirect_uri and add client_secret in the request if the client is public', async () => {
 
       const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
 
-      await solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise();
+      await handler.handle(testContext).toPromise();
 
       const bodyAsSearchParams = new URLSearchParams(testContext.request.body);
       bodyAsSearchParams.set('client_id', client_id_constructor);
       bodyAsSearchParams.set('client_secret', client_secret);
+      bodyAsSearchParams.set('redirect_uri', redirect_uri_constructor);
 
       testContext.request.body = bodyAsSearchParams.toString();
 
@@ -180,7 +181,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(solidClientStaticTokenRegistrationHandler.handle(testContext)
+      await expect(handler.handle(testContext)
         .toPromise()).resolves.toEqual({
         ...response, body: { access_token: { payload: { client_id: public_id } } },
       });
@@ -197,7 +198,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise()).rejects.toThrow('response body did not contain an access_token');
+      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('response body did not contain an access_token');
 
     });
 
@@ -211,7 +212,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(testContext).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
+      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 
@@ -219,7 +220,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
 
-      await expect(solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
+      await expect(handler.handle(context).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
 
     });
 
@@ -227,7 +228,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await expect(solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow(`Not a valid webID: No oidcRegistration field found`);
+      await expect(handler.handle(context).toPromise()).rejects.toThrow(`Not a valid webID: No oidcRegistration field found`);
 
     });
 
@@ -235,7 +236,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await expect(solidClientStaticTokenRegistrationHandler.handle({ ...context, request: { ...context.request, body: requestBodyWithOtherGrantType } }).toPromise()).rejects.toThrow('The grant type in the request is not included in the WebId');
+      await expect(handler.handle({ ...context, request: { ...context.request, body: requestBodyWithOtherGrantType } }).toPromise()).rejects.toThrow('The grant type in the request is not included in the WebId');
 
     });
 
@@ -243,7 +244,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await solidClientStaticTokenRegistrationHandler.handle(context).toPromise();
+      await handler.handle(context).toPromise();
 
       expect(httpHandler.handle).toHaveBeenCalledTimes(1);
 
@@ -257,7 +258,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
       const newContext = { request: { headers, body: requestBodyWithStaticClient, method: 'POST', url } } as HttpHandlerContext;
       const length = recalculateContentLength(newContext.request);
-      await solidClientStaticTokenRegistrationHandler.handle(context).toPromise();
+      await handler.handle(context).toPromise();
 
       const bodyAsSearchParams = new URLSearchParams(newContext.request.body);
 
@@ -277,7 +278,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(solidClientStaticTokenRegistrationHandler.handle(context)
+      await expect(handler.handle(context)
         .toPromise()).resolves.toEqual({
         ...response, body: { access_token: { payload: { client_id } } },
       });
@@ -294,7 +295,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
 
     });
 
@@ -308,7 +309,7 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => solidClientStaticTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 
@@ -318,36 +319,36 @@ describe('SolidClientStaticTokenRegistrationHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(solidClientStaticTokenRegistrationHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(solidClientStaticTokenRegistrationHandler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientStaticTokenRegistrationHandler.canHandle(undefined).toPromise())
+      await expect(handler.canHandle(undefined).toPromise())
         .resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(solidClientStaticTokenRegistrationHandler.canHandle({ ...context, request: null })
+      await expect(handler.canHandle({ ...context, request: null })
         .toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientStaticTokenRegistrationHandler.canHandle({ ...context, request: undefined })
+      await expect(handler.canHandle({ ...context, request: undefined })
         .toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false if no request body was provided', async () => {
 
-      await expect(solidClientStaticTokenRegistrationHandler
+      await expect(handler
         .canHandle({ ...context, request: { ...context.request, body: null } })
         .toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientStaticTokenRegistrationHandler
+      await expect(handler
         .canHandle({ ...context, request: { ...context.request, body: undefined } })
         .toPromise()).resolves.toEqual(false);
 

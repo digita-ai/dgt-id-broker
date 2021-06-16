@@ -15,10 +15,10 @@ import { OidcClientRegistrationResponse } from '../util/oidc-client-registration
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
+export class ClientIdDynamicAuthHandler extends HttpHandler {
 
   /**
-   * Creates a { SolidClientDynamicAuthRegistrationHandler }.
+   * Creates a { ClientIdDynamicAuthHandler }.
    *
    * @param {string} registration_uri - the registration endpoint for the currently used provider.
    * @param { KeyValueStore } store - the store used to save a clients register data.
@@ -32,11 +32,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     super();
 
-    if (!registration_uri) {
-
-      throw new Error('A registration_uri must be provided');
-
-    }
+    if (!registration_uri) { throw new Error('A registration_uri must be provided'); }
 
     try {
 
@@ -48,17 +44,9 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    if (!store) {
+    if (!store) { throw new Error('A store must be provided'); }
 
-      throw new Error('A store must be provided');
-
-    }
-
-    if (!httpHandler) {
-
-      throw new Error('A HttpHandler must be provided');
-
-    }
+    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
 
   }
 
@@ -76,32 +64,18 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) {
+    if (!context) { return throwError(new Error('A context must be provided')); }
 
-      return throwError(new Error('A context must be provided'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
-
-    }
+    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
 
-    if (!client_id) {
+    if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
-      return throwError(new Error('No client_id was provided'));
-
-    }
-
-    if (!redirect_uri) {
-
-      return throwError(new Error('No redirect_uri was provided'));
-
-    }
+    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -113,48 +87,14 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     }
 
-    if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient') {
-
-      const clientData = {
-        'redirect_uris': [ redirect_uri ],
-        'token_endpoint_auth_method' : 'none',
-      };
-
-      return from(this.store.get(redirect_uri)).pipe(
-        switchMap((registerData) => registerData
-          ? of(registerData)
-          : this.registerClient(clientData, client_id, redirect_uri)),
-        tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
-        tap(() => context.request.url.search = context.request.url.searchParams.toString()),
-        switchMap(() => this.httpHandler.handle(context)),
-      );
-
-    }
-
-    return from(getWebID(client_id))
-      .pipe(
-        switchMap((response) => {
-
-          if (response.headers.get('content-type') !== 'text/turtle') {
-
-            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
-
-          }
-
-          return from(response.text());
-
-        }),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        switchMap((clientData) => this.compareClientDataWithRequest(clientData, context.request.url.searchParams)),
-        switchMap((clientData) => zip(of(clientData), from(this.store.get(client_id)))),
-        switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
-          ? this.registerClient(this.createRequestData(clientData), client_id)
-          : of(registerData)),
-        tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
-        tap(() => context.request.url.search = context.request.url.searchParams.toString()),
-        switchMap(() => this.httpHandler.handle(context)),
-      );
+    return of(client_id).pipe(
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient'
+        ? this.checkRedirectUri(clientId, redirect_uri)
+        : this.checkWebId(clientId, context.request.url.searchParams)),
+      tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
+      tap(() => context.request.url.search = context.request.url.searchParams.toString()),
+      switchMap(() => this.httpHandler.handle(context)),
+    );
 
   }
 
@@ -254,11 +194,7 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
 
     metadata.map((item) => {
 
-      if (clientData[item]) {
-
-        reqData[item] = clientData[item];
-
-      }
+      if (clientData[item]) { reqData[item] = clientData[item]; }
 
     });
 
@@ -327,6 +263,44 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
     }
 
     return false;
+
+  }
+
+  private checkRedirectUri(
+    clientId: string,
+    redirectUri: string
+  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+
+    const clientData = {
+      'redirect_uris': [ redirectUri ],
+      'token_endpoint_auth_method' : 'none',
+    };
+
+    return from(this.store.get(redirectUri)).pipe(
+      switchMap((registerData) => registerData
+        ? of(registerData)
+        : this.registerClient(clientData, clientId, redirectUri)),
+    );
+
+  }
+
+  private checkWebId(
+    clientId: string,
+    contextRequestUrlSearchParams: URLSearchParams
+  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+
+    return from(getWebID(clientId)).pipe(
+      switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
+        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+        : from(response.text())),
+      map((text) => parseQuads(text)),
+      switchMap((quads) => getOidcRegistrationTriple(quads)),
+      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+      switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
+      switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
+        ? this.registerClient(this.createRequestData(clientData), clientId)
+        : of(registerData)),
+    );
 
   }
 

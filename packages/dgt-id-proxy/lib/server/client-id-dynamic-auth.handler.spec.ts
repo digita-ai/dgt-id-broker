@@ -5,9 +5,9 @@ import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { SolidClientDynamicAuthRegistrationHandler } from './solid-client-dynamic-auth-registration.handler';
+import { ClientIdDynamicAuthHandler } from './client-id-dynamic-auth.handler';
 
-describe('SolidClientDynamicAuthRegistrationHandler', () => {
+describe('ClientIdDynamicAuthHandler', () => {
 
   const httpHandler: HttpHandler = {
     canHandle: jest.fn(),
@@ -119,8 +119,8 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   let context: HttpHandlerContext;
   let url: URL;
+  let handler: ClientIdDynamicAuthHandler;
   let publicClientURL: URL;
-  let solidClientDynamicAuthRegistrationHandler: SolidClientDynamicAuthRegistrationHandler;
 
   beforeAll(() => fetchMock.enableMocks());
 
@@ -130,7 +130,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
 
-    solidClientDynamicAuthRegistrationHandler = new SolidClientDynamicAuthRegistrationHandler(
+    handler = new ClientIdDynamicAuthHandler(
       registration_uri,
       store,
       httpHandler
@@ -144,34 +144,34 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
   it('should be correctly instantiated', () => {
 
-    expect(solidClientDynamicAuthRegistrationHandler).toBeTruthy();
+    expect(handler).toBeTruthy();
 
   });
 
   it('should error when no handler was provided', () => {
 
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, store, undefined)).toThrow('A HttpHandler must be provided');
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, store, null)).toThrow('A HttpHandler must be provided');
+    expect(() => new ClientIdDynamicAuthHandler(registration_uri, store, undefined)).toThrow('A HttpHandler must be provided');
+    expect(() => new ClientIdDynamicAuthHandler(registration_uri, store, null)).toThrow('A HttpHandler must be provided');
 
   });
 
   it('should error when no store was provided', () => {
 
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, undefined, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(registration_uri, null, solidClientDynamicAuthRegistrationHandler)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicAuthHandler(registration_uri, undefined, handler)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicAuthHandler(registration_uri, null, handler)).toThrow('A store must be provided');
 
   });
 
   it('should error when no registration uri was provided', () => {
 
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(undefined, store, solidClientDynamicAuthRegistrationHandler)).toThrow('A registration_uri must be provided');
-    expect(() => new SolidClientDynamicAuthRegistrationHandler(null, store, solidClientDynamicAuthRegistrationHandler)).toThrow('A registration_uri must be provided');
+    expect(() => new ClientIdDynamicAuthHandler(undefined, store, handler)).toThrow('A registration_uri must be provided');
+    expect(() => new ClientIdDynamicAuthHandler(null, store, handler)).toThrow('A registration_uri must be provided');
 
   });
 
   it('should error when no registration uri was provided', () => {
 
-    expect(() => new SolidClientDynamicAuthRegistrationHandler('htp//:incorrecturi.com', store, solidClientDynamicAuthRegistrationHandler)).toThrow('The provided registration_uri is not a valid URL');
+    expect(() => new ClientIdDynamicAuthHandler('htp//:incorrecturi.com', store, handler)).toThrow('The provided registration_uri is not a valid URL');
 
   });
 
@@ -179,15 +179,24 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+
+    });
+
+    it('should error when no context request url is provided', async () => {
+
+      context.request.url = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      context.request.url = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -197,10 +206,10 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       const noClientIdContext = { ... context, request: { ...context.request, url: noClientIdURL } };
 
       noClientIdContext.request.url.searchParams.set('client_id', '');
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
 
       noClientIdContext.request.url.searchParams.delete('client_id');
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
 
     });
 
@@ -210,10 +219,10 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       const noRedirectUriContext = { ... context, request: { ...context.request, url: noRedirectUriURL } };
 
       noRedirectUriContext.request.url.searchParams.set('redirect_uri', '');
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
 
       noRedirectUriContext.request.url.searchParams.delete('redirect_uri');
-      await expect(() => solidClientDynamicAuthRegistrationHandler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
 
     });
 
@@ -224,7 +233,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       url.searchParams.set('client_id', 'static_client');
       context = { ...context, request: { ...context.request, url } };
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(context).toPromise()).resolves.toEqual(response);
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(response);
 
     });
 
@@ -233,7 +242,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
+      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
 
     });
 
@@ -242,7 +251,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
       const badResponseTypeContext = { ...context, request: { ...context.request, url: otherResponseTypeURL } };
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(badResponseTypeContext).toPromise()).rejects.toThrow(`Response types do not match`);
+      await expect(handler.handle(badResponseTypeContext).toPromise()).rejects.toThrow(`Response types do not match`);
 
     });
 
@@ -251,14 +260,14 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
       = new InMemoryStore();
 
-      const solidClientDynamicAuthRegistrationHandler2
-      = new SolidClientDynamicAuthRegistrationHandler(registration_uri, public_store, httpHandler);
+      const handler2
+      = new ClientIdDynamicAuthHandler(registration_uri, public_store, httpHandler);
 
       fetchMock.once(JSON.stringify(mockPublicRegisterResponse), { status: 200 });
 
       public_store.set = jest.fn();
 
-      await solidClientDynamicAuthRegistrationHandler2
+      await handler2
         .handle({ ...context, request: { ...context.request, url: publicClientURL } })
         .toPromise();
 
@@ -271,24 +280,24 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
       = new InMemoryStore();
 
-      const solidClientDynamicAuthRegistrationHandler3
-      = new SolidClientDynamicAuthRegistrationHandler(registration_uri, public_store, httpHandler);
+      const handler2
+      = new ClientIdDynamicAuthHandler(registration_uri, public_store, httpHandler);
 
       const newContext: HttpHandlerContext = { request: { headers: {}, body: {}, method: 'POST', url: publicClientURL } };
       public_store.set(redirect_uri, mockPublicRegisterResponse);
 
       const registeredInfo = public_store.get(redirect_uri);
 
-      solidClientDynamicAuthRegistrationHandler3.registerClient
+      handler2.registerClient
        = jest.fn().mockReturnValueOnce(mockPublicRegisterResponse);
 
       public_store.get = jest.fn().mockReturnValueOnce(registeredInfo);
 
-      await solidClientDynamicAuthRegistrationHandler3
+      await handler2
         .handle({ ...newContext, request: { ...newContext.request, url: publicClientURL } })
         .toPromise();
 
-      expect(solidClientDynamicAuthRegistrationHandler3.registerClient).toHaveBeenCalledTimes(0);
+      expect(handler2.registerClient).toHaveBeenCalledTimes(0);
 
     });
 
@@ -298,7 +307,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
 
-      await expect(solidClientDynamicAuthRegistrationHandler
+      await expect(handler
         .handle(context)
         .toPromise()).resolves
         .toEqual(mockRegisterResponse);
@@ -309,7 +318,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await expect(solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: { ...context.request, url: differentClientIdURL } }).toPromise()).rejects.toThrow('The client id in the request does not match the one in the WebId');
+      await expect(handler.handle({ ...context, request: { ...context.request, url: differentClientIdURL } }).toPromise()).rejects.toThrow('The client id in the request does not match the one in the WebId');
 
     });
 
@@ -317,7 +326,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await expect(solidClientDynamicAuthRegistrationHandler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }).toPromise()).rejects.toThrow('The redirect_uri in the request is not included in the WebId');
+      await expect(handler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }).toPromise()).rejects.toThrow('The redirect_uri in the request is not included in the WebId');
 
     });
 
@@ -325,14 +334,14 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await expect(solidClientDynamicAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
+      await expect(handler.handle(context).toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
 
     });
 
     it('should save the registered client data in the store', async () => {
 
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
-      await solidClientDynamicAuthRegistrationHandler.handle(context).toPromise();
+      await handler.handle(context).toPromise();
       await store.get(client_id).then((data) => expect(data).toBeDefined());
 
     });
@@ -342,7 +351,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
       fetchMock.mockResponses([ differentRedirectUriPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
       store.set(client_id, mockRegisterResponse);
 
-      await solidClientDynamicAuthRegistrationHandler
+      await handler
         .handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } })
         .toPromise();
 
@@ -360,23 +369,23 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(solidClientDynamicAuthRegistrationHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(solidClientDynamicAuthRegistrationHandler.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(solidClientDynamicAuthRegistrationHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(solidClientDynamicAuthRegistrationHandler.canHandle({ ...context, request: null })
+      await expect(handler.canHandle({ ...context, request: null })
         .toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientDynamicAuthRegistrationHandler.canHandle({ ...context, request: undefined })
+      await expect(handler.canHandle({ ...context, request: undefined })
         .toPromise()).resolves.toEqual(false);
 
     });
@@ -389,7 +398,7 @@ describe('SolidClientDynamicAuthRegistrationHandler', () => {
 
       fetchMock.once(JSON.stringify(mockRegisterResponse), { status: 200 });
 
-      const responseGotten = await solidClientDynamicAuthRegistrationHandler.registerClient(reqData, client_id);
+      const responseGotten = await handler.registerClient(reqData, client_id);
       expect(responseGotten.registration_access_token).toBeDefined();
 
     });

@@ -5,9 +5,9 @@ import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { SolidClientDynamicTokenRegistrationHandler } from './solid-client-dynamic-token-registration.handler';
+import { ClientIdDynamicTokenHandler } from './client-id-dynamic-token.handler';
 
-describe('SolidClientDynamicTokenRegistrationHandler', () => {
+describe('ClientIdDynamicTokenHandler', () => {
 
   const referer = 'http://client.example.com';
   const url =  new URL(`${referer}/token`);
@@ -50,7 +50,7 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
   const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
   = new InMemoryStore();
 
-  let solidClientDynamicTokenRegistrationHandler: SolidClientDynamicTokenRegistrationHandler;
+  let handler: ClientIdDynamicTokenHandler;
 
   const registerInfo = {
     application_type: 'web',
@@ -85,27 +85,27 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
       safeHandle: jest.fn(),
     };
 
-    solidClientDynamicTokenRegistrationHandler = new SolidClientDynamicTokenRegistrationHandler(store, httpHandler);
+    handler = new ClientIdDynamicTokenHandler(store, httpHandler);
 
   });
 
   it('should be correctly instantiated', () => {
 
-    expect(solidClientDynamicTokenRegistrationHandler).toBeTruthy();
+    expect(handler).toBeTruthy();
 
   });
 
   it('should error when no handler was provided', () => {
 
-    expect(() => new SolidClientDynamicTokenRegistrationHandler(store, undefined)).toThrow('A HttpHandler must be provided');
-    expect(() => new SolidClientDynamicTokenRegistrationHandler(store, null)).toThrow('A HttpHandler must be provided');
+    expect(() => new ClientIdDynamicTokenHandler(store, undefined)).toThrow('A HttpHandler must be provided');
+    expect(() => new ClientIdDynamicTokenHandler(store, null)).toThrow('A HttpHandler must be provided');
 
   });
 
   it('should error when no store was provided', () => {
 
-    expect(() => new SolidClientDynamicTokenRegistrationHandler(undefined, solidClientDynamicTokenRegistrationHandler)).toThrow('A store must be provided');
-    expect(() => new SolidClientDynamicTokenRegistrationHandler(null, solidClientDynamicTokenRegistrationHandler)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicTokenHandler(undefined, handler)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicTokenHandler(null, handler)).toThrow('A store must be provided');
 
   });
 
@@ -113,36 +113,36 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no request body is provided', async () => {
 
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
 
     });
 
     it('should error when no client_id was provided', async () => {
 
       const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody } };
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
 
     });
 
     it('should error when no client_id was provided', async () => {
 
       const noRedirectURIContext = { ... context, request: { ...context.request, body:  noRedirectURIRequestBody } };
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(noRedirectURIContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => handler.handle(noRedirectURIContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
 
     });
 
@@ -153,14 +153,14 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
       const body = `grant_type=authorization_code&code=${code}&client_id=static_client&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
       const testContext = { ...context, request: { ...context.request, body } };
-      await expect(solidClientDynamicTokenRegistrationHandler.handle(testContext).toPromise()).resolves.toEqual(resp);
+      await expect(handler.handle(testContext).toPromise()).resolves.toEqual(resp);
 
     });
 
     it('should error when no data was found in the store', async () => {
 
       store.delete(client_id);
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No data was found in the store');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No data was found in the store');
 
     });
 
@@ -169,8 +169,8 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
       const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
       = new InMemoryStore();
 
-      const solidClientDynamicTokenRegistrationHandler2
-      = new SolidClientDynamicTokenRegistrationHandler(public_store, httpHandler);
+      const handler2
+      = new ClientIdDynamicTokenHandler(public_store, httpHandler);
 
       public_store.set(redirect_uri, registerInfo);
 
@@ -178,7 +178,7 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
       public_store.get = jest.fn().mockReturnValueOnce(registeredInfo);
 
-      await solidClientDynamicTokenRegistrationHandler2
+      await handler2
         .handle({ ...context, request: { ...context.request, body:  requestBodyWithPublicId } })
         .toPromise();
 
@@ -189,7 +189,7 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
     it('should replace the client_id with the registered one & change the content length', async () => {
 
       const length = recalculateContentLength(newContext.request);
-      await solidClientDynamicTokenRegistrationHandler.handle(context).toPromise();
+      await handler.handle(context).toPromise();
 
       expect(httpHandler.handle).toHaveBeenCalledWith({ ...newContext, request: { ...newContext.request, headers: { 'content-length': length, 'content-type': 'application/json;charset=utf-8' } } });
 
@@ -197,13 +197,13 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
     it('should error when the provided charset is not supported', async () => {
 
-      await expect(solidClientDynamicTokenRegistrationHandler.handle({ ...context, request: { ...context.request, headers: { 'content-type': 'application/json;charset=123' } } }).toPromise()).rejects.toThrow('The specified charset is not supported');
+      await expect(handler.handle({ ...context, request: { ...context.request, headers: { 'content-type': 'application/json;charset=123' } } }).toPromise()).rejects.toThrow('The specified charset is not supported');
 
     });
 
     it('should swap the client id in the access_token with the client_id given in the request', async () => {
 
-      const responseGotten = await solidClientDynamicTokenRegistrationHandler.handle(context).toPromise();
+      const responseGotten = await handler.handle(context).toPromise();
 
       expect(responseGotten.body.access_token.payload.client_id).toEqual(client_id);
       expect(responseGotten.status).toEqual(200);
@@ -216,7 +216,7 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
 
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
 
     });
 
@@ -226,7 +226,7 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
 
-      await expect(() => solidClientDynamicTokenRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 
@@ -236,36 +236,36 @@ describe('SolidClientDynamicTokenRegistrationHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(solidClientDynamicTokenRegistrationHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(solidClientDynamicTokenRegistrationHandler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientDynamicTokenRegistrationHandler.canHandle(undefined).toPromise())
+      await expect(handler.canHandle(undefined).toPromise())
         .resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(solidClientDynamicTokenRegistrationHandler.canHandle({ ...context, request: null })
+      await expect(handler.canHandle({ ...context, request: null })
         .toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientDynamicTokenRegistrationHandler.canHandle({ ...context, request: undefined })
+      await expect(handler.canHandle({ ...context, request: undefined })
         .toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false if no request body was provided', async () => {
 
-      await expect(solidClientDynamicTokenRegistrationHandler
+      await expect(handler
         .canHandle({ ...context, request: { ...context.request, body: null } })
         .toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientDynamicTokenRegistrationHandler
+      await expect(handler
         .canHandle({ ...context, request: { ...context.request, body: undefined } })
         .toPromise()).resolves.toEqual(false);
 
