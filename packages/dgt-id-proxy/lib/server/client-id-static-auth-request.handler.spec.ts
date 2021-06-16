@@ -3,9 +3,9 @@ import { of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { KeyValueStore } from '../storage/key-value-store';
 import { InMemoryStore } from '../storage/in-memory-store';
-import { SolidClientStaticAuthRegistrationHandler } from './solid-client-static-auth-registration.handler';
+import { ClientIdStaticAuthRequestHandler } from './client-id-static-auth-request.handler';
 
-describe('SolidClientStaticAuthRegistrationHandler', () => {
+describe('ClientIdStaticAuthRequestHandler', () => {
 
   let httpHandler: HttpHandler;
 
@@ -20,7 +20,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
   const differentClientIdURL= new URL(`http://client.com/auth?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&state=1234`);
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
 
-  let solidClientStaticAuthRegistrationHandler: SolidClientStaticAuthRegistrationHandler;
+  let handler: ClientIdStaticAuthRequestHandler;
 
   const podText = `
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -44,16 +44,9 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
   beforeEach(async () => {
 
-    httpHandler = {
-      canHandle: jest.fn(),
-      handle: jest.fn().mockReturnValueOnce(of()),
-      safeHandle: jest.fn(),
-    };
-
     store = new InMemoryStore();
 
-    solidClientStaticAuthRegistrationHandler  = new SolidClientStaticAuthRegistrationHandler(
-      httpHandler,
+    handler  = new ClientIdStaticAuthRequestHandler(
       client_id_constructor,
       client_secret,
       redirect_uri_constructor,
@@ -67,28 +60,26 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
   it('should be correctly instantiated', () => {
 
-    expect(solidClientStaticAuthRegistrationHandler).toBeTruthy();
+    expect(handler).toBeTruthy();
 
   });
 
   it('should error when no handler, clientId, clientSecret, redirectUri or keyValueStore are provided', () => {
 
-    expect(() => new SolidClientStaticAuthRegistrationHandler(undefined, client_id_constructor, client_secret, redirect_uri_constructor, store)).toThrow('No handler was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(null, client_id_constructor, client_secret, redirect_uri_constructor, store)).toThrow('No handler was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, undefined, client_secret, redirect_uri_constructor, store)).toThrow('No clientID was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, null, client_secret, redirect_uri_constructor, store)).toThrow('No clientID was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, undefined, redirect_uri_constructor, store)).toThrow('No clientSecret was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, null, redirect_uri_constructor, store)).toThrow('No clientSecret was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, undefined, store)).toThrow('No redirectUri was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, null, store)).toThrow('No redirectUri was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, redirect_uri_constructor, undefined)).toThrow('No keyValueStore was provided');
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, redirect_uri_constructor, null)).toThrow('No keyValueStore was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(undefined, client_secret, redirect_uri_constructor, store)).toThrow('No clientId was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(null, client_secret, redirect_uri_constructor, store)).toThrow('No clientId was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, undefined, redirect_uri_constructor, store)).toThrow('No clientSecret was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, null, redirect_uri_constructor, store)).toThrow('No clientSecret was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, undefined, store)).toThrow('No redirectUri was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, null, store)).toThrow('No redirectUri was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, redirect_uri_constructor, undefined)).toThrow('No keyValueStore was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, redirect_uri_constructor, null)).toThrow('No keyValueStore was provided');
 
   });
 
   it('should error when redirectUri is not a valid URL', () => {
 
-    expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, 'notAValidURI', store)).toThrow('redirectUri must be a valid URI');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, 'notAValidURI', store)).toThrow('redirectUri must be a valid URI');
 
   });
 
@@ -96,15 +87,24 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+
+    });
+
+    it('should error when no context request url is provided', async () => {
+
+      context.request.url = null;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      context.request.url = undefined;
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -114,21 +114,18 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
       const noClientIdContext = { ... context, request: { ...context.request, url: noClientIdURL } };
 
       noClientIdContext.request.url.searchParams.set('client_id', '');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
 
       noClientIdContext.request.url.searchParams.delete('client_id');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
 
     });
 
-    it('should pass the request on to the nested handler if the client_id is not a valid URL', async () => {
-
-      const response = { body: 'mockBody', status: 200, headers: {} };
-      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+    it('should return the request unedited if the client_id is not a valid URL', async () => {
 
       url.searchParams.set('client_id', 'static_client');
       context = { ...context, request: { ...context.request, url } };
-      await expect(solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).resolves.toEqual(response);
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(context);
 
     });
 
@@ -136,7 +133,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
       url.searchParams.delete('state');
       context.request.url = url;
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('Request must contain a state. Add state handlers to the proxy');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Request must contain a state. Add state handlers to the proxy');
 
     });
 
@@ -145,7 +142,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
       await expect(store.get('1234')).resolves.toBeUndefined();
-      await solidClientStaticAuthRegistrationHandler.handle(context).toPromise();
+      await handler.handle(context).toPromise();
       await expect(store.get('1234')).resolves.toEqual(new URL(redirect_uri));
 
     });
@@ -153,10 +150,10 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
     it('should error when no redirect_uri was provided', async () => {
 
       context.request.url.searchParams.set('redirect_uri', '');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No redirect_uri was provided');
 
       context.request.url.searchParams.delete('redirect_uri');
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No redirect_uri was provided');
 
     });
 
@@ -164,7 +161,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
       url.searchParams.set('redirect_uri', 'notAValidURL');
       context.request.url = url;
-      await expect(() => solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow('redirect_uri must be a valid URL');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('redirect_uri must be a valid URL');
 
     });
 
@@ -173,7 +170,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(solidClientStaticAuthRegistrationHandler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
+      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
 
     });
 
@@ -181,7 +178,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
       fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await expect(solidClientStaticAuthRegistrationHandler.handle(context).toPromise()).rejects.toThrow(`Not a valid webID: No oidcRegistration field found`);
+      await expect(handler.handle(context).toPromise()).rejects.toThrow(`Not a valid webID: No oidcRegistration field found`);
 
     });
 
@@ -189,7 +186,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
       fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
-      await solidClientStaticAuthRegistrationHandler.handle(context).toPromise();
+      await handler.handle(context).toPromise();
 
       expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
       expect(context.request.url.searchParams.get('client_secret')).toEqual(client_secret);
@@ -202,23 +199,23 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(solidClientStaticAuthRegistrationHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(solidClientStaticAuthRegistrationHandler.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(solidClientStaticAuthRegistrationHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(solidClientStaticAuthRegistrationHandler.canHandle({ ...context, request: null })
+      await expect(handler.canHandle({ ...context, request: null })
         .toPromise()).resolves.toEqual(false);
 
-      await expect(solidClientStaticAuthRegistrationHandler.canHandle({ ...context, request: undefined })
+      await expect(handler.canHandle({ ...context, request: undefined })
         .toPromise()).resolves.toEqual(false);
 
     });

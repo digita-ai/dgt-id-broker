@@ -1,32 +1,31 @@
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { Handler } from '@digita-ai/handlersjs-core';
+import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 
 /**
- * A {HttpHandler} that gets the webid data and retrieves oidcRegistration. If the info is
+ * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
  */
-export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
+export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
   private redirectURL: URL;
 
   /**
-   * Creates a { SolidClientStaticAuthRegistrationHandler }.
+   * Creates a { ClientIdStaticAuthRequestHandler }.
    *
-   * @param { HttpHandler } httpHandler - the handler through which to pass requests.
-   * @param { string } clientID - the client_id of the static client configured on the upstream server.
+   * @param { string } clientId - the client_id of the static client configured on the upstream server.
    * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
    * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
    * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
    */
   constructor(
-    private httpHandler: HttpHandler,
-    private clientID: string,
+    private clientId: string,
     private clientSecret: string,
     private redirectUri: string,
     private keyValueStore: KeyValueStore<string, URL>
@@ -34,21 +33,15 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     super();
 
-    if (!clientID) {
+    if (!clientId) {
 
-      throw new Error('No clientID was provided');
+      throw new Error('No clientId was provided');
 
     }
 
     if (!clientSecret) {
 
       throw new Error('No clientSecret was provided');
-
-    }
-
-    if (!httpHandler) {
-
-      throw new Error('No handler was provided');
 
     }
 
@@ -86,7 +79,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
+  handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
     if (!context) {
 
@@ -97,6 +90,12 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
     if (!context.request) {
 
       return throwError(new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.url) {
+
+      return throwError(new Error('No url was included in the request'));
 
     }
 
@@ -132,7 +131,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
     } catch (error) {
 
-      return this.httpHandler.handle(context);
+      return of(context);
 
     }
 
@@ -151,10 +150,10 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
           : from(response.text())),
         map((text) => parseQuads(text)),
         switchMap((quads) => getOidcRegistrationTriple(quads)),
-        tap(() => context.request.url.searchParams.set('client_id', this.clientID)),
+        tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
         tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
         tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
-        switchMap(() => this.httpHandler.handle(context)),
+        switchMap(() => of(context)),
       );
 
   }

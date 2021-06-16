@@ -15,10 +15,10 @@ import { OidcClientRegistrationResponse } from '../util/oidc-client-registration
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
+export class ClientIdDynamicAuthHandler extends HttpHandler {
 
   /**
-   * Creates a { SolidClientDynamicAuthRegistrationHandler }.
+   * Creates a { ClientIdDynamicAuthHandler }.
    *
    * @param {string} registration_uri - the registration endpoint for the currently used provider.
    * @param { KeyValueStore } store - the store used to save a clients register data.
@@ -85,6 +85,12 @@ export class SolidClientDynamicAuthRegistrationHandler extends HttpHandler {
     if (!context.request) {
 
       return throwError(new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.url) {
+
+      return throwError(new Error('No url was included in the request'));
 
     }
 

@@ -13,10 +13,10 @@ import { OidcClientRegistrationResponse } from '../util/oidc-client-registration
  * - recalculates the content length because the body has changed
  * - handles the request
  */
-export class SolidClientDynamicTokenRegistrationHandler extends HttpHandler {
+export class ClientIdDynamicTokenHandler extends HttpHandler {
 
   /**
-   * Creates a { SolidClientDynamicTokenRegistrationHandler }.
+   * Creates a { ClientIdDynamicTokenHandler }.
    *
    * @param { KeyValueStore } store - the store used to retrieve a clients register data.
    * @param {HttpHandler} httpHandler - the handler through which to pass requests

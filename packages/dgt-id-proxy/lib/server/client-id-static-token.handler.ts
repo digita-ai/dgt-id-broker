@@ -10,19 +10,19 @@ import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process
  * - checks the if it's a valid webid and compares the grant types
  * - replaces the client id, client secret and redirect url in the context
  */
-export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
+export class ClientIdStaticTokenHandler extends HttpHandler {
 
   /**
-   * Creates a { SolidClientStaticTokenRegistrationHandler }.
+   * Creates a { ClientIdStaticTokenHandler }.
    *
    * @param { HttpHandler } httpHandler - the handler through which to pass requests.
-   * @param { string } clientID - the client_id of the static client configured on the upstream server.
+   * @param { string } clientId - the client_id of the static client configured on the upstream server.
    * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
    * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
    */
   constructor(
     private httpHandler: HttpHandler,
-    private clientID: string,
+    private clientId: string,
     private clientSecret: string,
     private redirectUri: string,
   ){
@@ -35,9 +35,9 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
     }
 
-    if (!clientID) {
+    if (!clientId) {
 
-      throw new Error('No clientID was provided');
+      throw new Error('No clientId was provided');
 
     }
 
@@ -141,7 +141,7 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
           : throwError(new Error('The grant type in the request is not included in the WebId'))),
         map(() => {
 
-          params.set('client_id', this.clientID);
+          params.set('client_id', this.clientId);
           params.set('client_secret', this.clientSecret);
           params.set('redirect_uri', this.redirectUri);
 
