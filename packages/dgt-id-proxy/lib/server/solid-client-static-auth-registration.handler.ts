@@ -2,6 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
  * A {HttpHandler} that
