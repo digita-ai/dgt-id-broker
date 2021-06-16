@@ -32,11 +32,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
 
     super();
 
-    if (!registration_uri) {
-
-      throw new Error('A registration_uri must be provided');
-
-    }
+    if (!registration_uri) { throw new Error('A registration_uri must be provided'); }
 
     try {
 
@@ -48,17 +44,9 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
 
     }
 
-    if (!store) {
+    if (!store) { throw new Error('A store must be provided'); }
 
-      throw new Error('A store must be provided');
-
-    }
-
-    if (!httpHandler) {
-
-      throw new Error('A HttpHandler must be provided');
-
-    }
+    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
 
   }
 
@@ -76,38 +64,18 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) {
+    if (!context) { return throwError(new Error('A context must be provided')); }
 
-      return throwError(new Error('A context must be provided'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
-
-    }
-
-    if (!context.request.url) {
-
-      return throwError(new Error('No url was included in the request'));
-
-    }
+    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
 
-    if (!client_id) {
+    if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
-      return throwError(new Error('No client_id was provided'));
-
-    }
-
-    if (!redirect_uri) {
-
-      return throwError(new Error('No redirect_uri was provided'));
-
-    }
+    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -226,11 +194,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
 
     metadata.map((item) => {
 
-      if (clientData[item]) {
-
-        reqData[item] = clientData[item];
-
-      }
+      if (clientData[item]) { reqData[item] = clientData[item]; }
 
     });
 
@@ -325,27 +289,18 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
-    return from(getWebID(clientId))
-      .pipe(
-        switchMap((response) => {
-
-          if (response.headers.get('content-type') !== 'text/turtle') {
-
-            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
-
-          }
-
-          return from(response.text());
-
-        }),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
-        switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
-        switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
-          ? this.registerClient(this.createRequestData(clientData), clientId)
-          : of(registerData)),
-      );
+    return from(getWebID(clientId)).pipe(
+      switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
+        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+        : from(response.text())),
+      map((text) => parseQuads(text)),
+      switchMap((quads) => getOidcRegistrationTriple(quads)),
+      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+      switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
+      switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
+        ? this.registerClient(this.createRequestData(clientData), clientId)
+        : of(registerData)),
+    );
 
   }
 

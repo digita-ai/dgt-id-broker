@@ -1,5 +1,5 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of, from, zip, empty, EMPTY } from 'rxjs';
+import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
@@ -30,29 +30,13 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     super();
 
-    if (!httpHandler) {
+    if (!httpHandler) { throw new Error('No handler was provided'); }
 
-      throw new Error('No handler was provided');
+    if (!clientId) { throw new Error('No clientId was provided'); }
 
-    }
+    if (!clientSecret) { throw new Error('No clientSecret was provided'); }
 
-    if (!clientId) {
-
-      throw new Error('No clientId was provided');
-
-    }
-
-    if (!clientSecret) {
-
-      throw new Error('No clientSecret was provided');
-
-    }
-
-    if (!redirectUri) {
-
-      throw new Error('No redirectUri was provided');
-
-    }
+    if (!redirectUri) { throw new Error('No redirectUri was provided'); }
 
     try {
 
@@ -79,46 +63,22 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) {
+    if (!context) { return throwError(new Error('A context must be provided')); }
 
-      return throwError(new Error('A context must be provided'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
-
-    }
-
-    if (!context.request.body) {
-
-      return throwError(new Error('No body was included in the request'));
-
-    }
+    if (!context.request.body) { return throwError(new Error('No body was included in the request')); }
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
     const grant_type = params.get('grant_type');
     const redirect_uri = params.get('redirect_uri');
 
-    if (!client_id) {
+    if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
-      return throwError(new Error('No client_id was provided'));
+    if (!grant_type) { return throwError(new Error('No grant_type was provided')); }
 
-    }
-
-    if (!grant_type) {
-
-      return throwError(new Error('No grant_type was provided'));
-
-    }
-
-    if (!redirect_uri) {
-
-      return throwError(new Error('No redirect_uri was provided'));
-
-    }
+    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -131,7 +91,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
     }
 
     return of(client_id).pipe(
-      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebID(clientId, grant_type)),
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId, grant_type)),
       map(() => {
 
         params.set('client_id', this.clientId);
@@ -146,17 +106,9 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
       switchMap((response) => {
 
-        if(!response.body.access_token) {
+        if (!response.body.access_token) { return throwError(new Error('response body did not contain an access_token')); }
 
-          return throwError(new Error('response body did not contain an access_token'));
-
-        }
-
-        if(!response.body.access_token.payload) {
-
-          return throwError(new Error('Access token in response body did not contain a decoded payload'));
-
-        }
+        if (!response.body.access_token.payload) { return throwError(new Error('Access token in response body did not contain a decoded payload')); }
 
         response.body.access_token.payload.client_id = client_id;
 
@@ -183,7 +135,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   }
 
-  private checkWebID(clientId: string, grantType: string): Observable<Partial<OidcClientMetadata>> {
+  private checkWebId(clientId: string, grantType: string): Observable<Partial<OidcClientMetadata>> {
 
     return from(getWebID(clientId))
       .pipe(

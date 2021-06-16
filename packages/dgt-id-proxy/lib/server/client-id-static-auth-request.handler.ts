@@ -34,23 +34,11 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     super();
 
-    if (!clientId) {
+    if (!clientId) { throw new Error('No clientId was provided'); }
 
-      throw new Error('No clientId was provided');
+    if (!clientSecret) { throw new Error('No clientSecret was provided'); }
 
-    }
-
-    if (!clientSecret) {
-
-      throw new Error('No clientSecret was provided');
-
-    }
-
-    if (!redirectUri) {
-
-      throw new Error('No redirectUri was provided');
-
-    }
+    if (!redirectUri) { throw new Error('No redirectUri was provided'); }
 
     try {
 
@@ -62,11 +50,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     }
 
-    if (!keyValueStore) {
-
-      throw new Error('No keyValueStore was provided');
-
-    }
+    if (!keyValueStore) { throw new Error('No keyValueStore was provided'); }
 
   }
 
@@ -82,39 +66,19 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
-    if (!context) {
+    if (!context) { return throwError(new Error('A context must be provided')); }
 
-      return throwError(new Error('A context must be provided'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
-
-    }
-
-    if (!context.request.url) {
-
-      return throwError(new Error('No url was included in the request'));
-
-    }
+    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
     const state = context.request.url.searchParams.get('state');
 
-    if (!client_id) {
+    if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
-      return throwError(new Error('No client_id was provided'));
-
-    }
-
-    if (!redirect_uri) {
-
-      return throwError(new Error('No redirect_uri was provided'));
-
-    }
+    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -136,16 +100,12 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     }
 
-    if (!state) {
-
-      return throwError(new Error('Request must contain a state. Add state handlers to the proxy.'));
-
-    }
+    if (!state) { return throwError(new Error('Request must contain a state. Add state handlers to the proxy.')); }
 
     this.keyValueStore.set(state, new URL(redirect_uri));
 
     return of(client_id).pipe(
-      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebID(clientId)),
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       switchMap(() => of(context)),
@@ -169,16 +129,15 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
   }
 
-  private checkWebID(clientId: string): Observable<Partial<OidcClientMetadata>> {
+  private checkWebId(clientId: string): Observable<Partial<OidcClientMetadata>> {
 
-    return from(getWebID(clientId))
-      .pipe(
-        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-          : from(response.text())),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-      );
+    return from(getWebID(clientId)).pipe(
+      switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+        : from(response.text())),
+      map((text) => parseQuads(text)),
+      switchMap((quads) => getOidcRegistrationTriple(quads)),
+    );
 
   }
 

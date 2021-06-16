@@ -28,17 +28,9 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
     super();
 
-    if (!store) {
+    if (!store) { throw new Error('A store must be provided'); }
 
-      throw new Error('A store must be provided');
-
-    }
-
-    if (!httpHandler) {
-
-      throw new Error('A HttpHandler must be provided');
-
-    }
+    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
 
   }
 
@@ -54,39 +46,19 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) {
+    if (!context) { return throwError(new Error('A context must be provided')); }
 
-      return throwError(new Error('A context must be provided'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
-
-    }
-
-    if (!context.request.body) {
-
-      return throwError(new Error('No body was included in the request'));
-
-    }
+    if (!context.request.body) { return throwError(new Error('No body was included in the request')); }
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
     const redirect_uri = params.get('redirect_uri');
 
-    if (!client_id) {
+    if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
-      return throwError(new Error('No client_id was provided'));
-
-    }
-
-    if (!redirect_uri) {
-
-      return throwError(new Error('No redirect_uri was provided'));
-
-    }
+    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -114,17 +86,9 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
       switchMap((response) => {
 
-        if (!response.body.access_token) {
+        if (!response.body.access_token) { return throwError(new Error('response body did not contain an access_token')); }
 
-          return throwError(new Error('response body did not contain an access_token'));
-
-        }
-
-        if (!response.body.access_token.payload) {
-
-          return throwError(new Error('Access token in response body did not contain a decoded payload'));
-
-        }
+        if (!response.body.access_token.payload) { return throwError(new Error('Access token in response body did not contain a decoded payload')); }
 
         response.body.access_token.payload.client_id = client_id;
 

@@ -10,34 +10,35 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
     super();
 
-    if (!keyValueStore) {
-
-      throw new Error('No keyValueStore was provided');
-
-    }
+    if (!keyValueStore) { throw new Error('No keyValueStore was provided'); }
 
   }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
-    if (!response) {
+    if (!response) { return throwError(new Error('No response was provided')); }
 
-      return throwError(new Error('No response was provided'));
-
-    }
-
-    try{
+    try {
 
       const locationUrl = new URL(response.headers.location);
       const state = locationUrl.searchParams.get('state');
 
-      if (!state) {
+      if (!state) { return throwError(new Error('No state was found on the response. Cannot handle the response.')); }
 
-        return throwError(new Error('No state was found on the response. Cannot handle the response.'));
+      response.body = '';
 
-      }
+      return from(this.keyValueStore.get(state)).pipe(
+        switchMap((redirectURL) => redirectURL
+          ? of(redirectURL)
+          : throwError(new Error(`Response containing state '${state}' does not have a matching request`))),
+        tap((redirectURL) => {
 
-      return this.handleResponse(response, state, locationUrl);
+          locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
+          response.headers.location = redirectURL.toString();
+
+        }),
+        mapTo(response),
+      );
 
     } catch (error) {
 
@@ -57,29 +58,6 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
     return response
       ? of(true)
       : of(false);
-
-  }
-
-  private handleResponse(
-    response: HttpHandlerResponse,
-    state: string,
-    locationUrl: URL,
-  ): Observable<HttpHandlerResponse> {
-
-    response.body = '';
-
-    return from(this.keyValueStore.get(state)).pipe(
-      switchMap((redirectURL) => redirectURL
-        ? of(redirectURL)
-        : throwError(new Error(`Response containing state '${state}' does not have a matching request`))),
-      tap((redirectURL) => {
-
-        locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
-        response.headers.location = redirectURL.toString();
-
-      }),
-      mapTo(response),
-    );
 
   }
 
