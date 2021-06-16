@@ -1,8 +1,9 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of, from, zip } from 'rxjs';
+import { Observable,  throwError, of, from, zip, empty, EMPTY } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
  * A {HttpHandler} that
@@ -129,29 +130,40 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     }
 
-    return from(getWebID(client_id))
-      .pipe(
-        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-          : from(response.text())),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        switchMap((text) => (text.grant_types.includes(grant_type))
-          ? of(text)
-          : throwError(new Error('The grant type in the request is not included in the WebId'))),
-        map(() => {
+    return of(client_id).pipe(
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebID(clientId, grant_type)),
+      map(() => {
 
-          params.set('client_id', this.clientId);
-          params.set('client_secret', this.clientSecret);
-          params.set('redirect_uri', this.redirectUri);
+        params.set('client_id', this.clientId);
+        params.set('client_secret', this.clientSecret);
+        params.set('redirect_uri', this.redirectUri);
 
-          return { ...context, request: { ...context.request, body: params.toString() } };
+        return { ...context, request: { ...context.request, body: params.toString() } };
 
-        }),
-        switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
-        tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
-        switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
-      );
+      }),
+      switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
+      tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
+      switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
+      switchMap((response) => {
+
+        if(!response.body.access_token) {
+
+          return throwError(new Error('response body did not contain an access_token'));
+
+        }
+
+        if(!response.body.access_token.payload) {
+
+          return throwError(new Error('Access token in response body did not contain a decoded payload'));
+
+        }
+
+        response.body.access_token.payload.client_id = client_id;
+
+        return of(response);
+
+      })
+    );
 
   }
 
@@ -168,6 +180,22 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
     && context.request.body
       ? of(true)
       : of(false);
+
+  }
+
+  private checkWebID(clientId: string, grantType: string): Observable<Partial<OidcClientMetadata>> {
+
+    return from(getWebID(clientId))
+      .pipe(
+        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+          : from(response.text())),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+        switchMap((text) => (text.grant_types.includes(grantType))
+          ? of(text)
+          : throwError(new Error('The grant type in the request is not included in the WebId'))),
+      );
 
   }
 

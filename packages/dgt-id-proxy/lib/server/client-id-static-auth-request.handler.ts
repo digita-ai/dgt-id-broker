@@ -1,9 +1,10 @@
 import { Handler } from '@digita-ai/handlersjs-core';
-import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
@@ -143,18 +144,12 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     this.keyValueStore.set(state, new URL(redirect_uri));
 
-    return from(getWebID(client_id))
-      .pipe(
-        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-          : from(response.text())),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
-        tap(() => context.request.url.searchParams.set('client_secret', this.clientSecret)),
-        tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
-        switchMap(() => of(context)),
-      );
+    return of(client_id).pipe(
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebID(clientId)),
+      tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
+      tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
+      switchMap(() => of(context)),
+    );
 
   }
 
@@ -171,6 +166,19 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
     && context.request.url
       ? of(true)
       : of(false);
+
+  }
+
+  private checkWebID(clientId: string): Observable<Partial<OidcClientMetadata>> {
+
+    return from(getWebID(clientId))
+      .pipe(
+        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+          : from(response.text())),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+      );
 
   }
 

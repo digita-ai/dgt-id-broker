@@ -82,12 +82,18 @@
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/scripts"
+    ],
     "coverageThreshold": {
       "global": {
-        "branches": 92.69,
-        "functions": 95.43,
-        "lines": 90.91,
-        "statements": 90.97
+        "branches": 94.28,
+        "functions": 97.24,
+        "lines": 93.21,
+        "statements": 93.19
       }
     }
   }

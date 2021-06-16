@@ -119,29 +119,14 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
 
     }
 
-    return from(getWebID(client_id))
-      .pipe(
-        switchMap((response) => {
-
-          if (response.headers.get('content-type') !== 'text/turtle') {
-
-            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
-
-          }
-
-          return from(response.text());
-
-        }),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        switchMap((clientData) => this.compareClientDataWithRequest(clientData, context.request.url.searchParams)),
-        switchMap((clientData) => zip(of(clientData), from(this.store.get(client_id)))),
-        switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
-          ? this.registerClient(client_id, this.createRequestData(clientData))
-          : of(registerData)),
-        tap((res) => context.request.url.search = context.request.url.search.replace(new RegExp('client_id=+[^&.]+'), `client_id=${res.client_id}`)),
-        switchMap(() => this.httpHandler.handle(context)),
-      );
+    return of(client_id).pipe(
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient'
+        ? this.checkRedirectUri(clientId, redirect_uri)
+        : this.checkWebId(clientId, context.request.url.searchParams)),
+      tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
+      tap(() => context.request.url.search = context.request.url.searchParams.toString()),
+      switchMap(() => this.httpHandler.handle(context)),
+    );
 
   }
 
@@ -172,8 +157,9 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
    * @param { string } client_id
    */
   async registerClient(
-    client_id: string,
     data: Partial<OidcClientMetadata>,
+    client_id: string,
+    redirect_uri?: string,
   ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
     const response = await fetch(this.registration_uri, {
@@ -186,7 +172,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
     });
 
     const regResponse = await response.json();
-    this.store.set(client_id, regResponse);
+    redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);
 
     return regResponse;
 
@@ -234,7 +220,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
     ];
 
     const reqData = {
-      'redirect_uris':  clientData.redirect_uris,
+      'redirect_uris': clientData.redirect_uris,
       'token_endpoint_auth_method' : 'none',
     };
 
@@ -313,6 +299,53 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
     }
 
     return false;
+
+  }
+
+  private checkRedirectUri(
+    clientId: string,
+    redirectUri: string
+  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+
+    const clientData = {
+      'redirect_uris': [ redirectUri ],
+      'token_endpoint_auth_method' : 'none',
+    };
+
+    return from(this.store.get(redirectUri)).pipe(
+      switchMap((registerData) => registerData
+        ? of(registerData)
+        : this.registerClient(clientData, clientId, redirectUri)),
+    );
+
+  }
+
+  private checkWebId(
+    clientId: string,
+    contextRequestUrlSearchParams: URLSearchParams
+  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+
+    return from(getWebID(clientId))
+      .pipe(
+        switchMap((response) => {
+
+          if (response.headers.get('content-type') !== 'text/turtle') {
+
+            return throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`));
+
+          }
+
+          return from(response.text());
+
+        }),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+        switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+        switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
+        switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
+          ? this.registerClient(this.createRequestData(clientData), clientId)
+          : of(registerData)),
+      );
 
   }
 
