@@ -119,7 +119,7 @@ export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 
   }
 
-  private checkWebID(clientId: string): Observable<any> {
+  private checkWebID(clientId: string): Observable<Partial<OidcClientMetadata>> {
 
     return from(getWebID(clientId))
       .pipe(
