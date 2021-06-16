@@ -15,5 +15,7 @@ export * from './server/opaque-access-token.handler';
 export * from './server/webid-response.handler';
 export * from './server/solid-audience.handler';
 export * from './server/jwk-request.handler';
+export * from './server/auth-state-request.handler';
+export * from './server/auth-state-response.handler';
 export * from './util/error-response-factory';
 export * from './util/code-challenge-method';

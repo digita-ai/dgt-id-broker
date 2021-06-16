@@ -373,6 +373,21 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
+    it('should error when a DPoP proof does not contain a jwk', async () => {
+
+      const header = Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'dpop+jwt' })).toString('base64').replace(/=/g, '');
+      const payload = Buffer.from(JSON.stringify({ htm: 'POST', htu: 'http://localhost:3003/token' })).toString('base64').replace(/=/g, '');
+
+      context.request.headers = { ...context.request.headers, 'dpop': header + '.' + payload + '.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: '"jwk" (JSON Web Key) Header Parameter must be a JSON object' }),
+        headers: { },
+        status: 400,
+      });
+
+    });
+
     it('should error when a DPoP proof\'s jti value is missing', async () => {
 
       const dpopJwtMissingJti = await new SignJWT({

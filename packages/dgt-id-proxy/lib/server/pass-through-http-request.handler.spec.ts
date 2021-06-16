@@ -241,7 +241,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
-    it('should decompress json when the encoding is br and remove the content-encodign header', async () => {
+    it('should decompress json when the encoding is br and remove the content-encoding header', async () => {
 
       resp.headers = {
         'content-type': 'application/json',

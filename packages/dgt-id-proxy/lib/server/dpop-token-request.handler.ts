@@ -141,12 +141,6 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     const jwk = header.jwk;
 
-    if (!jwk) {
-
-      return throwError(new Error('header must contain a jwk'));
-
-    }
-
     if (!payload.jti || typeof payload.jti !== 'string') {
 
       return throwError(new Error('must have a jti string property'));
