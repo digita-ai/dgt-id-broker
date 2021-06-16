@@ -2,7 +2,7 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "start": "lerna run start --parallel",
+    "start": "lerna run start --parallel --no-bail",
     "postinstall": "husky install",
     "release": "lerna version",
     "bootstrap": "npm ci && lerna bootstrap",
@@ -17,9 +17,9 @@
     "test": "lerna run test --since HEAD --parallel",
     "test:all": "lerna run test --parallel",
     "test:ci": "lerna run test:ci",
-    "demo:auth0": "lerna run demo:auth0 --parallel",
-    "demo:panva": "lerna run demo:panva --parallel",
-    "demo:keycloak": "lerna run demo:keycloak --parallel"
+    "demo:auth0": "lerna run demo:auth0 --parallel --no-bail",
+    "demo:panva": "lerna run demo:panva --parallel--no-bail",
+    "demo:keycloak": "lerna run demo:keycloak --parallel --no-bail"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",
