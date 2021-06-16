@@ -9,7 +9,7 @@ import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process
  * valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
- * sent by teh upstream.
+ * sent by the upstream.
  */
 export class SolidClientStaticAuthRegistrationHandler extends HttpHandler {
 

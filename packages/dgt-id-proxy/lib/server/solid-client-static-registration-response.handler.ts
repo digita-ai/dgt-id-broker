@@ -4,7 +4,7 @@ import { of, from, throwError, Observable } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 
-export class SolidClientStaticResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class SolidClientStaticRegistrationResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   constructor(private keyValueStore: KeyValueStore<string, URL>){
 

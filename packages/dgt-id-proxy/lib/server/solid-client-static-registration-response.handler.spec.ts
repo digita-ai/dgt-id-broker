@@ -2,13 +2,13 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
 import { KeyValueStore } from '../storage/key-value-store';
 import { InMemoryStore } from '../storage/in-memory-store';
-import { SolidClientStaticResponseHandler } from './solid-client-static-response.handler';
+import { SolidClientStaticRegistrationResponseHandler } from './solid-client-static-registration-response.handler';
 
-describe('SolidClientStaticResponseHandler', () => {
+describe('SolidClientStaticRegistrationResponseHandler', () => {
 
   let response: HttpHandlerResponse;
   let store: KeyValueStore<string, URL>;
-  let handler: SolidClientStaticResponseHandler;
+  let handler: SolidClientStaticRegistrationResponseHandler;
 
   beforeAll(() => fetchMock.enableMocks());
 
@@ -17,7 +17,7 @@ describe('SolidClientStaticResponseHandler', () => {
     store = new InMemoryStore();
     store.set('1234', new URL('http://client-redirect-uri.com/client'));
 
-    handler  = new SolidClientStaticResponseHandler(store);
+    handler  = new SolidClientStaticRegistrationResponseHandler(store);
 
     response = {
       body: 'mockBody',
@@ -35,8 +35,8 @@ describe('SolidClientStaticResponseHandler', () => {
 
   it('should error when no keyValueStore is provided', () => {
 
-    expect(() => new SolidClientStaticResponseHandler(undefined)).toThrow('No keyValueStore was provided');
-    expect(() => new SolidClientStaticResponseHandler(null)).toThrow('No keyValueStore was provided');
+    expect(() => new SolidClientStaticRegistrationResponseHandler(undefined)).toThrow('No keyValueStore was provided');
+    expect(() => new SolidClientStaticRegistrationResponseHandler(null)).toThrow('No keyValueStore was provided');
 
   });
 

@@ -86,7 +86,7 @@ describe('SolidClientStaticAuthRegistrationHandler', () => {
 
   });
 
-  it('should error when redirectUri is not a valid URI', () => {
+  it('should error when redirectUri is not a valid URL', () => {
 
     expect(() => new SolidClientStaticAuthRegistrationHandler(httpHandler, client_id_constructor, client_secret, 'notAValidURI', store)).toThrow('redirectUri must be a valid URI');
 
