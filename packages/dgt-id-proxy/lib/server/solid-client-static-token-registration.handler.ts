@@ -1,8 +1,9 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of, from, zip } from 'rxjs';
+import { Observable,  throwError, of, from, zip, empty, EMPTY } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
  * A {HttpHandler} that
@@ -111,44 +112,39 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
     }
 
-    if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient') {
+    return of(client_id).pipe(
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebID(clientId, grant_type)),
+      map(() => {
 
-      params.set('client_id', this.clientID);
-      params.set('client_secret', this.clientSecret);
+        params.set('client_id', this.clientID);
+        params.set('client_secret', this.clientSecret);
 
-      const newContext = { ...context, request: { ...context.request, body: params.toString() } };
-      const length = recalculateContentLength(newContext.request);
-      newContext.request.headers['content-length'] = length;
+        return { ...context, request: { ...context.request, body: params.toString() } };
 
-      return this.httpHandler.handle(newContext).pipe(
-        switchMap((response) => this.setClientIdInAccesstoken(response, client_id))
-      );
+      }),
+      switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
+      tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
+      switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
+      switchMap((response) => {
 
-    }
+        if(!response.body.access_token) {
 
-    return from(getWebID(client_id))
-      .pipe(
-        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-          : from(response.text())),
-        map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
-        switchMap((text) => (text.grant_types.includes(grant_type))
-          ? of(text)
-          : throwError(new Error('The grant type in the request is not included in the WebId'))),
-        map(() => {
+          return throwError(new Error('response body did not contain an access_token'));
 
-          params.set('client_id', this.clientID);
-          params.set('client_secret', this.clientSecret);
+        }
 
-          return { ...context, request: { ...context.request, body: params.toString() } };
+        if(!response.body.access_token.payload) {
 
-        }),
-        switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
-        tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
-        switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
-        switchMap((response) => this.setClientIdInAccesstoken(response, client_id))
-      );
+          return throwError(new Error('Access token in response body did not contain a decoded payload'));
+
+        }
+
+        response.body.access_token.payload.client_id = client_id;
+
+        return of(response);
+
+      })
+    );
 
   }
 
@@ -168,23 +164,19 @@ export class SolidClientStaticTokenRegistrationHandler extends HttpHandler {
 
   }
 
-  private setClientIdInAccesstoken(response: HttpHandlerResponse, client_id: string): Observable<HttpHandlerResponse> {
+  private checkWebID(clientId: string, grantType: string): Observable<Partial<OidcClientMetadata>> {
 
-    if(!response.body.access_token) {
-
-      return throwError(new Error('response body did not contain an access_token'));
-
-    }
-
-    if(!response.body.access_token.payload) {
-
-      return throwError(new Error('Access token in response body did not contain a decoded payload'));
-
-    }
-
-    response.body.access_token.payload.client_id = client_id;
-
-    return of(response);
+    return from(getWebID(clientId))
+      .pipe(
+        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
+          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
+          : from(response.text())),
+        map((text) => parseQuads(text)),
+        switchMap((quads) => getOidcRegistrationTriple(quads)),
+        switchMap((text) => (text.grant_types.includes(grantType))
+          ? of(text)
+          : throwError(new Error('The grant type in the request is not included in the WebId'))),
+      );
 
   }
 
