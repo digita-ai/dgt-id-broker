@@ -55,7 +55,7 @@
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
   },
   "jest": {
-    "displayName": "components",
+    "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",
     "coverageThreshold": {
       "global": {
