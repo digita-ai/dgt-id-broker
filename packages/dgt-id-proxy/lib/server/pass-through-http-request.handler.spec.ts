@@ -9,16 +9,17 @@ describe('PassThroughHttpRequestHandler', () => {
 
   let handler: PassThroughHttpRequestHandler;
   let context: HttpHandlerContext;
-  const httpRequest = new http.ClientRequest('http://digita.ai');
   let resp: IncomingMessage;
-  httpRequest.write = jest.fn();
   const mockHttpBuffer = Buffer.from('mockHttp');
+  let httpRequest: http.ClientRequest;
 
   const mockRequestImplementation = (body: Buffer, callback: (response: IncomingMessage) => void) => {
 
     callback(resp);
     resp.emit('data', body);
     resp.emit('end');
+    httpRequest = new http.ClientRequest('http://digita.ai');
+    httpRequest.write = jest.fn();
 
     return httpRequest;
 
@@ -132,7 +133,6 @@ describe('PassThroughHttpRequestHandler', () => {
 
     it('should call write on the request when the request includes a body', async () => {
 
-      httpRequest.write = jest.fn();
       context.request.body = 'mockBody';
       await handler.handle(context).toPromise();
       expect(httpRequest.write).toHaveBeenCalledTimes(1);
