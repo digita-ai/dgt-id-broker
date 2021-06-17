@@ -26,6 +26,9 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
+    "@digita-ai/inrupt-solid-client": "^0.6.1",
+    "@types/uuid": "^8.3.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@digita-ai/typescript-config": "^0.3.3",
