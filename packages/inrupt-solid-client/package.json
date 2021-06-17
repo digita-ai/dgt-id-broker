@@ -29,11 +29,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digita-ai/ui-transfer.git",
-    "directory": "packages/ui-transfer-solid-client"
+    "url": "git+https://github.com/digita-ai/dgt-id-broker.git",
+    "directory": "packages/inrupt-solid-client"
   },
   "bugs": {
-    "url": "https://github.com/digita-ai/ui-transfer/issues"
+    "url": "https://github.com/digita-ai/dgt-id-broker/issues"
   },
   "dependencies": {
     "@inrupt/solid-client": "1.6.1",

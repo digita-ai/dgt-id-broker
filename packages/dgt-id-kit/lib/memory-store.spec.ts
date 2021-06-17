@@ -70,7 +70,7 @@ describe('MemoryStore', () => {
 
     it('should throw an error when no resource is given', () => {
 
-      expect(service.delete(null)).rejects.toThrow('qrgument resource should be set.');
+      expect(service.delete(null)).rejects.toThrow('Argument resource should be set.');
 
     });
 
