@@ -4,7 +4,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { KeyValueStore } from '../storage/key-value-store';
 import { createErrorResponse } from '../util/error-response-factory';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
-import { PkceCodeRequestHandler } from './pkce-code-request.handler';
+import { PkceCodeResponseHandler } from './pkce-code-response.handler';
 
 /**
  * A {HttpHandler} that handles pkce requests to the authorization endpoint.
@@ -14,17 +14,17 @@ export class PkceAuthRequestHandler extends HttpHandler {
   /**
    * Creates a {PkceAuthRequestHandler}
    *
-   * @param {PkceCodeRequestHandler} codeHandler - the handler that will handle the response from the upstream server containing a code.
+   * @param {HttpHandler} handler - the handler to which to pass the request.
    * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method and code challenge.
    */
   constructor(
-    private codeHandler: PkceCodeRequestHandler,
+    private handler: HttpHandler,
     private store: KeyValueStore<Code, ChallengeAndMethod>,
   ){
 
     super();
 
-    if (!codeHandler) {
+    if (!handler) {
 
       throw new Error('A HttpHandler must be provided');
 
@@ -91,7 +91,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
 
-    return this.codeHandler.handle(context);
+    return this.handler.handle(context);
 
   }
 

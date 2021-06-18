@@ -3,7 +3,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceAuthRequestHandler } from './pkce-auth-request.handler';
-import { PkceCodeRequestHandler } from './pkce-code-request.handler';
+import { PkceCodeResponseHandler } from './pkce-code-response.handler';
 
 describe('PkceAuthRequestHandler', () => {
 
@@ -40,7 +40,7 @@ describe('PkceAuthRequestHandler', () => {
       body: {},
       headers: { location: redirectWithAuth },
       status: 302,
-    } as HttpHandlerResponse)),
+    })),
     safeHandle: jest.fn(),
   };
 
@@ -50,15 +50,13 @@ describe('PkceAuthRequestHandler', () => {
     status: 400,
   };
 
-  let pkceCodeHandler: PkceCodeRequestHandler;
   let pkceHandler: PkceAuthRequestHandler;
 
   beforeEach(async () => {
 
     context = { request: { headers: { host, referer }, method: 'GET', url } };
     url = new URL(`http://${host}/${endpoint}?response_type=code&state=${state}&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
-    pkceCodeHandler = new PkceCodeRequestHandler(nestedHttpHandler, store);
-    pkceHandler = new PkceAuthRequestHandler(pkceCodeHandler, store);
+    pkceHandler = new PkceAuthRequestHandler(nestedHttpHandler, store);
 
   });
 
@@ -72,8 +70,8 @@ describe('PkceAuthRequestHandler', () => {
 
     expect(() => new PkceAuthRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
     expect(() => new PkceAuthRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, undefined)).toThrow('A store must be provided');
-    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, null)).toThrow('A store must be provided');
+    expect(() => new PkceAuthRequestHandler(nestedHttpHandler, undefined)).toThrow('A store must be provided');
+    expect(() => new PkceAuthRequestHandler(nestedHttpHandler, null)).toThrow('A store must be provided');
 
   });
 
@@ -150,27 +148,6 @@ describe('PkceAuthRequestHandler', () => {
 
       await expect(pkceHandler.handle(noMethodContext).toPromise())
         .resolves.toEqual({ ...response, body: responseBody });
-
-    });
-
-    it('should call the pkceCodeHandler handle method with the context', async () => {
-
-      pkceCodeHandler.handle = jest.fn().mockReturnValueOnce(of());
-      await pkceHandler.handle(context).toPromise();
-      expect(pkceCodeHandler.handle).toHaveBeenCalledTimes(1);
-      expect(pkceCodeHandler.handle).toHaveBeenCalledWith(context);
-
-    });
-
-    it('should error when no authorization code was provided in the response', async () => {
-
-      const badRes = { ...response, headers: { location: `/requests.html` } };
-
-      const badHttpHandler = { ...nestedHttpHandler, handle: jest.fn().mockReturnValue(of(badRes)) };
-      const badCodeHandler = new PkceCodeRequestHandler(badHttpHandler, store);
-      const pkceHandler2 = new PkceAuthRequestHandler(badCodeHandler, store);
-
-      await expect(pkceHandler2.handle(context).toPromise()).resolves.toEqual(badRes);
 
     });
 

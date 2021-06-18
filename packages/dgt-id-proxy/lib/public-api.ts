@@ -6,7 +6,7 @@ export * from './server/client-id-static-auth-response.handler';
 export * from './server/client-id-static-token.handler';
 export * from './server/pkce-auth-request.handler';
 export * from './server/pkce-token-request.handler';
-export * from './server/pkce-code-request.handler';
+export * from './server/pkce-code-response.handler';
 export * from './storage/in-memory-store';
 export * from './storage/key-value-store';
 export * from './server/jwt-decode.handler';
