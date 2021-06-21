@@ -143,7 +143,6 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
           ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
           : from(response.text())),
         map((text) => parseQuads(text)),
-        tap((quads) => checkOidcRegistrationTriple(quads)),
         switchMap((quad) => parseOidcRegistrationTriple(quad)),
         switchMap((text) => (text.grant_types.includes(grantType))
           ? of(text)
