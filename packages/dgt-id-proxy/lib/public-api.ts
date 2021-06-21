@@ -12,6 +12,7 @@ export * from './storage/key-value-store';
 export * from './server/jwt-decode.handler';
 export * from './server/jwt-encode.handler';
 export * from './server/dpop-token-request.handler';
+export * from './server/dpop-pass-through-request.handler';
 export * from './server/opaque-access-token.handler';
 export * from './server/webid-response.handler';
 export * from './server/solid-audience.handler';
