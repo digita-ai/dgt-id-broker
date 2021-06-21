@@ -110,6 +110,7 @@ describe('ClientIdDynamicAuthHandler', () => {
   const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
 
   const correctPodText = podText + '\n' + oidcRegistration;
+  const inCorrectPodText = podText + '\n' + `<#id> solid:oidcRegistration """""" .`;
   const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
   const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
@@ -335,6 +336,14 @@ describe('ClientIdDynamicAuthHandler', () => {
       fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
 
       await expect(handler.handle(context).toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
+
+    });
+
+    it('should error when the oidcRegistration cannot be parsed', async () => {
+
+      fetchMock.once(inCorrectPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+
+      await expect(handler.handle(context).toPromise()).rejects.toThrow('Unexpected end of JSON input');
 
     });
 

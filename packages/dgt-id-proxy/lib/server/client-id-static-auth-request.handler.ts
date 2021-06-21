@@ -1,11 +1,10 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
+import {  Quad } from 'n3';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
-import { OidcClientMetadata } from '../util/oidc-client-metadata';
-
+import { parseQuads, checkOidcRegistrationTriple, getWebID } from '../util/process-webid';
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
@@ -27,7 +26,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    */
   constructor(
     private clientId: string,
-    private clientSecret: string,
     private redirectUri: string,
     private keyValueStore: KeyValueStore<string, URL>
   ) {
@@ -35,8 +33,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
     super();
 
     if (!clientId) { throw new Error('No clientId was provided'); }
-
-    if (!clientSecret) { throw new Error('No clientSecret was provided'); }
 
     if (!redirectUri) { throw new Error('No redirectUri was provided'); }
 
@@ -129,14 +125,14 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
   }
 
-  private checkWebId(clientId: string): Observable<Partial<OidcClientMetadata>> {
+  private checkWebId(clientId: string): Observable<Quad> {
 
     return from(getWebID(clientId)).pipe(
       switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
         ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
         : from(response.text())),
       map((text) => parseQuads(text)),
-      switchMap((quads) => getOidcRegistrationTriple(quads)),
+      switchMap((quads) => checkOidcRegistrationTriple(quads)),
     );
 
   }

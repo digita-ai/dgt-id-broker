@@ -4,7 +4,7 @@ import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { parseQuads, checkOidcRegistrationTriple, parseOidcRegistrationTriple, getWebID } from '../util/process-webid';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
 /**
@@ -294,7 +294,8 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
         ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
         : from(response.text())),
       map((text) => parseQuads(text)),
-      switchMap((quads) => getOidcRegistrationTriple(quads)),
+      switchMap((quads) => checkOidcRegistrationTriple(quads)),
+      switchMap((quad) => parseOidcRegistrationTriple(quad)),
       switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
