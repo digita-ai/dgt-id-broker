@@ -37,7 +37,7 @@ export const parseQuads = (text: string): Quad[] => {
  *
  * @param { Quad[] } quads
  */
-export const checkOidcRegistrationTriple = (quads: Quad[]): Observable<Quad> => {
+export const checkOidcRegistrationTriple = (quads: Quad[]): Observable<Record<string, never>> => {
 
   const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 
@@ -47,18 +47,28 @@ export const checkOidcRegistrationTriple = (quads: Quad[]): Observable<Quad> => 
 
   }
 
-  return of(oidcRegistrationQuad);
+  return of({});
 
 };
 
 /**
- * Parses the oidcRegistration triple quad into a JSON object
+ * Reads the quads and finds the oidcRegistration triple.
+ * If it is not present it errors.
+ * If it is, it parses the oidcRegistration triple quad into a JSON object
  *
  * @param { Quad } quad
  */
-export const parseOidcRegistrationTriple = (quad: Quad): Observable<Partial<OidcClientMetadata>> => {
+export const parseOidcRegistrationTriple = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
 
-  const object = quad.object;
+  const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
+
+  if (!oidcRegistrationQuad) {
+
+    return throwError(new BadRequestHttpError('Not a valid webID: No oidcRegistration field found'));
+
+  }
+
+  const object = oidcRegistrationQuad.object;
   // this has to be done because for some strange reason the whole object is surrounded by quotes
   const objectSub = object.id.substring(1, object.id.length - 1);
 

@@ -294,8 +294,8 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
         ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
         : from(response.text())),
       map((text) => parseQuads(text)),
-      switchMap((quads) => checkOidcRegistrationTriple(quads)),
-      switchMap((quad) => parseOidcRegistrationTriple(quad)),
+      tap((quads) => checkOidcRegistrationTriple(quads)),
+      switchMap((quads) => parseOidcRegistrationTriple(quads)),
       switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)

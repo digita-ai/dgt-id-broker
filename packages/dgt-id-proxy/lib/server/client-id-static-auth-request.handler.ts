@@ -125,7 +125,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
   }
 
-  private checkWebId(clientId: string): Observable<Quad> {
+  private checkWebId(clientId: string): Observable<Record<string, never>> {
 
     return from(getWebID(clientId)).pipe(
       switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
