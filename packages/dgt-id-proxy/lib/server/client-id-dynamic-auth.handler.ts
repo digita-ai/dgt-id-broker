@@ -1,10 +1,11 @@
 
-import { ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { compareClientDataWithRequest } from '../util/request-data-comparison';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
 /**
@@ -203,40 +204,6 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
   }
 
   /**
-   * Compares the data from the webid with the data given in the requests URLSearchParams.
-   * It returns a 403 error when crucial parameters do not match
-   *
-   * @param { Partial<OidcClientMetadata> } clientData
-   * @param { URLSearchParams } searchParams
-   */
-  compareClientDataWithRequest(
-    clientData: Partial<OidcClientMetadata>,
-    searchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata>>{
-
-    if (clientData.client_id !== searchParams.get('client_id')) {
-
-      return throwError(new ForbiddenHttpError('The client id in the request does not match the one in the WebId'));
-
-    }
-
-    if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
-
-      return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the WebId'));
-
-    }
-
-    if (!clientData.response_types.includes(searchParams.get('response_type')))  {
-
-      return throwError(new ForbiddenHttpError('Response types do not match'));
-
-    }
-
-    return of(clientData);
-
-  }
-
-  /**
    * Compares the data in the store with one in the webid, to check if the webid is not updated.
    * If the in the webid is changed the client registers again with the new data.
    * If registered again it saves the new register data in the KeyValue store.
@@ -295,7 +262,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
         : from(response.text())),
       map((text) => parseQuads(text)),
       switchMap((quads) => getOidcRegistrationTriple(quads)),
-      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+      switchMap((clientData) => compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
