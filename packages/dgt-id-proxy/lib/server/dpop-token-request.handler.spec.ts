@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
@@ -445,6 +445,62 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
+    it('should add the jti to the "jtis" key in the keyValueStore when none were in the store yet', async () => {
+
+      await expect(keyValueStore.get('jtis')).resolves.toBeUndefined();
+
+      const jti = uuid();
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(jti)
+        .setIssuedAt()
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      // send the jti once
+      await handler.handle(context).toPromise();
+
+      await expect(keyValueStore.get('jtis')).resolves.toEqual([ jti ]);
+
+    });
+
+    it('should add the jti to the list of jtis in the keyValueStore if there are already jtis in the store', async () => {
+
+      keyValueStore.set('jtis', [ 'mockJti' ]);
+
+      const jti = uuid();
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(jti)
+        .setIssuedAt()
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      // send the jti once
+      await handler.handle(context).toPromise();
+
+      await expect(keyValueStore.get('jtis')).resolves.toEqual([ 'mockJti', jti ]);
+
+    });
+
     it('should return an error response when the upstream server returns a response with status other than 200', async () => {
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
@@ -475,6 +531,13 @@ describe('DpopTokenRequestHandler', () => {
       expect(resp.body.access_token.payload.cnf).toBeDefined();
       const thumbprint = await calculateThumbprint(publicJwk);
       expect(resp.body.access_token.payload.cnf.jkt).toEqual(thumbprint);
+
+    });
+
+    it('should throw on any errors that are caught in the catchError', async () => {
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(throwError(new Error('mockError')));
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('mockError');
 
     });
 

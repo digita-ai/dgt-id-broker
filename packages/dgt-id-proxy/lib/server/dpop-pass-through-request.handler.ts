@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, tap, map } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
@@ -79,7 +79,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
           },
         })),
       switchMap((response) => this.updateDpopResponse(response, context.request.headers.dpop)),
-      catchError((error) => of(error)),
+      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
     );
 
   }
@@ -123,17 +123,12 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
     const originalDpopProofHeader = JSON.parse(decode(originalDpopProof.split('.')[0]).toString());
 
     return from(calculateThumbprint(originalDpopProofHeader.jwk)).pipe(
-      switchMap((thumbprint) => {
-
-        response.body.access_token.payload.cnf = { 'jkt': thumbprint };
-
-        return of({
-          body: response.body,
-          headers: response.headers,
-          status: 200,
-        });
-
-      })
+      tap((thumbprint) => response.body.access_token.payload.cnf = { 'jkt': thumbprint }),
+      map(() => ({
+        body: response.body,
+        headers: response.headers,
+        status: 200,
+      })),
     );
 
   }

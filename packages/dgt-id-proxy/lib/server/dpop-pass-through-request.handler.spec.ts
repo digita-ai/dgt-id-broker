@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
@@ -109,19 +109,15 @@ describe('DpopPassThroughRequestHandler', () => {
 
     it('should error when no context request is provided', async () => {
 
-      context.request = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
-      context.request = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ... context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request headers are provided', async () => {
 
-      context.request.headers = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
-      context.request.headers = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, headers: null } }).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, headers: undefined } }).toPromise()).rejects.toThrow('No headers were included in the request');
 
     });
 
@@ -252,6 +248,17 @@ describe('DpopPassThroughRequestHandler', () => {
       expect(resp.body.access_token.payload.cnf).toBeDefined();
       const thumbprint = await calculateThumbprint(publicJwk);
       expect(resp.body.access_token.payload.cnf.jkt).toEqual(thumbprint);
+
+    });
+
+    it('An error thrown in updateDpopResponse should be caught by the catchError and thrown on', async () => {
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const jose = require('jose/jwk/thumbprint');
+      jose.calculateThumbprint = jest.fn().mockReturnValueOnce(throwError(new Error('mockError')));
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('mockError');
 
     });
 
