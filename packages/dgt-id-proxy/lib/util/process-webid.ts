@@ -37,17 +37,17 @@ export const parseQuads = (text: string): Quad[] => {
  *
  * @param { Quad[] } quads
  */
-export const checkOidcRegistrationTriple = (quads: Quad[]): Observable<Record<string, never>> => {
+export const checkOidcRegistrationTriple = (quads: Quad[]): boolean => {
 
   const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 
   if (!oidcRegistrationQuad) {
 
-    return throwError(new BadRequestHttpError('Not a valid webID: No oidcRegistration field found'));
+    return false;
 
   }
 
-  return of({});
+  return true;
 
 };
 
