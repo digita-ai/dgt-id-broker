@@ -4,12 +4,12 @@ import { KeyLike, JWK } from 'jose/types';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import fetchMock from 'jest-fetch-mock';
 import { fromKeyLike } from 'jose/jwk/from_key_like';
-import { JwtDecodeHandler } from './jwt-decode.handler';
+import { JwtDecodeResponseHandler } from './jwt-decode-response.handler';
 
-describe('JwtDecodeHandler', () => {
+describe('JwtDecodeResponseHandler', () => {
 
   fetchMock.enableMocks();
-  let handler: JwtDecodeHandler;
+  let handler: JwtDecodeResponseHandler;
   let response: HttpHandlerResponse;
   let jwtFields: string[];
   let privateKey: KeyLike;
@@ -70,7 +70,7 @@ describe('JwtDecodeHandler', () => {
   beforeEach(async () => {
 
     jwtFields = [ 'access_token', 'id_token' ];
-    handler = new JwtDecodeHandler(jwtFields, url, false);
+    handler = new JwtDecodeResponseHandler(jwtFields, url, false);
 
     response = {
       body: 'mockbody',
@@ -88,19 +88,19 @@ describe('JwtDecodeHandler', () => {
 
   it('should be error when no upstreamUrl is provided', async () => {
 
-    await expect(() => new JwtDecodeHandler(null, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
-    await expect(() => new JwtDecodeHandler(undefined, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
-    await expect(() => new JwtDecodeHandler(jwtFields, null, false)).toThrow('upstreamUrl must be defined');
-    await expect(() => new JwtDecodeHandler(jwtFields, undefined, false)).toThrow('upstreamUrl must be defined');
-    await expect(() => new JwtDecodeHandler(jwtFields, url, null)).toThrow('verifyJwk must be defined');
-    await expect(() => new JwtDecodeHandler(jwtFields, url, undefined)).toThrow('verifyJwk must be defined');
+    await expect(() => new JwtDecodeResponseHandler(null, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    await expect(() => new JwtDecodeResponseHandler(undefined, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    await expect(() => new JwtDecodeResponseHandler(jwtFields, null, false)).toThrow('upstreamUrl must be defined');
+    await expect(() => new JwtDecodeResponseHandler(jwtFields, undefined, false)).toThrow('upstreamUrl must be defined');
+    await expect(() => new JwtDecodeResponseHandler(jwtFields, url, null)).toThrow('verifyJwk must be defined');
+    await expect(() => new JwtDecodeResponseHandler(jwtFields, url, undefined)).toThrow('verifyJwk must be defined');
 
   });
 
   it('should be error when passed an empty list of jwtFields', async () => {
 
     jwtFields = [];
-    await expect(() => new JwtDecodeHandler(jwtFields, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    await expect(() => new JwtDecodeResponseHandler(jwtFields, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
 
   });
 
@@ -141,7 +141,7 @@ describe('JwtDecodeHandler', () => {
 
     it('should return a response with a decoded access token header and payload when upstream returns 200 response and verifyJwk is true', async () => {
 
-      handler = new JwtDecodeHandler([ 'id_token' ], url, true);
+      handler = new JwtDecodeResponseHandler([ 'id_token' ], url, true);
 
       // mock the fetches of the verifyUpstreamJwk function
       fetchMock.mockResponses(
