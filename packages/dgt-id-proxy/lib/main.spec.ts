@@ -1,6 +1,19 @@
-import { checkFile, checkUri } from './main';
+jest.mock('fs', () => ({ readFileSync: jest.fn().mockImplementation((filename) => {
 
-// jest.mock('fs', () => ({ readFile: jest.fn().mockResolvedValue(Buffer.from(JSON.stringify({ 'text': 'some text' }))) }));
+  if (filename === 'path') {
+
+    throw new Error('mockError');
+
+  } else {
+
+    return Buffer.from(JSON.stringify({ text: 'some text' }));
+
+  }
+
+}) }));
+
+import { readFileSync } from 'fs';
+import { checkFile, checkUri, createVariables, launch } from './main';
 
 describe('Main.ts', () => {
 
@@ -12,21 +25,21 @@ describe('Main.ts', () => {
 
   beforeEach(async () => {
 
-    jest.useFakeTimers();
+    JSON.parse = jest.fn();
 
   });
 
   describe('checkUri', () => {
 
-    fit('should error when an invalid uri parameter was given', async () => {
+    it('should error when an invalid uri parameter was given', () => {
 
-      await expect(() => checkUri('http://')).toThrow('Invalid uri parameter');
+      expect(() => checkUri('http://')).toThrow('Invalid uri parameter');
 
     });
 
-    it('should return a valid uri', async () => {
+    it('should return a valid uri',  () => {
 
-      await expect(checkUri('digita')).toEqual({ uri: 'http://digita', host: 'digita', port: '80', scheme: 'http:' });
+      expect(checkUri('digita')).toEqual({ uri: 'http://digita', host: 'digita', port: '80', scheme: 'http:' });
 
     });
 
@@ -34,18 +47,27 @@ describe('Main.ts', () => {
 
   describe('checkFile', () => {
 
-    it('should error when reading the file failed', async () => {
+    it('should error when reading the file failed',  () => {
 
-      await expect(() => checkFile('path')).toThrow(`Reading file 'path' failed with Error: ENOENT: no such file or directory, open 'path'`);
+      expect(() => checkFile('path')).toThrow(`Reading file 'path' failed with Error: mockError`);
 
     });
 
-    // it('should parse', () => {
+    it('should call readFileSync & json.parse without erroring', () => {
 
-    //   expect(checkFile('./files/text.txt')).toEqual({ 'text': 'some text' });
+      checkFile('./files/text.txt');
 
-    // });
+      expect(readFileSync).toHaveBeenCalledWith('./files/text.txt');
+      expect(JSON.parse).toHaveBeenCalledWith(JSON.stringify({ text: 'some text' }));
+
+    });
 
   });
+
+  // describe('createVariables', () => {
+
+  //   createVariables()
+
+  // });
 
 });
