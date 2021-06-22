@@ -1,10 +1,9 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { BadRequestHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
-import {  Quad } from 'n3';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { parseQuads, checkOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { parseQuads, checkOidcRegistrationStatement, getWebID } from '../util/process-webid';
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
@@ -133,7 +132,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
         ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
         : from(response.text())),
       map((text) => parseQuads(text)),
-      map((quads) => checkOidcRegistrationTriple(quads))
+      map((quads) => checkOidcRegistrationStatement(quads))
     );
 
   }

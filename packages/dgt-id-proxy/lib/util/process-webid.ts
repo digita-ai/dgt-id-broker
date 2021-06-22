@@ -37,7 +37,7 @@ export const parseQuads = (text: string): Quad[] => {
  *
  * @param { Quad[] } quads
  */
-export const checkOidcRegistrationTriple = (quads: Quad[]): boolean => {
+export const checkOidcRegistrationStatement = (quads: Quad[]): boolean => {
 
   const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 
@@ -58,7 +58,7 @@ export const checkOidcRegistrationTriple = (quads: Quad[]): boolean => {
  *
  * @param { Quad } quad
  */
-export const parseOidcRegistrationTriple = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
+export const parseOidcRegistrationStatement = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
 
   const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 
