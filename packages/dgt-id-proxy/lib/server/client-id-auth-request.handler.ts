@@ -6,8 +6,27 @@ import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
 
+/**
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } abstract class that
+ * contains two important functions:
+ * 1. A  retrieveAndValidateWebId function
+ * 2. A compareClientDataWithRequest function that
+ */
 export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
+  /**
+   * A  retrieveAndValidateWebId function that:
+   * - retrieves the WebId,
+   * - checks if the returned type is turtle, and errors if not,
+   * else it returns the WebId contentTypeHeader
+   * - parses this into Quads
+   * - parseOidcRegistrationStatement, checks if the oidcRegistration is present and returns a error if not
+   * else it returns a JSON object
+   * -calls compareClientDataWithRequest to compare the data and errors if not correct
+   *
+   * @param clientId
+   * @param contextRequestUrlSearchParams
+   */
   retrieveAndValidateWebId = (
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
