@@ -1,7 +1,7 @@
 
-import { ForbiddenHttpError, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { ForbiddenHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap, map, mapTo } from 'rxjs/operators';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
@@ -16,10 +16,10 @@ import { OidcClientRegistrationResponse } from '../util/oidc-client-registration
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class ClientIdDynamicAuthHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
+export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
   /**
-   * Creates a { ClientIdDynamicAuthHandler }.
+   * Creates a { ClientIdDynamicAuthRequestHandler }.
    *
    * @param {string} registration_uri - the registration endpoint for the currently used provider.
    * @param { KeyValueStore } store - the store used to save a clients register data.
@@ -90,7 +90,7 @@ export class ClientIdDynamicAuthHandler extends Handler<HttpHandlerContext, Http
         : this.checkWebId(clientId, context.request.url.searchParams)),
       tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
-      switchMap(() => of(context)),
+      mapTo(context),
     );
 
   }

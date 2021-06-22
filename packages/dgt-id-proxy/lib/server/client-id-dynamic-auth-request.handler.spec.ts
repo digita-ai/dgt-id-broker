@@ -4,9 +4,9 @@ import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { ClientIdDynamicAuthHandler } from './client-id-dynamic-auth.handler';
+import { ClientIdDynamicAuthRequestHandler } from './client-id-dynamic-auth-request.handler';
 
-describe('ClientIdDynamicAuthHandler', () => {
+describe('ClientIdDynamicAuthRequestHandler', () => {
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
@@ -110,7 +110,7 @@ describe('ClientIdDynamicAuthHandler', () => {
 
   let context: HttpHandlerContext;
   let url: URL;
-  let handler: ClientIdDynamicAuthHandler;
+  let handler: ClientIdDynamicAuthRequestHandler;
   let publicClientURL: URL;
 
   beforeAll(() => fetchMock.enableMocks());
@@ -121,7 +121,7 @@ describe('ClientIdDynamicAuthHandler', () => {
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
 
-    handler = new ClientIdDynamicAuthHandler(
+    handler = new ClientIdDynamicAuthRequestHandler(
       registration_uri,
       store
     );
@@ -138,16 +138,16 @@ describe('ClientIdDynamicAuthHandler', () => {
 
   it('should error when no registration_uri or store was provided', () => {
 
-    expect(() => new ClientIdDynamicAuthHandler(undefined, store)).toThrow('A registration_uri must be provided');
-    expect(() => new ClientIdDynamicAuthHandler(null, store)).toThrow('A registration_uri must be provided');
-    expect(() => new ClientIdDynamicAuthHandler(registration_uri, undefined)).toThrow('A store must be provided');
-    expect(() => new ClientIdDynamicAuthHandler(registration_uri, null)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(undefined, store)).toThrow('A registration_uri must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(null, store)).toThrow('A registration_uri must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(registration_uri, undefined)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(registration_uri, null)).toThrow('A store must be provided');
 
   });
 
   it('should error when no registration uri was provided', () => {
 
-    expect(() => new ClientIdDynamicAuthHandler('htp//:incorrecturi.com', store)).toThrow('The provided registration_uri is not a valid URL');
+    expect(() => new ClientIdDynamicAuthRequestHandler('htp//:incorrecturi.com', store)).toThrow('The provided registration_uri is not a valid URL');
 
   });
 
@@ -234,7 +234,7 @@ describe('ClientIdDynamicAuthHandler', () => {
       = new InMemoryStore();
 
       const handler2
-      = new ClientIdDynamicAuthHandler(registration_uri, public_store);
+      = new ClientIdDynamicAuthRequestHandler(registration_uri, public_store);
 
       fetchMock.once(JSON.stringify(mockPublicRegisterResponse), { status: 200 });
 
@@ -254,7 +254,7 @@ describe('ClientIdDynamicAuthHandler', () => {
       = new InMemoryStore();
 
       const handler2
-      = new ClientIdDynamicAuthHandler(registration_uri, public_store);
+      = new ClientIdDynamicAuthRequestHandler(registration_uri, public_store);
 
       const newContext: HttpHandlerContext = { request: { headers: {}, body: {}, method: 'POST', url: publicClientURL } };
       public_store.set(redirect_uri, mockPublicRegisterResponse);
