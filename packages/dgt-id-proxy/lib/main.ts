@@ -75,7 +75,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
 };
 
-const createVariables = (args: string[]): Record<string, any> => {
+export const createVariables = (args: string[]): Record<string, any> => {
 
   const { argv: params } = yargs(hideBin(args))
     .usage('node ./dist/main.js [args]')
@@ -110,7 +110,3 @@ const createVariables = (args: string[]): Record<string, any> => {
   };
 
 };
-
-const vars = createVariables(process.argv);
-
-launch(vars);

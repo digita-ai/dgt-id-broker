@@ -1,6 +1,6 @@
 import { checkFile, checkUri } from './main';
 
-jest.mock('fs', () => ({ readFile: jest.fn().mockResolvedValue(Buffer.from(JSON.stringify({ 'text': 'some text' }))) }));
+// jest.mock('fs', () => ({ readFile: jest.fn().mockResolvedValue(Buffer.from(JSON.stringify({ 'text': 'some text' }))) }));
 
 describe('Main.ts', () => {
 
@@ -10,17 +10,23 @@ describe('Main.ts', () => {
 
   const uri = `${protocol}${hostname}:${port}/token`;
 
+  beforeEach(async () => {
+
+    jest.useFakeTimers();
+
+  });
+
   describe('checkUri', () => {
 
-    it('should error when an invalid uri parameter was given', () => {
+    fit('should error when an invalid uri parameter was given', async () => {
 
-      expect(() => checkUri('http://')).toThrow('Invalid uri parameter');
+      await expect(() => checkUri('http://')).toThrow('Invalid uri parameter');
 
     });
 
-    it('should return a valid uri', () => {
+    it('should return a valid uri', async () => {
 
-      expect(checkUri('digita')).toEqual({ uri: 'http://digita', host: 'digita', port: '80', scheme: 'http:' });
+      await expect(checkUri('digita')).toEqual({ uri: 'http://digita', host: 'digita', port: '80', scheme: 'http:' });
 
     });
 
@@ -28,17 +34,17 @@ describe('Main.ts', () => {
 
   describe('checkFile', () => {
 
-    it('should error when reading the file failed', () => {
+    it('should error when reading the file failed', async () => {
 
-      expect(() => checkFile('path')).toThrow(`Reading file 'path' failed with Error: ENOENT: no such file or directory, open 'path'`);
-
-    });
-
-    it('should parse', () => {
-
-      expect(checkFile('./files/text.txt')).toEqual({ 'text': 'some text' });
+      await expect(() => checkFile('path')).toThrow(`Reading file 'path' failed with Error: ENOENT: no such file or directory, open 'path'`);
 
     });
+
+    // it('should parse', () => {
+
+    //   expect(checkFile('./files/text.txt')).toEqual({ 'text': 'some text' });
+
+    // });
 
   });
 
