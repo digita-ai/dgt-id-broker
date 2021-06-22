@@ -4,7 +4,7 @@ import { switchMap, map } from 'rxjs/operators';
 import { ForbiddenHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
 
 export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
@@ -16,7 +16,7 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
       ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
       : from(response.text())),
     map((text) => parseQuads(text)),
-    switchMap((quads) => getOidcRegistrationTriple(quads)),
+    switchMap((quads) => parseOidcRegistrationStatement(quads)),
     switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
   );
 

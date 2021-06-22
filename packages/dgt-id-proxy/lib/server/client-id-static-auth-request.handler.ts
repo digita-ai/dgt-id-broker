@@ -1,8 +1,7 @@
-import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of, from } from 'rxjs';
-import { switchMap, tap, map, mapTo } from 'rxjs/operators';
+import { BadRequestHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { Observable,  throwError, of } from 'rxjs';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
