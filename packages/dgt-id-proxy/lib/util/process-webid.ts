@@ -72,7 +72,7 @@ export const parseOidcRegistrationTriple = (quads: Quad[]): Observable<Partial<O
   // this has to be done because for some strange reason the whole object is surrounded by quotes
   const objectSub = object.id.substring(1, object.id.length - 1);
 
-  try{
+  try {
 
     const JSONObject = JSON.parse(objectSub);
 
