@@ -7,13 +7,24 @@ jest.mock('fs/promises', () => {
     'keys': [
       {
         'crv': 'P-256',
-        'x': 'ZXD5luOOClkYI-WieNfw7WGISxIPjH_PWrtvDZRZsf0',
-        'y': 'vshKz414TtqkkM7gNXKqawrszn44OTSR_j-JxP-BlWo',
-        'd': '07JS0yPt-fDABw_28JdENtlF0PTNMchYmfSXz7pRhVw',
+        'x': 'mockX',
+        'y': 'mockY',
+        'd': 'mockD',
         'kty': 'EC',
-        'kid': 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
+        'kid': 'mockKid1',
         'alg': 'ES256',
         'use': 'sig',
+      },
+      {
+        'key_ops': [ 'mockKeyOps' ],
+        'kty': 'RSA',
+        'kid': 'mockKid2',
+        'alg': 'RS256',
+        'use': 'sig',
+        'e': 'mockE',
+        'n': 'mockN',
+        'd': 'mockD',
+        'x5c': [ 'mockX5C' ],
       },
     ],
   };
@@ -32,12 +43,22 @@ describe('JwkRequestHandler', () => {
   const publicJwksJson = { 'keys': [
     {
       'crv': 'P-256',
-      'x': 'ZXD5luOOClkYI-WieNfw7WGISxIPjH_PWrtvDZRZsf0',
-      'y': 'vshKz414TtqkkM7gNXKqawrszn44OTSR_j-JxP-BlWo',
+      'x': 'mockX',
+      'y': 'mockY',
       'kty': 'EC',
-      'kid': 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
+      'kid': 'mockKid1',
       'alg': 'ES256',
       'use': 'sig',
+    },
+    {
+      'key_ops': [ 'mockKeyOps' ],
+      'kty': 'RSA',
+      'kid': 'mockKid2',
+      'alg': 'RS256',
+      'use': 'sig',
+      'e': 'mockE',
+      'n': 'mockN',
+      'x5c': [ 'mockX5C' ],
     },
   ] };
 

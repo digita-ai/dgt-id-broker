@@ -1,33 +1,31 @@
 
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
- * A { HttpHandler } that
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
  * - checks if a client is already registered
  * - compares the data of the webid with the request data
  * - compares the store data with the webid data
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class ClientIdDynamicAuthHandler extends ClientIdAuthRequestHandler {
+export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandler {
 
   /**
-   * Creates a { ClientIdDynamicAuthHandler }.
+   * Creates a { ClientIdDynamicAuthRequestHandler }.
    *
    * @param {string} registration_uri - the registration endpoint for the currently used provider.
    * @param { KeyValueStore } store - the store used to save a clients register data.
-   * @param {HttpHandler} httpHandler - the handler through which to pass requests
    */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
-    private httpHandler: HttpHandler
+    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
   ) {
 
     super();
@@ -46,8 +44,6 @@ export class ClientIdDynamicAuthHandler extends ClientIdAuthRequestHandler {
 
     if (!store) { throw new Error('A store must be provided'); }
 
-    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
-
   }
 
   /**
@@ -62,7 +58,7 @@ export class ClientIdDynamicAuthHandler extends ClientIdAuthRequestHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
+  handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
     if (!context) { return throwError(new Error('A context must be provided')); }
 
@@ -83,7 +79,7 @@ export class ClientIdDynamicAuthHandler extends ClientIdAuthRequestHandler {
 
     } catch (error) {
 
-      return this.httpHandler.handle(context);
+      return of(context);
 
     }
 
@@ -93,7 +89,7 @@ export class ClientIdDynamicAuthHandler extends ClientIdAuthRequestHandler {
         : this.checkWebId(clientId, context.request.url.searchParams)),
       tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
-      switchMap(() => this.httpHandler.handle(context)),
+      mapTo(context),
     );
 
   }

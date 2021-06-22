@@ -18,7 +18,7 @@
     "test:all": "lerna run test --parallel",
     "test:ci": "lerna run test:ci",
     "demo:auth0": "lerna run demo:auth0 --parallel --no-bail",
-    "demo:panva": "lerna run demo:panva --parallel--no-bail",
+    "demo:panva": "lerna run demo:panva --parallel --no-bail",
     "demo:keycloak": "lerna run demo:keycloak --parallel --no-bail"
   },
   "devDependencies": {

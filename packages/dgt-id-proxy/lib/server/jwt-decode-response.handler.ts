@@ -10,10 +10,10 @@ import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
  * A {Handler} decoding JWTs for the specified fields of a {HttpHandlerResponse} body. Optionally verifies
  * the keys that were used to sign the tokens by an upstream server.
  */
-export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {JwtDecodeHandler}.
+   * Creates a {JwtDecodeResponseHandler}.
    *
    * @param {string[]} jwtFields - the fields of the response body containing tokens to decode.
    * @param {string} upstreamUrl - the url of the upstream server. Used to get the JWKs that were used to sign tokens.
@@ -23,23 +23,11 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
     super();
 
-    if (!jwtFields || jwtFields.length === 0) {
+    if (!jwtFields || jwtFields.length === 0) { throw new Error('jwtFields must be defined and must contain at least 1 field'); }
 
-      throw new Error('jwtFields must be defined and must contain at least 1 field');
+    if (!upstreamUrl) { throw new Error('upstreamUrl must be defined'); }
 
-    }
-
-    if (!upstreamUrl) {
-
-      throw new Error('upstreamUrl must be defined');
-
-    }
-
-    if (verifyJwk === null || verifyJwk === undefined) {
-
-      throw new Error('verifyJwk must be defined');
-
-    }
+    if (verifyJwk === null || verifyJwk === undefined) { throw new Error('verifyJwk must be defined'); }
 
   }
 
@@ -53,17 +41,9 @@ export class JwtDecodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) {
+    if (!response) { return throwError(new Error('response cannot be null or undefined')); }
 
-      return throwError(new Error('response cannot be null or undefined'));
-
-    }
-
-    if (response.status !== 200) {
-
-      return of(response);
-
-    }
+    if (response.status !== 200) { return of(response); }
 
     const parsedBody = JSON.parse(response.body);
 

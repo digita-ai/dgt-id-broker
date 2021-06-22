@@ -1,11 +1,10 @@
-import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap, map, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { compareClientDataWithRequest } from '../util/request-data-comparison';
+import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
@@ -14,7 +13,7 @@ import { compareClientDataWithRequest } from '../util/request-data-comparison';
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
  */
-export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
+export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler {
 
   private redirectURL: URL;
 
@@ -28,7 +27,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    */
   constructor(
     private clientId: string,
-    private clientSecret: string,
     private redirectUri: string,
     private keyValueStore: KeyValueStore<string, URL>
   ) {
@@ -36,8 +34,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
     super();
 
     if (!clientId) { throw new Error('No clientId was provided'); }
-
-    if (!clientSecret) { throw new Error('No clientSecret was provided'); }
 
     if (!redirectUri) { throw new Error('No redirectUri was provided'); }
 
@@ -109,7 +105,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId, context.request.url.searchParams)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
-      switchMap(() => of(context)),
+      mapTo(context),
     );
 
   }
@@ -141,7 +137,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
         : from(response.text())),
       map((text) => parseQuads(text)),
       switchMap((quads) => getOidcRegistrationTriple(quads)),
-      switchMap((clientData) => compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
     );
 
   }

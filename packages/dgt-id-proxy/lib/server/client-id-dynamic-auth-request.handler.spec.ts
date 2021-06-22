@@ -1,19 +1,12 @@
-import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { of } from 'rxjs';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { ClientIdDynamicAuthHandler } from './client-id-dynamic-auth.handler';
+import { ClientIdDynamicAuthRequestHandler } from './client-id-dynamic-auth-request.handler';
 
-describe('ClientIdDynamicAuthHandler', () => {
-
-  const httpHandler: HttpHandler = {
-    canHandle: jest.fn(),
-    handle: jest.fn().mockReturnValue(of()),
-    safeHandle: jest.fn(),
-  };
+describe('ClientIdDynamicAuthRequestHandler', () => {
 
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
@@ -25,7 +18,6 @@ describe('ClientIdDynamicAuthHandler', () => {
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
-  const incorrectClient_id = 'jaspervandenberghen/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
   const different_redirect_uri = `http://${referer}/otherCallback.html`;
   const endpoint = 'auth';
@@ -112,14 +104,13 @@ describe('ClientIdDynamicAuthHandler', () => {
   const correctPodText = podText + '\n' + oidcRegistration;
   const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
 
-  const incorrectClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(incorrectClient_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
   const otherResponseTypeURL = new URL(`http://${host}/${endpoint}?response_type=plain&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
 
   let context: HttpHandlerContext;
   let url: URL;
-  let handler: ClientIdDynamicAuthHandler;
+  let handler: ClientIdDynamicAuthRequestHandler;
   let publicClientURL: URL;
 
   beforeAll(() => fetchMock.enableMocks());
@@ -130,13 +121,10 @@ describe('ClientIdDynamicAuthHandler', () => {
     url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
     context = { request: { headers: {}, body: {}, method: 'POST', url } };
 
-    handler = new ClientIdDynamicAuthHandler(
+    handler = new ClientIdDynamicAuthRequestHandler(
       registration_uri,
-      store,
-      httpHandler
+      store
     );
-
-    httpHandler.handle = jest.fn().mockReturnValue(of(mockRegisterResponse));
 
   });
 
@@ -148,30 +136,18 @@ describe('ClientIdDynamicAuthHandler', () => {
 
   });
 
-  it('should error when no handler was provided', () => {
+  it('should error when no registration_uri or store was provided', () => {
 
-    expect(() => new ClientIdDynamicAuthHandler(registration_uri, store, undefined)).toThrow('A HttpHandler must be provided');
-    expect(() => new ClientIdDynamicAuthHandler(registration_uri, store, null)).toThrow('A HttpHandler must be provided');
-
-  });
-
-  it('should error when no store was provided', () => {
-
-    expect(() => new ClientIdDynamicAuthHandler(registration_uri, undefined, handler)).toThrow('A store must be provided');
-    expect(() => new ClientIdDynamicAuthHandler(registration_uri, null, handler)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(undefined, store)).toThrow('A registration_uri must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(null, store)).toThrow('A registration_uri must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(registration_uri, undefined)).toThrow('A store must be provided');
+    expect(() => new ClientIdDynamicAuthRequestHandler(registration_uri, null)).toThrow('A store must be provided');
 
   });
 
   it('should error when no registration uri was provided', () => {
 
-    expect(() => new ClientIdDynamicAuthHandler(undefined, store, handler)).toThrow('A registration_uri must be provided');
-    expect(() => new ClientIdDynamicAuthHandler(null, store, handler)).toThrow('A registration_uri must be provided');
-
-  });
-
-  it('should error when no registration uri was provided', () => {
-
-    expect(() => new ClientIdDynamicAuthHandler('htp//:incorrecturi.com', store, handler)).toThrow('The provided registration_uri is not a valid URL');
+    expect(() => new ClientIdDynamicAuthRequestHandler('htp//:incorrecturi.com', store)).toThrow('The provided registration_uri is not a valid URL');
 
   });
 
@@ -226,14 +202,11 @@ describe('ClientIdDynamicAuthHandler', () => {
 
     });
 
-    it('should pass the request on to the nested handler if the client_id is not a valid URL', async () => {
-
-      const response = { body: 'mockBody', status: 200, headers: {} };
-      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+    it('should return the context unedited if the client_id is not a valid URL', async () => {
 
       url.searchParams.set('client_id', 'static_client');
       context = { ...context, request: { ...context.request, url } };
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(response);
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(context);
 
     });
 
@@ -261,7 +234,7 @@ describe('ClientIdDynamicAuthHandler', () => {
       = new InMemoryStore();
 
       const handler2
-      = new ClientIdDynamicAuthHandler(registration_uri, public_store, httpHandler);
+      = new ClientIdDynamicAuthRequestHandler(registration_uri, public_store);
 
       fetchMock.once(JSON.stringify(mockPublicRegisterResponse), { status: 200 });
 
@@ -281,7 +254,7 @@ describe('ClientIdDynamicAuthHandler', () => {
       = new InMemoryStore();
 
       const handler2
-      = new ClientIdDynamicAuthHandler(registration_uri, public_store, httpHandler);
+      = new ClientIdDynamicAuthRequestHandler(registration_uri, public_store);
 
       const newContext: HttpHandlerContext = { request: { headers: {}, body: {}, method: 'POST', url: publicClientURL } };
       public_store.set(redirect_uri, mockPublicRegisterResponse);
@@ -307,10 +280,11 @@ describe('ClientIdDynamicAuthHandler', () => {
 
       fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
 
-      await expect(handler
-        .handle(context)
-        .toPromise()).resolves
-        .toEqual(mockRegisterResponse);
+      handler.registerClient = jest.fn();
+
+      await handler.handle(context).toPromise();
+
+      expect(handler.registerClient).toHaveBeenCalledTimes(0);
 
     });
 
