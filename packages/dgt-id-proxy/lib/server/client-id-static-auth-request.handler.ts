@@ -1,7 +1,7 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { BadRequestHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap, map, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { parseQuads, checkOidcRegistrationStatement, getWebID } from '../util/process-webid';
 /**
@@ -104,7 +104,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
       switchMap((found) => found ? of({}) : throwError(new BadRequestHttpError('Not a valid webID: No oidcRegistration field found'))),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
-      switchMap(() => of(context)),
+      mapTo(context),
     );
 
   }

@@ -1,9 +1,9 @@
 import { createHash } from 'crypto';
 import { of } from 'rxjs';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
-import { PkceTokenRequestHandler } from './pkce-token-request.handler';
+import { PkceTokenHandler } from './pkce-token.handler';
 
 const generateRandomString = (length: number): string => {
 
@@ -20,9 +20,9 @@ const generateRandomString = (length: number): string => {
 
 };
 
-describe('PkceTokenRequestHandler', () => {
+describe('PkceTokenHandler', () => {
 
-  let pkceTokenRequestHandler: PkceTokenRequestHandler;
+  let pkceTokenRequestHandler: PkceTokenHandler;
   let httpHandler: HttpHandler;
   let store: InMemoryStore<Code, ChallengeAndMethod>;
   let context: HttpHandlerContext;
@@ -54,7 +54,7 @@ describe('PkceTokenRequestHandler', () => {
 
     context = { request: { headers: {}, body: `grant_type=authorization_code&code=${code}&client_id=${client_id}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`, method: 'POST', url } };
 
-    pkceTokenRequestHandler = new PkceTokenRequestHandler(httpHandler, store);
+    pkceTokenRequestHandler = new PkceTokenHandler(httpHandler, store);
 
     challengeAndMethod.challenge = await pkceTokenRequestHandler
       .generateCodeChallenge(code_verifier, challengeAndMethod.method).toPromise();
@@ -78,10 +78,10 @@ describe('PkceTokenRequestHandler', () => {
 
   it('should error when no handler or memory store was provided', () => {
 
-    expect(() => new PkceTokenRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceTokenRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceTokenRequestHandler(httpHandler, undefined)).toThrow('A store must be provided');
-    expect(() => new PkceTokenRequestHandler(httpHandler, null)).toThrow('A store must be provided');
+    expect(() => new PkceTokenHandler(undefined, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceTokenHandler(null, store)).toThrow('A HttpHandler must be provided');
+    expect(() => new PkceTokenHandler(httpHandler, undefined)).toThrow('A store must be provided');
+    expect(() => new PkceTokenHandler(httpHandler, null)).toThrow('A store must be provided');
 
   });
 

@@ -1,11 +1,11 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { of, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { Handler } from '@digita-ai/handlersjs-core';
 
 /**
  * A {Handler} that adds 'solid' to the audience claim of a JWT Access Token
  */
-export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
    * Handles the response. If the response is a 200 response it adds
@@ -13,19 +13,11 @@ export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandl
    *
    * @param {HttpHandlerResponse} response
    */
-  handle (response: HttpHandlerResponse) {
+  handle (response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) {
+    if (!response) { return throwError(new Error('response cannot be null or undefined')); }
 
-      return throwError(new Error('response cannot be null or undefined'));
-
-    }
-
-    if (response.status !== 200) {
-
-      return of(response);
-
-    }
+    if (response.status !== 200) { return of(response); }
 
     if (!response.body.access_token || !response.body.access_token.payload){
 
@@ -60,7 +52,7 @@ export class SolidAudienceHandler extends Handler<HttpHandlerResponse, HttpHandl
    *
    * @param {HttpHandlerResponse} response
    */
-  canHandle(response: HttpHandlerResponse) {
+  canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
     return response && response.body.access_token && response.body.access_token.payload
       ? of(true)
