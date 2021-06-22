@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { from, of, Observable, throwError, zip } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';

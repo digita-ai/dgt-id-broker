@@ -1,5 +1,5 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { decode } from 'jose/util/base64url';
+
 import { Observable, of, throwError, zip } from 'rxjs';
 import { map, switchMap, catchError } from 'rxjs/operators';
 

@@ -1,6 +1,4 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { of } from 'rxjs';
-import { decode } from 'jose/util/base64url';
 import { SolidAudienceHandler } from './solid-audience.handler';
 
 describe('SolidAudienceHandler', () => {

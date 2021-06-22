@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { of } from 'rxjs';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceTokenRequestHandler } from './pkce-token-request.handler';

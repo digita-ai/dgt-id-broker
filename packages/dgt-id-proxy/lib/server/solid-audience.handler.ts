@@ -1,6 +1,5 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable, of, throwError } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { of, throwError } from 'rxjs';
 import { Handler } from '@digita-ai/handlersjs-core';
 
 /**
