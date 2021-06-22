@@ -1,4 +1,5 @@
 export * from './server/pass-through-http-request.handler';
+export * from './server/client-id-auth-request.handler';
 export * from './server/client-id-dynamic-auth-request.handler';
 export * from './server/client-id-dynamic-token.handler';
 export * from './server/client-id-static-auth-request.handler';
