@@ -95,6 +95,14 @@ jobs:
       - run: npm publish packages/dgt-id-proxy
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  
+      - run: npm publish packages/dgt-id-kit
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  
+      - run: npm publish packages/inrupt-solid-client
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
   publish-docker:
     name: Publish Docker image
