@@ -13,6 +13,7 @@ export * from './storage/key-value-store';
 export * from './server/jwt-decode-response.handler';
 export * from './server/jwt-encode-response.handler';
 export * from './server/dpop-token-request.handler';
+export * from './server/dpop-pass-through-request.handler';
 export * from './server/opaque-access-token.handler';
 export * from './server/webid-response.handler';
 export * from './server/solid-audience-response.handler';

@@ -28,23 +28,11 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     super();
 
-    if(!handler){
+    if (!handler) { throw new Error('A HttpHandler must be provided'); }
 
-      throw new Error('A HttpHandler must be provided');
+    if (!keyValueStore) { throw new Error('A keyValueStore must be provided'); }
 
-    }
-
-    if(!keyValueStore){
-
-      throw new Error('A keyValueStore must be provided');
-
-    }
-
-    if(!proxyTokenUrl){
-
-      throw new Error('A proxyTokenUrl must be provided');
-
-    }
+    if (!proxyTokenUrl) { throw new Error('A proxyTokenUrl must be provided'); }
 
   }
 
@@ -55,37 +43,17 @@ export class DpopTokenRequestHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  handle(context: HttpHandlerContext) {
+  handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
-    if (!context) {
+    if (!context) { return throwError(new Error('Context cannot be null or undefined')); }
 
-      return throwError(new Error('Context cannot be null or undefined'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
+    if (!context.request.method) { return throwError(new Error('No method was included in the request')); }
 
-    if (!context.request) {
+    if (!context.request.headers) { return throwError(new Error('No headers were included in the request')); }
 
-      return throwError(new Error('No request was included in the context'));
-
-    }
-
-    if (!context.request.method) {
-
-      return throwError(new Error('No method was included in the request'));
-
-    }
-
-    if (!context.request.headers) {
-
-      return throwError(new Error('No headers were included in the request'));
-
-    }
-
-    if (!context.request.url) {
-
-      return throwError(new Error('No url was included in the request'));
-
-    }
+    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
 
     if (!context.request.headers.dpop) {
 
@@ -124,7 +92,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates thumbprint or errors
       switchMap((verified) => from(calculateThumbprint(verified.protectedHeader.jwk))),
       // builds error body around previous errors
-      catchError((error) => throwError(this.dpopError(error?.message ?? 'could not create thumbprint from dpop proof'))),
+      catchError((error) => error.message ? throwError(this.dpopError(error.message)) : throwError(new Error('DPoP verification failed due to an unknown error'))),
       // gets successful response or errors with body
       switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
       // creates dpop response
@@ -212,7 +180,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  canHandle(context: HttpHandlerContext) {
+  canHandle(context: HttpHandlerContext): Observable<boolean>{
 
     return context
       && context.request
