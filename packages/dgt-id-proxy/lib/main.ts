@@ -7,7 +7,7 @@ import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-const checkUri = (uri: string) => {
+export const checkUri = (uri: string) => {
 
   const httpUri = uri.match(/^https?:\/\//g) ? uri : 'http://' + uri ;
 
@@ -33,7 +33,7 @@ const checkUri = (uri: string) => {
 
 };
 
-const checkFile = (filePath: string): void => {
+export const checkFile = (filePath: string): void => {
 
   try {
 
