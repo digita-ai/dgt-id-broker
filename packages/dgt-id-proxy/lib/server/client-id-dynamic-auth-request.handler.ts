@@ -1,12 +1,11 @@
 
-import { ForbiddenHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap, map, mapTo } from 'rxjs/operators';
-import { Handler } from '@digita-ai/handlersjs-core';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { parseQuads, checkOidcRegistrationStatement, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
@@ -16,7 +15,7 @@ import { OidcClientRegistrationResponse } from '../util/oidc-client-registration
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
+export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandler {
 
   /**
    * Creates a { ClientIdDynamicAuthRequestHandler }.
@@ -200,40 +199,6 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   }
 
   /**
-   * Compares the data from the webid with the data given in the requests URLSearchParams.
-   * It returns a 403 error when crucial parameters do not match
-   *
-   * @param { Partial<OidcClientMetadata> } clientData
-   * @param { URLSearchParams } searchParams
-   */
-  compareClientDataWithRequest(
-    clientData: Partial<OidcClientMetadata>,
-    searchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata>>{
-
-    if (clientData.client_id !== searchParams.get('client_id')) {
-
-      return throwError(new ForbiddenHttpError('The client id in the request does not match the one in the WebId'));
-
-    }
-
-    if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
-
-      return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the WebId'));
-
-    }
-
-    if (!clientData.response_types.includes(searchParams.get('response_type')))  {
-
-      return throwError(new ForbiddenHttpError('Response types do not match'));
-
-    }
-
-    return of(clientData);
-
-  }
-
-  /**
    * Compares the data in the store with one in the webid, to check if the webid is not updated.
    * If the in the webid is changed the client registers again with the new data.
    * If registered again it saves the new register data in the KeyValue store.
@@ -286,17 +251,11 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
-    return from(getWebID(clientId)).pipe(
-      switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
-        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-        : from(response.text())),
-      map((text) => parseQuads(text)),
-      switchMap((quads) => parseOidcRegistrationStatement(quads)),
-      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData)),
+        : of(registerData))
     );
 
   }

@@ -1,6 +1,6 @@
 import { BadRequestHttpError } from '@digita-ai/handlersjs-http';
 import { Store, Parser, Quad } from 'n3';
-import {  throwError, of, Observable } from 'rxjs';
+import { throwError, of, Observable } from 'rxjs';
 import { OidcClientMetadata } from './oidc-client-metadata';
 
 /**
@@ -28,26 +28,6 @@ export const parseQuads = (text: string): Quad[] => {
 
   // adding these null values gives u a wildcard to check out all the quads in store, in JS this is just getQuads()
   return n3Store.getQuads(null, null, null, null);
-
-};
-
-/**
- * Reads the quads and finds the oidcRegistration triple.
- * If it is not present it errors.
- *
- * @param { Quad[] } quads
- */
-export const checkOidcRegistrationStatement = (quads: Quad[]): boolean => {
-
-  const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
-
-  if (!oidcRegistrationQuad) {
-
-    return false;
-
-  }
-
-  return true;
 
 };
 

@@ -1,9 +1,9 @@
 import { join } from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { from, of, throwError } from 'rxjs';
+import { from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { JWK, parseJwk } from 'jose/jwk/parse';
+import { JWK } from 'jose/jwk/parse';
 
 /**
  * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.

@@ -1,9 +1,10 @@
-import { Handler } from '@digita-ai/handlersjs-core';
 import { BadRequestHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { Observable,  throwError, of, from } from 'rxjs';
-import { switchMap, tap, map, mapTo } from 'rxjs/operators';
+import { Observable,  throwError, of } from 'rxjs';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { parseQuads, checkOidcRegistrationStatement, getWebID } from '../util/process-webid';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
+
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
@@ -11,7 +12,7 @@ import { parseQuads, checkOidcRegistrationStatement, getWebID } from '../util/pr
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
  */
-export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
+export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler {
 
   private redirectURL: URL;
 
@@ -100,8 +101,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
     this.keyValueStore.set(state, new URL(redirect_uri));
 
     return of(client_id).pipe(
-      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId)),
-      switchMap((found) => found ? of({}) : throwError(new BadRequestHttpError('Not a valid webID: No oidcRegistration field found'))),
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId, context.request.url.searchParams)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       mapTo(context),
@@ -125,15 +125,12 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
   }
 
-  private checkWebId(clientId: string): Observable<boolean> {
+  private checkWebId(
+    clientId: string,
+    contextRequestUrlSearchParams: URLSearchParams
+  ): Observable<Partial<OidcClientMetadata>> {
 
-    return from(getWebID(clientId)).pipe(
-      switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-        : from(response.text())),
-      map((text) => parseQuads(text)),
-      map((quads) => checkOidcRegistrationStatement(quads))
-    );
+    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams);
 
   }
 

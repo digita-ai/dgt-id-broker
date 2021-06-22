@@ -1,11 +1,4 @@
-import { of } from 'rxjs';
-import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
-import { SignJWT } from 'jose/jwt/sign';
-import { v4 as uuid } from 'uuid';
-import { calculateThumbprint } from 'jose/jwk/thumbprint';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { JwkRequestHandler } from './jwk-request.handler';
 
 jest.mock('fs/promises', () => {
