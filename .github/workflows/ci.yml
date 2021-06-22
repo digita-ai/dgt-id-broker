@@ -47,6 +47,8 @@ jobs:
           node-version: 14
 
       - run: npm run bootstrap
+
+      - run: npm run build:all
       
       - run: npm run lint:all
 
