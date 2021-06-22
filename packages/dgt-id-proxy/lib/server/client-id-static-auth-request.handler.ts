@@ -131,14 +131,7 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata>> {
 
-    return from(getWebID(clientId)).pipe(
-      switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-        : from(response.text())),
-      map((text) => parseQuads(text)),
-      switchMap((quads) => getOidcRegistrationTriple(quads)),
-      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
-    );
+    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams);
 
   }
 
