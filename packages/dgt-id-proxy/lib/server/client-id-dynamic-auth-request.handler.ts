@@ -5,7 +5,7 @@ import { switchMap, tap, map, mapTo } from 'rxjs/operators';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { parseQuads, checkOidcRegistrationStatement, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
 /**
@@ -291,7 +291,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
         ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
         : from(response.text())),
       map((text) => parseQuads(text)),
-      switchMap((quads) => getOidcRegistrationTriple(quads)),
+      switchMap((quads) => parseOidcRegistrationStatement(quads)),
       switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
