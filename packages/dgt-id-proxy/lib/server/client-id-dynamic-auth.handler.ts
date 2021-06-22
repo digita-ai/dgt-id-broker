@@ -1,12 +1,11 @@
 
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
-import { compareClientDataWithRequest } from '../util/request-data-comparison';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
  * A { HttpHandler } that
@@ -16,7 +15,7 @@ import { OidcClientRegistrationResponse } from '../util/oidc-client-registration
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class ClientIdDynamicAuthHandler extends HttpHandler {
+export class ClientIdDynamicAuthHandler extends ClientIdAuthRequestHandler {
 
   /**
    * Creates a { ClientIdDynamicAuthHandler }.
@@ -256,17 +255,11 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
-    return from(getWebID(clientId)).pipe(
-      switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
-        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-        : from(response.text())),
-      map((text) => parseQuads(text)),
-      switchMap((quads) => getOidcRegistrationTriple(quads)),
-      switchMap((clientData) => compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData)),
+        : of(registerData))
     );
 
   }
