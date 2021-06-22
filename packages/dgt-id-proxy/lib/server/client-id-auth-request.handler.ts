@@ -20,9 +20,9 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
    * - checks if the returned type is turtle, and errors if not,
    * else it returns the WebId contentTypeHeader
    * - parses this into Quads
-   * - parseOidcRegistrationStatement, checks if the oidcRegistration is present and returns a error if not
+   * - checks if the oidcRegistration is present and returns a error if not
    * else it returns a JSON object
-   * -calls compareClientDataWithRequest to compare the data and errors if not correct
+   * - calls compareClientDataWithRequest to compare the data and errors if not correct
    *
    * @param clientId
    * @param contextRequestUrlSearchParams
