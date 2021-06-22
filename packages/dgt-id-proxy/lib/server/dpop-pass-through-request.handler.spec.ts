@@ -109,7 +109,7 @@ describe('DpopPassThroughRequestHandler', () => {
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ... context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
       await expect(() => handler.handle({ ... context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
 
     });
@@ -273,21 +273,23 @@ describe('DpopPassThroughRequestHandler', () => {
 
     });
 
-    it('should return false if context was provided', async () => {
+    it('should return false if no context request was provided', async () => {
 
-      context.request = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: undefined })
+        .toPromise()).resolves.toEqual(false);
+
+      await expect(handler.canHandle({ ...context, request: null })
+        .toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request headers are provided', async () => {
 
-      context.request.headers = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.headers = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: { ...context.request, headers: undefined } })
+        .toPromise()).resolves.toEqual(false);
+
+      await expect(handler.canHandle({ ...context, request: { ...context.request, headers: null } })
+        .toPromise()).resolves.toEqual(false);
 
     });
 

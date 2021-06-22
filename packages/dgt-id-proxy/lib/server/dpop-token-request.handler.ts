@@ -92,7 +92,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates thumbprint or errors
       switchMap((verified) => from(calculateThumbprint(verified.protectedHeader.jwk))),
       // builds error body around previous errors
-      catchError((error) => throwError(this.dpopError(error.message))),
+      catchError((error) => error.message ? throwError(this.dpopError(error.message)) : throwError(new Error('DPoP verification failed due to an unknown error'))),
       // gets successful response or errors with body
       switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
       // creates dpop response
