@@ -54,6 +54,9 @@ const configuration = {
         })
 
     },
+    discovery: {
+        "solid_oidc_supported": "https://solidproject.org/TR/solid-oidc"
+    },
     features: {
         devInteractions: { enabled: false },
         userinfo: { enabled: false },
@@ -236,10 +239,6 @@ oidc.use(async (ctx, next) => {
     }
     // Send the request along to the oidc provider who handles it further.
     await next();
-
-    if (ctx.path === '/.well-known/openid-configuration') {
-        ctx.response.body = { ...ctx.response.body,  "solid_oidc_supported": "https://solidproject.org/TR/solid-oidc"}
-    } 
 });
 
 // Helper function to send a request to register our webID as a client.

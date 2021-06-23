@@ -1,6 +1,6 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
-import { JwtEncodeHandler, JwtField } from './jwt-encode.handler';
+import { JwtEncodeResponseHandler, JwtField } from './jwt-encode-response.handler';
 
 jest.mock('fs/promises', () => {
 
@@ -35,9 +35,9 @@ describe('JwtField', () => {
 
 });
 
-describe('JwtEncodeHandler', () => {
+describe('JwtEncodeResponseHandler', () => {
 
-  let handler: JwtEncodeHandler;
+  let handler: JwtEncodeResponseHandler;
   let proxyUrl: string;
   let response: HttpHandlerResponse;
   let jwtFields: JwtField[];
@@ -48,7 +48,7 @@ describe('JwtEncodeHandler', () => {
 
     proxyUrl = 'http://mock-proxy.com';
     jwtFields = [ { field: 'access_token', type: 'at+jwt' } ];
-    handler = new JwtEncodeHandler(jwtFields, 'assets/jwks.json', proxyUrl);
+    handler = new JwtEncodeResponseHandler(jwtFields, 'assets/jwks.json', proxyUrl);
 
     response = {
       body: 'mockbody',
@@ -81,19 +81,19 @@ describe('JwtEncodeHandler', () => {
 
   it('should error when no proxyUrl or pathToJwks is provided in the constructor', () => {
 
-    expect(() => new JwtEncodeHandler(undefined, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
-    expect(() => new JwtEncodeHandler(null, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
-    expect(() => new JwtEncodeHandler(jwtFields, undefined, proxyUrl)).toThrow('A pathToJwks must be provided');
-    expect(() => new JwtEncodeHandler(jwtFields, null, proxyUrl)).toThrow('A pathToJwks must be provided');
-    expect(() => new JwtEncodeHandler(jwtFields, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
-    expect(() => new JwtEncodeHandler(jwtFields, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
+    expect(() => new JwtEncodeResponseHandler(undefined, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtEncodeResponseHandler(null, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtEncodeResponseHandler(jwtFields, undefined, proxyUrl)).toThrow('A pathToJwks must be provided');
+    expect(() => new JwtEncodeResponseHandler(jwtFields, null, proxyUrl)).toThrow('A pathToJwks must be provided');
+    expect(() => new JwtEncodeResponseHandler(jwtFields, 'assets/jwks.json', undefined)).toThrow('A proxyUrl must be provided');
+    expect(() => new JwtEncodeResponseHandler(jwtFields, 'assets/jwks.json', null)).toThrow('A proxyUrl must be provided');
 
   });
 
   it('should be error when passed an empty list of jwtFields', async () => {
 
     jwtFields = [];
-    await expect(() => new JwtEncodeHandler(jwtFields, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    await expect(() => new JwtEncodeResponseHandler(jwtFields, 'assets/jwks.json', proxyUrl)).toThrow('jwtFields must be defined and must contain at least 1 field');
 
   });
 

@@ -89,7 +89,8 @@
       "<rootDir>/dist/",
       "<rootDir>/node_modules/",
       "<rootDir>/.*\\.conf(ig)?.ts",
-      "<rootDir>/lib/scripts"
+      "<rootDir>/lib/scripts",
+      "<rootDir>/lib/public-api.ts"
     ],
     "coverageThreshold": {
       "global": {

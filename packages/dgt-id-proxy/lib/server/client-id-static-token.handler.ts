@@ -2,7 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
+import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
@@ -143,7 +143,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
           ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
           : from(response.text())),
         map((text) => parseQuads(text)),
-        switchMap((quads) => getOidcRegistrationTriple(quads)),
+        switchMap((quad) => parseOidcRegistrationStatement(quad)),
         switchMap((text) => (text.grant_types.includes(grantType))
           ? of(text)
           : throwError(new Error('The grant type in the request is not included in the WebId'))),

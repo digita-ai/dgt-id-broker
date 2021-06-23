@@ -20,17 +20,9 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     super();
 
-    if (!webIdPattern) {
+    if (!webIdPattern) { throw new Error('A WebID pattern must be provided'); }
 
-      throw new Error('A WebID pattern must be provided');
-
-    }
-
-    if (!claim) {
-
-      throw new Error('A claim id must be provided');
-
-    }
+    if (!claim) { throw new Error('A claim id must be provided'); }
 
   }
 
@@ -50,35 +42,15 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) {
+    if (!response) { return throwError(new Error('A response must be provided')); }
 
-      return throwError(new Error('A response must be provided'));
+    if (!response.body) { return throwError(new Error('The response did not contain a body')); }
 
-    }
+    if (!response.body.access_token) { return throwError(new Error('The response body did not contain an access_token')); }
 
-    if (!response.body) {
+    if (!response.body.access_token.payload) { return throwError(new Error('The access_token did not contain a payload')); }
 
-      return throwError(new Error('The response did not contain a body'));
-
-    }
-
-    if (!response.body.access_token) {
-
-      return throwError(new Error('The response body did not contain an access_token'));
-
-    }
-
-    if (!response.body.access_token.payload) {
-
-      return throwError(new Error('The access_token did not contain a payload'));
-
-    }
-
-    if (!response.body.id_token) {
-
-      return throwError(new Error('The response body did not contain an id_token'));
-
-    }
+    if (!response.body.id_token) { return throwError(new Error('The response body did not contain an id_token')); }
 
     const access_token_payload = response.body.access_token.payload;
     const id_token_payload = response.body.id_token.payload;
@@ -102,7 +74,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     }
 
-    { return of(response); }
+    return of(response);
 
   }
 

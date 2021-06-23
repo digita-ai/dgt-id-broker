@@ -1,5 +1,4 @@
-import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { of, Observable } from 'rxjs';
+import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 
 export const createErrorResponse = (
   msg: string,

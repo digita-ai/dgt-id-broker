@@ -10,7 +10,6 @@ describe('ClientIdStaticAuthRequestHandler', () => {
   const code_challenge_method_value = 'S256';
   const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
   const client_id_constructor = 'static_client';
-  const client_secret = 'static_secret';
   const redirect_uri_constructor = 'http://upstream.com/redirect';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const redirect_uri = 'http://client.com/requests.html';
@@ -45,7 +44,6 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     handler  = new ClientIdStaticAuthRequestHandler(
       client_id_constructor,
-      client_secret,
       redirect_uri_constructor,
       store
     );
@@ -63,20 +61,18 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
   it('should error when no handler, clientId, clientSecret, redirectUri or keyValueStore are provided', () => {
 
-    expect(() => new ClientIdStaticAuthRequestHandler(undefined, client_secret, redirect_uri_constructor, store)).toThrow('No clientId was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(null, client_secret, redirect_uri_constructor, store)).toThrow('No clientId was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, undefined, redirect_uri_constructor, store)).toThrow('No clientSecret was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, null, redirect_uri_constructor, store)).toThrow('No clientSecret was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, undefined, store)).toThrow('No redirectUri was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, null, store)).toThrow('No redirectUri was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, redirect_uri_constructor, undefined)).toThrow('No keyValueStore was provided');
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, redirect_uri_constructor, null)).toThrow('No keyValueStore was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(undefined, redirect_uri_constructor, store)).toThrow('No clientId was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(null, redirect_uri_constructor, store)).toThrow('No clientId was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, undefined, store)).toThrow('No redirectUri was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, null, store)).toThrow('No redirectUri was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, redirect_uri_constructor, undefined)).toThrow('No keyValueStore was provided');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, redirect_uri_constructor, null)).toThrow('No keyValueStore was provided');
 
   });
 
   it('should error when redirectUri is not a valid URL', () => {
 
-    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, client_secret, 'notAValidURI', store)).toThrow('redirectUri must be a valid URI');
+    expect(() => new ClientIdStaticAuthRequestHandler(client_id_constructor, 'notAValidURI', store)).toThrow('redirectUri must be a valid URI');
 
   });
 

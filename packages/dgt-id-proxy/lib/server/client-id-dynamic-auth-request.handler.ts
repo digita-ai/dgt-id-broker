@@ -1,33 +1,31 @@
 
-import { ForbiddenHttpError, HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { parseQuads, getOidcRegistrationTriple, getWebID } from '../util/process-webid';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
- * A { HttpHandler } that
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
  * - checks if a client is already registered
  * - compares the data of the webid with the request data
  * - compares the store data with the webid data
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class ClientIdDynamicAuthHandler extends HttpHandler {
+export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandler {
 
   /**
-   * Creates a { ClientIdDynamicAuthHandler }.
+   * Creates a { ClientIdDynamicAuthRequestHandler }.
    *
    * @param {string} registration_uri - the registration endpoint for the currently used provider.
    * @param { KeyValueStore } store - the store used to save a clients register data.
-   * @param {HttpHandler} httpHandler - the handler through which to pass requests
    */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
-    private httpHandler: HttpHandler
+    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
   ) {
 
     super();
@@ -46,8 +44,6 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
 
     if (!store) { throw new Error('A store must be provided'); }
 
-    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
-
   }
 
   /**
@@ -62,7 +58,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
+  handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
     if (!context) { return throwError(new Error('A context must be provided')); }
 
@@ -83,7 +79,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
 
     } catch (error) {
 
-      return this.httpHandler.handle(context);
+      return of(context);
 
     }
 
@@ -93,7 +89,7 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
         : this.checkWebId(clientId, context.request.url.searchParams)),
       tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
-      switchMap(() => this.httpHandler.handle(context)),
+      mapTo(context),
     );
 
   }
@@ -203,40 +199,6 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
   }
 
   /**
-   * Compares the data from the webid with the data given in the requests URLSearchParams.
-   * It returns a 403 error when crucial parameters do not match
-   *
-   * @param { Partial<OidcClientMetadata> } clientData
-   * @param { URLSearchParams } searchParams
-   */
-  compareClientDataWithRequest(
-    clientData: Partial<OidcClientMetadata>,
-    searchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata>>{
-
-    if (clientData.client_id !== searchParams.get('client_id')) {
-
-      return throwError(new ForbiddenHttpError('The client id in the request does not match the one in the WebId'));
-
-    }
-
-    if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
-
-      return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the WebId'));
-
-    }
-
-    if (!clientData.response_types.includes(searchParams.get('response_type')))  {
-
-      return throwError(new ForbiddenHttpError('Response types do not match'));
-
-    }
-
-    return of(clientData);
-
-  }
-
-  /**
    * Compares the data in the store with one in the webid, to check if the webid is not updated.
    * If the in the webid is changed the client registers again with the new data.
    * If registered again it saves the new register data in the KeyValue store.
@@ -289,17 +251,11 @@ export class ClientIdDynamicAuthHandler extends HttpHandler {
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
-    return from(getWebID(clientId)).pipe(
-      switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
-        ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-        : from(response.text())),
-      map((text) => parseQuads(text)),
-      switchMap((quads) => getOidcRegistrationTriple(quads)),
-      switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
+    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData)),
+        : of(registerData))
     );
 
   }

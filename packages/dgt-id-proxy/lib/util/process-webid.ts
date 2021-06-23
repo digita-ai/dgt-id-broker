@@ -1,6 +1,6 @@
 import { BadRequestHttpError } from '@digita-ai/handlersjs-http';
 import { Store, Parser, Quad } from 'n3';
-import {  throwError, of, Observable } from 'rxjs';
+import { throwError, of, Observable } from 'rxjs';
 import { OidcClientMetadata } from './oidc-client-metadata';
 
 /**
@@ -34,25 +34,34 @@ export const parseQuads = (text: string): Quad[] => {
 /**
  * Reads the quads and finds the oidcRegistration triple.
  * If it is not present it errors.
- * If it is it returns a JSON of the oidcRegistration triple
+ * If it is, it parses the oidcRegistration triple quad into a JSON object
  *
- * @param { Quad[] } quads
+ * @param { Quad } quad
  */
-export const getOidcRegistrationTriple = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
+export const parseOidcRegistrationStatement = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
 
-  const foundQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
+  const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 
-  if (!foundQuad) {
+  if (!oidcRegistrationQuad) {
 
     return throwError(new BadRequestHttpError('Not a valid webID: No oidcRegistration field found'));
 
   }
 
-  const object = foundQuad.object;
+  const object = oidcRegistrationQuad.object;
   // this has to be done because for some strange reason the whole object is surrounded by quotes
   const objectSub = object.id.substring(1, object.id.length - 1);
-  const JSONObject = JSON.parse(objectSub);
 
-  return of(JSONObject);
+  try {
+
+    const JSONObject = JSON.parse(objectSub);
+
+    return of(JSONObject);
+
+  } catch(error) {
+
+    return throwError(error);
+
+  }
 
 };
