@@ -1,6 +1,6 @@
 {
   "name": "classic-oidc-provider",
-  "version": "1.0.0",
+  "version": "0.2.0",
   "description": "oidc-demo-app",
   "main": "main.js",
   "scripts": {

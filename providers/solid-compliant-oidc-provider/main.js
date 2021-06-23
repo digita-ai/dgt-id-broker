@@ -54,6 +54,9 @@ const configuration = {
         })
 
     },
+    discovery: {
+        "solid_oidc_supported": "https://solidproject.org/TR/solid-oidc"
+    },
     features: {
         devInteractions: { enabled: false },
         userinfo: { enabled: false },

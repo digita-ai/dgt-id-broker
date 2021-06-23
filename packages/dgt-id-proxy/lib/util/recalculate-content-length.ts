@@ -1,5 +1,12 @@
 import { HttpHandlerRequest } from '@digita-ai/handlersjs-http';
 
+/**
+ * Checks what char type is in the request header 'Content-Type'.
+ * Checks if the charset is supported. If no charset is present it set utf-8 as default.
+ * It returns the new content-type length
+ *
+ * @param { HttpHandlerRequest } request
+ */
 export const recalculateContentLength = (request: HttpHandlerRequest): string => {
 
   const contentTypeHeader = request.headers['content-type'];

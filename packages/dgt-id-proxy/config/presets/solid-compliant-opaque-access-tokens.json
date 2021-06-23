@@ -106,24 +106,38 @@
         "@type": "InMemoryStore"
       },
       {
-        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler",
-        "@type": "SolidClientDynamicAuthRegistrationHandler",
-        "SolidClientDynamicAuthRegistrationHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthRequestHandler",
+        "@type": "ClientIdDynamicAuthRequestHandler",
+        "ClientIdDynamicAuthRequestHandler:_store": {
           "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
         },
-        "SolidClientDynamicAuthRegistrationHandler:_httpHandler": {
-          "@id": "urn:dgt-id-proxy:default:PkceCodeRequestHandler"
-        },
-        "SolidClientDynamicAuthRegistrationHandler:_registration_uri": "http://localhost:3000/reg"
+        "ClientIdDynamicAuthRequestHandler:_registration_uri": "http://localhost:3000/reg"
       },
       {
-        "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler",
-        "@type": "SolidClientDynamicTokenRegistrationHandler",
-        "SolidClientDynamicTokenRegistrationHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler",
+        "@type": "ClientIdDynamicTokenHandler",
+        "ClientIdDynamicTokenHandler:_store": {
           "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
         },
-        "SolidClientDynamicTokenRegistrationHandler:_httpHandler": {
+        "ClientIdDynamicTokenHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler",
+        "@type": "PkceAuthRequestHandler",
+        "PkceAuthRequestHandler:_handler": {
+          "@id": "urn:dgt-id-proxy:default:PipeThroughPkceCodeAuthState"
+        },
+        "PkceAuthRequestHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:PkceStore"
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler",
+        "@type": "PkceCodeResponseHandler",
+        "PkceCodeResponseHandler:_store": {
+          "@id": "urn:dgt-id-proxy:default:PkceStore"
         }
       },
       {
@@ -131,9 +145,42 @@
         "@type": "InMemoryStore"
       },
       {
-        "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
-        "@type": "JwtEncodeHandler",
-        "JwtEncodeHandler:_jwtFields":[
+        "@id": "urn:dgt-id-proxy:default:StateStore",
+        "@type": "InMemoryStore"
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
+        "@type": "AuthStateRequestHandler",
+        "AuthStateRequestHandler:_keyValueStore": {
+          "@id": "urn:dgt-id-proxy:default:StateStore"
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler",
+        "@type": "AuthStateResponseHandler",
+        "AuthStateResponseHandler:_keyValueStore": {
+          "@id": "urn:dgt-id-proxy:default:StateStore"
+        }
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:PipeThroughPkceCodeAuthState",
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+          {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+          }
+        ]
+      },
+      {
+        "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler",
+        "@type": "JwtEncodeResponseHandler",
+        "JwtEncodeResponseHandler:_jwtFields":[
           { 
             "@type": "JwtField",
             "JwtField:_field": "access_token", 
@@ -145,23 +192,23 @@
             "JwtField:_type": "JWT" 
           }
         ],
-        "JwtEncodeHandler:_pathToJwks": {
+        "JwtEncodeResponseHandler:_pathToJwks": {
           "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
         },
-        "JwtEncodeHandler:_proxyUrl": {
+        "JwtEncodeResponseHandler:_proxyUrl": {
           "@id": "urn:dgt-id-proxy:variables:proxyUri"
         }
       },
       {
-        "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
-        "@type": "JwtDecodeHandler",
-        "JwtDecodeHandler:_jwtFields": [
+        "@id": "urn:dgt-id-proxy:default:JwtDecodeResponseHandler",
+        "@type": "JwtDecodeResponseHandler",
+        "JwtDecodeResponseHandler:_jwtFields": [
           "id_token"
         ],
-        "JwtDecodeHandler:_upstreamUrl": {
+        "JwtDecodeResponseHandler:_upstreamUrl": {
           "@id": "urn:dgt-id-proxy:variables:upstreamUri"
         },
-        "JwtDecodeHandler:_verifyJwk": true
+        "JwtDecodeResponseHandler:_verifyJwk": true
       },
       {
         "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
@@ -173,18 +220,18 @@
               "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler"
+              "@id": "urn:dgt-id-proxy:default:JwtDecodeResponseHandler"
             }
           ]
         }
       },
       {
-        "@id": "urn:dgt-id-proxy:default:PkceTokenRequestHandler",
-        "@type": "PkceTokenRequestHandler",
-        "PkceTokenRequestHandler:_httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PkceTokenHandler",
+        "@type": "PkceTokenHandler",
+        "PkceTokenHandler:_httpHandler": {
           "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler"
         },
-        "PkceTokenRequestHandler:_store": {
+        "PkceTokenHandler:_store": {
           "@id": "urn:dgt-id-proxy:default:PkceStore"
         }
       },
@@ -192,7 +239,7 @@
         "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
         "@type": "DpopTokenRequestHandler",
         "DpopTokenRequestHandler:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PkceTokenRequestHandler"
+          "@id": "urn:dgt-id-proxy:default:PkceTokenHandler"
         },
         "DpopTokenRequestHandler:_keyValueStore": {
           "@type": "InMemoryStore"
@@ -242,14 +289,18 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler",
-          "@type": "PkceAuthRequestHandler",
-          "PkceAuthRequestHandler:_codeHandler": {
-            "@id": "urn:dgt-id-proxy:default:SolidClientDynamicAuthRegistrationHandler"
-          },
-          "PkceAuthRequestHandler:_store": {
-            "@id": "urn:dgt-id-proxy:default:PkceStore"
-          }
+          "@type": "PipeThroughHandler",
+          "PipeThroughHandler:_handlers": [
+            {
+              "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthRequestHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler"
+            }
+          ]
         },
         "HttpHandlerRoute:_path": "/auth"
       },
@@ -264,14 +315,7 @@
           }
         ],
         "HttpHandlerRoute:_handler": {
-          "@id": "urn:dgt-id-proxy:default:PkceCodeRequestHandler",
-          "@type": "PkceCodeRequestHandler",
-          "PkceCodeRequestHandler:_httpHandler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-          },
-          "PkceCodeRequestHandler:_store": {
-            "@id": "urn:dgt-id-proxy:default:PkceStore"
-          }
+          "@id": "urn:dgt-id-proxy:default:PipeThroughPkceCodeAuthState"
         },
         "HttpHandlerRoute:_path": "/auth/:dynamic"
       },
@@ -362,10 +406,10 @@
             "@type": "PipeThroughHandler",
             "PipeThroughHandler:_handlers": [
               {
-                "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler"
+                "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler"
               },
               {
-                "@type": "SolidAudienceHandler"
+                "@type": "SolidAudienceResponseHandler"
               },
               {
                 "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
@@ -373,7 +417,7 @@
                 "WebIDResponseHandler:_webIdPattern": "http://localhost:3002/:customclaim/profile/card#me"
               },
               {
-                "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler"
+                "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
               }
             ]
         },

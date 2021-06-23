@@ -96,27 +96,57 @@
       }
     },
     {
-      "@id": "urn:dgt-id-proxy:default:SolidClientStaticAuthRegistrationHandler",
-      "@type": "SolidClientStaticAuthRegistrationHandler",
-      "SolidClientStaticAuthRegistrationHandler:_clientID": "v0mugB6Y5JdUbhq7tt23SgntseaYxeRb",
-      "SolidClientStaticAuthRegistrationHandler:_clientSecret": "kZC1PBfQKJkY-czL1hgAfO3Bn-vkS4AX3ZSpLSF5syD2_PsNsorZm2KGKvlDe9yM",
-      "SolidClientStaticAuthRegistrationHandler:_httpHandler": {
-        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      "@id": "urn:dgt-id-proxy:default:StaticAuthStore",
+      "@type": "InMemoryStore"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler",
+      "@type": "ClientIdStaticAuthRequestHandler",
+      "ClientIdStaticAuthRequestHandler:_clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+      "ClientIdStaticAuthRequestHandler:_redirectUri": "http://localhost:3003/redirect",
+      "ClientIdStaticAuthRequestHandler:_keyValueStore": {
+        "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
       }
     },
     {
-      "@id": "urn:dgt-id-proxy:default:SolidClientStaticTokenRegistrationHandler",
-      "@type": "SolidClientStaticTokenRegistrationHandler",
-      "SolidClientStaticTokenRegistrationHandler:_clientID": "v0mugB6Y5JdUbhq7tt23SgntseaYxeRb",
-      "SolidClientStaticTokenRegistrationHandler:_clientSecret": "kZC1PBfQKJkY-czL1hgAfO3Bn-vkS4AX3ZSpLSF5syD2_PsNsorZm2KGKvlDe9yM",
-      "SolidClientStaticTokenRegistrationHandler:_httpHandler": {
+      "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler",
+      "@type": "ClientIdStaticAuthResponseHandler",
+      "ClientIdStaticAuthResponseHandler:_keyValueStore": {
+        "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler",
+      "@type": "ClientIdStaticTokenHandler",
+      "ClientIdStaticTokenHandler:_httpHandler": {
         "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
+      },
+      "ClientIdStaticTokenHandler:_clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+      "ClientIdStaticTokenHandler:_clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
+      "ClientIdStaticTokenHandler:_redirectUri": "http://localhost:3003/redirect"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:StateStore",
+      "@type": "InMemoryStore"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
+      "@type": "AuthStateRequestHandler",
+      "AuthStateRequestHandler:_keyValueStore": {
+        "@id": "urn:dgt-id-proxy:default:StateStore"
       }
     },
     {
-      "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
-      "@type": "JwtEncodeHandler",
-      "JwtEncodeHandler:_jwtFields":[
+      "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler",
+      "@type": "AuthStateResponseHandler",
+      "AuthStateResponseHandler:_keyValueStore": {
+        "@id": "urn:dgt-id-proxy:default:StateStore"
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler",
+      "@type": "JwtEncodeResponseHandler",
+      "JwtEncodeResponseHandler:_jwtFields":[
         { 
           "@type": "JwtField",
           "JwtField:_field": "access_token", 
@@ -128,23 +158,23 @@
           "JwtField:_type": "JWT" 
         }
       ],
-      "JwtEncodeHandler:_pathToJwks": {
+      "JwtEncodeResponseHandler:_pathToJwks": {
         "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
       },
-      "JwtEncodeHandler:_proxyUrl": {
+      "JwtEncodeResponseHandler:_proxyUrl": {
         "@id": "urn:dgt-id-proxy:variables:proxyUri"
       }
     },
     {
-      "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
-      "@type": "JwtDecodeHandler",
-      "JwtDecodeHandler:_jwtFields": [
+      "@id": "urn:dgt-id-proxy:default:JwtDecodeResponseHandler",
+      "@type": "JwtDecodeResponseHandler",
+      "JwtDecodeResponseHandler:_jwtFields": [
         "id_token"
       ],
-      "JwtDecodeHandler:_upstreamUrl": {
+      "JwtDecodeResponseHandler:_upstreamUrl": {
         "@id": "urn:dgt-id-proxy:variables:upstreamUri"
       },
-      "JwtDecodeHandler:_verifyJwk": false
+      "JwtDecodeResponseHandler:_verifyJwk": false
     },
     {
       "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
@@ -159,7 +189,7 @@
               "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler"
+              "@id": "urn:dgt-id-proxy:default:JwtDecodeResponseHandler"
             }
           ]
         }
@@ -212,7 +242,24 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@id": "urn:dgt-id-proxy:default:SolidClientStaticAuthRegistrationHandler"
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+          {
+            "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+          }
+        ]
       },
       "HttpHandlerRoute:_path": "/authorize"
     },
@@ -225,7 +272,18 @@
         }
       ],
       "HttpHandlerRoute:_handler": {
-        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+          {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+          }
+        ]
       },
       "HttpHandlerRoute:_path": "/authorize/resume"
     },
@@ -292,10 +350,10 @@
         "@type": "PipeThroughHandler",
         "PipeThroughHandler:_handlers": [
           {
-            "@id": "urn:dgt-id-proxy:default:SolidClientStaticTokenRegistrationHandler"
+            "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler"
           },
           {
-            "@type": "SolidAudienceHandler"
+            "@type": "SolidAudienceResponseHandler"
           },
           {
             "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
@@ -304,7 +362,7 @@
             "WebIDResponseHandler:_claim": "http://digita.ai/nickname"
           },
           {
-            "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler"
+            "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
           }
         ]
     },

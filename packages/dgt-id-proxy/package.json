@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
@@ -30,8 +30,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "lint:staged": "lint-staged",
-    "generate:oidc": "node dist/util/generate-openid-configuration.js",
-    "generate:keys": "node dist/util/generate-keys.js",
+    "generate:oidc": "node dist/scripts/generate-openid-configuration.js",
+    "generate:keys": "node dist/scripts/generate-keys.js",
     "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/",
     "demo:panva": "npm run start",
     "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita"
@@ -82,12 +82,19 @@
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/scripts",
+      "<rootDir>/lib/public-api.ts"
+    ],
     "coverageThreshold": {
       "global": {
-        "branches": 91.56,
-        "functions": 94.74,
-        "lines": 89.26,
-        "statements": 89.35
+        "branches": 95.28,
+        "functions": 97.42,
+        "lines": 95.41,
+        "statements": 95.81
       }
     }
   }

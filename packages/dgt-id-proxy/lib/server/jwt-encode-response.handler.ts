@@ -11,7 +11,7 @@ import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';
 
 /**
- * A {JwtField} class, used to enforce the existance of a field and type in the jwtFields parameter of {JwtEncodeHandler}
+ * A {JwtField} class, used to enforce the existance of a field and type in the jwtFields parameter of {JwtEncodeResponseHandler}
  */
 export class JwtField {
 
@@ -30,10 +30,10 @@ export class JwtField {
  * from the response body and creates a new JWT token with them. The tokens are signed and placed in the
  * specified fields in the response body.
  */
-export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {JwtEncodeHandler}.
+   * Creates a {JwtEncodeResponseHandler}.
    *
    * @param {JwtField[]} jwtFields - the fields of the response body containing tokens to encode, and what type should be set in the token's header.
    * @param {string} pathToJwks - the relative path to a json file containing JWKs to sign the tokens.
@@ -47,23 +47,11 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
 
     super();
 
-    if (!jwtFields || jwtFields.length === 0) {
+    if (!jwtFields || jwtFields.length === 0) { throw new Error('jwtFields must be defined and must contain at least 1 field'); }
 
-      throw new Error('jwtFields must be defined and must contain at least 1 field');
+    if (!pathToJwks) { throw new Error('A pathToJwks must be provided'); }
 
-    }
-
-    if(!pathToJwks){
-
-      throw new Error('A pathToJwks must be provided');
-
-    }
-
-    if(!proxyUrl){
-
-      throw new Error('A proxyUrl must be provided');
-
-    }
+    if (!proxyUrl) { throw new Error('A proxyUrl must be provided'); }
 
   }
 
@@ -75,17 +63,9 @@ export class JwtEncodeHandler extends Handler<HttpHandlerResponse, HttpHandlerRe
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
-    if (!response) {
+    if (!response) { return throwError(new Error('response cannot be null or undefined')); }
 
-      return throwError(new Error('response cannot be null or undefined'));
-
-    }
-
-    if (response.status !== 200) {
-
-      return of(response);
-
-    }
+    if (response.status !== 200) { return of(response); }
 
     for (const { field } of this.jwtFields) {
 

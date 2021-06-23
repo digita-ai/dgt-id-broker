@@ -1,9 +1,9 @@
 import { of } from 'rxjs';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceAuthRequestHandler } from './pkce-auth-request.handler';
-import { PkceCodeRequestHandler } from './pkce-code-request.handler';
+import { PkceCodeResponseHandler } from './pkce-code-response.handler';
 
 describe('PkceAuthRequestHandler', () => {
 
@@ -16,7 +16,6 @@ describe('PkceAuthRequestHandler', () => {
   const challengeAndMethod = {
     challenge: code_challenge_value,
     method: code_challenge_method_value,
-    initialState: false,
   };
 
   const state = '123456';
@@ -24,7 +23,6 @@ describe('PkceAuthRequestHandler', () => {
   const challengeAndMethodAndState = {
     challenge: code_challenge_value,
     method: code_challenge_method_value,
-    initialState: true,
   };
 
   const referer = 'client.example.com';
@@ -35,7 +33,6 @@ describe('PkceAuthRequestHandler', () => {
   const host = 'server.example.com';
   const redirectWithAuth = `/redirect_callback.html?code=${code}`;
   let url: URL;
-  let stateURL: URL;
 
   const nestedHttpHandler = {
     canHandle: jest.fn(),
@@ -43,7 +40,7 @@ describe('PkceAuthRequestHandler', () => {
       body: {},
       headers: { location: redirectWithAuth },
       status: 302,
-    } as HttpHandlerResponse)),
+    })),
     safeHandle: jest.fn(),
   };
 
@@ -53,16 +50,13 @@ describe('PkceAuthRequestHandler', () => {
     status: 400,
   };
 
-  let pkceCodeHandler: PkceCodeRequestHandler;
   let pkceHandler: PkceAuthRequestHandler;
 
   beforeEach(async () => {
 
     context = { request: { headers: { host, referer }, method: 'GET', url } };
-    url = new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
-    stateURL = new URL(`http://${host}/${endpoint}?response_type=code&state=${state}&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
-    pkceCodeHandler = new PkceCodeRequestHandler(nestedHttpHandler, store);
-    pkceHandler = new PkceAuthRequestHandler(pkceCodeHandler, store);
+    url = new URL(`http://${host}/${endpoint}?response_type=code&state=${state}&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${client_id}&redirect_uri=${redirect_uri}`);
+    pkceHandler = new PkceAuthRequestHandler(nestedHttpHandler, store);
 
   });
 
@@ -76,8 +70,8 @@ describe('PkceAuthRequestHandler', () => {
 
     expect(() => new PkceAuthRequestHandler(undefined, store)).toThrow('A HttpHandler must be provided');
     expect(() => new PkceAuthRequestHandler(null, store)).toThrow('A HttpHandler must be provided');
-    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, undefined)).toThrow('A store must be provided');
-    expect(() => new PkceAuthRequestHandler(pkceCodeHandler, null)).toThrow('A store must be provided');
+    expect(() => new PkceAuthRequestHandler(nestedHttpHandler, undefined)).toThrow('A store must be provided');
+    expect(() => new PkceAuthRequestHandler(nestedHttpHandler, null)).toThrow('A store must be provided');
 
   });
 
@@ -101,6 +95,23 @@ describe('PkceAuthRequestHandler', () => {
 
       await expect(() => pkceHandler.handle({ ... context, request: { ...context.request, url: null } }).toPromise()).rejects.toThrow('No url was included in the request');
       await expect(() => pkceHandler.handle({ ... context, request: { ...context.request, url: undefined } }).toPromise()).rejects.toThrow('No url was included in the request');
+
+    });
+
+    it('should error when no state is provided in the request', async () => {
+
+      const noStateURL = new URL(url.href);
+      noStateURL.searchParams.set('state', '');
+      const emptyStateContext = { ... context, request: { ...context.request, url: noStateURL } };
+
+      await expect(() => pkceHandler.handle(emptyStateContext).toPromise())
+        .rejects.toThrow('Request must contain a state. Add state handlers to the proxy.');
+
+      noStateURL.searchParams.delete('state');
+      const noStateContext = { ... context, request: { ...context.request, url: noStateURL } };
+
+      await expect(() => pkceHandler.handle(noStateContext).toPromise())
+        .rejects.toThrow('Request must contain a state. Add state handlers to the proxy.');
 
     });
 
@@ -140,58 +151,12 @@ describe('PkceAuthRequestHandler', () => {
 
     });
 
-    it('should call the pkceCodeHandler handle method with the context', async () => {
-
-      pkceCodeHandler.handle = jest.fn().mockReturnValueOnce(of());
-      await pkceHandler.handle(context).toPromise();
-      expect(pkceCodeHandler.handle).toHaveBeenCalledTimes(1);
-      expect(pkceCodeHandler.handle).toHaveBeenCalledWith(context);
-
-    });
-
-    it('should error when no authorization code was provided in the response', async () => {
-
-      const badRes = { ...response, headers: { location: `/requests.html` } };
-
-      const badHttpHandler = { ...nestedHttpHandler, handle: jest.fn().mockReturnValue(of(badRes)) };
-      const badCodeHandler = new PkceCodeRequestHandler(badHttpHandler, store);
-      const pkceHandler2 = new PkceAuthRequestHandler(badCodeHandler, store);
-
-      await expect(pkceHandler2.handle(context).toPromise()).resolves.toEqual(badRes);
-
-    });
-
-    it('should create a state if none was provided and use it as a key to save the challenge & method in memory', async () => {
-
-      await pkceHandler.handle(context).toPromise();
-      const getState = context.request.url.searchParams.get('state');
-      await expect(store.get(getState).then((data) => data)).resolves.toEqual(challengeAndMethod);
-
-    });
-
     it('should use the given state as a key to save the challenge & method & state in memory', async () => {
 
-      const contextUrlWithState = { ... context, request: { ...context.request, url: stateURL } };
-      const getState = contextUrlWithState.request.url.searchParams.get('state');
-
-      await pkceHandler.handle(contextUrlWithState).toPromise();
-
-      challengeAndMethodAndState.initialState = true;
-
-      await expect(store.get(getState)
-        .then((data) => data)).resolves.toEqual(challengeAndMethodAndState);
-
-    });
-
-    it('should use the created state as a key to save the challenge & method in memory', async () => {
-
       await pkceHandler.handle(context).toPromise();
 
-      const getState = context.request.url.searchParams.get('state');
-      challengeAndMethodAndState.initialState = true;
-
-      await expect(store.get(getState)
-        .then((data) => data)).resolves.toEqual(challengeAndMethod);
+      await expect(store.get(state)
+        .then((data) => data)).resolves.toEqual(challengeAndMethodAndState);
 
     });
 

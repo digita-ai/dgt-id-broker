@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError, MethodNotAllowedHttpError } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
 import { from, of, Observable, throwError, zip } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
@@ -11,10 +11,10 @@ import { recalculateContentLength } from '../util/recalculate-content-length';
  * A {HttpHandler} that handles pkce requests to the token endpoint. It checks that the code verifier that is sent
  * in a request matches the code challenge of the authorization code in a {KeyValueStore}.
  */
-export class PkceTokenRequestHandler extends HttpHandler {
+export class PkceTokenHandler extends HttpHandler {
 
   /**
-   * Creates a {PkceTokenRequestHandler}
+   * Creates a {PkceTokenHandler}
    *
    * @param {HttpHandler} httpHandler - the handler through which to pass requests
    * @param {KeyValueStore<Code, ChallengeAndMethod>} store - the store that contains the code challenge and challenge method used for each code
@@ -26,17 +26,9 @@ export class PkceTokenRequestHandler extends HttpHandler {
 
     super();
 
-    if (!httpHandler) {
+    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
 
-      throw new Error('A HttpHandler must be provided');
-
-    }
-
-    if (!store) {
-
-      throw new Error('A store must be provided');
-
-    }
+    if (!store) { throw new Error('A store must be provided'); }
 
   }
 
@@ -52,46 +44,26 @@ export class PkceTokenRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) {
+    if (!context) { return throwError(new Error('Context cannot be null or undefined')); }
 
-      return throwError(new Error('Context cannot be null or undefined'));
+    if (!context.request) { return throwError(new Error('No request was included in the context')); }
 
-    }
-
-    if (!context.request) {
-
-      return throwError(new Error('No request was included in the context'));
-
-    }
-
-    if (!context.request.body) {
-
-      return throwError(new Error('No body was included in the request'));
-
-    }
+    if (!context.request.body) { return throwError(new Error('No body was included in the request')); }
 
     const request = context.request;
 
     const params  = new URLSearchParams(request.body);
     const encodedCode_verifier = params.get('code_verifier');
 
-    if (!encodedCode_verifier) {
-
-      return of(createErrorResponse('Code verifier is required.', 'invalid_request'));
-
-    }
+    if (!encodedCode_verifier) { return of(createErrorResponse('Code verifier is required.', 'invalid_request')); }
 
     const code =  params.get('code');
 
-    if (!code) {
-
-      return of(createErrorResponse('An authorization code is required.', 'invalid_request'));
-
-    }
+    if (!code) { return of(createErrorResponse('An authorization code is required.', 'invalid_request')); }
 
     const code_verifier = decodeURI(encodedCode_verifier);
 
-    if (code_verifier.length < 43 || code_verifier.length > 128){
+    if (code_verifier.length < 43 || code_verifier.length > 128) {
 
       return of(createErrorResponse('Code verifier must be between 43 and 128 characters.', 'invalid_request'));
 

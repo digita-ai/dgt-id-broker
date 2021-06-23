@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
@@ -134,37 +134,29 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should error when no context request is provided', async () => {
 
-      context.request = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
-      context.request = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ... context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => handler.handle({ ... context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request method is provided', async () => {
 
-      context.request.method = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
-      context.request.method = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, method: null } }).toPromise()).rejects.toThrow('No method was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, method: undefined } }).toPromise()).rejects.toThrow('No method was included in the request');
 
     });
 
     it('should error when no context request headers are provided', async () => {
 
-      context.request.headers = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
-      context.request.headers = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, headers: null } }).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, headers: undefined } }).toPromise()).rejects.toThrow('No headers were included in the request');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
-      context.request.url = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
-      context.request.url = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, url: null } }).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => handler.handle({ ...context, request: { ...context.request, url: undefined } }).toPromise()).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -373,6 +365,21 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
+    it('should error when a DPoP proof does not contain a jwk', async () => {
+
+      const header = Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'dpop+jwt' })).toString('base64').replace(/=/g, '');
+      const payload = Buffer.from(JSON.stringify({ htm: 'POST', htu: 'http://localhost:3003/token' })).toString('base64').replace(/=/g, '');
+
+      context.request.headers = { ...context.request.headers, 'dpop': header + '.' + payload + '.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: '"jwk" (JSON Web Key) Header Parameter must be a JSON object' }),
+        headers: { },
+        status: 400,
+      });
+
+    });
+
     it('should error when a DPoP proof\'s jti value is missing', async () => {
 
       const dpopJwtMissingJti = await new SignJWT({
@@ -430,6 +437,62 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
+    it('should add the jti to the "jtis" key in the keyValueStore when none were in the store yet', async () => {
+
+      await expect(keyValueStore.get('jtis')).resolves.toBeUndefined();
+
+      const jti = uuid();
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(jti)
+        .setIssuedAt()
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      // send the jti once
+      await handler.handle(context).toPromise();
+
+      await expect(keyValueStore.get('jtis')).resolves.toEqual([ jti ]);
+
+    });
+
+    it('should add the jti to the list of jtis in the keyValueStore if there are already jtis in the store', async () => {
+
+      keyValueStore.set('jtis', [ 'mockJti' ]);
+
+      const jti = uuid();
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(jti)
+        .setIssuedAt()
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      // send the jti once
+      await handler.handle(context).toPromise();
+
+      await expect(keyValueStore.get('jtis')).resolves.toEqual([ 'mockJti', jti ]);
+
+    });
+
     it('should return an error response when the upstream server returns a response with status other than 200', async () => {
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
@@ -463,6 +526,24 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
+    it('should throw on any errors that are caught in the catchError', async () => {
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(throwError(new Error('mockError')));
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('mockError');
+
+    });
+
+    it('should throw a falback error if catchError catches an empty error', async () => {
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const jose = require('jose/jwk/thumbprint');
+      jose.calculateThumbprint = jest.fn().mockReturnValueOnce(throwError({}));
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('DPoP verification failed due to an unknown error');
+
+    });
+
   });
 
   describe('canHandle', () => {
@@ -476,37 +557,38 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should return false if context was provided', async () => {
 
-      context.request = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: null }).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: undefined }).toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request method is provided', async () => {
 
-      context.request.method = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.method = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: { ...context.request, method: null } })
+        .toPromise()).resolves.toEqual(false);
+
+      await expect(handler.canHandle({ ...context, request: { ...context.request, method: undefined } })
+        .toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request headers are provided', async () => {
 
-      context.request.headers = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.headers = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: { ...context.request, headers: null } })
+        .toPromise()).resolves.toEqual(false);
+
+      await expect(handler.canHandle({ ...context, request: { ...context.request, headers: undefined } })
+        .toPromise()).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request url is provided', async () => {
 
-      context.request.url = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
-      context.request.url = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(handler.canHandle({ ...context, request: { ...context.request, url: null } })
+        .toPromise()).resolves.toEqual(false);
+
+      await expect(handler.canHandle({ ...context, request: { ...context.request, url: undefined } })
+        .toPromise()).resolves.toEqual(false);
 
     });
 
