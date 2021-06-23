@@ -4,6 +4,7 @@
 
 As explained in https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1] of the Solid-OIDC specification, webIDs containing a `solid:oidcRegistration` property should be able to be used as clientIDs. But what if an Identity Provider does not support this? Our proxy provides two possible solutions for such cases.
 
+[[static_client]]
 == Use of a static client
 
 One solution consists of configuring a static client in the Identity Provider which you want to proxy. The proxy has a `ClientIdStaticAuthRequestHandler` and a `ClientIdStaticAuthResponseHandler` for the `authorization` endpoint, and a `ClientIdStaticTokenHandler` for the `token` endpoint.

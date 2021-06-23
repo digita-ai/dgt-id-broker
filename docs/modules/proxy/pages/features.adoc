@@ -10,3 +10,10 @@ The Proxy is created in accordance with the https://solid.github.io/authenticati
 * xref:accesstoken.adoc[Adding additional claims to access tokens] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 Solid-OIDC]
 * xref:opaque.adoc[Upgrading Opaque Access tokens to JWT Access Tokens]
 
+
+== Supporting handlers
+
+* xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]
+* xref:getting_started.adoc#encodinganddecoding[Decode and Encode JWT Handlers]
+* xref:state.adoc[State Handlers]
+

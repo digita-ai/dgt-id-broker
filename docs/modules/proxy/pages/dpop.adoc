@@ -1,4 +1,6 @@
 = Demonstrating Proof-of-Possession (DPoP)
+:toc:
+:toclevels: 3
 
 Enabling DPoP only requires one handler: the `DpopTokenRequestHandler`.
 

@@ -1,4 +1,6 @@
 = Getting Started
+:toc:
+:toclevels: 3
 
 The Identity Proxy works by utilising a library called https://componentsjs.readthedocs.io/en/latest/[componentsjs]. This library allows you to use and not use certain features of the Proxy simply by adding the handlers that enable those features to a JSON config file.
 
@@ -23,6 +25,7 @@ The `PassThroughHttpRequestHandler` can be configured as follows:
 
 Note that the scheme `https:` is supported aswell.
 
+[[encodinganddecoding]]
 == Encoding and Decoding Tokens
 
 If you plan on adding handlers to the token endpoint other than the `PassThroughHttpRequestHandler`, you will need to add a `JwtDecodeHandler` and a 'JwtEncodeHandler' to the chain of handlers on the token endpoint.
