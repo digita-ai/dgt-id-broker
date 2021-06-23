@@ -104,7 +104,7 @@ We can put all of these handlers together on an endpoint (the token endpoint) as
 }
 ```
 
-Because we gave our handlers id's, we can reference them by their ids, which makes the endpoints a lot more readable. Notice that we are using a `PipeThroughHandler`. This handler will execute the request on the first handler, and then pass the response to each subsequent handler. The decoder and encoder only need the response containing the JWTs.
+Because we gave our handlers id's, we can reference them by their ids, which makes the endpoints a lot more readable. Notice that we are using a `PipeThroughHandler`. This handler will simply pass whatever is passed to it to the first handler, take the response from the first handler and pass it to the second handler, and so on until it reaches the end of the chain. The decoder and encoder only need the response containing the JWTs, they don't need to do anything with the request.
 
 So with this config when a request is sent to the /token endpoint of the proxy it would send the request to the upstream server, and when it responds with a token response the given tokens will be decoded and subsequently encoded. With these basics in order, we can start adding handlers to these endpoints.
 
