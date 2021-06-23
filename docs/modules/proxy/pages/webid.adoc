@@ -1,4 +1,6 @@
 = WebIDs as clientIDs
+:toc:
+:toclevels: 3
 
 As explained in https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1] of the Solid-OIDC specification, webIDs containing a `solid:oidcRegistration` property should be able to be used as clientIDs. But what if an Identity Provider does not support this? Our proxy provides two possible solutions for such cases.
 
@@ -8,18 +10,21 @@ One solution consists of configuring a static client in the Identity Provider wh
 
 The authorization endpoint's handlers are split in two because the redirect response that is redirecting the client to the `redirect_uri` specified in their original request may not be on the same endpoint due to a login or other user action being required. The state parameter is used by the proxy in requests to the `authorization` endpoint so that client's redirect_uri can be substituted for the one that is statically configured on the upstream server's static client.
 
+Because these handlers are reliant on the state parameter, the use of xref:state.adoc[state handlers] is required.
+
 === Configuring the handlers
 
 ==== KeyValueStore
 
 The handlers on the `authorization` endpoint will need a `KeyValueStore` that they both use:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:StaticAuthStore",
     "@type": "InMemoryStore"
 },
-```
+----
 
 NOTE: In this example we use an `InMemoryStore`, in production you should use a different store!
 
@@ -27,7 +32,8 @@ NOTE: In this example we use an `InMemoryStore`, in production you should use a 
 
 The `ClientIdStaticAuthRequestHandler` can be configured as follows:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler",
     "@type": "ClientIdStaticAuthRequestHandler",
@@ -37,7 +43,7 @@ The `ClientIdStaticAuthRequestHandler` can be configured as follows:
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
     }
 },
-```
+----
 
 This handler takes the following constructor parameters:
 
@@ -49,7 +55,8 @@ This handler takes the following constructor parameters:
 
 The `ClientIdStaticAuthRequestHandler` can be configured as follows:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler",
     "@type": "ClientIdStaticAuthResponseHandler",
@@ -57,17 +64,19 @@ The `ClientIdStaticAuthRequestHandler` can be configured as follows:
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
     }
 },
-```
+----
 
 This handler takes the following constructor parameters:
 
 * a `keyValueStore`, which is used to save the client's `redirect_uri`, using the `state` parameter as the key, so it can be switched back in the redirect response.
 
-[[clientdstatictokenhandler]]
+[[clientidstatictokenhandler]]
 ==== ClientIdStaticTokenHandler
 
 The `ClientIdStaticTokenHandler` can be configured as follows:
 
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler",
     "@type": "ClientIdStaticTokenHandler",
@@ -85,7 +94,8 @@ The `ClientIdStaticTokenHandler` can be configured as follows:
     "ClientIdStaticTokenHandler:_clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
     "ClientIdStaticTokenHandler:_clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
     "ClientIdStaticTokenHandler:_redirectUri": "http://localhost:3003/redirect"
-},
+}
+----
 
 This handler takes the following constructor parameters:
 
@@ -101,7 +111,8 @@ This handler takes the following constructor parameters:
 
 These endpoints can be configured as follows:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint",
     "@type": "HttpHandlerRoute",
@@ -158,7 +169,7 @@ These endpoints can be configured as follows:
     },
     "HttpHandlerRoute:_path": "/authorize/resume"
 },
-```
+----
 
 Note the use of xref:state.adoc[state handlers]. These are required, so make sure to configure them as well.
 
@@ -179,7 +190,8 @@ The flow of the authorization endpoint static client handlers will be as follows
 
 This endpoint can be configured as follows:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
@@ -208,7 +220,7 @@ This endpoint can be configured as follows:
     },
     "HttpHandlerRoute:_path": "/token"
 }
-```
+----
 
 NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
 
@@ -218,7 +230,7 @@ The flow here will be:
 . The handler verifies that the webID is a valid webID, and that it returns a document in rdf format.
 . The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
 . If they match, the request is valid. The handler then replaces the `client_id` and `redirect_uri` in the request with those that were passed to it in the constructor and also adds the `client_secret` request parameter with the `clientSecret` passed in the constructor to the request before sending it on the its `httpHandler`.
-. It's httpHandler is configured as explained xref:getting_started.adoc#clientdstatictokenhandler[above].
+. It's httpHandler is configured as explained xref:webid.adoc#clientidstatictokenhandler[above].
 . The `client_id` in the access_token is replaced with the client's `client_id` as sent in the request, the token is encoded, and the response is returned to the client.
 
 == Use of dynamic registration
@@ -235,12 +247,13 @@ NOTE: Because the time between an `authorization` request and a `token` request 
 
 The handlers require a `KeyValueStore` of some sort that they both use, so one should be  configured:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore",
     "@type": "InMemoryStore"
 }
-```
+----
 
 NOTE: In this example we use an `InMemoryStore`, in production you should use a different store!
 
@@ -248,7 +261,8 @@ NOTE: In this example we use an `InMemoryStore`, in production you should use a 
 
 The `ClientIdDynamicAuthRequestHandler` can be configured as follows:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthRequestHandler",
     "@type": "ClientIdDynamicAuthRequestHandler",
@@ -257,7 +271,7 @@ The `ClientIdDynamicAuthRequestHandler` can be configured as follows:
     },
     "ClientIdDynamicAuthRequestHandler:_registration_uri": "http://upstream-server.com/reg"
 },
-```
+----
 
 This handler takes three arguments:
 
@@ -268,7 +282,8 @@ This handler takes three arguments:
 
 The `ClientIdDynamicTokenHandler` can be configured as follows:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler",
     "@type": "ClientIdDynamicTokenHandler",
@@ -279,7 +294,7 @@ The `ClientIdDynamicTokenHandler` can be configured as follows:
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
     }
 }
-```
+----
 
 This handler takes two arguments:
 
@@ -290,7 +305,8 @@ This handler takes two arguments:
 
 We will configure two endpoints, an `authorization` and a `token` endpoint:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
     "@type": "HttpHandlerRoute",
@@ -334,7 +350,7 @@ We will configure two endpoints, an `authorization` and a `token` endpoint:
     },
     "HttpHandlerRoute:_path": "/token"
 }
-```
+----
 
 NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
 

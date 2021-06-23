@@ -3,7 +3,9 @@
 Enabling DPoP only requires one handler: the `DpopTokenRequestHandler`.
 
 It can be configured as follows:
-```
+
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
     "@type": "DpopTokenRequestHandler",
@@ -23,7 +25,7 @@ It can be configured as follows:
     },
     "DpopTokenRequestHandler:_proxyTokenUrl": "http://urlofproxy.com/token"
 }
-```
+----
 
 The `DpopTokenRequestHandler` takes 3 arguments:
 
@@ -38,7 +40,8 @@ The `DpopTokenRequestHandler` takes 3 arguments:
 
 A handler doesn't do anything unless it's added to an endpoint. So let's put together a config with the handlers from the xref:getting_started.adoc[Getting Started] page:
 
-```
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
@@ -67,7 +70,7 @@ A handler doesn't do anything unless it's added to an endpoint. So let's put tog
     },
     "HttpHandlerRoute:_path": "/token"
 }
-```
+----
 
 NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
 

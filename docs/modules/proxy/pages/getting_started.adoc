@@ -8,16 +8,19 @@ The Identity Proxy works by utilising a library called https://componentsjs.read
 The foundation of the Proxy rests on the `PassThroughHttpRequestHandler`. This is a handler that takes any request, simply sends it on to a given upstream server, and returns the response. By adding handlers to a chain, you can make changes to the request before it is sent to the upstream, and also add things to the response before sending it back to the client.
 
 The `PassThroughHttpRequestHandler` can be configured as follows:
-```
+
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
     "@type": "PassThroughHttpRequestHandler",
-    "PassThroughHttpRequestHandler:_host": "upstreamhost.com"
+    "PassThroughHttpRequestHandler:_host": "upstreamhost.com",
     "PassThroughHttpRequestHandler:_port": 80,
     "PassThroughHttpRequestHandler:_scheme": "http:",
     "PassThroughHttpRequestHandler:_proxyUrl": "http://proxyhost.com"
 }
-```
+----
+
 Note that the scheme `https:` is supported aswell.
 
 == Encoding and Decoding Tokens
@@ -30,7 +33,9 @@ This is because, internally, the handlers expect a JSON object for certain token
 === JwtDecodeHandler
 
 The config for the `JwtDecodeHandler` is as follows:
-```
+
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
     "@type": "JwtDecodeHandler",
@@ -40,7 +45,7 @@ The config for the `JwtDecodeHandler` is as follows:
     "JwtDecodeHandler:_upstreamUrl": "http://urlofupstream.com",
     "JwtDecodeHandler:_verifyJwk": true
 }
-```
+----
 
 Where `jwtFields` is a list of fields containing a JWT token that should be decoded (most commonly this will be `access_token` and/or `id_token`), and `verifyJwk` is boolean that tells the proxy to verify the JWK that was used to sign the tokens.
 
@@ -48,7 +53,9 @@ Where `jwtFields` is a list of fields containing a JWT token that should be deco
 === JwtEncodeHandler
 
 The config for the `JwtEncodeHandler` is as follows:
-```
+
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
     "@type": "JwtEncodeHandler",
@@ -59,10 +66,10 @@ The config for the `JwtEncodeHandler` is as follows:
             "JwtField:_type": "at+jwt" 
         }
     ],
-    "JwtEncodeHandler:_pathToJwks": /path/to/jwk-file.json,
+    "JwtEncodeHandler:_pathToJwks": "/path/to/jwk-file.json",
     "JwtEncodeHandler:_proxyUrl": "http://urlofproxy.com"
 }
-```
+----
 
 Where `jwtFields` is a list of objects of the type `JwtField` and include a `field` pointing to a token that should be encoded and a `type` that should be set as the token's `typ` claim (commonly `JWT`, or for Access Tokens `at+jwt`)
 
@@ -70,7 +77,9 @@ Where `jwtFields` is a list of objects of the type `JwtField` and include a `fie
 == Putting them together
 
 We can put all of these handlers together on an endpoint (the token endpoint) as follows:
-```
+
+[source, json]
+----
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
@@ -102,7 +111,7 @@ We can put all of these handlers together on an endpoint (the token endpoint) as
     },
     "HttpHandlerRoute:_path": "/token"
 }
-```
+----
 
 Because we gave our handlers id's, we can reference them by their ids, which makes the endpoints a lot more readable. Notice that we are using a `PipeThroughHandler`. This handler will simply pass whatever is passed to it to the first handler, take the response from the first handler and pass it to the second handler, and so on until it reaches the end of the chain. The decoder and encoder only need the response containing the JWTs, they don't need to do anything with the request.
 
