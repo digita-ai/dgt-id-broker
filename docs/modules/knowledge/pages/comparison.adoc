@@ -1,4 +1,5 @@
 :hardbreaks:
+:imagesdir: ../img
 
 = Classic OIDC vs Solid OIDC
 
@@ -25,7 +26,7 @@ Identity Provider (IdP) :: A system implementing the authoritative part of an _a
 
 Claim :: An authoratitive piece of information the *Identity Provider* can provide about the *End-User*.
 
-Client | Relying Party (RP) :: An application relying on the authoratitive *Claims* in order to access data or perform actions on behalf of the *End-User*.
+Client | Relying Party (RP) :: An application relying on the authoritative *Claims* in order to access data or perform actions on behalf of the *End-User*.
 
 Client ID :: An identifier used to register the *Client* with the *Identity Provider*.
 
