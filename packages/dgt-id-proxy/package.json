@@ -75,8 +75,8 @@
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/config/": "config/",
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/dist/": "dist/"
   },
-  "eslintIgnore": [ 
-    "**/bin/server.js" 
+  "eslintIgnore": [
+    "**/bin/server.js"
   ],
   "jest": {
     "preset": "@digita-ai/jest-config",
@@ -93,10 +93,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 94.28,
-        "functions": 97.22,
-        "lines": 92.81,
-        "statements": 93.16
+        "branches": 98.92,
+        "functions": 99.44,
+        "lines": 96.85,
+        "statements": 97
       }
     }
   }
