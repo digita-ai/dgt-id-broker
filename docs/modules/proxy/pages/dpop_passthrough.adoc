@@ -1,0 +1,76 @@
+= DpopPassThroughHandler
+
+If the upstream IdP that is being proxied can supply DPoP, and this proxy is setup not to handle DPoP you will find that the request fails. This is because the DPoP proof that is sent will have an `htm` claim pointing to the proxy, and not to the upstream IdP. To prevent this, the proxy provides a handler: the `DpopPassThroughHandler`.
+
+This handler will verify that the DPoP proof was signed correctly by the private key that matches the public key found in the DPoP proof, and that the `htm` value is the token endpoint of the proxy. Then, it will change the `htm` value to be the token endpoint of the upstream IdP, and sign the DPoP proof with it's own set of keys. When the upstream IdP answers with a DPoP bound Access Token, the proxy will replace the `jkt` claim in the `cnf` claim with the thumbprint of the client's public key that was put in the client's DPoP proof. The result will be a valid DPoP bound Access Token.
+
+== Configuring the DpopPassThroughHandler
+
+The `DpopPassThroughHandler` can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:DpopPassThroughHandler",
+    "@type": "DpopPassThroughHandler",
+    "DpopPassThroughHandler:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:JwtDecodeResponseHandler"
+            }
+        ]
+    },
+    "DpopPassThroughHandler:_proxyTokenUrl": "http://proxy.com/token",
+    "DpopPassThroughHandler:_upstreamTokenUrl": "http://upstream.com/token"
+}
+----
+
+This handler takes the following constructor parameters:
+
+* a `handler`, which is the handler to which it will pass the request. In this case a `PipeThroughHandler` is used, which takes whatever is input into it, and passes it to the first handler. It then takes the value that handler returns, and passes it to the second, and so on. This handler will pass the request to a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which will send the request to the upstream server and return the response. That response is then passed to a xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which should be setup to decode the access_token so that the `DpopPassThroughHandler` can easily access the claims within.
+* a `proxyTokenUrl`, which is the url of the proxy's token endpoint.
+* * a `upstreamTokenUrl`, which is the url of the upstream's token endpoint.
+
+== Configuring the Token endpoint
+
+The token endpoint can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@id": "urn:dgt-id-proxy:default:PostOperation"
+        },
+        {
+            "@id": "urn:dgt-id-proxy:default:OptionsOperation"
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:DpopPassThroughHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
+            }
+        ]
+    },
+    "HttpHandlerRoute:_path": "/token"
+}
+----
+
+The flow here will be:
+
+. The request reaches the `PipeThroughHandler` which passes the request to the `DpopPassThroughHandler`.
+. The `DpopPassThroughHandler` will then make the necessary checks on the DPoP proof, and then send the request on to it's `handler`.
+. In this case, the `PassThroughHttpRequestHandler` will pass the request on to the upstream server, and return the response. The Access Token will then be decoded.
+. The `DpopPassThroughHandler` replaces the `jkt` claim in the `cnf` claim of the access token, and returns the response.
+. The Access Token is then xref:getting_started.adoc#encode[encoded], and the request is returned to the client.

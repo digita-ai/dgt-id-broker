@@ -16,4 +16,5 @@ The Proxy is created in accordance with the https://solid.github.io/authenticati
 * xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]
 * xref:getting_started.adoc#encodinganddecoding[Decode and Encode JWT Handlers]
 * xref:state.adoc[State Handlers]
+* xref:dpop_passthrough.adoc[DpopPassThroughHandler]
 

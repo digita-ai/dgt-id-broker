@@ -1,4 +1,6 @@
 = Upgrading Opaque Access tokens to JWT Access Tokens
+:toc:
+:toclevels: 3
 
 According to https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 of the Solid-OIDC specification] Access Tokens must be valid Json Web Tokens, also known as `JWT`. In classic OIDC however, Access Tokens don't have to be `JWTs`, they can also be what is called an `opaque` access token. So, to make an IdP Solid compliant, the proxy must be able to upgrade `opaque` Access Tokens to `JWT` Access Tokens. To accomplish this, the proxy provides an `OpaqueAccessTokenHandler`.
 
