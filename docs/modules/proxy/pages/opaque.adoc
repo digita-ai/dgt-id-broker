@@ -1,0 +1,75 @@
+= Upgrading Opaque Access tokens to JWT Access Tokens
+
+According to https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 of the Solid-OIDC specification] Access Tokens must be valid Json Web Tokens, also known as `JWT`. In classic OIDC however, Access Tokens don't have to be `JWTs`, they can also be what is called an `opaque` access token. So, to make an IdP Solid compliant, the proxy must be able to upgrade `opaque` Access Tokens to `JWT` Access Tokens. To accomplish this, the proxy provides an `OpaqueAccessTokenHandler`.
+
+== OpaqueAccessTokenHandler
+
+The OpaqueAccessTokenHandler works by taking claims from the ID Token, which is always a JWT. Specifically, it takes the `sub`, `aud`, `iat`, and `exp` claims from the ID Token, and puts them into the Access Token. It also takes the `client_id` parameter that was sent to the token endpoint, and adds it to the Access Token, as that is a necessary claim as well.
+
+=== Configuring the OpaqueAccessTokenHandler
+
+The `OpaqueAccessTokenHandler` can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
+    "@type": "OpaqueAccessTokenHandler",
+    "OpaqueAccessTokenHandler:_handler": {
+        "@type": "PipeThroughHandler",
+          "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:JwtDecodeResponseHandler"
+            }
+        ]
+    }
+}
+----
+
+This handler takes the following constructor parameter:
+
+* a `handler`, which is the handler to which it will pass the request. That handler will eventually return a response that should contain an Access Token and and ID Token.
++
+In this case, the handler is a `PipeThroughHandler` which will take the request and pass it to the xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], then take the response that it returns and pass it to the xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which should be configured to decode the ID token.
+
+== Configuring the Token Endpoint
+
+The `OpaqueAccessTokenHandler` works on the token endpoint. This endpoint can be configured as follows:
+
+[source, json]
+----
+{
+        "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+        "@type": "HttpHandlerRoute",
+        "HttpHandlerRoute:_operations": [
+          {
+            "@id": "urn:dgt-id-proxy:default:PostOperation"
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:OptionsOperation"
+          }
+        ],
+        "HttpHandlerRoute:_handler": {
+            "@type": "PipeThroughHandler",
+            "PipeThroughHandler:_handlers": [
+                {
+                    "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler"
+                },
+                {
+                    "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
+                }
+            ]
+        },
+        "HttpHandlerRoute:_path": "/token"
+      }
+----
+
+The flow here will be:
+
+. The request reaches the `OpaqueAccessTokenHandler`, which will remember the `client_id` that was sent with the request. It will then pass the request on to it's `handler`.
+. The handler was configured to pass the request to a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler] which will send the request on to the upstream server, and return the response. That response is then passed to a xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which should be configured to decode the ID Token, so that the claims can be easily accessed by the `OpaqueAccessTokenHandler`.
+. The response with the decoded ID Token will then be returned back to the `OpaqueAccessTokenHandler` which will take the claims from the ID token and add them to the payload of an Access Token along with the `client_id` claim and return the response.
+. The response, now containing the payload of a JWT Access Token and a decoded ID Token is then encoded by a xref:getting_started.adoc#encode[JwtEncodeResponseHandler], and the response is returned back to the client.

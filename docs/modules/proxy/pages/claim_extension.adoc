@@ -1,4 +1,6 @@
 = Adding necessary claims to tokens
+:toc:
+:toclevels: 3
 
 As described in https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 of the Solid-OIDC specification], Solid-OIDC has some additional requirements to claims found in Access Tokens and ID Tokens on top of the requirements laid out by classic OIDC.
 
