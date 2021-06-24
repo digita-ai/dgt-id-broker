@@ -6,8 +6,8 @@ The Proxy is created in accordance with the https://solid.github.io/authenticati
 
 * xref:dpop.adoc[Demonstrating Proof-of-Possession (DPoP)] in accordance with https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03[ietf draft 03]
 * xref:pkce.adoc[Proof Key for Code Exchange (PKCE)] in accordance with https://datatracker.ietf.org/doc/html/rfc7636[RFC-7636]
-* xref:webid.adoc[WebIDs as clientIDs] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1 Solid-OIDC]
-* xref:accesstoken.adoc[Adding additional claims to access tokens] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 Solid-OIDC]
+* xref:webids_as_clientids.adoc[WebIDs as clientIDs] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1 Solid-OIDC]
+* xref:claim_extension.adoc[Adding necessary claims to tokens] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 Solid-OIDC]
 * xref:opaque.adoc[Upgrading Opaque Access tokens to JWT Access Tokens]
 
 

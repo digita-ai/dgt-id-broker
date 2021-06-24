@@ -232,7 +232,7 @@ The flow here will be:
 . The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
 . If they match, the request is valid. The handler then replaces the `client_id` and `redirect_uri` in the request with those that were passed to it in the constructor and also adds the `client_secret` request parameter with the `clientSecret` passed in the constructor to the request before sending it on the its `httpHandler`.
 . It's httpHandler is configured as explained xref:webid.adoc#clientidstatictokenhandler[above].
-. The `client_id` in the access_token is replaced with the client's `client_id` as sent in the request, the token is encoded, and the response is returned to the client.
+. The `client_id` in the access_token is replaced with the client's `client_id` as sent in the request, the token is xref:getting_started.adoc#encode[encoded], and the response is returned to the client.
 
 == Use of dynamic registration
 
