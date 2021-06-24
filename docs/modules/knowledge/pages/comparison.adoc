@@ -1,5 +1,7 @@
 :hardbreaks:
 :imagesdir: ../img
+:toc:
+:toclevels: 3
 
 = Classic OIDC vs Solid OIDC
 
@@ -77,6 +79,10 @@ DPoP :: Demonstration of Proof-of-Possession, a relatively simple application-le
 
 Dynamic Client Registration :: A mechanism for the *Client* to register and present the *Authorization Server* with a set of metadata, such as a set of valid redirection URIs.
 Traditionally, registration of a client with an *Authorization Server* is performed manually. It can be used either for a *Client* to dynamically register itself with authorization servers or for a client developer to programmatically register the *Client* with authorization servers.
+
+Static Client Registration :: As an alternative to *Dynamic Client Registration* the *Client* can choose to register statically. Upon registration a form of *Client ID* can be provided, like a *WebID* for instance. The *id_token_signing_alg_values_supported* will swap out these client credentials and provide credentials of it's own. Thus providing instant access upon registration.
+
+WebID Verification :: Upon receiving a *WebID* as *Client ID* the *IdP* retrieves it's contents to verify it. The *WebID* must contain a _solid:oidcRegistration_ triple containing the parameters required for registering. Upon verification these parameters are compared to the parameters provided in the authorization request. 
 
 
 === Example
@@ -218,12 +224,13 @@ Notice the `authorization_endpoint` field. This URL will be used to send an auth
 First we need to generate a *code verifier*. This can be a cryptographic random string (e.g. `*_LDKoTiFC6_*`). 
 By encoding this code verifier into a SHA-256 encoded string we can create our *code challenge* (e.g. `BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))`).
 Resulting in the following code challenge: `*_92d5a871f52a513951e3260cd42b04f29b0f4a8bfea1740a0780e3db667_*`
+
 . The *Client*'s code verifier is saved into the session storage and will later be used to prove to the *OP* that Daily Pictures is the *Client* that has sent the request. 
 +
 WARNING: Do not save the code verifier anywhere else!
 
 
-. Our *Client* is now registered and we can start making a request to authorize it.
+. An authorization request can now be made to the authorization endpoint
 +
 [source, json]
 ----
