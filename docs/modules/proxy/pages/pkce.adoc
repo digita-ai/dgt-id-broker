@@ -64,7 +64,7 @@ This handler takes the following parameters:
 * a `handler`, to which it can pass its request when it has finished validating the PKCE request. This example uses a `PipeThroughHandler`, which will pass the request down a chain of handlers. Note the use of the xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
 * a `store` as mentioned above in which it can store the `code_challenge` and `challenge_method` associated with the request.
 
-==== PkceCodeResponseHandler:
+==== PkceCodeResponseHandler
 
 The `PkceCodeResponseHandler` can be configured as follows:
 
