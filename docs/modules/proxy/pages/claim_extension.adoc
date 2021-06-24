@@ -36,7 +36,7 @@ The `WebIDResponseHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
     "@type": "WebIDResponseHandler",
-    "WebIDResponseHandler:_webIdPattern": "http://hostofwebids/:customclaim/profile/card#me",
+    "WebIDResponseHandler:_webIdPattern": "http://hostofwebids.com/:customclaim/profile/card#me",
     "WebIDResponseHandler:_claim": "username"
 }
 ----
