@@ -1,3 +1,2 @@
 * xref:pages/index.adoc[Proxy documentation]
-* xref:pages/features.adoc[List of features]
 * xref:pages/getting_started.adoc[Getting Started]
