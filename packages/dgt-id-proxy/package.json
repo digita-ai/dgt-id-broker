@@ -92,14 +92,13 @@
       "<rootDir>/lib/scripts",
       "<rootDir>/lib/public-api.ts",
       "<rootDir>/bin/server.js"
-
     ],
     "coverageThreshold": {
       "global": {
         "branches": 99.82,
         "functions": 99.48,
-        "lines": 99.61,
-        "statements": 99.55
+        "lines": 100,
+        "statements": 99.89
       }
     }
   }
