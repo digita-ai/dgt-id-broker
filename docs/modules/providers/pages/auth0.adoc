@@ -1,0 +1,31 @@
+= Auth0
+
+https://auth0.com/[Auth0] lets you easily setup OIDC for your app. As opposed to the other Identity Providers that were used to test this proxy, it is managed through a web interface. It gives the least control in terms of configuration.
+
+https://auth0.com/docs/[Auth0 Documentation]
+
+For a demo of the Auth0 provider in the root of this repository, open a terminal and execute `npm run demo:auth0`. This will start an instance of the proxy with the correct configuration, a demo client and a demo pod server.
+
+You can login to Auth0 using:
+    * email: tonypaillard@digita.ai
+    * password: Digita1234!
+
+== Solid Compliant Features
+
+Out of the box, PKCE is the only Solid Compliant feature that is enabled.
+
+== Enabling Features
+
+There isn't much to enable.
+
+You have some control in the form of "Rules", which allow you to, for example, add a custom namespaced claim to a token. This can be used with the proxy to add the `webid` claim to tokens using the xref:../../proxy/pages/claim_extension.adoc#webidresponsehandler[WebIDResponseHandler].
+
+== Features Provided by the Proxy
+
+To make Auth0 Solid-OIDC compliant you will need to configure the following features on the proxy:
+
+* xref:../../proxy/pages/webids_as_clientids.adoc[Using webids as client IDs]. Can be achieved with either the Static Client handlers, or the Dynamic Registration handlers.
+* xref:../../proxy/pages/dpop.adoc[Demonstrating Proof of Posession].
+* xref:../../proxy/pages/opaque.adoc[Converting Opaque Access Tokens to JWTs].
+* xref:../../proxy/pages/claim_extension.adoc#webid[Adding the `webid` claim to tokens]
+* xref:../../proxy/pages/claim_extension.adoc#aud[Adding `solid` to the aud claim of Access Tokens].

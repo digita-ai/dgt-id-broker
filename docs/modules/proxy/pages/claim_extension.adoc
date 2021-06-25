@@ -13,6 +13,7 @@ In the ID Token:
 
 * The `webid` claim must also be present.
 
+[[webid]]
 == The `webid` claim
 
 The proxy provides a handler, the `WebIDResponseHandler` to make sure the `webid` claim is added to both the Access and ID Token.
@@ -27,6 +28,7 @@ A webid could then be created for each user based on their `sub` claim and be ad
 
 NOTE: A webID must be unique. If a claim is used other than the `sub` claim, make sure it is a claim that uniquely identifies the user.
 
+[[webidresponsehandler]]
 === Configuring the WebIDResponseHandler
 
 The `WebIDResponseHandler` can be configured as follows:
@@ -46,6 +48,7 @@ This handler takes the following constructor parameters:
 * a `webIdPattern`, which is the pattern of a webID with a parameter prefixed with `:` to tell the handler where to replace the parameter with a claim from the ID Token.
 * a `claim`, It denotes the ID Token claim used to mint the webID. This parameter is optional and can be excluded. By default `sub` is used.
 
+[[aud]]
 == The `aud` claim
 
 As mentioned, this claim must be either the string `solid` or be an array of values, one of which is the string `solid`. To accomplish this, the proxy provides the `SolidAudienceResponseHandler`
