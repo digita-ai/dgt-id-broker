@@ -20,36 +20,8 @@ import { checkFile, checkUri, createVariables, launch } from './main';
 
 describe('Main.ts', () => {
 
-  const variablesWithDefaultsAndNoMainModule = {
+  const variables = {
     'urn:dgt-id-proxy:variables:customConfigPath': 'config/presets/auth0-config.json',
-    'urn:dgt-id-proxy:variables:mainModulePath': undefined,
-    'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
-    'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
-    'urn:dgt-id-proxy:variables:proxyPort': '3003',
-    'urn:dgt-id-proxy:variables:upstreamUri': 'https://digita-ai.eu.auth0.com/',
-    'urn:dgt-id-proxy:variables:upstreamHost': 'digita-ai.eu.auth0.com',
-    'urn:dgt-id-proxy:variables:upstreamPort': '443',
-    'urn:dgt-id-proxy:variables:upstreamScheme': 'https:',
-    'urn:dgt-id-proxy:variables:openidConfigurationFilePath': 'assets/openid-configuration.json',
-    'urn:dgt-id-proxy:variables:jwksFilePath': 'assets/jwks.json',
-  } as Record<string, any>;
-
-  const variablesWithMainModule = {
-    'urn:dgt-id-proxy:variables:customConfigPath': 'config/presets/auth0-config.json',
-    'urn:dgt-id-proxy:variables:mainModulePath': 'lib/main.ts',
-    'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
-    'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
-    'urn:dgt-id-proxy:variables:proxyPort': '3003',
-    'urn:dgt-id-proxy:variables:upstreamUri': 'https://digita-ai.eu.auth0.com/',
-    'urn:dgt-id-proxy:variables:upstreamHost': 'digita-ai.eu.auth0.com',
-    'urn:dgt-id-proxy:variables:upstreamPort': '443',
-    'urn:dgt-id-proxy:variables:upstreamScheme': 'https:',
-    'urn:dgt-id-proxy:variables:openidConfigurationFilePath': 'assets/openid-configuration.json',
-    'urn:dgt-id-proxy:variables:jwksFilePath': 'assets/jwks.json',
-  } as Record<string, any>;
-
-  const variablesWithoutConfigPath = {
-    'urn:dgt-id-proxy:variables:customConfigPath': undefined,
     'urn:dgt-id-proxy:variables:mainModulePath': 'lib/main.ts',
     'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
     'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
@@ -160,7 +132,7 @@ describe('Main.ts', () => {
     it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
 
       expect(createVariables([ 'npm run start', '--', '-c', 'config/presets/auth0-config.json', '-U', 'https://digita-ai.eu.auth0.com/' ]))
-        .toEqual(variablesWithDefaultsAndNoMainModule);
+        .toEqual({ ...variables, ['urn:dgt-id-proxy:variables:mainModulePath'] : undefined });
 
     });
 
@@ -198,7 +170,7 @@ describe('Main.ts', () => {
 
       const mainModulePath = path.join(__dirname, '../');
 
-      await launch(variablesWithDefaultsAndNoMainModule);
+      await launch({ ...variables, ['urn:dgt-id-proxy:variables:mainModulePath'] : undefined });
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
       expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly' });
@@ -207,9 +179,9 @@ describe('Main.ts', () => {
 
     it('should call build with process.cwd and mainModulePath if provided', async () => {
 
-      const mainModulePath = path.join(process.cwd(), variablesWithMainModule ['urn:dgt-id-proxy:variables:mainModulePath']);
+      const mainModulePath = path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath']);
 
-      await launch(variablesWithMainModule);
+      await launch(variables);
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
       expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly' });
@@ -220,7 +192,7 @@ describe('Main.ts', () => {
 
       const configPath = path.join(__dirname, '../config/presets/solid-compliant-opaque-access-tokens.json');
 
-      await launch(variablesWithoutConfigPath);
+      await launch({ ...variables, ['urn:dgt-id-proxy:variables:customConfigPath'] : undefined });
 
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
