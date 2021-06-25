@@ -9,8 +9,16 @@
       "path": "docs"
     },
     {
+      "name": "dgt-id-kit",
+      "path": "packages/dgt-id-kit"
+    },
+    {
       "name": "dgt-id-proxy",
       "path": "packages/dgt-id-proxy"
+    },
+    {
+      "name": "inrupt-solid-client",
+      "path": "packages/inrupt-solid-client"
     }
   ],
   "settings": {
