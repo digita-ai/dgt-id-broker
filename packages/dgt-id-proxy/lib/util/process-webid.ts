@@ -38,7 +38,7 @@ export const parseQuads = (text: string): Quad[] => {
  *
  * @param { Quad } quad
  */
-export const parseOidcRegistrationStatement = (quads: Quad[]): Observable<Partial<OidcClientMetadata>> => {
+export const parseOidcRegistrationStatement = (quads: Quad[]): Observable<OidcClientMetadata> => {
 
   const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 

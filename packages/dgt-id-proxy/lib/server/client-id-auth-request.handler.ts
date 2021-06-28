@@ -30,7 +30,7 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
   retrieveAndValidateWebId = (
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> => from(getWebID(clientId)).pipe(
+  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> => from(getWebID(clientId)).pipe(
     switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
       ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
       : from(response.text())),
@@ -43,13 +43,13 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
    * Compares the data from the webid with the data given in the requests URLSearchParams.
    * It returns a 403 error when crucial parameters do not match
    *
-   * @param { Partial<OidcClientMetadata> } clientData
+   * @param { OidcClientMetadata } clientData
    * @param { URLSearchParams } searchParams
    */
   compareClientDataWithRequest = (
-    clientData: Partial<OidcClientMetadata>,
+    clientData: OidcClientMetadata,
     searchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata>> => {
+  ): Observable<OidcClientMetadata> => {
 
     if (clientData.client_id !== searchParams.get('client_id')) {
 

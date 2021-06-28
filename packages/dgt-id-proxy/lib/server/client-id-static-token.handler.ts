@@ -135,7 +135,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   }
 
-  private checkWebId(clientId: string, grantType: string): Observable<Partial<OidcClientMetadata>> {
+  private checkWebId(clientId: string, grantType: string): Observable<OidcClientMetadata> {
 
     return from(getWebID(clientId))
       .pipe(

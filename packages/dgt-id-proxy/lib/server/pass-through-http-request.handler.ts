@@ -1,4 +1,4 @@
-import { IncomingMessage, request as httpRequest, ServerResponse } from 'http';
+import { IncomingMessage, request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { gunzipSync, gzipSync, brotliDecompressSync, brotliCompressSync } from 'zlib';
@@ -177,12 +177,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       method,
       headers: outgoingHttpHeaders,
     };
-
-    // if (requestOpts.path === '/oauth/token') {
-
-    //   delete requestOpts.headers['accept-encoding'];
-
-    // }
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
 

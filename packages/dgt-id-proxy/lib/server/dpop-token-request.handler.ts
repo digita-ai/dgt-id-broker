@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, tap } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
@@ -107,7 +107,9 @@ export class DpopTokenRequestHandler extends HttpHandler {
     method: string, { payload, protectedHeader: header }: JWTVerifyResult,
   ): Observable<JWTVerifyResult & { protectedHeader: { jwk: Pick<JWK, 'kty' | 'crv' | 'x' | 'y' | 'e' | 'n'> } }> {
 
-    const jwk = header.jwk??{};
+    const jwk = header.jwk;
+
+    if (!jwk) { return throwError(new Error('no JWK was found in the header')); }
 
     if (!payload.jti || typeof payload.jti !== 'string') { return throwError(new Error('must have a jti string property')); }
 

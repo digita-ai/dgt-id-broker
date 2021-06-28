@@ -25,7 +25,8 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
    */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+    private store:
+    KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
   ) {
 
     super();
@@ -87,7 +88,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient'
         ? this.checkRedirectUri(clientId, redirect_uri)
         : this.checkWebId(clientId, context.request.url.searchParams)),
-      tap((res) => { context.request.url.searchParams.set('client_id', res.client_id??''); }),
+      tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
       mapTo(context),
     );
@@ -117,14 +118,14 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
    * and returns a JSON of the response and saves
    * this response in the KeyValue store with the client id as key.
    *
-   * @param { Partial<OidcClientMetadata> } data
+   * @param { OidcClientMetadata } data
    * @param { string } client_id
    */
   async registerClient(
-    data: Partial<OidcClientMetadata>,
+    data: OidcClientMetadata,
     client_id: string,
     redirect_uri?: string,
-  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+  ): Promise<OidcClientMetadata & OidcClientRegistrationResponse> {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -147,9 +148,9 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
    * It combines all the parameters that are possible for a register request
    * that are present in the webid.
    *
-   * @param { Partial<OidcClientMetadata> } clientData
+   * @param { OidcClientMetadata } clientData
    */
-  createRequestData(clientData: Partial<OidcClientMetadata>): Partial<OidcClientMetadata> {
+  createRequestData(clientData: OidcClientMetadata): OidcClientMetadata {
 
     const metadata = [
       'response_types',
@@ -186,7 +187,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
     const reqData = {
       redirect_uris: clientData.redirect_uris,
       token_endpoint_auth_method : 'none',
-    } as Partial<OidcClientMetadata>;
+    } as OidcClientMetadata;
 
     metadata.map((item) => {
 
@@ -204,15 +205,13 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
    * If registered again it saves the new register data in the KeyValue store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
-   * @param { Partial<OidcClientMetadata> } clientData - the data retrieved from the webid.
-   * @param { Partial<OidcClientMetadata & OidcClientRegistrationResponse> } registerData - the data retrieved from the store.
+   * @param { OidcClientMetadata } clientData - the data retrieved from the webid.
+   * @param { OidcClientMetadata & OidcClientRegistrationResponse } registerData - the data retrieved from the store.
    */
-  compareWebIdDataWithStore(
-    clientData: Partial<OidcClientMetadata>,
-    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse> | undefined,
+  clientRegistrationDataChanged(
+    clientData: OidcClientMetadata,
+    registerData: OidcClientMetadata & OidcClientRegistrationResponse,
   ): boolean {
-
-    if (!registerData) { return true; }
 
     for (const item of Object.keys(clientData)) {
 
@@ -231,12 +230,12 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   private checkRedirectUri(
     clientId: string,
     redirectUri: string
-  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
 
     const clientData = {
       redirect_uris: [ redirectUri ],
       token_endpoint_auth_method : 'none',
-    } as Partial<OidcClientMetadata>;
+    } as OidcClientMetadata;
 
     return from(this.store.get(redirectUri)).pipe(
       switchMap((registerData) => registerData
@@ -249,13 +248,14 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   private checkWebId(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
 
     return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
-      switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
-        ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData??{}))
+      switchMap(([ clientData, registerData ]) =>
+        !registerData || this.clientRegistrationDataChanged(clientData, registerData)
+          ? this.registerClient(this.createRequestData(clientData), clientId)
+          : of(registerData))
     );
 
   }

@@ -11,7 +11,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
 
-  const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+  const store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
   = new InMemoryStore();
 
   const referer = 'client.example.com';
@@ -27,7 +27,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const reqData = {
     'redirect_uris': [ redirect_uri ],
     'token_endpoint_auth_method' : 'none',
-  };
+  } as OidcClientMetadata;
 
   const mockRegisterResponse = {
     application_type: 'web',
@@ -231,7 +231,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should use the redirect_uri as key for the store if a public webid is used', async () => {
 
-      const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
       = new InMemoryStore();
 
       const handler2
@@ -251,7 +251,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should not register', async () => {
 
-      const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
       = new InMemoryStore();
 
       const handler2

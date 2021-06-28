@@ -40,6 +40,7 @@ describe('DpopTokenRequestHandler', () => {
   let privateKey: KeyLike;
   let publicJwk: JWK;
   let validDpopJwt: string;
+  let dpopJwtWithoutJWK: string;
 
   const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
 
@@ -88,6 +89,18 @@ describe('DpopTokenRequestHandler', () => {
         alg: 'ES256',
         typ: 'dpop+jwt',
         jwk: publicJwk,
+      })
+      .setJti(uuid())
+      .setIssuedAt()
+      .sign(privateKey);
+
+    dpopJwtWithoutJWK = await new SignJWT({
+      'htm': 'POST',
+      'htu': 'http://localhost:3003/token',
+    })
+      .setProtectedHeader({
+        alg: 'ES256',
+        typ: 'dpop+jwt',
       })
       .setJti(uuid())
       .setIssuedAt()
@@ -541,6 +554,37 @@ describe('DpopTokenRequestHandler', () => {
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
 
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('DPoP verification failed due to an unknown error');
+
+    });
+
+    it('should call calculateThumbprint with an empty object when no JWK was found in the header', async () => {
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const jwk = require('jose/jwk/thumbprint');
+      jwk.calculateThumbprint = jest.fn().mockReturnValueOnce(of({}));
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const jwt = require('jose/jwt/verify');
+
+      jwt.jwtVerify = jest.fn().mockReturnValueOnce(of(
+        { payload: {
+          htm: 'POST',
+          htu: 'http://localhost:3003/token',
+          jti: 'acb869a5-e9ff-462a-b7d3-ccb5470ab239',
+          iat: 1624888521,
+        },
+        protectedHeader: {
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+        } }
+      ));
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+
+      await expect(handler.handle({ ...context, request: { headers: { 'dpop': dpopJwtWithoutJWK }, method: 'POST', url: new URL('http://digita.ai/') } }).toPromise()).resolves.toEqual({
+        body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'no JWK was found in the header' }),
+        headers: {},
+        status: 400,
+      });
 
     });
 

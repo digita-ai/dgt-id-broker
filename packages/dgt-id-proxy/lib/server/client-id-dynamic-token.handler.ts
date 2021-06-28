@@ -22,7 +22,8 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    * @param {HttpHandler} httpHandler - the handler through which to pass requests
    */
   constructor(
-    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
+    private store:
+    KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>,
     private httpHandler: HttpHandler
   ) {
 
@@ -76,7 +77,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
         : throwError(new Error('No data was found in the store'))),
       map((registerInfo) => {
 
-        params.set('client_id', registerInfo.client_id??'');
+        params.set('client_id', registerInfo.client_id);
 
         return { ...context, request: { ...context.request, body: params.toString() } };
 
