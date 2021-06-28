@@ -87,7 +87,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient'
         ? this.checkRedirectUri(clientId, redirect_uri)
         : this.checkWebId(clientId, context.request.url.searchParams)),
-      tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
+      tap((res) => { if(res.client_id) { context.request.url.searchParams.set('client_id', res.client_id); } }),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
       mapTo(context),
     );
@@ -209,7 +209,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
    */
   compareWebIdDataWithStore(
     clientData: Partial<OidcClientMetadata>,
-    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
+    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse> | undefined,
   ): boolean {
 
     if (!registerData) { return true; }
@@ -234,8 +234,8 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
     const clientData = {
-      'redirect_uris': [ redirectUri ],
-      'token_endpoint_auth_method' : 'none',
+      redirect_uris: [ redirectUri ],
+      token_endpoint_auth_method : 'none',
     };
 
     return from(this.store.get(redirectUri)).pipe(
@@ -255,7 +255,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData))
+        : of(registerData? registerData : {}))
     );
 
   }

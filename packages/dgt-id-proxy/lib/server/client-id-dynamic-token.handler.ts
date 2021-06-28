@@ -76,7 +76,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
         : throwError(new Error('No data was found in the store'))),
       map((registerInfo) => {
 
-        params.set('client_id', registerInfo.client_id);
+        if(registerInfo.client_id){ params.set('client_id', registerInfo.client_id); }
 
         return { ...context, request: { ...context.request, body: params.toString() } };
 

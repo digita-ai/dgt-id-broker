@@ -144,7 +144,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
           : from(response.text())),
         map((text) => parseQuads(text)),
         switchMap((quad) => parseOidcRegistrationStatement(quad)),
-        switchMap((text) => (text.grant_types.includes(grantType))
+        switchMap((text) => (text.grant_types?.includes(grantType))
           ? of(text)
           : throwError(new Error('The grant type in the request is not included in the WebId'))),
       );

@@ -57,13 +57,17 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
 
     }
 
-    if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
+    const redirect_uri = searchParams.get('redirect_uri');
+
+    if (redirect_uri && !clientData.redirect_uris?.includes(redirect_uri)) {
 
       return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the WebId'));
 
     }
 
-    if (!clientData.response_types.includes(searchParams.get('response_type')))  {
+    const response_type = searchParams.get('redirect_uri');
+
+    if (response_type && !clientData.response_types?.includes(response_type))  {
 
       return throwError(new ForbiddenHttpError('Response types do not match'));
 

@@ -186,7 +186,17 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
 
-      const responseCallback = (res) => {
+      const responseCallback = (
+        res: {
+          on: (
+            arg0: string,
+            // eslint-disable-next-line @typescript-eslint/unified-signatures
+            arg1: { (chunk: any): any; (err?: unknown): void; (): void })
+          => void;
+          headers: { [x: string]: string; location?: any };
+          statusCode: number;
+        }
+      ) => {
 
         const buffer: any = [];
 
