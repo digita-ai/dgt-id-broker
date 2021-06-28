@@ -1,4 +1,4 @@
-import { request as httpRequest } from 'http';
+import { IncomingMessage, request as httpRequest, ServerResponse } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { gunzipSync, gzipSync, brotliDecompressSync, brotliCompressSync } from 'zlib';
@@ -186,17 +186,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
 
-      const responseCallback = (
-        res: {
-          on: (
-            arg0: string,
-            // eslint-disable-next-line @typescript-eslint/unified-signatures
-            arg1: { (chunk: any): any; (err?: unknown): void; (): void })
-          => void;
-          headers: { [x: string]: string; location?: any };
-          statusCode: number;
-        }
-      ) => {
+      const responseCallback = (res: IncomingMessage) => {
 
         const buffer: any = [];
 
@@ -208,7 +198,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
           try {
 
-            const location = new URL(res.headers.location);
+            const location = new URL(res.headers.location??'');
             const upstreamURL = new URL(this.scheme + '//' + this.host + ':' + this.port);
 
             if (upstreamURL.host === location.host) {

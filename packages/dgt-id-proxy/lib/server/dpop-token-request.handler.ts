@@ -107,25 +107,15 @@ export class DpopTokenRequestHandler extends HttpHandler {
     method: string, { payload, protectedHeader: header }: JWTVerifyResult,
   ): Observable<JWTVerifyResult & { protectedHeader: { jwk: Pick<JWK, 'kty' | 'crv' | 'x' | 'y' | 'e' | 'n'> } }> {
 
+    if(!header.jwk){ return throwError(new Error('no jwk was found in this header')); }
+
     const jwk = header.jwk;
 
-    if (!payload.jti || typeof payload.jti !== 'string') {
+    if (!payload.jti || typeof payload.jti !== 'string') { return throwError(new Error('must have a jti string property')); }
 
-      return throwError(new Error('must have a jti string property'));
+    if (payload.htm !== method) { return throwError(new Error('htm does not match the request method')); }
 
-    }
-
-    if (payload.htm !== method) {
-
-      return throwError(new Error('htm does not match the request method'));
-
-    }
-
-    if (payload.htu !== this.proxyTokenUrl) {
-
-      return throwError(new Error('htu does not match'));
-
-    }
+    if (payload.htu !== this.proxyTokenUrl) { return throwError(new Error('htu does not match')); }
 
     const jti = payload.jti;
 
@@ -140,7 +130,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
 
-        return of({ payload, protectedHeader: { ... header, jwk } });
+        return  of({ payload, protectedHeader: { ... header, jwk } });
 
       }),
     );

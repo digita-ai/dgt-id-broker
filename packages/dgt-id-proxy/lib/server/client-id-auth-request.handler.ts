@@ -65,7 +65,7 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
 
     }
 
-    const response_type = searchParams.get('redirect_uri');
+    const response_type = searchParams.get('response_type');
 
     if (response_type && !clientData.response_types?.includes(response_type))  {
 

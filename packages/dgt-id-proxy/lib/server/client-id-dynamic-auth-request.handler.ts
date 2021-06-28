@@ -184,9 +184,9 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
     ];
 
     const reqData = {
-      'redirect_uris': clientData.redirect_uris,
-      'token_endpoint_auth_method' : 'none',
-    };
+      redirect_uris: clientData.redirect_uris,
+      token_endpoint_auth_method : 'none',
+    } as Partial<OidcClientMetadata>;
 
     metadata.map((item) => {
 
@@ -236,7 +236,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
     const clientData = {
       redirect_uris: [ redirectUri ],
       token_endpoint_auth_method : 'none',
-    };
+    } as Partial<OidcClientMetadata>;
 
     return from(this.store.get(redirectUri)).pipe(
       switchMap((registerData) => registerData
