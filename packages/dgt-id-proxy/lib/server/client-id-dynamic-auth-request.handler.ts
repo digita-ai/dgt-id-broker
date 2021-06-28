@@ -87,7 +87,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient'
         ? this.checkRedirectUri(clientId, redirect_uri)
         : this.checkWebId(clientId, context.request.url.searchParams)),
-      tap((res) => { if(res.client_id) { context.request.url.searchParams.set('client_id', res.client_id); } }),
+      tap((res) => { context.request.url.searchParams.set('client_id', res.client_id??''); }),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
       mapTo(context),
     );

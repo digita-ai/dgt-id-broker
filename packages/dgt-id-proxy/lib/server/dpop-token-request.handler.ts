@@ -107,9 +107,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
     method: string, { payload, protectedHeader: header }: JWTVerifyResult,
   ): Observable<JWTVerifyResult & { protectedHeader: { jwk: Pick<JWK, 'kty' | 'crv' | 'x' | 'y' | 'e' | 'n'> } }> {
 
-    if(!header.jwk){ return throwError(new Error('no jwk was found in this header')); }
-
-    const jwk = header.jwk;
+    const jwk = header.jwk??{};
 
     if (!payload.jti || typeof payload.jti !== 'string') { return throwError(new Error('must have a jti string property')); }
 
