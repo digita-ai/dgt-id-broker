@@ -2,14 +2,14 @@
  * An interface that presents all data that is possible in a registration request
  */
 export interface OidcClientMetadata {
-  client_id: string;
+  [client_id: string]: string;
   response_types: string[];
   redirect_uris: string[];
-  grant_types: string[];
+  grant_type: string[];
   application_type: string;
   contacts: string;
-  client_name: string;
-  logo_uri: string;
+  client_name: string;W;
+  logo_ur: string;
   client_uri: string;
   policy_uri: string;
   tos_uri: string;
