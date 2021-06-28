@@ -255,7 +255,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData? registerData : {}))
+        : of(registerData??{}))
     );
 
   }
