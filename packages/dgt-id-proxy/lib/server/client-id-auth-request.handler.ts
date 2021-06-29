@@ -1,10 +1,10 @@
 import { Handler } from '@digita-ai/handlersjs-core';
-import { Observable,  throwError, of, from } from 'rxjs';
+import { Observable, throwError, of, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ForbiddenHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { getWebID } from '../util/get-webid';
+import { getWebID, checkContext } from '../util/process-webid';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } abstract class that
@@ -34,6 +34,7 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
     switchMap((response) => response.headers.get('content-type') !== ('application/json')
       ? throwError(new Error(`Incorrect content-type: expected application/json but got ${response.headers.get('content-type')}`))
       : from(response.json())),
+    switchMap((clientData) => checkContext(clientData)),
     switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
   );
 

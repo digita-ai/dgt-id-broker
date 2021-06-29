@@ -1,4 +1,4 @@
-import { BadRequestHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
