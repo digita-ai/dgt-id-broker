@@ -20,5 +20,6 @@ export * from './server/solid-audience-response.handler';
 export * from './server/jwk-request.handler';
 export * from './server/auth-state-request.handler';
 export * from './server/auth-state-response.handler';
+export * from './server/client-compression.handler';
 export * from './util/error-response-factory';
 export * from './util/code-challenge-method';
