@@ -10,4 +10,3 @@
     acl:agentClass foaf:Agent;
     acl:accessTo <./profile>;
     acl:mode acl:Read.
-    
