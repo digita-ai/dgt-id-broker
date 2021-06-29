@@ -13,6 +13,11 @@ export const getWebID = (webID: string): Promise<Response> => fetch(webID, {
   },
 });
 
+/**
+ * Checks if the JSON-LD '@Context' is present and if not errors
+ *
+ * @param { OidcClientMetadata} clientData: the data from the clients WebId
+ */
 export const checkContext = (clientData: OidcClientMetadata): Observable<OidcClientMetadata> => !clientData['@context']
   ? throwError(new Error('WebID should use the normative JSON-LD @context'))
   : of(clientData);

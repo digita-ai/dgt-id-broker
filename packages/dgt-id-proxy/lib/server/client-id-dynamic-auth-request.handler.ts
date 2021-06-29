@@ -216,7 +216,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
 
     for (const item of Object.keys(clientData)) {
 
-      if ((item !== 'client_id' && item !== 'scope') && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+      if ((item !== 'client_id' && item !== 'scope' && item !== '@context')  && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
 
         return true;
 
@@ -228,6 +228,14 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
 
   }
 
+  /**
+   * If the clientId is a public WebId it checks if the client
+   * was already registered in the store with this redirectUri as key
+   * and if not registers the with the data from the WebId, clientId and redirectUri
+   *
+   * @param { string } clientId : the clientId (webId) provided in the request
+   * @param { string } redirectUri : the redirectUri provided in the request
+   */
   private checkRedirectUri(
     clientId: string,
     redirectUri: string
@@ -246,6 +254,13 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
 
   }
 
+  /**
+   * Calls retrieveAndValidateWebId, checks if client is already registered,
+   * calls compareWebIdDataWithStore and registers if not registered yet or if something changed.
+   *
+   * @param { string } clientId: the clientId (webId) provided in the request
+   * @param { URLSearchParams } contextRequestUrlSearchParams: the URL parameters given in the request
+   */
   private checkWebId(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams

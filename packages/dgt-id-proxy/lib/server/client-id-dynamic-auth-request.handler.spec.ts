@@ -15,7 +15,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   = new InMemoryStore();
 
   const referer = 'client.example.com';
-  const client_id = 'http://solidpod.com/jaspervandenberghen/profile/card#me';
+  const client_id = 'http://client.example.com/clientapp/profile#id';
   const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
@@ -32,7 +32,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const mockRegisterResponse = {
     application_type: 'web',
     grant_types: [ 'refresh_token', 'authorization_code' ],
-    client_name: 'My Panva Application',
+    client_name: 'My Demo Application',
     tos_uri : 'https://app.example/tos.html',
     require_auth_time : true,
     id_token_signed_response_alg: 'RS256',
@@ -83,27 +83,21 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
   };
 
-  const podText = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-  @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-  
-  <>
-      a foaf:PersonalProfileDocument;
-      foaf:maker <http://solidpod.com/jaspervandenberghen/profile/card#me>;
-      foaf:primaryTopic <http://solidpod.com/jaspervandenberghen/profile/card#me>.
-  
-  <http://solidpod.com/jaspervandenberghen/profile/card#me>
-      a foaf:Person;
-      foaf:name "Jasper Vandenberghen";
-      solid:oidcIssuer <http://server.example.com/> ;
-      solid:oidcIssuerRegistrationToken "" .
-      `;
+  const podText = {
+    '@context': 'https://www.w3.org/ns/solid/oidc-context.jsonld',
 
-  const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
-  const differentRedirectOidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${different_redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
-
-  const correctPodText = podText + '\n' + oidcRegistration;
-  const inCorrectPodText = podText + '\n' + `<#id> solid:oidcRegistration """""" .`;
-  const differentRedirectUriPodText = podText + ' ' + differentRedirectOidcRegistration;
+    client_id,
+    'redirect_uris' : [ redirect_uri ],
+    'client_name' : 'My Demo Application',
+    'client_uri' : 'https://app.example/',
+    'logo_uri' : 'https://app.example/logo.png',
+    'tos_uri' : 'https://app.example/tos.html',
+    'scope' : 'openid offline_access',
+    'grant_types' : [ 'refresh_token', 'authorization_code' ],
+    'response_types' : [ 'code' ],
+    'default_max_age' : 60000,
+    'require_auth_time' : true,
+  };
 
   const differentClientIdURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(different_client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}`);
   const differentRedirectUriURL= new URL(`http://${host}/${endpoint}?response_type=code&code_challenge=${code_challenge_value}&code_challenge_method=${code_challenge_method_value}&scope=openid&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(different_redirect_uri)}`);
@@ -211,18 +205,18 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     });
 
-    it('should error when return type is not turtle', async () => {
+    it('should error when return type is not json', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
+      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
+      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/json but got text/html`);
 
     });
 
     it('should error when response types do not match', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 200 });
 
       const badResponseTypeContext = { ...context, request: { ...context.request, url: otherResponseTypeURL } };
       await expect(handler.handle(badResponseTypeContext).toPromise()).rejects.toThrow(`Response types do not match`);
@@ -263,7 +257,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       const registeredInfo = public_store.get(redirect_uri);
 
       handler2.registerClient
-       = jest.fn().mockReturnValueOnce(mockPublicRegisterResponse);
+       = jest.fn().mockReturnValue(mockPublicRegisterResponse);
 
       public_store.get = jest.fn().mockReturnValueOnce(registeredInfo);
 
@@ -279,7 +273,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       store.set(client_id, mockRegisterResponse);
 
-      fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 } ]);
+      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 200 });
 
       handler.registerClient = jest.fn();
 
@@ -291,7 +285,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should error if client id is not the same as in the webid', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 200 });
 
       await expect(handler.handle({ ...context, request: { ...context.request, url: differentClientIdURL } }).toPromise()).rejects.toThrow('The client id in the request does not match the one in the WebId');
 
@@ -299,31 +293,23 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should error if redirect uri is not the same as in the webid', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 200 });
 
       await expect(handler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }).toPromise()).rejects.toThrow('The redirect_uri in the request is not included in the WebId');
 
     });
 
-    it('should error when no oidcRegistration was found', async () => {
+    it('should error when no jsonld context was found', async () => {
 
-      fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify({ ...podText, '@context': undefined }), { headers: { 'content-type':'application/json' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow('Not a valid webID: No oidcRegistration field found');
-
-    });
-
-    it('should error when the oidcRegistration cannot be parsed', async () => {
-
-      fetchMock.once(inCorrectPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
-
-      await expect(handler.handle(context).toPromise()).rejects.toThrow('Unexpected end of JSON input');
+      await expect(handler.handle(context).toPromise()).rejects.toThrow('WebID should use the normative JSON-LD @context');
 
     });
 
     it('should save the registered client data in the store', async () => {
 
-      fetchMock.mockResponses([ correctPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
+      fetchMock.mockResponses([ JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
       await handler.handle(context).toPromise();
       await store.get(client_id).then((data) => expect(data).toBeDefined());
 
@@ -331,7 +317,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should register with new data if client_id is already registered in the store', async () => {
 
-      fetchMock.mockResponses([ differentRedirectUriPodText, { headers: { 'content-type':'text/turtle' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
+      fetchMock.mockResponses([ JSON.stringify({ ...podText, 'redirect_uris': [ different_redirect_uri ] }), { headers: { 'content-type':'application/json' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
       store.set(client_id, mockRegisterResponse);
 
       await handler
