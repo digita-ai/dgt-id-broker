@@ -1,11 +1,12 @@
 
+import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
+import { compareClientDataWithRequest, retrieveAndValidateWebId } from '../util/process-webid';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
@@ -15,7 +16,7 @@ import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
-export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandler {
+export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
   /**
    * Creates a { ClientIdDynamicAuthRequestHandler }.
@@ -251,7 +252,8 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
-    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
+    return retrieveAndValidateWebId(clientId).pipe(
+      switchMap((clientData) => compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
       switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
