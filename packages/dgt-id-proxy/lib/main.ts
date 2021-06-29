@@ -7,7 +7,7 @@ import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-const checkUri = (uri: string) => {
+export const checkUri = (uri: string) => {
 
   const httpUri = uri.match(/^https?:\/\//g) ? uri : 'http://' + uri ;
 
@@ -33,7 +33,7 @@ const checkUri = (uri: string) => {
 
 };
 
-const checkFile = (filePath: string): void => {
+export const checkFile = (filePath: string): void => {
 
   try {
 
@@ -75,7 +75,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
 };
 
-const createVariables = (args: string[]): Record<string, any> => {
+export const createVariables = (args: string[]): Record<string, any> => {
 
   const { argv: params } = yargs(hideBin(args))
     .usage('node ./dist/main.js [args]')
@@ -100,17 +100,13 @@ const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:mainModulePath': params.mainModulePath,
     'urn:dgt-id-proxy:variables:proxyUri': proxyUri,
     'urn:dgt-id-proxy:variables:proxyHost': proxyHost,
-    'urn:dgt-id-proxy:variables:proxyPort': proxyPort ?? '3003',
+    'urn:dgt-id-proxy:variables:proxyPort': proxyPort,
     'urn:dgt-id-proxy:variables:upstreamUri': upstreamUri,
     'urn:dgt-id-proxy:variables:upstreamHost': upstreamHost,
-    'urn:dgt-id-proxy:variables:upstreamPort': upstreamPort ??'3000',
+    'urn:dgt-id-proxy:variables:upstreamPort': upstreamPort,
     'urn:dgt-id-proxy:variables:upstreamScheme': upstreamScheme,
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': params.openidConfigurationFilePath ? params.openidConfigurationFilePath : 'assets/openid-configuration.json',
     'urn:dgt-id-proxy:variables:jwksFilePath': params.jwksFilePath ? params.jwksFilePath : 'assets/jwks.json',
   };
 
 };
-
-const vars = createVariables(process.argv);
-
-launch(vars);
