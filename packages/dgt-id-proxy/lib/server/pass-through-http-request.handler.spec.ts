@@ -271,7 +271,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       const response = await handler.handle(context).toPromise();
 
-      expect(response.body.toString()).toEqual(JSON.stringify({ mockKey: 'mockValue' }));
+      expect(response.body).toEqual(JSON.stringify({ mockKey: 'mockValue' }));
       expect(response.headers['content-encoding']).toBeUndefined();
 
     });

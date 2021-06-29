@@ -222,20 +222,31 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
           };
 
           // decompress the data if it's compressed
-          httpHandlerResponse.body = this.decompress(httpHandlerResponse.body, httpHandlerResponse.headers['content-encoding']);
+          const decompressedResponse = { ...httpHandlerResponse, body: this.decompress(httpHandlerResponse.body, httpHandlerResponse.headers['content-encoding']) };
 
           // replace any instance of the upstream's url with the proxy's url
-          if (httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].includes('text/html')) {
+          const urlReplacedResponse = {
+            ...decompressedResponse,
+            body: (decompressedResponse.headers['content-type'] && decompressedResponse.headers['content-type'].includes('text/html'))
+              ? Buffer.from(
+                decompressedResponse.body
+                  .toString()
+                  .replace(new RegExp('(action="|src="|href=")' + new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), '$1' + this.proxyURL.toString())
+              )
+              : decompressedResponse.body,
+          };
 
-            httpHandlerResponse.body = Buffer.from(
-              httpHandlerResponse.body.toString().replace(new RegExp('(action="|src="|href=")' + new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), '$1' + this.proxyURL.toString())
-            );
+          // convert body to string if content type is application/json
+          const response = {
+            ...urlReplacedResponse,
+            body: (httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].includes('application/json'))
+              ? urlReplacedResponse.body.toString()
+              : urlReplacedResponse.body,
+          };
 
-          }
+          delete response.headers['content-encoding'];
 
-          delete httpHandlerResponse.headers['content-encoding'];
-
-          resolve(httpHandlerResponse);
+          resolve(response);
 
         });
 
