@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.2.0...v0.3.0) (2021-06-29)
+
+
+### **Bug Fixes**
+
+* maxListenersExceededWarning in pass-through tests ([#148](https://github.com/digita-ai/dgt-id-broker/issues/148)) ([c46f246](https://github.com/digita-ai/dgt-id-broker/commit/c46f24605218654dacaf918375ab45d9fddc77df))
+
+
+### **Features**
+
+* advertise solid oidc compliance in openid-config ([#150](https://github.com/digita-ai/dgt-id-broker/issues/150)) ([6ed544c](https://github.com/digita-ai/dgt-id-broker/commit/6ed544cc53d35da6e41827fa461b7e2e96dd8c55))
+* dpop pass through request handler + tests ([#159](https://github.com/digita-ai/dgt-id-broker/issues/159)) ([ff9efd3](https://github.com/digita-ai/dgt-id-broker/commit/ff9efd37493aa49006d214b5bc5fb64e366c74e1))
+* redirect uri added to static client handlers ([#138](https://github.com/digita-ai/dgt-id-broker/issues/138)) ([a1e93c0](https://github.com/digita-ai/dgt-id-broker/commit/a1e93c0c96a0a3759594b0bedddd99d75ed6df65))
+* repackaged solid client & initial id kit ([#151](https://github.com/digita-ai/dgt-id-broker/issues/151)) ([911a22c](https://github.com/digita-ai/dgt-id-broker/commit/911a22c6734e5e610bc37474b2911d0a80c6c3c2))
+* state handlers ([#145](https://github.com/digita-ai/dgt-id-broker/issues/145)) ([e9b8610](https://github.com/digita-ai/dgt-id-broker/commit/e9b8610de9ddef1c9d5b6d044220b7e24d3fcfb6))
+* support ephemeral clients ([#132](https://github.com/digita-ai/dgt-id-broker/issues/132)) ([d606896](https://github.com/digita-ai/dgt-id-broker/commit/d606896cfcc27bf795cb9f7af5041d7caafccd37))
+
+
+
 ## 0.2.0 (2021-06-08)
 
 

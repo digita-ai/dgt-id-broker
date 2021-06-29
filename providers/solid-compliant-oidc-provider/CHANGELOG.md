@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.3.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.2.0...v0.3.0) (2021-06-29)
+
+
+### **Features**
+
+* advertise solid oidc compliance in openid-config ([#150](https://github.com/digita-ai/dgt-id-broker/issues/150)) ([6ed544c](https://github.com/digita-ai/dgt-id-broker/commit/6ed544cc53d35da6e41827fa461b7e2e96dd8c55))
+
+
+
 ## 0.2.0 (2021-06-08)
 
 
