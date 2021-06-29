@@ -2,7 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
+import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/get-webid';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
