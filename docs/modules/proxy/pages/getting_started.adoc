@@ -25,6 +25,8 @@ The `PassThroughHttpRequestHandler` can be configured as follows:
 
 Note that the scheme `https:` is supported aswell.
 
+NOTE: This handler will convert all outgoing and incoming headers to lowercase.
+
 [[encodinganddecoding]]
 == Encoding and Decoding Tokens
 
