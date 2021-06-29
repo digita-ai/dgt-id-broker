@@ -479,6 +479,8 @@ expressApp.get('/interaction/:uid/abort', setNoCache, async (req, res, next) => 
     }
 });
 
+expressApp.use('/static', express.static('static'));
+
 // Leave the rest of the requests to be handled by oidc-provider, there's a catch all 404 there
 expressApp.use(oidc.callback());
 
