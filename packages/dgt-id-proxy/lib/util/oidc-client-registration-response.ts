@@ -10,4 +10,5 @@ export interface OidcClientRegistrationResponse {
   client_secret_expires_at?: number;
   post_logout_redirect_uris?: string[];
   client_id_issued_at?: number;
+  [key: string]: string | number | boolean | string[] | undefined;
 }
