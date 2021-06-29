@@ -1,0 +1,16 @@
+{
+  "extends": "@digita-ai/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "lib",
+    "outDir": "dist",
+    // Recommended by Lit Element
+    "module": "es2015",
+    "target": "es2017"
+  },
+  "include": [ "lib" ],
+  "exclude": [
+    "**/*.spec.ts",
+    "node_modules",
+    "dist"
+  ]
+}
