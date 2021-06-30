@@ -18,7 +18,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
   let handler: ClientIdStaticAuthRequestHandler;
 
-  const podText = {
+  const clientRegistrationData = {
     '@context': 'https://www.w3.org/ns/solid/oidc-context.jsonld',
 
     client_id,
@@ -134,7 +134,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     it('should add state to the store as key with clients redirect uri as value', async () => {
 
-      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 200 });
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       await expect(store.get('1234')).resolves.toBeUndefined();
       await handler.handle(context).toPromise();
@@ -172,24 +172,24 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     it('should error when return type is not turtle', async () => {
 
-      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'text/html' }, status: 200 });
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/json but got text/html`);
+      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
 
     });
 
-    it('should error when the webId is not valid', async () => {
+    it('should error when the client registration datais not valid', async () => {
 
-      fetchMock.once(JSON.stringify({ ...podText, '@context': undefined }), { headers: { 'content-type':'application/json' }, status: 200 });
+      fetchMock.once(JSON.stringify({ ...clientRegistrationData, '@context': undefined }), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow(`WebID should use the normative JSON-LD @context`);
+      await expect(handler.handle(context).toPromise()).rejects.toThrow(`client registration data should use the normative JSON-LD @context`);
 
     });
 
     it('should switch the context client id given in the constructor', async () => {
 
-      fetchMock.once(JSON.stringify(podText), { headers: { 'content-type':'application/json' }, status: 200 });
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       await handler.handle(context).toPromise();
 
