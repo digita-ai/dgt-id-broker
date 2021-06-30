@@ -130,7 +130,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
 
-        return  of({ payload, protectedHeader: { ... header, jwk } });
+        return of({ payload, protectedHeader: { ... header, jwk } });
 
       }),
     );
