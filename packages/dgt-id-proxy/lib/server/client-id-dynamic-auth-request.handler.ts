@@ -10,8 +10,8 @@ import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
  * - checks if a client is already registered
- * - compares the data of the webid with the request data
- * - compares the store data with the webid data
+ * - compares the client registration data with the request data
+ * - compares the store data with the clien registration data
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
@@ -48,11 +48,11 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
 
   /**
    * Handles the context. Checks that the request contains a client id and redirect uri.
-   * It retrieves the information from the webid of the given client id.
+   * It retrieves the information from the registration data of the given client id.
    * Checks if the response is of the expected turtle type.
    * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
-   * Compares the webid data with the request data and checks if the client id is already registered
-   * Compares the webid with the register data in the store and if not the same registers again with the new data.
+   * Compares the client registration data with the request data and checks if the client id is already registered
+   * Compares the client registration with the register data in the store and if not the same registers again with the new data.
    * If nothing changed it doesn't register.
    * It replaces the given client id in the context with the random client id it retrieved from the registration endpoint
    *
@@ -86,7 +86,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
     return of(client_id).pipe(
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient'
         ? this.checkRedirectUri(clientId, redirect_uri)
-        : this.checkWebId(clientId, context.request.url.searchParams)),
+        : this.checkClientRegistrationData(clientId, context.request.url.searchParams)),
       tap((res) => context.request.url.searchParams.set('client_id', res.client_id)),
       tap(() => context.request.url.search = context.request.url.searchParams.toString()),
       mapTo(context),
@@ -145,7 +145,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   /**
    * Creates a the request data to send to the registration endpoint.
    * It combines all the parameters that are possible for a register request
-   * that are present in the webid.
+   * that are present in the client registration data.
    *
    * @param { Partial<OidcClientMetadata> } clientData
    */
@@ -199,15 +199,15 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   }
 
   /**
-   * Compares the data in the store with one in the webid, to check if the webid is not updated.
-   * If the in the webid is changed the client registers again with the new data.
+   * Compares the data in the store with one in the client registration, to check if the registration is not updated.
+   * If the in the data is changed the client registers again with the new data.
    * If registered again it saves the new register data in the KeyValue store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
-   * @param { Partial<OidcClientMetadata> } clientData - the data retrieved from the webid.
+   * @param { Partial<OidcClientMetadata> } clientData - the data retrieved from the client registration data.
    * @param { Partial<OidcClientMetadata & OidcClientRegistrationResponse> } registerData - the data retrieved from the store.
    */
-  compareWebIdDataWithStore(
+  compareClientRegistrationDataWithStore(
     clientData: Partial<OidcClientMetadata>,
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
   ): boolean {
@@ -216,9 +216,16 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
 
     for (const item of Object.keys(clientData)) {
 
-      if ((item !== 'client_id' && item !== 'scope' && item !== '@context')  && JSON.stringify(registerData[item]) !== JSON.stringify(clientData[item])){
+      if ((![ 'client_id', 'scope', '@context' ].includes(item))) {
 
-        return true;
+        if (Array.isArray(clientData[item])) {
+
+          const a = new Set(registerData[item]);
+          const b = new Set(clientData[item]);
+
+          return a.size === b.size && [ ...a ].every((value) => b.has(value)) ? false : true;
+
+        } else if (registerData[item] !== clientData[item]) { return true; }
 
       }
 
@@ -231,9 +238,9 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   /**
    * If the clientId is a public WebId it checks if the client
    * was already registered in the store with this redirectUri as key
-   * and if not registers the with the data from the WebId, clientId and redirectUri
+   * and if not registers the with the data from the client registration data, clientId and redirectUri
    *
-   * @param { string } clientId : the clientId (webId) provided in the request
+   * @param { string } clientId : the clientId (public webid) provided in the request
    * @param { string } redirectUri : the redirectUri provided in the request
    */
   private checkRedirectUri(
@@ -255,20 +262,20 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   }
 
   /**
-   * Calls retrieveAndValidateWebId, checks if client is already registered,
-   * calls compareWebIdDataWithStore and registers if not registered yet or if something changed.
+   * Calls retrieveAndValidateClientRegistrationData, checks if client is already registered,
+   * calls compareClientRegistrationDataWithStore and registers if not registered yet or if something changed.
    *
-   * @param { string } clientId: the clientId (webId) provided in the request
+   * @param { string } clientId: the clientId (client registration data) provided in the request
    * @param { URLSearchParams } contextRequestUrlSearchParams: the URL parameters given in the request
    */
-  private checkWebId(
+  private checkClientRegistrationData(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
   ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
 
-    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
+    return this.retrieveAndValidateClientRegistrationData(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
-      switchMap(([ clientData, registerData ]) => this.compareWebIdDataWithStore(clientData, registerData)
+      switchMap(([ clientData, registerData ]) => this.compareClientRegistrationDataWithStore(clientData, registerData)
         ? this.registerClient(this.createRequestData(clientData), clientId)
         : of(registerData))
     );
