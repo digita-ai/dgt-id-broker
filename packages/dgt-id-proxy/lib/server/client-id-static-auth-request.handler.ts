@@ -2,7 +2,7 @@ import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { ObservableOfCombinedRegistrationData } from '../util/process-webid';
 import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
@@ -128,7 +128,7 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
   private checkWebId(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<OidcClientMetadata> {
+  ): ObservableOfCombinedRegistrationData {
 
     return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams);
 

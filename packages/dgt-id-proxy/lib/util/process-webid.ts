@@ -2,6 +2,10 @@ import { BadRequestHttpError } from '@digita-ai/handlersjs-http';
 import { Store, Parser, Quad } from 'n3';
 import { throwError, of, Observable } from 'rxjs';
 import { OidcClientMetadata } from './oidc-client-metadata';
+import { OidcClientRegistrationResponse } from './oidc-client-registration-response';
+
+export type ObservableOfCombinedRegistrationData = Observable<OidcClientMetadata & OidcClientRegistrationResponse>;
+export type CombinedRegistrationData = OidcClientMetadata & OidcClientRegistrationResponse;
 
 /**
  * Performs a get request to retrieve the webid turtle file
@@ -38,7 +42,7 @@ export const parseQuads = (text: string): Quad[] => {
  *
  * @param { Quad } quad
  */
-export const parseOidcRegistrationStatement = (quads: Quad[]): Observable<OidcClientMetadata> => {
+export const parseOidcRegistrationStatement = (quads: Quad[]): ObservableOfCombinedRegistrationData => {
 
   const oidcRegistrationQuad = quads.find((quad) => quad.predicate.id === 'http://www.w3.org/ns/solid/terms#oidcRegistration');
 

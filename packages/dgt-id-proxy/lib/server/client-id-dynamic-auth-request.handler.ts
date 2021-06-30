@@ -5,6 +5,7 @@ import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { CombinedRegistrationData, ObservableOfCombinedRegistrationData } from '../util/process-webid';
 import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
 
 /**
@@ -25,8 +26,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
    */
   constructor(
     private registration_uri: string,
-    private store:
-    KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
+    private store: KeyValueStore<string, CombinedRegistrationData>
   ) {
 
     super();
@@ -184,10 +184,10 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       'request_uris',
     ];
 
-    const reqData = {
-      redirect_uris: clientData.redirect_uris,
-      token_endpoint_auth_method : 'none',
-    } as OidcClientMetadata;
+    const reqData: { [key: string]: string | number | boolean | string[] | undefined } = {
+      'redirect_uris': clientData.redirect_uris,
+      ' token_endpoint_auth_method' : 'none',
+    };
 
     metadata.map((item) => {
 
@@ -227,15 +227,12 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
 
   }
 
-  private checkRedirectUri(
-    clientId: string,
-    redirectUri: string
-  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
+  private checkRedirectUri(clientId: string, redirectUri: string): ObservableOfCombinedRegistrationData {
 
-    const clientData = {
+    const clientData: { [key: string]: string | number | boolean | string[] | undefined } = {
       redirect_uris: [ redirectUri ],
       token_endpoint_auth_method : 'none',
-    } as OidcClientMetadata;
+    };
 
     return from(this.store.get(redirectUri)).pipe(
       switchMap((registerData) => registerData
@@ -248,7 +245,7 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
   private checkWebId(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
+  ): ObservableOfCombinedRegistrationData {
 
     return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),

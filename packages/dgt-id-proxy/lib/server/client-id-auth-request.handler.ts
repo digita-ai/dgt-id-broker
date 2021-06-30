@@ -1,10 +1,10 @@
 import { Handler } from '@digita-ai/handlersjs-core';
-import { Observable,  throwError, of, from } from 'rxjs';
+import { throwError, of, from } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { ForbiddenHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
+import { parseQuads, parseOidcRegistrationStatement, getWebID, ObservableOfCombinedRegistrationData } from '../util/process-webid';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } abstract class that
@@ -30,12 +30,12 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
   retrieveAndValidateWebId = (
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> => from(getWebID(clientId)).pipe(
+  ): ObservableOfCombinedRegistrationData => from(getWebID(clientId)).pipe(
     switchMap((response) => response.headers.get('content-type') !== 'text/turtle'
       ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
       : from(response.text())),
-    map((text) => parseQuads(text)),
-    switchMap((quads) => parseOidcRegistrationStatement(quads)),
+    map((registration) => parseQuads(registration)),
+    switchMap((registrationQuads) => parseOidcRegistrationStatement(registrationQuads)),
     switchMap((clientData) => this.compareClientDataWithRequest(clientData, contextRequestUrlSearchParams)),
   );
 
@@ -47,9 +47,9 @@ export abstract class ClientIdAuthRequestHandler extends Handler<HttpHandlerCont
    * @param { URLSearchParams } searchParams
    */
   compareClientDataWithRequest = (
-    clientData: OidcClientMetadata,
+    clientData: OidcClientMetadata & OidcClientRegistrationResponse,
     searchParams: URLSearchParams
-  ): Observable<OidcClientMetadata> => {
+  ): ObservableOfCombinedRegistrationData => {
 
     if (clientData.client_id !== searchParams.get('client_id')) {
 

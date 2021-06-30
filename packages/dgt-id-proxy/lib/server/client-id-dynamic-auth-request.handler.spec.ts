@@ -4,6 +4,7 @@ import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { CombinedRegistrationData } from '../util/process-webid';
 import { ClientIdDynamicAuthRequestHandler } from './client-id-dynamic-auth-request.handler';
 
 describe('ClientIdDynamicAuthRequestHandler', () => {
@@ -11,7 +12,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
 
-  const store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
+  const store: KeyValueStore<string, CombinedRegistrationData>
   = new InMemoryStore();
 
   const referer = 'client.example.com';
@@ -27,7 +28,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const reqData = {
     'redirect_uris': [ redirect_uri ],
     'token_endpoint_auth_method' : 'none',
-  } as OidcClientMetadata;
+  };
 
   const mockRegisterResponse = {
     application_type: 'web',

@@ -2,9 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { parseQuads, parseOidcRegistrationStatement, getWebID } from '../util/process-webid';
-import { OidcClientMetadata } from '../util/oidc-client-metadata';
-
+import { parseQuads, parseOidcRegistrationStatement, getWebID, ObservableOfCombinedRegistrationData } from '../util/process-webid';
 /**
  * A {HttpHandler} that
  * - gets the webid data and retrieves oidcRegistration
@@ -135,17 +133,17 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   }
 
-  private checkWebId(clientId: string, grantType: string): Observable<OidcClientMetadata> {
+  private checkWebId(clientId: string, grantType: string): ObservableOfCombinedRegistrationData {
 
     return from(getWebID(clientId))
       .pipe(
         switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
           ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
           : from(response.text())),
-        map((text) => parseQuads(text)),
-        switchMap((quad) => parseOidcRegistrationStatement(quad)),
-        switchMap((text) => (text.grant_types?.includes(grantType))
-          ? of(text)
+        map((registration) => parseQuads(registration)),
+        switchMap((registrationQuads) => parseOidcRegistrationStatement(registrationQuads)),
+        switchMap((registration) => (registration.grant_types?.includes(grantType))
+          ? of(registration)
           : throwError(new Error('The grant type in the request is not included in the WebId'))),
       );
 
