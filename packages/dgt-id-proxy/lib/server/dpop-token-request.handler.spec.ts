@@ -4,7 +4,8 @@ import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
 import { SignJWT } from 'jose/jwt/sign';
 import { v4 as uuid } from 'uuid';
-import { calculateThumbprint } from 'jose/jwk/thumbprint';
+import * as jwk from 'jose/jwk/thumbprint';
+import * as jwt from 'jose/jwt/verify';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { DpopTokenRequestHandler } from './dpop-token-request.handler';
 
@@ -534,7 +535,7 @@ describe('DpopTokenRequestHandler', () => {
       expect(resp.body.expires_in).toBeDefined();
 
       expect(resp.body.access_token.payload.cnf).toBeDefined();
-      const thumbprint = await calculateThumbprint(publicJwk);
+      const thumbprint = await jwk.calculateThumbprint(publicJwk);
       expect(resp.body.access_token.payload.cnf.jkt).toEqual(thumbprint);
 
     });
@@ -548,9 +549,10 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should throw a falback error if catchError catches an empty error', async () => {
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const jose = require('jose/jwk/thumbprint');
-      jose.calculateThumbprint = jest.fn().mockReturnValueOnce(throwError({}));
+      Object.defineProperty(jwk, 'calculateThumbprint', {
+        value: jest.fn().mockReturnValueOnce(throwError({})),
+      });
+
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
 
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('DPoP verification failed due to an unknown error');
@@ -559,24 +561,24 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should call calculateThumbprint with an empty object when no JWK was found in the header', async () => {
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const jwk = require('jose/jwk/thumbprint');
-      jwk.calculateThumbprint = jest.fn().mockReturnValueOnce(of({}));
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const jwt = require('jose/jwt/verify');
+      Object.defineProperty(jwk, 'calculateThumbprint', {
+        value: jest.fn().mockReturnValueOnce(throwError({})),
+      });
 
-      jwt.jwtVerify = jest.fn().mockReturnValueOnce(of(
-        { payload: {
-          htm: 'POST',
-          htu: 'http://localhost:3003/token',
-          jti: 'acb869a5-e9ff-462a-b7d3-ccb5470ab239',
-          iat: 1624888521,
-        },
-        protectedHeader: {
-          alg: 'ES256',
-          typ: 'dpop+jwt',
-        } }
-      ));
+      Object.defineProperty(jwt, 'jwtVerify', {
+        value: jest.fn().mockReturnValueOnce(of(
+          { payload: {
+            htm: 'POST',
+            htu: 'http://localhost:3003/token',
+            jti: 'acb869a5-e9ff-462a-b7d3-ccb5470ab239',
+            iat: 1624888521,
+          },
+          protectedHeader: {
+            alg: 'ES256',
+            typ: 'dpop+jwt',
+          } }
+        )),
+      });
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
 

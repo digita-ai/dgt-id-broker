@@ -184,9 +184,9 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
       'request_uris',
     ];
 
-    const reqData: { [key: string]: string | number | boolean | string[] | undefined } = {
+    const reqData: OidcClientMetadata = {
       'redirect_uris': clientData.redirect_uris,
-      ' token_endpoint_auth_method' : 'none',
+      'token_endpoint_auth_method': 'none',
     };
 
     metadata.map((item) => {
