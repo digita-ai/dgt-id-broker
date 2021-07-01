@@ -286,13 +286,9 @@ describe('PassThroughHttpRequestHandler', () => {
         'content-type': 'text/html',
       };
 
-      const body = Buffer.from(JSON.stringify({ mockKey: 'mockValue' }));
-
-      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('some body'), callback));
 
       const response = await handler.handle(context).toPromise();
-
-      expect(response.body.toString()).toEqual(JSON.stringify({ mockKey: 'mockValue' }));
 
       expect(response.headers).toEqual({
         'content-type': 'application/json,text/html',

@@ -39,9 +39,9 @@ export class ClientCompressionHandler extends HttpHandler {
 
     const clientAcceptEncoding = context.request.headers['accept-encoding'];
 
-    return this.handler.handle(context).pipe(
-      switchMap((response) => clientAcceptEncoding ? this.handleEncoding(response, clientAcceptEncoding) : of(response))
-    );
+    const response = this.handler.handle(context);
+    
+    return clientAcceptEncoding ? this.handleEncoding(response, clientAcceptEncoding) : response;
 
   }
 
@@ -65,20 +65,12 @@ export class ClientCompressionHandler extends HttpHandler {
     clientAcceptEncodingHeader: string
   ): Observable<HttpHandlerResponse> {
 
-    // Accepted encodings are presented in a comma seperated list and can contain q weights. This line will remove the q weights and put them in a list.
-    const encodingPossibilities = clientAcceptEncodingHeader.split(',').map((encodingType) => {
+    // Accepted encodings are presented in a comma seperated list and can contain q weights. 
+    // This line will remove the q weights and put them in a list.
+    const encodingPossibilities = clientAcceptEncodingHeader.split(',')
+      .map((encodingType) => encodingType.trim().split(';')[0])
+      .filter((encodingType) => encodingType !== 'compress');
 
-      // Remove excess spaces
-      encodingType = encodingType.trim();
-
-      return encodingType.split(';')[0];
-
-      // Remove 'compress' from the list
-
-    }).filter((encodingType) => encodingType !== 'compress');
-
-    // We don't support "compress", so if only "compress" was requested and filtered out, send the response back without encoding
-    if (encodingPossibilities.length === 0) { return of(response); }
 
     // Compress according to the first in the list as they are ordered by preference.
     switch (encodingPossibilities[0]) {
