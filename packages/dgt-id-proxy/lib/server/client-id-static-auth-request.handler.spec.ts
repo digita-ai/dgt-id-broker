@@ -18,20 +18,22 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
   let handler: ClientIdStaticAuthRequestHandler;
 
-  const podText = `
-    @prefix foaf: <http://xmlns.com/foaf/0.1/>.
-    @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-    <>
-      a foaf:PersonalProfileDocument;
-      foaf:maker <http://solidpod.com/jaspervandenberghen/profile/card#me>;
-      foaf:primaryTopic <http://solidpod.com/jaspervandenberghen/profile/card#me>.
-    <http://solidpod.com/jaspervandenberghen/profile/card#me>
-      a foaf:Person;
-      foaf:name "Jasper Vandenberghen".
-  `;
+  const clientRegistrationData = {
+    '@context': 'https://www.w3.org/ns/solid/oidc-context.jsonld',
 
-  const oidcRegistration = `<#id> solid:oidcRegistration """{"client_id" : "${client_id}","redirect_uris" : ["${redirect_uri}"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .`;
-  const correctPodText = podText + '\n' + oidcRegistration;
+    client_id,
+    'redirect_uris' : [ redirect_uri ],
+    'client_name' : 'My Demo Application',
+    'client_uri' : 'https://app.example/',
+    'logo_uri' : 'https://app.example/logo.png',
+    'tos_uri' : 'https://app.example/tos.html',
+    'scope' : 'openid offline_access',
+    'grant_types' : [ 'refresh_token', 'authorization_code' ],
+    'response_types' : [ 'code' ],
+    'default_max_age' : 60000,
+    'require_auth_time' : true,
+  };
+
   let context: HttpHandlerContext;
   let url: URL;
   let store: KeyValueStore<string, URL>;
@@ -132,7 +134,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     it('should add state to the store as key with clients redirect uri as value', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       await expect(store.get('1234')).resolves.toBeUndefined();
       await handler.handle(context).toPromise();
@@ -170,24 +172,24 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     it('should error when return type is not turtle', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/html' }, status: 200 });
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected text/turtle but got text/html`);
+      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
 
     });
 
-    it('should error when the webId is not valid', async () => {
+    it('should error when the client registration datais not valid', async () => {
 
-      fetchMock.once(podText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify({ ...clientRegistrationData, '@context': undefined }), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow(`Not a valid webID: No oidcRegistration field found`);
+      await expect(handler.handle(context).toPromise()).rejects.toThrow(`client registration data should use the normative JSON-LD @context`);
 
     });
 
     it('should switch the context client id given in the constructor', async () => {
 
-      fetchMock.once(correctPodText, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       await handler.handle(context).toPromise();
 

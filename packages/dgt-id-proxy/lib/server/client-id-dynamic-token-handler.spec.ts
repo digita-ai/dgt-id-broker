@@ -1,5 +1,5 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import {  of } from 'rxjs';
+import { of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
