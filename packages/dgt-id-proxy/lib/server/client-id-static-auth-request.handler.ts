@@ -1,9 +1,9 @@
+import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
+import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the registration data data and retrieves oidcRegistration. If the info is
@@ -12,7 +12,7 @@ import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
  */
-export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler {
+export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
   private redirectURL: URL;
 
@@ -101,7 +101,7 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
     this.keyValueStore.set(state, new URL(redirect_uri));
 
     return of(client_id).pipe(
-      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkClientRegistrationData(clientId, context.request.url.searchParams)),
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : retrieveAndValidateClientRegistrationData(clientId, context.request.url.searchParams)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       mapTo(context),
@@ -122,15 +122,6 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
     && context.request.url
       ? of(true)
       : of(false);
-
-  }
-
-  private checkClientRegistrationData(
-    clientId: string,
-    contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata>> {
-
-    return this.retrieveAndValidateClientRegistrationData(clientId, contextRequestUrlSearchParams);
 
   }
 
