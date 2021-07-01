@@ -167,11 +167,8 @@ grant_type=authorization_code&code=h-DnHRAfTsn9V_m4I1A3Cw&redirect_uri=https%3A%
 
 .. *Access Tokens*, in classic OIDC, kan be either an opaque string (with no further meaning to the *Client*), or a JWT containing the following information.
 +
-Token header:
 * *"alg"*: the signing algorithm
 * *"typ"*: indicates that this is a JSON Web Token
-+
-Token Body:
 * *"iss"* : the URI of the *Identity Provider*
 * *"sub"* : the issuer's identifier for the subject, Alice
 * *"client_id"* : the *Client ID*
@@ -181,7 +178,6 @@ Token Body:
 * *"exp"*: the UNIX timestamp of when the token will expire
 * *"jti"*: a temporary unique identifier to prevent replay attacks
 +
-This results in a token similar to the following:
 [source, json]
 ---- 
 {
@@ -221,8 +217,8 @@ This results in a token similar to the following:
 . The *Client*, in our case Daily Pictures, can now use the *Access Token* directly as `Authorization: Bearer [...]` header to send requests to the *Resource Server*, in our case Alice's pod, in order to daily find a new picture for her social feed. Moreover, within the expiration time, the *Client* can use the *Refresh Token* to retreive a fresh *Access Token* to maintain it's access.
 
 [#img-classic-oidc]
-.A Classic OIDC Flow
-image::classic-oidc-flow.jpg[Classic OIDC Flow]
+.A Classic OIDC flow
+image::classic-oidc-flow.jpg[Classic OIDC flow]
 
 
 == Solid OIDC
@@ -279,11 +275,10 @@ GET https://secureauth.example/authorize?response_type=code&redirect_uri=https%3
 
 . After receiving the *Authorization Code*, the *Client* must now generate a *DPoP Token*. The *DPoP* enhancement of the flow proves to the resource server that the *Client* it is the same application that got the token from the *Identity Provider*.
 
-.. The first step to achieve this is is for the *Client* to generate both a pair of private and public keys. A private key could look like this, and a public key is the same with some fields (in this case `d`) left out:
+.. The first step to achieve this is is for the *Client* to generate both a pair of private and public keys. A private key could look like this (and a public key is the same with some fields left out):
 +
 [source, json]
 ----
-Private key:
 {
     "kty": "EC",
     "kid": "2i00gHnREsMhD5WqsABPSaqEjLC5MS-E98ykd-qtF1I",
@@ -321,8 +316,6 @@ The body of the JWT contains the following parameters.
 * *"htm"*: The method with which the token can be used.
 * *"jti"*: A unique identifier to prevent replay attacks.
 * *"iat"*: The UNIX timestamp of when the token was issued.
-+
-It then looks somewhat like this:
 +
 [source, json]
 ----
@@ -385,8 +378,8 @@ grant_type=authorization_code&code_verifier=LDKoTiFC6&code=h-DnHRAfTsn9V_m4I1A3C
 . The *Client* can now use the *Access Token* in `Authorization: DPoP [...]` header of requests to Alice's pod. To be valid, however, these requests will also have to contain a `DPoP` header with a *DPoP* token generated with the same keys as the token request to the *Identity Provider*, but now for the method and URL of this request to the *Resource Server*.
 
 [#img-solid-oidc]
-.B Solid OIDC Flow Chart
-image::solid-oidc-chart.jpg[Solid Flow]
+.B Solid-compliant OIDC flow
+image::solid-oidc-chart.jpg[Solid-compliant flow]
 
 
 == Summary
