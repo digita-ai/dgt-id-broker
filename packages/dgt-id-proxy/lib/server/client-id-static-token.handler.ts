@@ -2,11 +2,13 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { parseQuads, parseOidcRegistrationStatement, getWebID, ObservableOfCombinedRegistrationData } from '../util/process-webid';
+import { getClientRegistrationData } from '../util/process-client-registration-data';
+import { OidcClientMetadata } from '../util/oidc-client-metadata';
+
 /**
  * A {HttpHandler} that
- * - gets the webid data and retrieves oidcRegistration
- * - checks the if it's a valid webid and compares the grant types
+ * - gets the client registration data and retrieves oidcRegistration
+ * - checks the if the registration data is valid and compares the grant types
  * - replaces the client id, client secret and redirect url in the context
  */
 export class ClientIdStaticTokenHandler extends HttpHandler {
@@ -50,10 +52,10 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   /**
    * Handles the context. Checks that the request contains a client id, grant type and redirect uri.
-   * It retrieves the information from the webid of the given client id.
+   * It retrieves the information from the registration data of the given client id.
    * Checks if the response is of the expected turtle type.
    * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
-   * so it knows if it's a valid webid.
+   * so it knows if it's a valid registration data.
    * It replaces the client id, client secret and redirect url in the context with the one given to the constructor.
    * and recalculates the content length because the body has changed
    *
@@ -89,7 +91,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
     }
 
     return of(client_id).pipe(
-      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId, grant_type)),
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkClientRegistrationData(clientId, grant_type)),
       map(() => {
 
         params.set('client_id', this.clientId);
@@ -133,18 +135,13 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   }
 
-  private checkWebId(clientId: string, grantType: string): ObservableOfCombinedRegistrationData {
+  private checkClientRegistrationData(clientId: string, grantType: string): Observable<OidcClientMetadata> {
 
-    return from(getWebID(clientId))
+    return from(getClientRegistrationData(clientId))
       .pipe(
-        switchMap((response) => (response.headers.get('content-type') !== 'text/turtle')
-          ? throwError(new Error(`Incorrect content-type: expected text/turtle but got ${response.headers.get('content-type')}`))
-          : from(response.text())),
-        map((registration) => parseQuads(registration)),
-        switchMap((registrationQuads) => parseOidcRegistrationStatement(registrationQuads)),
-        switchMap((registration) => (registration.grant_types?.includes(grantType))
-          ? of(registration)
-          : throwError(new Error('The grant type in the request is not included in the WebId'))),
+        switchMap((registrationData) => (registrationData.grant_types?.includes(grantType))
+          ? of(registrationData)
+          : throwError(new Error('The grant type in the request is not included in the client registration data'))),
       );
 
   }

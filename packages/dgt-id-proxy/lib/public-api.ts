@@ -1,5 +1,4 @@
 export * from './server/pass-through-http-request.handler';
-export * from './server/client-id-auth-request.handler';
 export * from './server/client-id-dynamic-auth-request.handler';
 export * from './server/client-id-dynamic-token.handler';
 export * from './server/client-id-static-auth-request.handler';
@@ -20,5 +19,6 @@ export * from './server/solid-audience-response.handler';
 export * from './server/jwk-request.handler';
 export * from './server/auth-state-request.handler';
 export * from './server/auth-state-response.handler';
+export * from './server/client-compression.handler';
 export * from './util/error-response-factory';
 export * from './util/code-challenge-method';

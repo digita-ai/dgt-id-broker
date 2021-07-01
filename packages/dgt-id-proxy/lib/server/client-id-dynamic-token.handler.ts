@@ -2,7 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { CombinedRegistrationData } from '../util/process-webid';
+import { CombinedRegistrationData } from '../util/process-client-registration-data';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 
 /**
@@ -70,6 +70,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
     }
 
     return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? redirect_uri : client_id)).pipe(
+
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)
         : throwError(new Error('No data was found in the store'))),

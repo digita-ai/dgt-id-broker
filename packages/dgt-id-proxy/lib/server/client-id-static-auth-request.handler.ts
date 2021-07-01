@@ -1,18 +1,18 @@
+import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '../storage/key-value-store';
-import { ObservableOfCombinedRegistrationData } from '../util/process-webid';
-import { ClientIdAuthRequestHandler } from './client-id-auth-request.handler';
+import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
- * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the webid data and retrieves oidcRegistration. If the info is
+ * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the registration data data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
  */
-export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler {
+export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
   private redirectURL: URL;
 
@@ -52,7 +52,7 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
 
   /**
    * Handles the context. Checks that the request contains a client id and redirect uri.
-   * It retrieves the information from the webid of the given client id.
+   * It retrieves the information from the registration data of the given client id.
    * Checks if the response is of the expected turtle type.
    * Parses the turtle response into Quads and retrieves the required oidcRegistration triple
    * It replaces the client id and redirect uri in the context with the one given to the constructor,
@@ -101,7 +101,7 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
     this.keyValueStore.set(state, new URL(redirect_uri));
 
     return of(client_id).pipe(
-      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : this.checkWebId(clientId, context.request.url.searchParams)),
+      switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : retrieveAndValidateClientRegistrationData(clientId, context.request.url.searchParams)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       mapTo(context),
@@ -122,15 +122,6 @@ export class ClientIdStaticAuthRequestHandler extends ClientIdAuthRequestHandler
     && context.request.url
       ? of(true)
       : of(false);
-
-  }
-
-  private checkWebId(
-    clientId: string,
-    contextRequestUrlSearchParams: URLSearchParams
-  ): ObservableOfCombinedRegistrationData {
-
-    return this.retrieveAndValidateWebId(clientId, contextRequestUrlSearchParams);
 
   }
 

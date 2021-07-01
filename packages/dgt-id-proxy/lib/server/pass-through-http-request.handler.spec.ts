@@ -1,7 +1,7 @@
 import http, { IncomingMessage } from 'http';
 import https from 'https';
 import { Socket } from 'net';
-import { gunzipSync, gzipSync, brotliDecompressSync, brotliCompressSync } from 'zlib';
+import { gzipSync, brotliCompressSync, deflateSync } from 'zlib';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 
@@ -220,7 +220,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       const response = await handler.handle(context).toPromise();
 
-      expect(gunzipSync(response.body).toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
+      expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
     });
 
@@ -237,11 +237,43 @@ describe('PassThroughHttpRequestHandler', () => {
 
       const response = await handler.handle(context).toPromise();
 
-      expect(brotliDecompressSync(response.body).toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
+      expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
     });
 
-    it('should decompress json when the encoding is br and remove the content-encoding header', async () => {
+    it('should replace the upstream url with the proxy url in html files when content encoding is deflate', async () => {
+
+      resp.headers = {
+        'content-type': 'text/html',
+        'content-encoding': 'deflate',
+      };
+
+      const body = deflateSync('<src="http://localhost:3000/test"\><value="http://localhost:3000/test"\>');
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+
+      const response = await handler.handle(context).toPromise();
+
+      expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
+
+    });
+
+    it('should error when content-encoding type is unknown', async () => {
+
+      resp.headers = {
+        'content-type': 'text/html',
+        'content-encoding': 'unknownDecompressionType',
+      };
+
+      const body = deflateSync('<src="http://localhost:3000/test"\><value="http://localhost:3000/test"\>');
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow(`Compression type 'unknownDecompressionType' is unknown`);
+
+    });
+
+    it('should remove the content-encoding header and return decoded body', async () => {
 
       resp.headers = {
         'content-type': 'application/json',
@@ -254,8 +286,31 @@ describe('PassThroughHttpRequestHandler', () => {
 
       const response = await handler.handle(context).toPromise();
 
-      expect(JSON.parse((response.body).toString())).toEqual({ mockKey: 'mockValue' });
-      expect(resp.headers).toEqual({ 'content-type': 'application/json' });
+      expect(response.body).toEqual(JSON.stringify({ mockKey: 'mockValue' }));
+      expect(response.headers['content-encoding']).toBeUndefined();
+
+    });
+
+    it('should clean the response headers', async () => {
+
+      resp.headers = {
+        'Content-Type': 'application/json',
+        'Connection': 'keep-alive',
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache, no-store',
+        'content-type': 'text/html',
+      };
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('some body'), callback));
+
+      const response = await handler.handle(context).toPromise();
+
+      expect(response.headers).toEqual({
+        'content-type': 'application/json,text/html',
+        'connection': 'keep-alive',
+        'pragma': 'no-cache',
+        'cache-control': 'no-cache, no-store',
+      });
 
     });
 
