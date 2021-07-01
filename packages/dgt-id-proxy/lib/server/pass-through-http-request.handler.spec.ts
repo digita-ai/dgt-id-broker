@@ -258,6 +258,21 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
+    it('should error when content-encoding type is unknown', async () => {
+
+      resp.headers = {
+        'content-type': 'text/html',
+        'content-encoding': 'unknownDecompressionType',
+      };
+
+      const body = deflateSync('<src="http://localhost:3000/test"\><value="http://localhost:3000/test"\>');
+
+      http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
+
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Compression type is unknown');
+
+    });
+
     it('should remove the content-encoding header and return decoded body', async () => {
 
       resp.headers = {

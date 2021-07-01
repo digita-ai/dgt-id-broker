@@ -282,8 +282,10 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
         return gunzipSync(data);
       case 'deflate':
         return inflateSync(data);
-      default:
+      case 'identity':
         return data;
+      default:
+        throw new Error('Compression type is unknown');
 
     }
 
