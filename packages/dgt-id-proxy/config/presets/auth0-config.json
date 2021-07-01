@@ -56,41 +56,44 @@
         "NodeHttpRequestResponseHandler:_httpHandler": {
           "@type": "HttpCorsRequestHandler",
           "HttpCorsRequestHandler:_handler": {
-            "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
-            "@type": "RoutedHttpRequestHandler",
-            "RoutedHttpRequestHandler:_handlerControllerList": [
-              {
-                "@id": "urn:handlersjs-http:default:HttpHandlerController",
-                "@type": "HttpHandlerController",
-                "HttpHandlerController:_label": "ControllerList",
-                "HttpHandlerController:_routes": [
-                  {
-                    "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
-                  },
-                  {
-                    "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
-                  }
-                ]
-              }
-            ]
+            "@type": "ClientCompressionHandler",
+            "ClientCompressionHandler:_handler": {
+              "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
+              "@type": "RoutedHttpRequestHandler",
+              "RoutedHttpRequestHandler:_handlerControllerList": [
+                {
+                  "@id": "urn:handlersjs-http:default:HttpHandlerController",
+                  "@type": "HttpHandlerController",
+                  "HttpHandlerController:_label": "ControllerList",
+                  "HttpHandlerController:_routes": [
+                    {
+                      "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
+                    }
+                  ]
+                }
+              ]
+            }
           }
         }
       }
