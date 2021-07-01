@@ -242,16 +242,23 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       };
 
       // decompress the data if it's compressed
-      const decompressedResponse = { ...httpHandlerResponse, body: this.decompress(httpHandlerResponse.body, httpHandlerResponse.headers['content-encoding']??'identity') };
+      const decompressedResponse = { 
+        ...httpHandlerResponse, 
+        body: this.decompress(
+          httpHandlerResponse.body, 
+          httpHandlerResponse.headers['content-encoding'] ?? 'identity'
+        )
+      };
 
       // replace any instance of the upstream's url with the proxy's url
       const urlReplacedResponse = {
         ...decompressedResponse,
         body: (decompressedResponse.headers['content-type'] && decompressedResponse.headers['content-type'].includes('text/html'))
           ? Buffer.from(
-            decompressedResponse.body
-              .toString()
-              .replace(new RegExp('(action="|src="|href=")' + new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), '$1' + this.proxyURL.toString())
+            decompressedResponse.body.toString().replace(
+              new RegExp('(action="|src="|href=")' + new URL(`${this.scheme}//${this.host}:${this.port}`).toString(), 'g'),
+              '$1' + this.proxyURL.toString()
+            )
           )
           : decompressedResponse.body,
       };
@@ -285,7 +292,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       case 'identity':
         return data;
       default:
-        throw new Error('Compression type is unknown');
+        throw new Error(`Compression type '${compressionType}' is unknown`);
 
     }
 
