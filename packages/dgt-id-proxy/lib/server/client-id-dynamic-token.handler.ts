@@ -71,6 +71,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
     }
 
     return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? redirect_uri : client_id)).pipe(
+
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)
         : throwError(new Error('No data was found in the store'))),
