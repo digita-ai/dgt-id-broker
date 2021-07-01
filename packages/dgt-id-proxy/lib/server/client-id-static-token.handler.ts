@@ -2,7 +2,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { getClientRegistrationData } from '../util/process-clientregistrationdata';
+import { getClientRegistrationData } from '../util/process-client-registration-data';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**

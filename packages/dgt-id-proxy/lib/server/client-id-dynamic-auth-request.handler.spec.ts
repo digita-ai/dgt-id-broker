@@ -243,7 +243,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     });
 
-    it('should not register', async () => {
+    it('should check the redirect uri and not register if a public webid was used', async () => {
 
       const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
       = new InMemoryStore();
@@ -315,7 +315,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     });
 
-    it('should register with new data if client_id is already registered in the store', async () => {
+    it('should register with new redirect uri if client_id is already registered in the store', async () => {
 
       fetchMock.mockResponses([ JSON.stringify({ ...JSON.parse(clientRegistrationData), 'redirect_uris': [ different_redirect_uri ] }), { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
       store.set(client_id, mockRegisterResponse);

@@ -212,26 +212,25 @@ export class ClientIdDynamicAuthRequestHandler extends ClientIdAuthRequestHandle
     registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
   ): boolean {
 
-    if (!registerData) { return true; }
+    return !registerData || Object.keys(clientData).some((key) =>
+      this.compareClientRegistrationParameter(clientData[key], registerData[key], key));
 
-    for (const item of Object.keys(clientData)) {
+  }
 
-      if ((![ 'client_id', 'scope', '@context' ].includes(item))) {
+  compareClientRegistrationParameter(clientDataItem: unknown, registerDataItem: unknown, key: string): boolean {
 
-        if (Array.isArray(clientData[item])) {
+    if (([ 'client_id', 'scope', '@context' ].includes(key))) { return false; }
 
-          const a = new Set(registerData[item]);
-          const b = new Set(clientData[item]);
+    if (Array.isArray(clientDataItem) && Array.isArray(registerDataItem)) {
 
-          return a.size === b.size && [ ...a ].every((value) => b.has(value)) ? false : true;
+      const a = new Set(registerDataItem);
+      const b = new Set(clientDataItem);
 
-        } else if (registerData[item] !== clientData[item]) { return true; }
-
-      }
+      return (!(a.size === b.size && [ ...a ].every((value) => b.has(value))));
 
     }
 
-    return false;
+    return (registerDataItem !== clientDataItem);
 
   }
 

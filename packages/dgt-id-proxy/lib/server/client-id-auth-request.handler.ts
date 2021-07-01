@@ -4,7 +4,7 @@ import { switchMap } from 'rxjs/operators';
 import { ForbiddenHttpError, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { getClientRegistrationData } from '../util/process-clientregistrationdata';
+import { getClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } abstract class that
