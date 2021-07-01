@@ -15,7 +15,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   = new InMemoryStore();
 
   const referer = 'client.example.com';
-  const client_id = 'http://client.example.com/clientapp/profile#id';
+  const client_id = 'http://client.example.com/clientapp/profile';
   const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const different_client_id = 'http://solidpod.com/vandenberghenjasper/profile/card#me';
   const redirect_uri = `http://${referer}/requests.html`;
