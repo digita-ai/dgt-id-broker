@@ -1,7 +1,7 @@
 import { join } from 'path';
 import { readFile } from 'fs/promises';
-import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { from, of } from 'rxjs';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { JWK } from 'jose/jwk/parse';
 
@@ -28,7 +28,7 @@ export class JwkRequestHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  handle(context: HttpHandlerContext) {
+  handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
     return of({ path: join(process.cwd(), this.path) })
       .pipe(
@@ -69,7 +69,7 @@ export class JwkRequestHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  canHandle(context: HttpHandlerContext) {
+  canHandle(context: HttpHandlerContext): Observable<boolean>{
 
     return of(true);
 

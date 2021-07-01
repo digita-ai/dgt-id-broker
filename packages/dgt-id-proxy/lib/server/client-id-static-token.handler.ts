@@ -139,8 +139,8 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     return from(getClientRegistrationData(clientId))
       .pipe(
-        switchMap((text) => (text.grant_types.includes(grantType))
-          ? of(text)
+        switchMap((registrationData) => (registrationData.grant_types?.includes(grantType))
+          ? of(registrationData)
           : throwError(new Error('The grant type in the request is not included in the client registration data'))),
       );
 

@@ -1,7 +1,7 @@
 import { brotliCompressSync, deflateSync, gzipSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable, of, throwError, zip } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 /**
  * A { HttpHandler } that handles compression for the client.
