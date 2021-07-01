@@ -182,91 +182,95 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     requestOpts.headers['accept-encoding'] = 'gzip, br, deflate';
 
-    return from(new Promise<HttpHandlerResponse>((resolve, reject) => {
-
-      const responseCallback = (res) => {
-
-        const buffer: any = [];
-
-        res.on('data', (chunk) => buffer.push(chunk));
-
-        res.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
-
-        res.on('end', () => {
-
-          // Make sure headers are lowercase for consistency
-          res.headers = this.cleanHeaders(res.headers);
-
-          try {
-
-            const location = new URL(res.headers.location);
-            const upstreamURL = new URL(this.scheme + '//' + this.host + ':' + this.port);
-
-            if (upstreamURL.host === location.host) {
-
-              location.host = this.proxyURL.host;
-              location.protocol = this.proxyURL.protocol;
-              location.port = this.proxyURL.port;
-              res.headers.location = location.toString();
-
-            }
-
-          } catch (e) {
-            // do nothing
-          }
-
-          const httpHandlerResponse: HttpHandlerResponse = {
-            body: Buffer.concat(buffer),
-            headers: res.headers as { [key: string]: string },
-            status: res.statusCode ? res.statusCode : 500,
-          };
-
-          // decompress the data if it's compressed
-          const decompressedResponse = { ...httpHandlerResponse, body: this.decompress(httpHandlerResponse.body, httpHandlerResponse.headers['content-encoding']) };
-
-          // replace any instance of the upstream's url with the proxy's url
-          const urlReplacedResponse = {
-            ...decompressedResponse,
-            body: (decompressedResponse.headers['content-type'] && decompressedResponse.headers['content-type'].includes('text/html'))
-              ? Buffer.from(
-                decompressedResponse.body
-                  .toString()
-                  .replace(new RegExp('(action="|src="|href=")' + new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), '$1' + this.proxyURL.toString())
-              )
-              : decompressedResponse.body,
-          };
-
-          // convert body to string if content type is application/json
-          const response = {
-            ...urlReplacedResponse,
-            body: (httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].includes('application/json'))
-              ? urlReplacedResponse.body.toString()
-              : urlReplacedResponse.body,
-          };
-
-          delete response.headers['content-encoding'];
-
-          resolve(response);
-
-        });
-
-      };
-
-      const req = this.scheme === 'http:' ? httpRequest(requestOpts, responseCallback) : httpsRequest(requestOpts, responseCallback);
-
-      if (body) {
-
-        req.write(body);
-
-      }
-
-      req.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
-
-      req.end();
-
-    }));
+    return from(this.resolveResponse(requestOpts, body));
 
   }
+
+  private resolveResponse = (requestOpts: any, body: any) => new Promise<HttpHandlerResponse>((resolve, reject) => {
+
+    const responseCallback = (res) => this.responseCallback(res,  resolve, reject);
+
+    const req = this.scheme === 'http:' ? httpRequest(requestOpts, responseCallback) : httpsRequest(requestOpts, responseCallback);
+
+    if (body) {
+
+      req.write(body);
+
+    }
+
+    req.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
+
+    req.end();
+
+  });
+
+  private responseCallback = (res, resolve, reject) => {
+
+    const buffer: any = [];
+
+    res.on('data', (chunk) => buffer.push(chunk));
+
+    res.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
+
+    res.on('end', () => {
+
+      // Make sure headers are lowercase for consistency
+      res.headers = this.cleanHeaders(res.headers);
+
+      try {
+
+        const location = new URL(res.headers.location);
+        const upstreamURL = new URL(this.scheme + '//' + this.host + ':' + this.port);
+
+        if (upstreamURL.host === location.host) {
+
+          location.host = this.proxyURL.host;
+          location.protocol = this.proxyURL.protocol;
+          location.port = this.proxyURL.port;
+          res.headers.location = location.toString();
+
+        }
+
+      } catch (e) {
+        // do nothing
+      }
+
+      const httpHandlerResponse: HttpHandlerResponse = {
+        body: Buffer.concat(buffer),
+        headers: res.headers as { [key: string]: string },
+        status: res.statusCode ? res.statusCode : 500,
+      };
+
+      // decompress the data if it's compressed
+      const decompressedResponse = { ...httpHandlerResponse, body: this.decompress(httpHandlerResponse.body, httpHandlerResponse.headers['content-encoding']??'identity') };
+
+      // replace any instance of the upstream's url with the proxy's url
+      const urlReplacedResponse = {
+        ...decompressedResponse,
+        body: (decompressedResponse.headers['content-type'] && decompressedResponse.headers['content-type'].includes('text/html'))
+          ? Buffer.from(
+            decompressedResponse.body
+              .toString()
+              .replace(new RegExp('(action="|src="|href=")' + new URL(this.scheme + '//' + this.host + ':' + this.port).toString(), 'g'), '$1' + this.proxyURL.toString())
+          )
+          : decompressedResponse.body,
+      };
+
+      // convert body to string if content type is application/json
+      const response = {
+        ...urlReplacedResponse,
+        body: (httpHandlerResponse.headers['content-type'] && httpHandlerResponse.headers['content-type'].includes('application/json'))
+          ? urlReplacedResponse.body.toString()
+          : urlReplacedResponse.body,
+      };
+
+      delete response.headers['content-encoding'];
+
+      resolve(response);
+
+    });
+
+  };
 
   private decompress = (data: Buffer, compressionType: string): Buffer => {
 
