@@ -1,7 +1,7 @@
 import { brotliCompressSync, deflateSync, gzipSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable, of, throwError } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of, throwError, zip } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 
 /**
  * A { HttpHandler } that handles compression for the client.
@@ -40,39 +40,32 @@ export class ClientCompressionHandler extends HttpHandler {
     const clientAcceptEncoding = context.request.headers['accept-encoding'];
 
     return this.handler.handle(context).pipe(
-      map((response) => clientAcceptEncoding ? this.handleEncoding(response, clientAcceptEncoding) : response)
+
+      map((response) => clientAcceptEncoding
+        ? this.handleEncoding(response, this.retrieveEncoding(clientAcceptEncoding))
+        : response),
+
     );
 
   }
 
-  /**
-   * Specifies that if the context, context request, and context request headers are defined this handler can handle the response.
-   *
-   * @param {HttpHandlerContext} context
-   */
-  canHandle(context: HttpHandlerContext): Observable<boolean> {
+  private retrieveEncoding(clientAcceptEncodingHeader: string): string {
 
-    return context
-      && context.request
-      && context.request.headers
-      ? of(true)
-      : of(false);
+    // Accepted encodings are presented in a comma seperated list and can contain q weights.
+    // This line will remove the q weights and put them in a list.
+    return clientAcceptEncodingHeader.split(',')
+      .map((encodingType) => encodingType.trim().split(';')[0])
+      .filter((encodingType) => encodingType !== 'compress')[0];
 
   }
 
   private handleEncoding(
     response: HttpHandlerResponse,
-    clientAcceptEncodingHeader: string
+    encodingPossibilities: string,
   ): HttpHandlerResponse {
 
-    // Accepted encodings are presented in a comma seperated list and can contain q weights.
-    // This line will remove the q weights and put them in a list.
-    const encodingPossibilities = clientAcceptEncodingHeader.split(',')
-      .map((encodingType) => encodingType.trim().split(';')[0])
-      .filter((encodingType) => encodingType !== 'compress');
-
     // Compress according to the first in the list as they are ordered by preference.
-    switch (encodingPossibilities[0]) {
+    switch (encodingPossibilities) {
 
       case 'br':
         response.body = brotliCompressSync(response.body);
@@ -94,6 +87,21 @@ export class ClientCompressionHandler extends HttpHandler {
     }
 
     return response;
+
+  }
+
+  /**
+   * Specifies that if the context, context request, and context request headers are defined this handler can handle the response.
+   *
+   * @param {HttpHandlerContext} context
+   */
+  canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    return context
+      && context.request
+      && context.request.headers
+      ? of(true)
+      : of(false);
 
   }
 

@@ -242,12 +242,12 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       };
 
       // decompress the data if it's compressed
-      const decompressedResponse = { 
-        ...httpHandlerResponse, 
+      const decompressedResponse = {
+        ...httpHandlerResponse,
         body: this.decompress(
-          httpHandlerResponse.body, 
+          httpHandlerResponse.body,
           httpHandlerResponse.headers['content-encoding'] ?? 'identity'
-        )
+        ),
       };
 
       // replace any instance of the upstream's url with the proxy's url

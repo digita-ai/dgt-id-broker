@@ -1,7 +1,7 @@
 import http, { IncomingMessage } from 'http';
 import https from 'https';
 import { Socket } from 'net';
-import { gunzipSync, gzipSync, brotliDecompressSync, brotliCompressSync, inflateSync, deflateSync } from 'zlib';
+import { gzipSync, brotliCompressSync, deflateSync } from 'zlib';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 
@@ -269,7 +269,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Compression type is unknown');
+      await expect(() => handler.handle(context).toPromise()).rejects.toThrow(`Compression type 'unknownDecompressionType' is unknown`);
 
     });
 
