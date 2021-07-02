@@ -150,7 +150,9 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    *
    * @param { Partial<OidcClientMetadata> } clientData
    */
-  createRequestData(clientData: Partial<OidcClientMetadata>): Partial<OidcClientMetadata> {
+  createRequestData(
+    clientData: Partial<OidcClientMetadata>
+  ): Partial<OidcClientMetadata> {
 
     const metadata = [
       'response_types',
