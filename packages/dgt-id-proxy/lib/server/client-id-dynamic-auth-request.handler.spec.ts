@@ -348,7 +348,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     });
 
-    fit('should register with the new client name if client_id is already registered in the store', async () => {
+    it('should register with the new client name if client_id is already registered in the store', async () => {
 
       fetchMock.mockResponses([ clientRegistrationDataNewClientName, { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
       store.set(client_id, mockRegisterResponse);
