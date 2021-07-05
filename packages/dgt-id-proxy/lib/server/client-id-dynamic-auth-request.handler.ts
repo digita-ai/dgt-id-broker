@@ -3,10 +3,9 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { CombinedRegistrationData, ObservableOfCombinedRegistrationData, retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
+import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
@@ -26,7 +25,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, CombinedRegistrationData>
+    private store: RegistrationStore,
   ) {
 
     super();
@@ -209,8 +208,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * @param { OidcClientMetadata & OidcClientRegistrationResponse } registerData - the data retrieved from the store.
    */
   clientRegistrationDataChanged(
-    clientData: Partial<OidcClientMetadata>,
-    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
+    clientData: OidcClientMetadata,
+    registerData: CombinedRegistrationData,
   ): boolean {
 
     return !registerData || Object.keys(clientData).some((key) =>
@@ -271,7 +270,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   private checkClientRegistrationData(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): ObservableOfCombinedRegistrationData {
+  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
 
     return retrieveAndValidateClientRegistrationData(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),

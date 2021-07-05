@@ -1,11 +1,12 @@
 import { Observable, throwError, of, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ForbiddenHttpError } from '@digita-ai/handlersjs-http';
+import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from './oidc-client-metadata';
 import { OidcClientRegistrationResponse } from './oidc-client-registration-response';
 
-export type ObservableOfCombinedRegistrationData = Observable<OidcClientMetadata & OidcClientRegistrationResponse>;
 export type CombinedRegistrationData = OidcClientMetadata & OidcClientRegistrationResponse;
+export type RegistrationStore = KeyValueStore<string, CombinedRegistrationData>;
 
 /**
  * Performs a get request to retrieve the client registration file
@@ -37,13 +38,13 @@ export const getClientRegistrationData = async (clientid: string): Promise<Combi
  * Compares the data from the ClientRegistrationData with the data given in the requests URLSearchParams.
  * It returns a 403 error when crucial parameters do not match
  *
- * @param { Partial<OidcClientMetadata> } clientData
+ * @param { OidcClientMetadata } clientData
  * @param { URLSearchParams } searchParams
  */
 export const compareClientRegistrationDataWithRequest = (
   clientData: CombinedRegistrationData,
   searchParams: URLSearchParams
-): ObservableOfCombinedRegistrationData => {
+): Observable<CombinedRegistrationData> => {
 
   if (clientData.client_id !== searchParams.get('client_id')) {
 
@@ -82,7 +83,7 @@ export const compareClientRegistrationDataWithRequest = (
 export const retrieveAndValidateClientRegistrationData = (
   clientId: string,
   contextRequestUrlSearchParams: URLSearchParams
-): ObservableOfCombinedRegistrationData =>
+): Observable<CombinedRegistrationData> =>
   from(getClientRegistrationData(clientId)).pipe(
     switchMap((clientData) => compareClientRegistrationDataWithRequest(
       clientData,

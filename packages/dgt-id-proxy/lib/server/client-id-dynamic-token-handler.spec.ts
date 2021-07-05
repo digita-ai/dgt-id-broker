@@ -5,6 +5,7 @@ import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { RegistrationStore } from '../util/process-client-registration-data';
 import { ClientIdDynamicTokenHandler } from './client-id-dynamic-token.handler';
 
 describe('ClientIdDynamicTokenHandler', () => {
@@ -47,8 +48,7 @@ describe('ClientIdDynamicTokenHandler', () => {
 
   let httpHandler: HttpHandler;
 
-  const store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-  = new InMemoryStore();
+  const store: RegistrationStore = new InMemoryStore();
 
   let handler: ClientIdDynamicTokenHandler;
 

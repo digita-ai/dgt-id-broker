@@ -4,7 +4,7 @@ import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { CombinedRegistrationData } from '../util/process-client-registration-data';
+import { RegistrationStore } from '../util/process-client-registration-data';
 import { ClientIdDynamicAuthRequestHandler } from './client-id-dynamic-auth-request.handler';
 
 describe('ClientIdDynamicAuthRequestHandler', () => {
@@ -12,8 +12,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
 
-  const store: KeyValueStore<string, CombinedRegistrationData>
-  = new InMemoryStore();
+  const store: RegistrationStore = new InMemoryStore();
 
   const referer = 'client.example.com';
   const client_id = 'http://client.example.com/clientapp/profile';

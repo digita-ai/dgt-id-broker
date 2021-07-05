@@ -1,11 +1,10 @@
-import { IncomingMessage, request as httpRequest } from 'http';
+import { IncomingHttpHeaders, IncomingMessage, request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { gunzipSync, brotliDecompressSync, inflateSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { IncomingHttpHeaders } from 'node:http';
 
 /**
  * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
@@ -207,7 +206,13 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   private responseCallback = (
     res: IncomingMessage,
-    resolve: (value: HttpHandlerResponse<any> | PromiseLike<HttpHandlerResponse<any>>) => void,
+    resolve: (value: {
+      body: string | Buffer;
+      headers: {
+        [key: string]: string;
+      };
+      status: number;
+    }) => void,
     reject: (reason?: any) => void
   ) => {
 
