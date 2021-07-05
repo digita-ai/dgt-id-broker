@@ -218,7 +218,7 @@ grant_type=authorization_code&code=h-DnHRAfTsn9V_m4I1A3Cw&redirect_uri=https%3A%
 
 [#img-classic-oidc]
 .A Classic OIDC flow
-image::classic-oidc-flow.jpg[Classic OIDC flow]
+image::classic-oidc-flow.png[Classic OIDC flow]
 
 
 == Solid OIDC
@@ -252,17 +252,6 @@ The URI of the *Identity Provider* is the value of the `solid:oidcIssuer` triple
 
 . To be Solid-compliant, the *Client* must now use the secure link:url[PKCE, https://oauth.net/2/pkce/] enhancement to OIDC. To do so, it first needs to generate a *code verifier*. This can be a cryptographic random string (e.g. `LDKoTiFC6`). By encoding this code verifier with a *challenge method*  (e.g. `BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))`) we can create our *code challenge* (e.g. `92d5a871f52a513951e3260cd42b04f29b0f4a8bfea1740a0780e3db667`).
 
-. Note that in this flow, it is not necessary for the *Client* to be registered beforehand with the *Identity Provider*. Instead, the *Client* can use a URL as its *Client ID* that dereferences to a JSON-LD serialized RDF document with its registration parameters. For example: 
-+
-[source, json]
-----
-...
-----
-+
-If the Solid-compliant *Identity Provider* receives a request with such a *Client ID*, it should always check the request parameters with the ones in that document.
-+
-Alternatively, the *Client* can present itself as an ephemeral, anonymous public client by using the *Client ID* `http://www.w3.org/ns/solid/terms#PublicOidcClient`. In such cases, the Solid-compliant *Identity Provider* must accept the request, taking any *Redirect URI* to be valid.
-
 . After generating the *PKCE* parameters, an authorization request can be made to the *Authorization Endpoint*. This request looks the same as in the classic flow, with an extra `profile` *Scope* to request the *WebID* of the *End-User* (Alice), the extra *PKCE* parameters described above, and the possibility of a URI as *Client ID*:
 +
 [source, json]
@@ -271,9 +260,36 @@ GET https://secureauth.example/authorize?response_type=code&redirect_uri=https%3
 ----
 +
 
+. Note that in this flow, it is not necessary for the *Client* to be registered beforehand with the *Identity Provider*. Instead, the *Client* can use a URL as its *Client ID* that dereferences to a JSON-LD serialized RDF document with its registration parameters. For example: 
++
+[source, json]
+----
+{
+    "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
+
+    "client_id" : "http://localhost:3002/clientapp/profile",
+    "redirect_uris" : ["http://localhost:3001/requests.html"],
+    "client_name" : "My Demo Application", 
+    "client_uri" : "https://app.example/",
+    "logo_uri" : "https://app.example/logo.png",
+    "tos_uri" : "https://app.example/tos.html",
+    "scope" : "openid offline_access",
+    "grant_types" : ["refresh_token","authorization_code"],
+    "response_types" : ["code"],
+    "default_max_age" : 60000,
+    "require_auth_time" : true
+}
+----
++
+If the Solid-compliant *Identity Provider* receives a request with such a *Client ID*, it should always check the request parameters with the ones in that document.
++
+Alternatively, the *Client* can present itself as an ephemeral, anonymous public client by using the *Client ID* `http://www.w3.org/ns/solid/terms#PublicOidcClient`. In such cases, the Solid-compliant *Identity Provider* must accept the request, taking any *Redirect URI* to be valid.
+
 . Finally Alice is prompted to login by the *Identity Provider*. This happens identical to the classic flow, with the remark that the stored request parameters now also contain the *PKCE* parameters.
 
-. After receiving the *Authorization Code*, the *Client* must now generate a *DPoP Token*. The *DPoP* enhancement of the flow proves to the resource server that the *Client* it is the same application that got the token from the *Identity Provider*.
+. After logging in the *Identity Provider* generates an *Authorization Code* and sends it back to the *Redirect URI*.
+
+. The *Client* must now generate a *DPoP Token*. The *DPoP* enhancement of the flow proves to the resource server that the *Client* it is the same application that got the token from the *Identity Provider*.
 
 .. The first step to achieve this is is for the *Client* to generate both a pair of private and public keys. A private key could look like this (and a public key is the same with some fields left out):
 +
@@ -379,7 +395,7 @@ grant_type=authorization_code&code_verifier=LDKoTiFC6&code=h-DnHRAfTsn9V_m4I1A3C
 
 [#img-solid-oidc]
 .B Solid-compliant OIDC flow
-image::solid-oidc-chart.jpg[Solid-compliant flow]
+image::solid-oidc-flow.png[Solid-compliant flow]
 
 
 == Summary
