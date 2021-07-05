@@ -1,8 +1,12 @@
 import { Observable, throwError, of, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ForbiddenHttpError } from '@digita-ai/handlersjs-http';
+import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from './oidc-client-metadata';
 import { OidcClientRegistrationResponse } from './oidc-client-registration-response';
+
+export type CombinedRegistrationData = OidcClientMetadata & OidcClientRegistrationResponse;
+export type RegistrationStore = KeyValueStore<string, CombinedRegistrationData>;
 
 /**
  * Performs a get request to retrieve the client registration file
@@ -11,7 +15,7 @@ import { OidcClientRegistrationResponse } from './oidc-client-registration-respo
  *
  * @param { string } client id
  */
-export const getClientRegistrationData = async (clientid: string): Promise<Partial<OidcClientMetadata>> =>{
+export const getClientRegistrationData = async (clientid: string): Promise<CombinedRegistrationData> =>{
 
   const data = await fetch(clientid, {
     method: 'GET',
@@ -34,13 +38,13 @@ export const getClientRegistrationData = async (clientid: string): Promise<Parti
  * Compares the data from the ClientRegistrationData with the data given in the requests URLSearchParams.
  * It returns a 403 error when crucial parameters do not match
  *
- * @param { Partial<OidcClientMetadata> } clientData
+ * @param { OidcClientMetadata } clientData
  * @param { URLSearchParams } searchParams
  */
 export const compareClientRegistrationDataWithRequest = (
-  clientData: Partial<OidcClientMetadata>,
+  clientData: CombinedRegistrationData,
   searchParams: URLSearchParams
-): Observable<Partial<OidcClientMetadata>> => {
+): Observable<CombinedRegistrationData> => {
 
   if (clientData.client_id !== searchParams.get('client_id')) {
 
@@ -48,13 +52,17 @@ export const compareClientRegistrationDataWithRequest = (
 
   }
 
-  if (!clientData.redirect_uris.includes(searchParams.get('redirect_uri'))) {
+  const redirect_uri = searchParams.get('redirect_uri');
+
+  if (redirect_uri && !clientData.redirect_uris?.includes(redirect_uri)) {
 
     return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the client registration data'));
 
   }
 
-  if (!clientData.response_types.includes(searchParams.get('response_type')))  {
+  const response_type = searchParams.get('response_type');
+
+  if (response_type && !clientData.response_types?.includes(response_type))  {
 
     return throwError(new ForbiddenHttpError('Response types do not match'));
 
@@ -75,7 +83,7 @@ export const compareClientRegistrationDataWithRequest = (
 export const retrieveAndValidateClientRegistrationData = (
   clientId: string,
   contextRequestUrlSearchParams: URLSearchParams
-): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> =>
+): Observable<CombinedRegistrationData> =>
   from(getClientRegistrationData(clientId)).pipe(
     switchMap((clientData) => compareClientRegistrationDataWithRequest(
       clientData,

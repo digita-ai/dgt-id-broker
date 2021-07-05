@@ -94,7 +94,7 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    *
    * @param {HttpHandlerResponse} response
    */
-  canHandle(response: HttpHandlerResponse) {
+  canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
     return response
       ? of(true)

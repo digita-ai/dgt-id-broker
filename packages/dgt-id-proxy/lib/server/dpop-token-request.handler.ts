@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError } from 'rxjs/operators';
+import { switchMap, catchError, tap } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
@@ -109,23 +109,13 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     const jwk = header.jwk;
 
-    if (!payload.jti || typeof payload.jti !== 'string') {
+    if (!jwk) { return throwError(new Error('no JWK was found in the header')); }
 
-      return throwError(new Error('must have a jti string property'));
+    if (!payload.jti || typeof payload.jti !== 'string') { return throwError(new Error('must have a jti string property')); }
 
-    }
+    if (payload.htm !== method) { return throwError(new Error('htm does not match the request method')); }
 
-    if (payload.htm !== method) {
-
-      return throwError(new Error('htm does not match the request method'));
-
-    }
-
-    if (payload.htu !== this.proxyTokenUrl) {
-
-      return throwError(new Error('htu does not match'));
-
-    }
+    if (payload.htu !== this.proxyTokenUrl) { return throwError(new Error('htu does not match')); }
 
     const jti = payload.jti;
 

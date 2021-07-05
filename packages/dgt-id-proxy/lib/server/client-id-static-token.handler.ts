@@ -135,7 +135,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   }
 
-  private checkClientRegistrationData(clientId: string, grantType: string): Observable<Partial<OidcClientMetadata>> {
+  private checkClientRegistrationData(clientId: string, grantType: string): Observable<OidcClientMetadata> {
 
     return from(getClientRegistrationData(clientId))
       .pipe(

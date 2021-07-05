@@ -3,10 +3,8 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
+import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
@@ -26,7 +24,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    */
   constructor(
     private registration_uri: string,
-    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+    private store: RegistrationStore,
   ) {
 
     super();
@@ -118,14 +116,14 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * and returns a JSON of the response and saves
    * this response in the KeyValue store with the client id as key.
    *
-   * @param { Partial<OidcClientMetadata> } data
+   * @param { OidcClientMetadata } data
    * @param { string } client_id
    */
   async registerClient(
-    data: Partial<OidcClientMetadata>,
+    data: OidcClientMetadata,
     client_id: string,
     redirect_uri?: string,
-  ): Promise<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+  ): Promise<CombinedRegistrationData> {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -148,9 +146,9 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * It combines all the parameters that are possible for a register request
    * that are present in the client registration data.
    *
-   * @param { Partial<OidcClientMetadata> } clientData
+   * @param { OidcClientMetadata } clientData
    */
-  createRequestData(clientData: Partial<OidcClientMetadata>): Partial<OidcClientMetadata> {
+  createRequestData(clientData: OidcClientMetadata): OidcClientMetadata {
 
     const metadata = [
       'response_types',
@@ -184,9 +182,9 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       'request_uris',
     ];
 
-    const reqData = {
+    const reqData: OidcClientMetadata = {
       'redirect_uris': clientData.redirect_uris,
-      'token_endpoint_auth_method' : 'none',
+      'token_endpoint_auth_method': 'none',
     };
 
     metadata.map((item) => {
@@ -205,12 +203,12 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * If registered again it saves the new register data in the KeyValue store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
-   * @param { Partial<OidcClientMetadata> } clientData - the data retrieved from the client registration data.
-   * @param { Partial<OidcClientMetadata & OidcClientRegistrationResponse> } registerData - the data retrieved from the store.
+   * @param { OidcClientMetadata } clientData - the data retrieved from the webid.
+   * @param { CombinedRegistrationData } registerData - the data retrieved from the store.
    */
-  compareClientRegistrationDataWithStore(
-    clientData: Partial<OidcClientMetadata>,
-    registerData: Partial<OidcClientMetadata & OidcClientRegistrationResponse>,
+  clientRegistrationDataChanged(
+    clientData: OidcClientMetadata,
+    registerData: CombinedRegistrationData,
   ): boolean {
 
     return !registerData || Object.keys(clientData).some((key) =>
@@ -246,11 +244,11 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   private checkRedirectUri(
     clientId: string,
     redirectUri: string
-  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+  ): Observable<CombinedRegistrationData> {
 
-    const clientData = {
-      'redirect_uris': [ redirectUri ],
-      'token_endpoint_auth_method' : 'none',
+    const clientData: { [key: string]: string | number | boolean | string[] | undefined } = {
+      redirect_uris: [ redirectUri ],
+      token_endpoint_auth_method : 'none',
     };
 
     return from(this.store.get(redirectUri)).pipe(
@@ -271,13 +269,14 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   private checkClientRegistrationData(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<Partial<OidcClientMetadata & OidcClientRegistrationResponse>> {
+  ): Observable<CombinedRegistrationData> {
 
     return retrieveAndValidateClientRegistrationData(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
-      switchMap(([ clientData, registerData ]) => this.compareClientRegistrationDataWithStore(clientData, registerData)
-        ? this.registerClient(this.createRequestData(clientData), clientId)
-        : of(registerData))
+      switchMap(([ clientData, registerData ]) =>
+        !registerData || this.clientRegistrationDataChanged(clientData, registerData)
+          ? this.registerClient(this.createRequestData(clientData), clientId)
+          : of(registerData))
     );
 
   }
