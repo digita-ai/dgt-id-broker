@@ -206,13 +206,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   private responseCallback = (
     res: IncomingMessage,
-    resolve: (value: {
-      body: string | Buffer;
-      headers: {
-        [key: string]: string;
-      };
-      status: number;
-    }) => void,
+    resolve: (value: HttpHandlerResponse) => void,
     reject: (reason?: any) => void
   ) => {
 

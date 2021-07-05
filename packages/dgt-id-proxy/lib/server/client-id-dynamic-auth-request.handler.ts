@@ -4,7 +4,6 @@ import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
@@ -124,7 +123,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     data: OidcClientMetadata,
     client_id: string,
     redirect_uri?: string,
-  ): Promise<OidcClientMetadata & OidcClientRegistrationResponse> {
+  ): Promise<CombinedRegistrationData> {
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -205,7 +204,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
    * @param { OidcClientMetadata } clientData - the data retrieved from the webid.
-   * @param { OidcClientMetadata & OidcClientRegistrationResponse } registerData - the data retrieved from the store.
+   * @param { CombinedRegistrationData } registerData - the data retrieved from the store.
    */
   clientRegistrationDataChanged(
     clientData: OidcClientMetadata,
@@ -245,7 +244,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   private checkRedirectUri(
     clientId: string,
     redirectUri: string
-  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
+  ): Observable<CombinedRegistrationData> {
 
     const clientData: { [key: string]: string | number | boolean | string[] | undefined } = {
       redirect_uris: [ redirectUri ],
@@ -270,7 +269,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   private checkClientRegistrationData(
     clientId: string,
     contextRequestUrlSearchParams: URLSearchParams
-  ): Observable<OidcClientMetadata & OidcClientRegistrationResponse> {
+  ): Observable<CombinedRegistrationData> {
 
     return retrieveAndValidateClientRegistrationData(clientId, contextRequestUrlSearchParams).pipe(
       switchMap((clientData) => zip(of(clientData), from(this.store.get(clientId)))),
