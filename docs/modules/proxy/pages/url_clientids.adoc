@@ -1,17 +1,15 @@
-= WebIDs as clientIDs
+= URLs as client identifiers
 :toc:
 :toclevels: 3
 
-As explained in https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1] of the Solid-OIDC specification, webIDs containing a `solid:oidcRegistration` property should be able to be used as clientIDs. But what if an Identity Provider does not support this? Our proxy provides two possible solutions for such cases.
+As explained in https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1] of the Solid-OIDC specification, client identifiers can be URLs, dereferencing to JSON-LD serialized OIDC registration parameters. But what if an Identity Provider does not support this? Our proxy provides two possible solutions for such cases.
 
 [[static_client]]
 == Use of a static client
 
 One solution consists of configuring a static client in the Identity Provider which you want to proxy. The proxy has a `ClientIdStaticAuthRequestHandler` and a `ClientIdStaticAuthResponseHandler` for the `authorization` endpoint, and a `ClientIdStaticTokenHandler` for the `token` endpoint.
 
-The authorization endpoint's handlers are split in two because the redirect response that is redirecting the client to the `redirect_uri` specified in their original request may not be on the same endpoint due to a login or other user action being required. The state parameter is used by the proxy in requests to the `authorization` endpoint so that client's redirect_uri can be substituted for the one that is statically configured on the upstream server's static client.
-
-Because these handlers are reliant on the state parameter, the use of xref:state.adoc[state handlers] is required.
+The authorization endpoint's handlers are split in two because the redirect response that is redirecting the client to the `redirect_uri` specified in their original request may not be on the same endpoint due to a login or other user action being required. The state parameter is used by the proxy in requests to the `authorization` endpoint so that client's redirect_uri can be substituted for the one that is statically configured on the upstream server's static client. Because these handlers are relying on the state parameter, the use of xref:state.adoc[state handlers] is required.
 
 === Configuring the handlers
 
@@ -24,7 +22,7 @@ The handlers on the `authorization` endpoint will need a `KeyValueStore` that th
 {
     "@id": "urn:dgt-id-proxy:default:StaticAuthStore",
     "@type": "InMemoryStore"
-},
+}
 ----
 
 NOTE: In this example we use an `InMemoryStore`, in production you should use a different store!
@@ -43,7 +41,7 @@ The `ClientIdStaticAuthRequestHandler` can be configured as follows:
     "ClientIdStaticAuthRequestHandler:_keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
     }
-},
+}
 ----
 
 This handler takes the following constructor parameters:
@@ -64,7 +62,7 @@ The `ClientIdStaticAuthRequestHandler` can be configured as follows:
     "ClientIdStaticAuthResponseHandler:_keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
     }
-},
+}
 ----
 
 This handler takes the following constructor parameters:
@@ -169,18 +167,18 @@ These endpoints can be configured as follows:
         ]
     },
     "HttpHandlerRoute:_path": "/authorize/resume"
-},
+}
 ----
 
-Note the use of xref:state.adoc[state handlers]. These are required, so make sure to configure them as well.
+NOTE: xref:state.adoc[State handlers] are required, so make sure to configure them as well.
 
-Also note the use of a `PipeThroughHandler`. This handler will simply pass whatever is passed to it to the first handler, take the response from the first handler and pass it to the second handler, and so on until it reaches the end of the chain.
+Note: The `PipeThroughHandler` will simply pass whatever is passed to it to the first handler, take the response from the first handler and pass it to the second handler, and so on until it reaches the end of the chain.
 
 The flow of the authorization endpoint static client handlers will be as follows:
 
 . A request is sent to the endpoint and passed through the `PipeThroughHandler`.
-. The request reaches the `ClientIdStaticAuthRequestHandler`, which verifies that the webID is a valid webID, and that it returns a document in rdf format.
-. The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
+. The request reaches the `ClientIdStaticAuthRequestHandler`, which verifies that the client identifier is a valid URL, and that it returns a document in JSON-LD format.
+. The handler then verifies that the document contains a the required context and registration parameters, and checks that the request parameters match the registration in the document.
 . If they match, the request is valid. The handler then replaces the `client_id` and `redirect_uri` in the request with the parameters passed to it in the constructor to the request before returning the request.
 . The next handler in the chain is a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which sends the request to the upstream, and returns the response.
 . The response reaches the `ClientIdStaticAuthResponseHandler`, which checks that the response contains a redirect to the static client's `redirect_uri`, and if it does it replaces it with the client's `redirect_uri` which it has saved in its `keyValueStore`.
@@ -228,25 +226,25 @@ NOTE: All endpoints are Identity Provider specific. Change the endpoints to matc
 The flow here will be:
 
 . A request is sent to the endpoint and passed on to the `ClientIdStaticTokenHandler` handler.
-. The handler verifies that the webID is a valid webID, and that it returns a document in rdf format.
-. The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
+. The handler verifies that the client identifier is a valid URL, and that it returns a document in JSON-LD format.
+. The handler then verifies that the document contains the required context and registration parameters, and checks that the request parameters match the registration in the document.
 . If they match, the request is valid. The handler then replaces the `client_id` and `redirect_uri` in the request with those that were passed to it in the constructor and also adds the `client_secret` request parameter with the `clientSecret` passed in the constructor to the request before sending it on the its `httpHandler`.
-. It's httpHandler is configured as explained xref:webid.adoc#clientidstatictokenhandler[above].
+. It's `httpHandler` is configured as explained xref:url_clientids.adoc#static_client[above].
 . The `client_id` in the access_token is replaced with the client's `client_id` as sent in the request, the token is xref:getting_started.adoc#encode[encoded], and the response is returned to the client.
 
 == Use of dynamic registration
 
-In some cases it may not be possible to add a static client to an Identity Provider. If the Identity Provider provides https://datatracker.ietf.org/doc/html/rfc7591[Dynamic Client Registration] the proxy can leverage this instead. The proxy provides two handlers: a `ClientIdDynamicAuthRequestHandler` and a `ClientIdDynamicTokenHandler`. When a client sends an authorization request containing a webID as a client_id, the `ClientIdDynamicAuthRequestHandler` will validate the `oidcRegistration` information in the webID and then check if it already has the registration information saved. If it does, it will replace the `client_id` and `client_secret` in the request with those in the store and send on the request. If it doesn't, it will use the dynamic registration endpoint of the upstream server to register the client and save the information in the store.
+In some cases it may not be possible to add a static client to an Identity Provider. If the Identity Provider provides https://datatracker.ietf.org/doc/html/rfc7591[Dynamic Client Registration] the proxy can leverage this instead. The proxy provides two handlers: a `ClientIdDynamicAuthRequestHandler` and a `ClientIdDynamicTokenHandler`. When a client sends an authorization request containing a URL as a client_id, the `ClientIdDynamicAuthRequestHandler` will validate the registration parameters in the JSON-LD document and then check if it already has the registration information saved. If it does, it will replace the `client_id` and `client_secret` in the request with those in the store and send on the request. If it doesn't, it will use the dynamic registration endpoint of the upstream server to register the client and save the information in the store.
 
-This also means that if the `oidcRegistration` found via the webID changes and does not match that which is found in the store, the upstream server will dynamically register the client again and update the data in the store.
+This also means that if the registration parameters found via the URL change, and do not match those found in the store, the upstream server will dynamically register the client again and update the data in the store.
 
-NOTE: Because the time between an `authorization` request and a `token` request is generally very small, we only check the data in our store in the `ClientIdDynamicTokenHandler`, and don't try to register the client.
+NOTE: Because the time between an `authorization` request and a `token` request is generally very small, we only check the data in our store in the `ClientIdDynamicTokenHandler`, and don't try to register the client again.
 
 === Configuring the handlers
 
 ==== KeyValueStore
 
-The handlers require a `KeyValueStore` of some sort that they both use, so one should be  configured:
+The handlers require a `KeyValueStore` of some sort that they both use, so one should be configured:
 
 [source, json]
 ----
@@ -276,8 +274,8 @@ The `ClientIdDynamicAuthRequestHandler` can be configured as follows:
 
 This handler takes three arguments:
 
-* A `store`. This store will contain the data on all of the webIDs which have a matching dynamically registered client in the upstream.
-* A `registration_uri`. This is the URI of the registration endpoint of the upstream server.
+* A `store`, which will contain the registration parameters of all the clients which have a matching dynamically registered client in the upstream.
+* A `registration_uri`, which is the URI of the registration endpoint of the upstream server.
 
 ==== ClientIdDynamicTokenHandler
 
@@ -299,12 +297,12 @@ The `ClientIdDynamicTokenHandler` can be configured as follows:
 
 This handler takes two arguments:
 
-* A `store`. This store will contain the data on all of the webIDs which have a matching dynamically registered client in the upstream. It MUST be the same as on the `authorization` endpoint.
-* A 'httpHandler'. This is the handler to which the `SolidClientDynamicAuthRegistrationHandler` will pass the request. In this example we are using a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
+* A `store`, which will contain the registration parameters of all the clients which have a matching dynamically registered client in the upstream. It MUST be the same as on the `authorization` endpoint.
+* A 'httpHandler', to which the `SolidClientDynamicAuthRegistrationHandler` will pass the request. In this example we are using a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
 
 === Configuring the endpoints
 
-We will configure two endpoints, an `authorization` and a `token` endpoint:
+We will configure two endpoints, an authorization endpoint and a token endpoint:
 
 [source, json]
 ----
@@ -359,10 +357,10 @@ NOTE: All endpoints are Identity Provider specific. Change the endpoints to matc
 The flow here will be:
 
 . A request is sent to the `authorization` endpoint and passed through the `PipeThroughHandler` on to the `ClientIdDynamicAuthRequestHandler`.
-. The handler verifies that the webID is a valid webID, and that it returns a document in rdf format.
-. The handler then verifies that the document contains a `solid:oidcRegistration` property, and checks that the request parameters match the registration in the document.
-. If they match, the request is valid. The handler then checks if it has the webID in its store. If it does, it checks that the data in its store matches the data in the `solid:oidcRegistration` property, and if they match it will replace the `client_id` in the request with the dynamically generated `client_id` in the store and add the `client_secret`. If the webID was not yet registered, it will dynamically register the client first and save the data in its store.
+. The handler verifies that the client identifier is a valid URL, and that it returns a document in JSON-LD.
+. The handler then verifies that the document contains the required context and registration parameters, and checks that the request parameters match the registration in the document.
+. If they match, the request is valid. The handler then checks if it has the client identifier in its store. If it does, it checks that the data in its store matches the data in the `solid:oidcRegistration` property, and if they match it will replace the `client_id` in the request with the dynamically generated `client_id` in the store and add the `client_secret`. If the client was not yet registered, it will dynamically register the client first and save the data in its store.
 . The request is then passed on again to a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which sends the request to the upstream, and returns the response.
 . The response is returned back to the client, who can now make a request for a token.
-. The `ClientIdDynamicTokenHandler` carries out the checks on the webID again, which should be registered in its store, and will also replace the `client_id` and add a `client_secret` to the request before passing it on.
+. The `ClientIdDynamicTokenHandler` carries out the checks on the registration parameters again, which should be registered in its store, and will also replace the `client_id` and add a `client_secret` to the request before passing it on.
 . The client should receive a response containing an Access Token if the request was succesful!
