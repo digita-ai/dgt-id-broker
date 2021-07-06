@@ -6,4 +6,4 @@ Take a look at the [documentation of the provider](../../docs/modules/providers/
 
 ## Starting the provider
 
-Starting the provider can be done by opening a terminal and executing the command `npm run start`. This will build a docker image based on the docker-compose file.
+Starting the provider can be done by executing `npm run start` in the package root. This will build a docker image based on the docker-compose file. To test the provider with the proxy, you can execute `npm run keycloak` in the repo root.
