@@ -1,5 +1,5 @@
 {
-  "name": "solid-compliant-oidc-provider",
+  "name": "@digita-ai/solid-oidc-provider",
   "version": "0.3.0",
   "description": "oidc-demo-app",
   "main": "index.js",

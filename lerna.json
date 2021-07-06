@@ -1,8 +1,7 @@
 {
   "packages": [
     "packages/*",
-    "providers/*",
-    "demo/*"
+    "providers/solid-compliant-oidc-provider"
   ],
   "command": {
     "bootstrap": {
