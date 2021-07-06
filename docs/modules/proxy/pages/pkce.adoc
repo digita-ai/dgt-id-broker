@@ -1,0 +1,194 @@
+= Proof Key for Code Exchange (PKCE)
+:toc:
+:toclevels: 3
+
+Enabling PKCE requires the configuration of the following handlers:
+
+* `PkceAuthRequestHandler`. This handler will handle the PKCE authorization request before sending it on the the upstream server, but it won't do anything with the response.
+* `PkceCodeResponseHandler`. This handler will handle the response that contains the code with which a token can be requested.
+* `PkceTokenHandler`. This handler will handle the PKCE request to the token endpoint, and its response back to the client.
+
+The reason that the `authorization` portion is split into two seperate handlers is because many Identity Providers will redirect the user to a login page and/or a consent page before returning a response with the code. Since these would be split into seperate requests and responses, the proxy needs to be able to catch the authorization code on different endpoints. If the user is already logged in, then the first request would get a response containing a code if everything went right. To connect the request and the ultimate response, the state parameter is used. Because these handlers are reliant on the state parameter, the use of xref:state.adoc[state handlers] is required.
+
+== Configuration
+
+=== KeyValueStore
+
+To facilitate PKCE we need to store some information. All handlers will need access to the same information, so they will share a store:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:PkceStore",
+    "@type": "InMemoryStore"
+}
+----
+
+NOTE: In this example we use an `InMemoryStore`, in production you should use a different store!
+
+=== Authorization endpoint
+
+==== PkceAuthRequestHandler
+
+The `PkceAuthRequestHandler` can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler",
+    "@type": "PkceAuthRequestHandler",
+    "PkceAuthRequestHandler:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler"
+            }
+        ]
+      }
+    },
+    "PkceAuthRequestHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:PkceStore"
+    }
+}
+----
+
+This handler takes the following parameters:
+
+* a `handler`, to which it can pass its request when it has finished validating the PKCE request. This example uses a `PipeThroughHandler`, which will pass the request down a chain of handlers. Note the use of the xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler].
+* a `store` as mentioned above in which it can store the `code_challenge` and `challenge_method` associated with the request.
+
+==== PkceCodeResponseHandler
+
+The `PkceCodeResponseHandler` can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler",
+    "@type": "PkceCodeResponseHandler",
+    "PkceCodeResponseHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:PkceStore"
+    }
+}
+----
+
+This handler takes the following parameters:
+
+* a `store`, so it can link the code it receives from the upstream server with the `code_challenge` and `challenge_method` that the user sent to get the code.
+
+=== Token endpoint
+
+==== PkceTokenHandler
+
+The `PkceTokenHandler` can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:PkceTokenHandler",
+    "@type": "PkceTokenHandler",
+    "PkceTokenHandler:_httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+    },
+    "PkceTokenHandler:_store": {
+        "@id": "urn:dgt-id-proxy:default:PkceStore"
+    }
+}
+----
+
+This handler takes the following parameters:
+
+* a `httpHandler`, in this example we will use a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]. 
+* a `store`, the same store as the other handlers.
+
+
+== Putting it together
+
+We will need to configure three seperate endpoints. The authorization endpoint, the token endpoint, and the endpoint to which the client is redirected after a successful login:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "GET",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+            }
+        ]
+    },
+    "HttpHandlerRoute:_path": "/auth"
+},
+{
+    "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+        "@type": "HttpHandlerOperation",
+        "HttpHandlerOperation:_method": "GET",
+        "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler"
+            },
+            {
+                "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+            }
+        ]
+    },
+    "HttpHandlerRoute:_path": "/auth/:dynamic"
+},
+{
+    "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "POST",
+            "HttpHandlerOperation:_publish": false
+        },
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "OPTIONS",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@id": "urn:dgt-id-proxy:default:PkceTokenHandler"
+    },
+    "HttpHandlerRoute:_path": "/token"
+}
+----
+
+NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
+
+The flow here will be:
+
+. A request for an authorization code is sent to the `authorization` endpoint.
+. The request is passed to the `PkceAuthRequestHandler`, which takes the `code_challenge` and `challenge_method` and saves them in a `store`, then strips the PKCE parts from the request and returns the PKCE-less request.
+. The next handler, in this case the `PassThroughHttpRequestHandler`, sends the request to the upstream, and returns the response. If the user is logged in, and the request was successful, the response will contain the authorization code. But in this example, let's assume the user is not logged in yet.
+. The request would go back to the `PkceCodeResponseHandler`, but since there is no code in the request, it will ignore it and pass it up the chain until it is eventually returned to the client.
+. After the user logs in and gives consent to authorize the client, the upstream server will return a response containing an authorization code. The `PkceCodeResponseHandler` will take that code and match it to the request that contained the `code_challenge` and `challenge_method` for that code, and save the code in the store, and return the response.
+. The client will request a token with the authorization code it received. The `PkceTokenHandler` will find the code in the store and the matching `code_challenge` and `challenge_method`, and then check the `code_verifier` sent by the client to see if they match. If they do, the request will be passed on again, and the client will get a response from the upstream server containing an Access Token!

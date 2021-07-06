@@ -1,0 +1,88 @@
+= Demonstrating Proof-of-Possession (DPoP)
+:toc:
+:toclevels: 3
+
+Enabling DPoP only requires one handler: the `DpopTokenRequestHandler`.
+
+It can be configured as follows:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
+    "@type": "DpopTokenRequestHandler",
+    "DpopTokenRequestHandler:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            {
+              "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler"
+            }
+        ]
+    },
+    "DpopTokenRequestHandler:_keyValueStore": {
+        "@type": "InMemoryStore"
+    },
+    "DpopTokenRequestHandler:_proxyTokenUrl": "http://urlofproxy.com/token"
+}
+----
+
+The `DpopTokenRequestHandler` takes 3 arguments:
+
+* `handler`: the handler can be any HttpHandler. This allows you to add other functionality to the chain on the token endpoint. In this example a `PipeThroughHandler` is used as explained in the xref:getting_started.adoc#together[Putting it together section] of the "Getting Started" page. To that we add a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler] and a xref:getting_started.adoc#decode[JwtDecodeHandler] with the "access_token" in the `jwtFields`, because the `DpopTokenRequestHandler` relies on a decoded access_token.
+
+* `keyValueStore`: A key value store of any kind. For this example we are using an InMemoryStore, but you can use any store.
+
+* `proxyTokenUrl`: The url of the proxy's token endpoint. This is used to validate the `htm` claim in a DPoP proof.
+
+
+== Putting it together
+
+A handler doesn't do anything unless it's added to an endpoint. So let's put together a config with the handlers from the xref:getting_started.adoc[Getting Started] page:
+
+[source, json]
+----
+{
+    "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
+    "@type": "HttpHandlerRoute",
+    "HttpHandlerRoute:_operations": [
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "POST",
+            "HttpHandlerOperation:_publish": false
+        },
+        {
+            "@type": "HttpHandlerOperation",
+            "HttpHandlerOperation:_method": "OPTIONS",
+            "HttpHandlerOperation:_publish": false
+        }
+    ],
+    "HttpHandlerRoute:_handler": {
+        "@type": "PipeThroughHandler",
+        "PipeThroughHandler:_handlers": [
+            {
+                "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
+            }
+            {
+                "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler"
+            }
+        ]
+    },
+    "HttpHandlerRoute:_path": "/token"
+}
+----
+
+NOTE: All endpoints are Identity Provider specific. Change the endpoints to match the endpoints of the upstream server you are proxying.
+
+The flow of our token endpoint would be:
+
+. A DPoP request is sent to the proxy's token endpoint
+. A `PipeThroughHandler` passes the request on to it's first handler.
+. The `DpopTokenRequestHandler` checks that the request is valid, and if so it strips the DPoP parts from the request and passes a DPoP-less request on to it's `handler`, a `PipeThroughHandler` in this case.
+. The `PipeThroughHandler` passes the request on to the first handler in it's list.
+. The `PassThroughHttpRequestHandler` takes the request and sends it to the upstream server, then returns the response.
+. The response is passed to the `JwtDecodeHandler` which knows to decode the `access_token` field of the response body, and then returns the response.
+. The response is returned back to the `DpopTokenRequestHandler` by the `PipeThroughHandler`, and the necessary claims are added to the Access Token to create a DPoP-bound Access Token.
+. Finally, the `DpopTokenRequestHandler` returns it's response, which is then passed onto the xref:getting_started.adoc#encode[JwtEncodeHandler] which has a `JwtField` with a `field` of `access_token` and a `typ` of `at+jwt`. The `JwtEncodeHandler` then signs the `access_token` after which it is returned to the client.

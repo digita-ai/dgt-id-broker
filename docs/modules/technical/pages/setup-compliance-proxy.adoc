@@ -99,7 +99,7 @@ In the config for non-compliant providers, exchange the `PassThroughHandler` by 
 As always: write and run test while coding, and check afterwards with a real setup.
 
 
-=== Dynamic client registration
+=== Dynamic client registration &#10004;&#65039;
 
 Since Solid OIDC allows clients to simply refer to their WebId for registration info, while the upstream provider might only have static clients or classic dynamic registration enabled, we should provide a handler that provides this functionality. We might want to provide two different implementations of this handler, depending on the case of the upstream server:
 
@@ -110,12 +110,12 @@ Since Solid OIDC allows clients to simply refer to their WebId for registration 
 Beware of the fact that in either case, ephemeral Solid clients may also identify as http://www.w3.org/ns/solid/terms#PublicOidcClient, (in which case the IdP may accept any `redirect_uri`), _or_ may present an identifier that is already statically or dynamically registered.
 
 
-=== Advertise Solid compliance 
+=== Advertise Solid compliance &#10004;&#65039;
 
 Make sure the proxy advertises its Solid OIDC support in a OIDC Discovery resource.
 
 
-=== Addition: launch variables
+=== Addition: launch variables &#10004;&#65039;
 
 Look into the startup code of `platform-api` (link:https://github.com/digita-ai/dgt-platform/blob/develop/packages/dgt-platform-api/lib/main.ts[`lib/main.ts`], link:https://github.com/digita-ai/dgt-platform/blob/develop/packages/dgt-platform-api/bin/server.js[`bin/server.js`] and link:https://github.com/digita-ai/dgt-platform/blob/develop/packages/dgt-platform-api/config/presets/launch.json[config/presets/launch.json]) and implement a similar use of variables, at least for:
 
