@@ -1,4 +1,4 @@
-import http, { IncomingMessage } from 'http';
+import http, { IncomingMessage, OutgoingMessage } from 'http';
 import https from 'https';
 import { Socket } from 'net';
 import { gzipSync, brotliCompressSync, deflateSync } from 'zlib';
@@ -11,14 +11,14 @@ describe('PassThroughHttpRequestHandler', () => {
   let context: HttpHandlerContext;
   let resp: IncomingMessage;
   const mockHttpBuffer = Buffer.from('mockHttp');
-  let httpRequest: http.ClientRequest;
+  let httpRequest: OutgoingMessage;
 
   const mockRequestImplementation = (body: Buffer, callback: (response: IncomingMessage) => void) => {
 
     callback(resp);
     resp.emit('data', body);
     resp.emit('end');
-    httpRequest = new http.ClientRequest('http://digita.ai');
+    httpRequest = new http.OutgoingMessage();
     httpRequest.write = jest.fn();
 
     return httpRequest;
