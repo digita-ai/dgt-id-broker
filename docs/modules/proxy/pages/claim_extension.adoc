@@ -2,7 +2,7 @@
 :toc:
 :toclevels: 3
 
-As described in https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 of the Solid-OIDC specification], Solid-OIDC has some additional requirements to claims found in Access Tokens and ID Tokens on top of the requirements laid out by classic OIDC.
+As described in https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1] of the specification, Solid-OIDC has some additional requirements to claims found in Access Tokens and ID Tokens, on top of the requirements laid out by classic OIDC.
 
 In the Access Token:
 
@@ -20,13 +20,13 @@ The proxy provides a handler, the `WebIDResponseHandler` to make sure the `webid
 
 A classic OIDC IdP might be able to provide the `webid` claim as part of the ID Token as it is information pertaining to the identity of a user. In that case, the handler copies the claim into the Access Token.
 
-However, in the event that the IdP is unable to be updated to provide the `webid` claim, the proxy can mint webids based on a claim found in the ID Token - by default the `sub` claim is used. This claim is then taken from the Access Token and added to a `webIdPattern`, which is the url that all access tokens should have, with a parameter prefaced with `:` to denote where the handler should replace the parameter with the actual claim from the Access Token.
+However, in the event that the IdP is unable to be updated to provide the `webid` claim, the proxy can mint WebIDs based on a claim found in the ID Token (by default the `sub` claim is used). This claim is then taken from the Access Token and added to a `webIdPattern`, which is a URL pattern containing a parameter (starting with `:`) to denote where the handler should place the value of the specified claim.
 
-For example, the webIdPattern is `http://hostofwebids.com/:customclaim/profile/card#me` and the claim to be substituted is the sub claim. An Access Token containing the sub claim `johndoe` is passed through the handler and the handler replaces the `:claim` with `johndoe`. The newly minted webid `http://hostofwebids.com/johndoe/profile/card#me` is then added to the Access and ID Token.
+For example, the pattern can be `http://hostofwebids.com/:customclaim/profile/card#me` and the claim to be substituted is the `custom` claim. An Access Token containing the`custom` claim `johndoe` is passed through the handler and the handler replaces `:customclaim` with `johndoe`. The newly minted webid `http://hostofwebids.com/johndoe/profile/card#me` is then added to the Access and ID Token.
 
-A webid could then be created for each user based on their `sub` claim and be added to the Tokens, without having to change anything on the IdP.
+A WebID could then be created for each user based on any pre-existing claim and be added to the Tokens, without having to change anything on the IdP.
 
-NOTE: A webID must be unique. If a claim is used other than the `sub` claim, make sure it is a claim that uniquely identifies the user.
+NOTE: A WebID must be unique. If a claim is used other than the `sub` claim, make sure it is a claim that uniquely identifies the user.
 
 [[webidresponsehandler]]
 === Configuring the WebIDResponseHandler
@@ -39,7 +39,7 @@ The `WebIDResponseHandler` can be configured as follows:
     "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
     "@type": "WebIDResponseHandler",
     "WebIDResponseHandler:_webIdPattern": "http://hostofwebids.com/:customclaim/profile/card#me",
-    "WebIDResponseHandler:_claim": "username"
+    "WebIDResponseHandler:_claim": "custom"
 }
 ----
 
@@ -53,7 +53,7 @@ This handler takes the following constructor parameters:
 
 As mentioned, this claim must be either the string `solid` or be an array of values, one of which is the string `solid`. To accomplish this, the proxy provides the `SolidAudienceResponseHandler`
 
-To keep as much of the IdP in tact as possible, this handler always does the latter. It will take whatever was in the `aud` claim, and add the string `solid` to it. If the `aud` claim is not an array, it will convert it into an array and add the string.
+To retain as much information of the IdP as possible, this handler always does the latter. It will take whatever was in the `aud` claim, and add the string `solid` to it. If the `aud` claim is not an array, it will convert it into an array and add the string.
 
 === Configuring the SolidAudienceResponseHandler
 
@@ -66,7 +66,7 @@ The `SolidAudienceResponseHandler` can be configured as follows:
 }
 ----
 
-This handler does not take any constructor parameters. Since it can just be called with a single line there also isn't really any point to giving it an id like other handlers.
+This handler does not take any constructor parameters. Since it can just be called with a single line there also isn't really any point to giving it a configuration identifier like other handlers.
 
 == Putting it together
 
@@ -116,11 +116,10 @@ When a request is sent to the token endpoint, it will reach the `PipeThroughHand
 The flow of this endpoint will be:
 
 . All of these handlers will be working with the response containing Access Tokens, so first we need to get that response. Therefore, the first handler is a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]. It sends the request to the upstream and returns the response.
-. The response is passed to the xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which will decode the Access and ID token, and pass on the response with the decoded tokens.
+. The response is passed to the xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which will decode the tokens, and pass on the response with the decoded tokens.
 . The `SolidAudienceResponseHandler` will add the string `solid` to the `aud` claim and return the response.
 . The `WebIDResponseHandler` will add the `webid` claim to the ID and Access Token and return the response.
 . Finally, the `JwtEncodeResponseHandler` will encode the ID and Access Token again, turn the response back into a string, and return the response which will then be sent back to the client.
-
 
 
 

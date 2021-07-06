@@ -2,7 +2,7 @@
 :toc:
 :toclevels: 3
 
-The Identity Proxy works by utilising a library called https://componentsjs.readthedocs.io/en/latest/[componentsjs]. This library allows you to use and not use certain features of the Proxy simply by adding the handlers that enable those features to a JSON config file.
+The Identity Proxy uses the https://componentsjs.readthedocs.io/en/latest/[componentsjs] DI framework to let you enable the desired features of the Proxy by simply adding handlers to a JSON-LD config file.
 
 [[passthrough]]
 == PassThroughHttpRequestHandler
@@ -23,7 +23,7 @@ The `PassThroughHttpRequestHandler` can be configured as follows:
 }
 ----
 
-Note that the scheme `https:` is supported aswell.
+NOTE: The `https:` scheme is supported as well.
 
 NOTE: This handler will convert all outgoing and incoming headers to lowercase.
 
@@ -52,7 +52,7 @@ The config for the `JwtDecodeHandler` is as follows:
 }
 ----
 
-Where `jwtFields` is a list of fields containing a JWT token that should be decoded (most commonly this will be `access_token` and/or `id_token`), and `verifyJwk` is boolean that tells the proxy to verify the JWK that was used to sign the tokens.
+The `jwtFields` parameter is a list of fields containing a JWT token that should be decoded (most commonly this will be `access_token` and/or `id_token`), and `verifyJwk` is boolean that tells the proxy to verify the JWK that was used to sign the tokens.
 
 [[encode]]
 === JwtEncodeHandler
@@ -76,7 +76,7 @@ The config for the `JwtEncodeHandler` is as follows:
 }
 ----
 
-Where `jwtFields` is a list of objects of the type `JwtField` and include a `field` pointing to a token that should be encoded and a `type` that should be set as the token's `typ` claim (commonly `JWT`, or for Access Tokens `at+jwt`)
+The `jwtFields` parameter is a list of objects of the type `JwtField` and includes a `field` pointing to a token that should be encoded and a `type` that should be set as the token's `typ` claim (commonly `jwt`, or for Access Tokens `at+jwt`)
 
 [[together]]
 == Putting them together

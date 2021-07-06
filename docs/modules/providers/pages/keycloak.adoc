@@ -10,7 +10,7 @@ https://www.keycloak.org/documentation[Keycloak Documentation]
 
 For a demo of the Keycloak provider in the root of this repository, open a terminal and execute `npm run demo:keycloak`. This will start an instance of the proxy with the correct configuration, a demo client and a demo pod server.
 
-You can login to Keycloak using:
+You can login with Keycloak using:
     * email: tonypaillard@digita.ai
     * password: Digita1234!
 

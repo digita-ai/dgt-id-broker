@@ -4,15 +4,11 @@
 
 Enabling PKCE requires the configuration of the following handlers:
 
-* For `authorization`:
-** `PkceAuthRequestHandler`. This handler will handle the pkce request before sending it on the the upstream server, but it won't do anything with the response.
-** `PkceCodeResponseHandler`. This handler will handle the response that contains the code with which a token can be requested.
-* For a `token`:
-** `PkceTokenHandler`. This handler will handle the pkce request to the token endpoint.
+* `PkceAuthRequestHandler`. This handler will handle the PKCE authorization request before sending it on the the upstream server, but it won't do anything with the response.
+* `PkceCodeResponseHandler`. This handler will handle the response that contains the code with which a token can be requested.
+* `PkceTokenHandler`. This handler will handle the PKCE request to the token endpoint, and its response back to the client.
 
-The reason that the `authorization` portion is split into two seperate handlers is because many Identity Providers will redirect the user to a login page and/or a consent page before returning a response with the code. Since these would be split into seperate requests and responses, the proxy needs to be able to catch the authorization code on different endpoints. If the user is already logged in, then the first request would get a response containing a code if everything went right. To connect the request and the ultimate response, the state parameter is used.
-
-Because these handlers are reliant on the state parameter, the use of xref:state.adoc[state handlers] is required.
+The reason that the `authorization` portion is split into two seperate handlers is because many Identity Providers will redirect the user to a login page and/or a consent page before returning a response with the code. Since these would be split into seperate requests and responses, the proxy needs to be able to catch the authorization code on different endpoints. If the user is already logged in, then the first request would get a response containing a code if everything went right. To connect the request and the ultimate response, the state parameter is used. Because these handlers are reliant on the state parameter, the use of xref:state.adoc[state handlers] is required.
 
 == Configuration
 
@@ -105,7 +101,7 @@ The `PkceTokenHandler` can be configured as follows:
 
 This handler takes the following parameters:
 
-* a httpHandler, in this example we will use a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]. 
+* a `httpHandler`, in this example we will use a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]. 
 * a `store`, the same store as the other handlers.
 
 

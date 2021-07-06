@@ -9,7 +9,7 @@ The client can send this state along itself, but it is not required. To make sur
 == Handlers that rely on the State Handlers
 
 * xref:pkce.adoc[PKCE handlers]
-* xref:webid.adoc#static_client[ClientIdStaticAuthRequest and Response handlers]
+* xref:webid.adoc#static_client[ClientIdStaticAuth handlers]
 
 == Configuring the handlers
 
@@ -22,7 +22,7 @@ The state handlers need a KeyValueStore of some kind so they can store per state
 {
     "@id": "urn:dgt-id-proxy:default:StateStore",
     "@type": "InMemoryStore"
-},
+}
 ----
 
 NOTE: In this example we use an `InMemoryStore`, in production you should use a different store!
@@ -130,5 +130,4 @@ The flow here would be:
 . The response is then passed to the `AuthStateResponseHandler` which checks that the response contains a state. If the user was already logged in, the response here will be a redirect response, and the state will be on the location header. The handler finds the state in it`s store and, if the value is true leaves the state on the request, but if the value is false it removes state from the request as the client did not originally send it. It then returns the response, and the response is sent back to the client.
 +
 However, if the user was not logged in the response will most likely be an html page containing a login form. After the user has logged in and given consent the redirect response will be sent on a slightly different endpoint, which is why the `AuthStateResponseHandler` must be configured on that endpoint aswell, in this example the /authorize/resume endpoint.
-
 

@@ -31,9 +31,9 @@ The `DpopPassThroughHandler` can be configured as follows:
 
 This handler takes the following constructor parameters:
 
-* a `handler`, which is the handler to which it will pass the request. In this case a `PipeThroughHandler` is used, which takes whatever is input into it, and passes it to the first handler. It then takes the value that handler returns, and passes it to the second, and so on. This handler will pass the request to a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which will send the request to the upstream server and return the response. That response is then passed to a xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which should be setup to decode the access_token so that the `DpopPassThroughHandler` can easily access the claims within.
+* a `handler`, to which it will pass the request. In this case a `PipeThroughHandler` is used, which takes whatever is input into it, and passes it to the first handler. It then takes the value that handler returns, and passes it to the second, and so on. This handler will pass the request to a xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler], which will send the request to the upstream server and return the response. That response is then passed to a xref:getting_started.adoc#decode[JwtDecodeResponseHandler] which should be setup to decode the Access Token so that the `DpopPassThroughHandler` can easily access the claims within.
 * a `proxyTokenUrl`, which is the url of the proxy's token endpoint.
-* * a `upstreamTokenUrl`, which is the url of the upstream's token endpoint.
+* a `upstreamTokenUrl`, which is the url of the upstream's token endpoint.
 
 == Configuring the Token endpoint
 

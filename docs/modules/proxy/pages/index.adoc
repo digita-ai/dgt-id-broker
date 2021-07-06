@@ -1,23 +1,23 @@
 = Proxy documentation
 
-This module contains documentation of all the features of the Identity Proxy and how they can be configured.
+This documentation describes all the features of the Identity Proxy and how they can be configured.
 
 == Features
 
 Below is a list of features that the Identity Proxy currently supports to create a Solid-OIDC compliant Identity Provider.
 
-The Proxy is created in accordance with the https://solid.github.io/authentication-panel/solid-oidc/[Solid-OIDC spec.]
+The Proxy is created in accordance with the https://solid.github.io/authentication-panel/solid-oidc/[Solid-OIDC specification].
 
-* xref:dpop.adoc[Demonstrating Proof-of-Possession (DPoP)] in accordance with https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03[ietf draft 03]
+* xref:dpop.adoc[Demonstrating Proof-of-Possession (DPoP)] in accordance with https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03[IETF Draft 03]
 * xref:pkce.adoc[Proof Key for Code Exchange (PKCE)] in accordance with https://datatracker.ietf.org/doc/html/rfc7636[RFC-7636]
-* xref:webids_as_clientids.adoc[WebIDs as clientIDs] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Section 5.1 Solid-OIDC]
-* xref:claim_extension.adoc[Adding necessary claims to tokens] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Section 6.1 Solid-OIDC]
+* xref:webids_as_clientids.adoc[URLs as client identifiers] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#clientids-webid[Solid-OIDC Section 5.1]
+* xref:claim_extension.adoc[Adding necessary claims to tokens] in accordance with https://solid.github.io/authentication-panel/solid-oidc/#tokens-access[Solid-OIDC Section 6.1]
 * xref:opaque.adoc[Upgrading Opaque Access tokens to JWT Access Tokens]
 
 
 == Supporting handlers
 
 * xref:getting_started.adoc#passthrough[PassThroughHttpRequestHandler]
-* xref:getting_started.adoc#encodinganddecoding[Decode and Encode JWT Handlers]
+* xref:getting_started.adoc#encodinganddecoding[JWT Decode and Encode Handlers]
 * xref:state.adoc[State Handlers]
 * xref:dpop_passthrough.adoc[DpopPassThroughHandler]
