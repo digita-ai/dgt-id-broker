@@ -1,0 +1,42 @@
+= Meta-analysis for the technical design of the ID Kit
+Wouter Termont
+
+This analysis prescribes how to write out the technical analysis for a library that can be used to:
+
+- authenticate a user using the solid compliant authentication flow;
+- use this authentication to perform operations on solid pods; and
+- securely store and use this authentication over page reloads in the browser.
+
+== Functional analysis
+
+As a functional analysis, we take:
+
+. first and foremost all that which is currently already possible with the solid service in the crude prototype of the present ID Kit package;
+. in a later stage some or most of the functionality exposed in our repackaged version of the Inrupt SDK;
+. maybe someday also other functionality of the progressing Inrupt SDK.
+
+== Technical meta-analysis
+
+Write out an overview of
+
+- which modules should exists, 
+- which functions they should contain, and
+- which signatures these funcitons should have. 
+
+Also give guides (e.g. if you see a very logical or obvious shorter way to do something) and pointers (e.g. where have we used this before, what spec/doc describes this) etc. where suited.
+
+To keep the scope manageable, split the work in two efforts, described below.
+
+=== Working code
+
+First, make sure both the above points work from a server environment, before worrying about browser implementation.
+
+Try to keep most functionality separated between:
+- interaction with idp
+- interaction with pod server
+
+As a general guideline, I would keep all models together in the models folder, and move some common internal stuff to a util folder. I would prefer not to used classes if possible.
+
+=== Browser implementation
+
+When the working code is done, expose a subset of the functionality as an event-based service worker in a separate package.
