@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.3.0...v0.4.0) (2021-07-06)
+
+
+### **Features**
+
+* checking optional parameters in requests ([#176](https://github.com/digita-ai/dgt-id-broker/issues/176)) ([a09b790](https://github.com/digita-ai/dgt-id-broker/commit/a09b790c769356842eb545b1083b39ec529c9357))
+* handle compression and decompression ([#170](https://github.com/digita-ai/dgt-id-broker/issues/170)) ([70924f8](https://github.com/digita-ai/dgt-id-broker/commit/70924f8b24c9f49a23b104f0d8e0f1bbaa33c5ae))
+
+
+### **Bug Fixes**
+
+* fixed worker failed to exit gracefully warning ([#177](https://github.com/digita-ai/dgt-id-broker/issues/177)) ([2f72f97](https://github.com/digita-ai/dgt-id-broker/commit/2f72f97acb56af155da8eedfc303f03780bd8261))
+
+
+### **Documentation**
+
+* proxy docs ([#131](https://github.com/digita-ai/dgt-id-broker/issues/131)) ([a6cfe82](https://github.com/digita-ai/dgt-id-broker/commit/a6cfe82ed4a4135c4093c0b2c3e2f37dba41bc19))
+
+
+
 ## [0.3.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.2.0...v0.3.0) (2021-06-29)
 
 
