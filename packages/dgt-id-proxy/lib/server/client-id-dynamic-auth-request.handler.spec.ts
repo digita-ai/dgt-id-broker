@@ -68,7 +68,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
   const mockAlternativeRegisterResponse = {
     application_type: 'web',
-    client_name: 'My Panva Application',
+    client_name: 'New client name',
     grant_types: [ 'refresh_token', 'authorization_code' ],
     id_token_signed_response_alg: 'RS256',
     response_types: [ 'code' ],
@@ -89,6 +89,22 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
     client_id,
     'redirect_uris' : [ redirect_uri ],
     'client_name' : 'My Demo Application',
+    'client_uri' : 'https://app.example/',
+    'logo_uri' : 'https://app.example/logo.png',
+    'tos_uri' : 'https://app.example/tos.html',
+    'scope' : 'openid offline_access',
+    'grant_types' : [ 'refresh_token', 'authorization_code' ],
+    'response_types' : [ 'code' ],
+    'default_max_age' : 60000,
+    'require_auth_time' : true,
+  });
+
+  const clientRegistrationDataNewClientName = JSON.stringify({
+    '@context': 'https://www.w3.org/ns/solid/oidc-context.jsonld',
+
+    client_id,
+    'redirect_uris' : [ redirect_uri ],
+    'client_name' : 'New client name',
     'client_uri' : 'https://app.example/',
     'logo_uri' : 'https://app.example/logo.png',
     'tos_uri' : 'https://app.example/tos.html',
@@ -327,6 +343,23 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       await store.get(client_id).then((data) => {
 
         expect(data.redirect_uris.includes(different_redirect_uri));
+
+      });
+
+    });
+
+    it('should register with the new client name if client_id is already registered in the store', async () => {
+
+      fetchMock.mockResponses([ clientRegistrationDataNewClientName, { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
+      store.set(client_id, mockRegisterResponse);
+
+      await handler
+        .handle(context)
+        .toPromise();
+
+      await store.get(client_id).then((data) => {
+
+        expect(data.client_name).toEqual('New client name');
 
       });
 
