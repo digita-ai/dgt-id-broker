@@ -5,6 +5,7 @@ import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
+import { RegistrationStore } from '../util/process-client-registration-data';
 import { ClientIdDynamicTokenHandler } from './client-id-dynamic-token.handler';
 
 describe('ClientIdDynamicTokenHandler', () => {
@@ -47,8 +48,7 @@ describe('ClientIdDynamicTokenHandler', () => {
 
   let httpHandler: HttpHandler;
 
-  const store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
-  = new InMemoryStore();
+  const store: RegistrationStore = new InMemoryStore();
 
   let handler: ClientIdDynamicTokenHandler;
 
@@ -166,7 +166,7 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     it('should use the redirect_uri as key for the store if a public webid is used', async () => {
 
-      const public_store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>
+      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
       = new InMemoryStore();
 
       const handler2
@@ -183,6 +183,15 @@ describe('ClientIdDynamicTokenHandler', () => {
         .toPromise();
 
       expect(public_store.get).toHaveBeenCalledWith(redirect_uri);
+
+    });
+
+    it('should replace the client_id with the registered one & change the content length', async () => {
+
+      const length = recalculateContentLength(newContext.request);
+      await handler.handle(context).toPromise();
+
+      expect(httpHandler.handle).toHaveBeenCalledWith({ ...newContext, request: { ...newContext.request, headers: { 'content-length': length, 'content-type': 'application/json;charset=utf-8' } } });
 
     });
 

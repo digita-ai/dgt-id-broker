@@ -1,10 +1,8 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
-import { OidcClientMetadata } from '../util/oidc-client-metadata';
+import { RegistrationStore } from '../util/process-client-registration-data';
 import { recalculateContentLength } from '../util/recalculate-content-length';
-import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 
 /**
  * A {HttpHandler} that
@@ -22,7 +20,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    * @param {HttpHandler} httpHandler - the handler through which to pass requests
    */
   constructor(
-    private store: KeyValueStore<string, Partial<OidcClientMetadata & OidcClientRegistrationResponse>>,
+    private store: RegistrationStore,
     private httpHandler: HttpHandler
   ) {
 

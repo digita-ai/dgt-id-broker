@@ -1,4 +1,4 @@
-import { request as httpRequest } from 'http';
+import { IncomingHttpHeaders, IncomingMessage, request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { OutgoingHttpHeaders } from 'http2';
 import { gunzipSync, brotliDecompressSync, inflateSync } from 'zlib';
@@ -162,7 +162,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   private fetchRequest(
     url: URL,
     method: string,
-    headers: Record<string, string>,
+    headers: IncomingHttpHeaders,
     body?: any,
   ): Observable<HttpHandlerResponse> {
 
@@ -188,7 +188,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   private resolveResponse = (requestOpts: any, body: any) => new Promise<HttpHandlerResponse>((resolve, reject) => {
 
-    const responseCallback = (res) => this.responseCallback(res,  resolve, reject);
+    const responseCallback = (res: IncomingMessage) => this.responseCallback(res,  resolve, reject);
 
     const req = this.scheme === 'http:' ? httpRequest(requestOpts, responseCallback) : httpsRequest(requestOpts, responseCallback);
 
@@ -204,7 +204,11 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   });
 
-  private responseCallback = (res, resolve, reject) => {
+  private responseCallback = (
+    res: IncomingMessage,
+    resolve: (value: HttpHandlerResponse) => void,
+    reject: (reason?: any) => void
+  ) => {
 
     const buffer: any = [];
 
@@ -219,15 +223,19 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
       try {
 
-        const location = new URL(res.headers.location);
-        const upstreamURL = new URL(this.scheme + '//' + this.host + ':' + this.port);
+        if (res.headers.location) {
 
-        if (upstreamURL.host === location.host) {
+          const location = new URL(res.headers.location);
+          const upstreamURL = new URL(this.scheme + '//' + this.host + ':' + this.port);
 
-          location.host = this.proxyURL.host;
-          location.protocol = this.proxyURL.protocol;
-          location.port = this.proxyURL.port;
-          res.headers.location = location.toString();
+          if (upstreamURL.host === location.host) {
+
+            location.host = this.proxyURL.host;
+            location.protocol = this.proxyURL.protocol;
+            location.port = this.proxyURL.port;
+            res.headers.location = location.toString();
+
+          }
 
         }
 
@@ -298,7 +306,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   };
 
-  private cleanHeaders = (headers: { [key: string]: string }) => Object.keys(headers).reduce<{ [key: string]: string }>(
+  private cleanHeaders = (headers: IncomingHttpHeaders) => Object.keys(headers).reduce<IncomingHttpHeaders>(
     (acc, key) => {
 
       const lKey = key.toLowerCase();
