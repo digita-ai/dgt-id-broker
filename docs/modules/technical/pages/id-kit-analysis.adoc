@@ -1,0 +1,61 @@
+= ID Kit Analysis
+
+The goal of this project is to create a Solid Complaint OIDC Client that gets and stores Access Tokens, and is able to refresh those Tokens so they can be used to gain access to resources.
+
+== Models
+
+[[issuer]]
+* Issuer
++
+Consists of a `url: string` and an `icon: string`
+
+== Storage
+
+Create a file containing a Map<string, any> as a global variable and two functions:
+
+* `saveData(key: string, value: any): void`
+
+* `getData(key:string): any`
+
+== Functions
+
+Create a file that imports the two storage functions, and implement the following functions:
+
+* `generateKeys(): void`
++
+Generate a private and public key pair using the xref:https://github.com/panva/jose[jose library]. Save the private key as a `KeyLike`, and convert the public key to a `JWK` and save it. 
+
+* `validateWebID(webID: string): Promise<boolean>`
++
+Should validate that the given webID is valid.
+
+* `validateIssuer(issuer:string): Promise<boolean>`
++
+Should validate that the given issuer is valid. A valid issuer should advertise that it is solid compliant. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 19-40] of the solid-sdk.service.ts
+
+* `getIssuerFromWebID(webID: string): Promise<Issuer>`
++
+This function should get the `oidcIssuer` triple from a valid webID profile and check that the issuer valid. If both are valid, create an xref:id-kit-analysis.adoc#issuer[Issuer] and return it. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 82-90] of the solid-sdk.service.ts for inspiration.
+
+* `getEndpoint(issuer: string, endpoint: string): Promise<string>`
++
+Get the specified endpoint from the specified issuer's openid-configuration. `endpoint` should be a field of the configuration, for example: `authorization_endpoint` or `token_endpoint`.
+
+* Functions for PKCE: `generateCodeVerifier(length: number): string`, `generateCodeChallenge(code_verifier: string): string`, `base64UrlEncode(string: string): string`
++
+We will need to send PKCE parameters, so implement these 3 functions to support that. These have already been implemented in the xref:../../../demo/demo-client/main.js[demo-client] (lines 24-39 of main.js).
+
+* `authRequest(issuer: string, offline_access: boolean): Promise<string>`
++
+Send a solid compliant request to the `authorization_endpoint` of the issuer, and return the Authorization code that can be found in the `location` header of the response. Make sure to save the `refresh_token` in storage if one was received when using `offline_access` scope. 
+
+* `createDpopProof(htu: string, htm: string): string`
++
+Create a xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-4[DPoP Proof] using the xref:https://github.com/panva/jose[jose library]. Add the public JWK and sign it with the private key from the storage. An example DPoP proof can be found in the xref:../../../demo/demo-client/getAccessTokenAndResource.js[demo-client] (lines 36-50 and 67-79).
+
+
+
+
+
+
+
