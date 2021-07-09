@@ -4,7 +4,7 @@
   "scripts": {
     "start": "lerna run start --parallel --no-bail",
     "postinstall": "husky install",
-    "release": "lerna version",
+    "release": "lerna version --no-private",
     "bootstrap": "npm ci && lerna bootstrap",
     "bootstrap:no-ci": "npm i && lerna bootstrap --no-ci",
     "build": "lerna run build --since HEAD",

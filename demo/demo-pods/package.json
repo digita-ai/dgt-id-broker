@@ -13,5 +13,6 @@
   "dependencies": {
     "@solid/community-server": "0.8.1",
     "shx": "^0.3.3"
-  }
+  },
+  "private": true
 }
