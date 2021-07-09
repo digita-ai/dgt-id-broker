@@ -37,5 +37,6 @@
     "nodemon": "^2.0.7",
     "oidc-provider": "^7.1.2",
     "openid-client": "^4.5.1"
-  }
+  },
+  "private": true
 }
