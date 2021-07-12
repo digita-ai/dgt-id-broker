@@ -67,26 +67,7 @@ describe('full integration', () => {
 
   afterAll(() => {
 
-    server.stop();
-
-  });
-
-  fit('should be able to', () => {
-
-    const req = request(
-      {
-        host: 'localhost:3003',
-        path: '',
-        method: 'GET',
-      },
-      (response) => {
-
-        expect(response.statusCode).toBe(200);
-
-      }
-    );
-
-    req.end();
+    // server.stop();
 
   });
 

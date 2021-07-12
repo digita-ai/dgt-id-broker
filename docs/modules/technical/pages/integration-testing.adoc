@@ -1,0 +1,54 @@
+:toc:
+:toclevels: 3
+
+
+= Integration testing
+
+== Overview of the possible different integration tests
+
+=== DPoP flow
+
+The following needs to be tested:
+
+. The token endpoint replies with the tokens when all required parameters are present and correct.
+
+. The token endpoint replies with invalid DPoP proof in the following cases:
+* There is no DPoP header included in the request.
+* There is no JWK present in the header
+* There is no jti in the payload / jti is not of type string
+* 
+* The DPoP header lacks one of the following required parameters:
+** "typ": type header, value "dpop+jwt"
+** "alg": a digital signature algorithm identifier,  MUST NOT be "none" or an identifier for a symmetric
+      algorithm (MAC).
+** "jwk": representing the public key chosen by the client, in JWK
+      format.  MUST NOT contain the private key.
+* 
+
+=== PKCE flow
+
+The following needs to be tested:
+
+. Check the incoming request parameters on endpoint
+
+. The upstream server replies with access_token when all required parameters are present and correct.
+
+. The upstream server replies with invalid_grant when code challenges do not match
+. The upstream server replies with invalid_request when no auth code was given
+. The upstream server replies with invalid_request when no code verifier was given
+. The upstream server replies with invalid_request when the code verifier is too long or short
+
+=== Client Registration flow
+
+
+The following needs to be tested:
+
+. The registration endpoint responds with
+   an HTTP 201 Created status code and a body of type "application/json"
+   The response contains the following required parameters:
+       * client_id
+       * All additional registered client metadata
+. The registration endpoint responds with a 400 status code with
+   content type "application/json" consisting of a JSON object
+   describing the error in the response body.
+
