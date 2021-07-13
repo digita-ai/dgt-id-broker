@@ -29,6 +29,10 @@ Should contain a list of all OIDC Discovery fields that return an array. A list 
 +
 Create a type `DiscoveryField` as follows: `type DiscoveryField = DiscoveryStringField | DiscoveryArrayField`
 
+* TokenResponse
++
+Create an interface that has an `access_token: string`, `id_token: string`, `expiration_time: number` and a `token_type: string` 
+
 
 
 
@@ -81,21 +85,34 @@ Use the `getEndpoint` function to get the `authorization_endpoint`, and use the 
 +
 Use the Authorization request documentation from the xref:https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.1[Classic OIDC spec] and the xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.3[PKCE spec].
 
-* `createDpopProof(htu: string, htm: string): string`
+* `createDpopProof(htu: string, htm: string): Promise<string>`
 +
 Create a xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-4[DPoP Proof] using the xref:https://github.com/panva/jose[jose library]. Add the public JWK and sign it with the private key from the storage. An example DPoP proof can be found in the xref:../../../demo/demo-client/getAccessTokenAndResource.js[demo-client] (lines 36-50 and 67-79).
 
-* `tokenRequest(issuer: URL, refresh_token?: string)`
+* `tokenRequest(issuer: URL, refresh_token?: string): Promise<TokenResponse>`
 +
-Send a solid compliant request to the `token_endpoint` of the issuer, save the access_token and id_token in storage, and return the response. Make sure to check whether a `refresh_token` was given to the function, because a request with a refresh_token is different to a regular request.
+Send a solid compliant request to the `token_endpoint` of the issuer, save the access_token and id_token in storage, and return the response as a xref:id-kit-analysis.adoc#tokenresponse[TokenResponse] object. Make sure to check whether a `refresh_token` was given to the function, because a request with a refresh_token is different to a regular request.
 +
 Use the `getEndpoint` function to get the `token_endpoint`, and use the `createDpopProof` function as well.
 +
 Use the Token Request documentation from the xref:https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3[Classic OIDC spec], the xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.5[PKCE spec], and the xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-5[DPoP spec].
 
-* `accessResource(resource: URL, method: HttpMethod)`
+* `accessResource(resource: URL, method: HttpMethod): Promise<Response>`
 +
-Send a request with the DPoP bound `access_token` to the resource server. Check that the `access_token` has not expired and is still valid. If it is not valid, a new one can be requested using the `refresh_token` and the `tokenRequest` function. Make sure to use the `createDpopProof` function as a valid DPoP proof will be necessary for every request to a resource. In this case the `resource` url will be the `htu`, and the `method` will be the `htm`.
+Send a request with the DPoP bound `access_token` to the resource server. Check that the `access_token` has not expired and is still valid. If it is not valid, a new one can be requested using the `refresh_token` and the `tokenRequest` function. Make sure to use the `createDpopProof` function as a valid DPoP proof will be necessary for every request to a resource. In this case the `resource` url will be the `htu`, and the `method` will be the `htm`. This function should return the fetched Response.
+
+* `loginWithIssuer(issuer: URL): promise<TokenResponse>`
++
+This function should send an `authRequest` and a `tokenRequest`, and return the `TokenResponse`.
+
+* `loginWithWebId(webId: URL): promise<TokenResponse>`
++
+This function should get the issuer from the webId using the `getIssuerFromWebId` function. Once it has an issuer, it can call the `loginWithIssuer` function to handle the rest of the login, and return the `TokenResponse.`
+
+
+* `logout(): Promise<void>`
++
+Remove the access token and id token from the store. This effectively logs the user out on our end.
 
 [[pkce]]
 === PKCE module
