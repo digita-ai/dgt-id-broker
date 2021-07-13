@@ -17,13 +17,17 @@ Should contain every method allowed in http (GET, POST, PUT, DELETE, etc.)
 +
 Should contain all JOSE supported JWA Algorithm Identifiers. Look at jose's xref:https://github.com/panva/jose/blob/v3.14.0/src/runtime/node/generate.ts#L43[generateKeyPair] function to figure out which algorithms are supported and should be part of this Type.
 
-*DiscoveryStringField
+* DiscoveryStringField
 +
 Should contain a list of all OIDC Discovery fields that return a string. A list can be found here: xref:https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata[OpenID Provider Metadata].
 
-*DiscoveryArrayField
+* DiscoveryArrayField
 +
 Should contain a list of all OIDC Discovery fields that return an array. A list can be found here: xref:https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata[OpenID Provider Metadata].
+
+* DiscoveryField
++
+Create a type `DiscoveryField` as follows: `type DiscoveryField = DiscoveryStringField | DiscoveryArrayField`
 
 
 
@@ -59,9 +63,11 @@ Should validate that the given issuer is valid. The string should be a valid URL
 +
 This function should get the `oidcIssuer` triple from a valid webID profile using the `getWebIdProfile` function and check that the issuer is valid using the `validateIssuer` function. If both are valid, create an xref:id-kit-analysis.adoc#issuer[Issuer] and return it. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 82-90] of the solid-sdk.service.ts for inspiration.
 
-* `getDiscoveryInfo(issuer: URL, field: DiscoveryStringField | DiscoveryArrayField): string | []`
+* `getDiscoveryInfo<T extends DiscoveryField>(issuer: URL, field: T): T extends DiscoveryStringField ? string : string[]`
 +
-This function takes a `field`, which can be a DiscoveryStringField or a DiscoveryArrayField. Depending on which type the `field` is, it will return a string or array respectively. 
+This function takes a `field`, which can be a DiscoveryStringField or a DiscoveryArrayField. Depending on which type the `field` is, it will return a string or array respectively. This function works using xref:https://www.typescriptlang.org/docs/handbook/2/conditional-types.html[Conditional Types]. Should fetch the issuer's Discovery document and return the value of the `field`.
++
+I implemented an xref:id-kit-analysis.adoc#conditionaltypingexample[example] version of this so it might be a bit easier to understand what it does exactly.
 
 * `getEndpoint(issuer: URL, endpoint: DiscoveryStringField): Promise<string>`
 +
@@ -109,6 +115,39 @@ Should generate a `code_challenge` according to xref:https://datatracker.ietf.or
 Should base64 URL encode the string and return it.
 
 NOTE: all of these functions have already been implemented in the xref:../../../demo/demo-client/main.js[demo-client] of the identity proxy. (lines 24-39 of main.js). However, since they were part of a demo they were not implemented with the necessary checks. Use those functions as a starting point, and make them more secure.
+
+[[conditionaltypingexample]]
+== Conditional Typing Example
+
+Below is an example implementation of `getDiscoveryInfo` using Conditional Typing.
+
+``` javascript
+// fields that can return a string
+type DiscoveryStringField = 'authorization_endpoint' | `token_endpoint`;
+
+// fields that can return an array
+type DiscoveryArrayField = 'scopes';
+
+// DiscoveryField type can be either a DiscoveryStringField or a DiscoveryArrayField
+type DiscoveryField = DiscoveryStringField | DiscoveryArrayField;
+
+// to give an easy example, we will use an "any". This simply gets the field from the discoveryInfo parameter and logs some information.
+const getDiscoveryInfo = <T extends DiscoveryField>
+(discoveryInfo: any, field: T): T extends DiscoveryStringField ? string : string[] => {
+
+  console.log(typeof discoveryInfo[field], ', value: ', discoveryInfo[field]);
+
+  return discoveryInfo[field];
+
+};
+
+// Console output: 'string , value:  string'
+getDiscoveryInfo({ authorization_endpoint: 'string', scopes: [ 'array', 'of', 'strings' ] }, 'authorization_endpoint');
+
+// Console output: 'object , value:  [ 'array', 'of', 'strings' ]'
+getDiscoveryInfo({ authorization_endpoint: 'string', scopes: [ 'array', 'of', 'strings' ] }, 'scopes');
+
+```
 
 
 
