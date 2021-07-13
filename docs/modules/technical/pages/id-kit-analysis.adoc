@@ -7,51 +7,108 @@ The goal of this project is to create a Solid Complaint OIDC Client that gets an
 [[issuer]]
 * Issuer
 +
-Consists of a `url: string` and an `icon: string`
+Consists of a `url: URL` and an `icon: string`
+
+* HttpMethod
++
+Should contain every method allowed in http (GET, POST, PUT, DELETE, etc.)
+
+* KeyGenerationAlgorithm
++
+Should contain all JOSE supported JWA Algorithm Identifiers. Look at jose's xref:https://github.com/panva/jose/blob/v3.14.0/src/runtime/node/generate.ts#L43[generateKeyPair] function to figure out which algorithms are supported and should be part of this Type.
+
+*DiscoveryStringField
++
+Should contain a list of all OIDC Discovery fields that return a string. A list can be found here: xref:https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata[OpenID Provider Metadata].
+
+*DiscoveryArrayField
++
+Should contain a list of all OIDC Discovery fields that return an array. A list can be found here: xref:https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata[OpenID Provider Metadata].
+
+
+
 
 == Storage
 
 Create a file containing a Map<string, any> as a global variable and two functions:
 
-* `saveData(key: string, value: any): void`
+* `saveData(key: string, value: any): Promise<void>`
 
-* `getData(key:string): any`
+* `getData(key:string): Promise<any>`
 
 == Functions
 
-Create a file that imports the two storage functions, and implement the following functions:
+=== Main module
 
-* `generateKeys(): void`
-+
-Generate a private and public key pair using the xref:https://github.com/panva/jose[jose library]. Save the private key as a `KeyLike`, and convert the public key to a `JWK` and save it. 
+Create a file that imports the two storage functions and the xref:id-kit-analysis.adoc#pkce[PKCE functions], and implement the following functions:
 
-* `validateWebID(webID: string): Promise<boolean>`
+* `generateKeys(algorithm: KeyGenerationAlgorithm = 'ES256'): Promise<void>`
 +
-Should validate that the given webID is valid.
+Generate a private and public key pair using the xref:https://github.com/panva/jose[jose library]. Save the private key as a `KeyLike`, and convert the public key to a `JWK` and save it using `saveData`. The algorithm should be `ES256` by default.
 
-* `validateIssuer(issuer:string): Promise<boolean>`
+* `getWebIdProfile(webId: URL): Promise<N3.Quad[]>`
 +
-Should validate that the given issuer is valid. A valid issuer should advertise that it is solid compliant. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 19-40] of the solid-sdk.service.ts
+Should get the profile information from the webID. Check that the response is an RDF document, parse it using xref:https://www.npmjs.com/package/n3[n3], and return the list of Quads.
 
-* `getIssuerFromWebID(webID: string): Promise<Issuer>`
-+
-This function should get the `oidcIssuer` triple from a valid webID profile and check that the issuer valid. If both are valid, create an xref:id-kit-analysis.adoc#issuer[Issuer] and return it. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 82-90] of the solid-sdk.service.ts for inspiration.
 
-* `getEndpoint(issuer: string, endpoint: string): Promise<string>`
+* `validateIssuer(issuer: string): Promise<boolean>`
 +
-Get the specified endpoint from the specified issuer's openid-configuration. `endpoint` should be a field of the configuration, for example: `authorization_endpoint` or `token_endpoint`.
+Should validate that the given issuer is valid. The string should be a valid URL, and a valid issuer should advertise that it is solid compliant. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 19-40] of the solid-sdk.service.ts
 
-* Functions for PKCE: `generateCodeVerifier(length: number): string`, `generateCodeChallenge(code_verifier: string): string`, `base64UrlEncode(string: string): string`
+* `getIssuerFromWebId(webId: URL): Promise<Issuer>`
 +
-We will need to send PKCE parameters, so implement these 3 functions to support that. These have already been implemented in the xref:../../../demo/demo-client/main.js[demo-client] (lines 24-39 of main.js).
+This function should get the `oidcIssuer` triple from a valid webID profile using the `getWebIdProfile` function and check that the issuer is valid using the `validateIssuer` function. If both are valid, create an xref:id-kit-analysis.adoc#issuer[Issuer] and return it. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 82-90] of the solid-sdk.service.ts for inspiration.
 
-* `authRequest(issuer: string, offline_access: boolean): Promise<string>`
+* `getDiscoveryInfo(issuer: URL, field: DiscoveryStringField | DiscoveryArrayField): string | []`
 +
-Send a solid compliant request to the `authorization_endpoint` of the issuer, and return the Authorization code that can be found in the `location` header of the response. Make sure to save the `refresh_token` in storage if one was received when using `offline_access` scope. 
+This function takes a `field`, which can be a DiscoveryStringField or a DiscoveryArrayField. Depending on which type the `field` is, it will return a string or array respectively. 
+
+* `getEndpoint(issuer: URL, endpoint: DiscoveryStringField): Promise<string>`
++
+Get the specified endpoint from the specified issuer's openid-configuration. `endpoint` should be a field of the Discovery document that returns a string, for example: `authorization_endpoint` or `token_endpoint`. Use the function `getDiscoveryInfo`.
+
+* `authRequest(issuer: URL, offline_access: boolean): Promise<string>`
++
+Send a solid compliant request to the `authorization_endpoint` of the issuer, and return the Authorization code that can be found in the `location` header of the response. Make sure to save the `refresh_token` in storage if one was received when using `offline_access` scope.
++
+Use the `getEndpoint` function to get the `authorization_endpoint`, and use the PKCE functions to make a valid request.
++
+Use the Authorization request documentation from the xref:https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.1[Classic OIDC spec] and the xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.3[PKCE spec].
 
 * `createDpopProof(htu: string, htm: string): string`
 +
 Create a xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-4[DPoP Proof] using the xref:https://github.com/panva/jose[jose library]. Add the public JWK and sign it with the private key from the storage. An example DPoP proof can be found in the xref:../../../demo/demo-client/getAccessTokenAndResource.js[demo-client] (lines 36-50 and 67-79).
+
+* `tokenRequest(issuer: URL, refresh_token?: string)`
++
+Send a solid compliant request to the `token_endpoint` of the issuer, save the access_token and id_token in storage, and return the response. Make sure to check whether a `refresh_token` was given to the function, because a request with a refresh_token is different to a regular request.
++
+Use the `getEndpoint` function to get the `token_endpoint`, and use the `createDpopProof` function as well.
++
+Use the Token Request documentation from the xref:https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3[Classic OIDC spec], the xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.5[PKCE spec], and the xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-5[DPoP spec].
+
+* `accessResource(resource: URL, method: HttpMethod)`
++
+Send a request with the DPoP bound `access_token` to the resource server. Check that the `access_token` has not expired and is still valid. If it is not valid, a new one can be requested using the `refresh_token` and the `tokenRequest` function. Make sure to use the `createDpopProof` function as a valid DPoP proof will be necessary for every request to a resource. In this case the `resource` url will be the `htu`, and the `method` will be the `htm`.
+
+[[pkce]]
+=== PKCE module
+
+Implement the following functions as part of the PKCE module:
+
+* `generateCodeVerifier(length: number): string`
++
+Should generate a `code_verifier` according to xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.1[section 4.1] of the PKCE spec. Make sure to check that the `length` is within the valid range. 
+
+* `generateCodeChallenge(code_verifier: string): string`
++
+Should generate a `code_challenge` according to xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.2[section 4.2] of the PKCE spec. Specifically note that we MUST use `S256` if we support it, which we will. Do not use the `plain` method to implement this function (that would be kind of useless anyway, since this function would then simply return the `code_verifier` it was given...). Also, make sure to check that the `code_verifier` has an acceptable length.
+
+* `base64UrlEncode(string: string): string`
++
+Should base64 URL encode the string and return it.
+
+NOTE: all of these functions have already been implemented in the xref:../../../demo/demo-client/main.js[demo-client] of the identity proxy. (lines 24-39 of main.js). However, since they were part of a demo they were not implemented with the necessary checks. Use those functions as a starting point, and make them more secure.
 
 
 
