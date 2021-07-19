@@ -1,5 +1,6 @@
 export interface Issuer {
-  icon: string;
-  description: string;
-  uri: string;
+  url: URL;
+  icon?: URL;
+  label?: string;
+  description?: string;
 }
