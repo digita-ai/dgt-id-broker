@@ -54,6 +54,9 @@
   "bugs": {
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
   },
+  "eslintConfig": {
+    "ignorePatterns": [ "lib-old/" ]
+  },
   "jest": {
     "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",

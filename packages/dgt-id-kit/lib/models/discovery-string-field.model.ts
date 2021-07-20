@@ -11,4 +11,5 @@ export type DiscoveryStringField =
   'request_uri_parameter_supported' |
   'require_request_uri_registration' |
   'op_policy_uri' |
-  'op_tos_uri';
+  'op_tos_uri' |
+  'solid_oidc_supported';
