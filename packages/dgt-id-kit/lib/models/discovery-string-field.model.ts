@@ -1,3 +1,6 @@
+/**
+ * Consist of all discovery fields that return a string
+ */
 export type DiscoveryStringField =
   'issuer' |
   'authorization_endpoint' |

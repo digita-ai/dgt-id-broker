@@ -1,3 +1,6 @@
+/**
+ * Consist of all discovery fields that return an array
+ */
 export type DiscoveryArrayField =
   'scopes_supported' |
   'response_types_supported' |

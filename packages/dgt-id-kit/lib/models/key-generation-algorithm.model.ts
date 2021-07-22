@@ -1,3 +1,6 @@
+/**
+ * Consists of all possible algorithms supported for key generation
+ */
 export type KeyGenerationAlgorithm =
   'ECDH-ES' |
   'ECDH-ES+A128KW' |
