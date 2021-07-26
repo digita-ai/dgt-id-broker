@@ -1,5 +1,5 @@
 /**
- * Consist of all discovery fields that return a string
+ * Consist of all OIDC discovery fields that return a string
  */
 export type DiscoveryStringField =
   'issuer' |

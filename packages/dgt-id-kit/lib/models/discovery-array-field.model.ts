@@ -1,5 +1,5 @@
 /**
- * Consist of all discovery fields that return an array
+ * Consist of all OIDC discovery fields that return an array
  */
 export type DiscoveryArrayField =
   'scopes_supported' |
