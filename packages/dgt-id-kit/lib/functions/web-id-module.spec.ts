@@ -156,6 +156,16 @@ describe('WebIdModule', () => {
 
     });
 
+    it('should throw an error when something goes wrong', async () => {
+
+      fetchMock.mockRejectedValueOnce(undefined);
+      const url = new URL('https://not.a.pod/profile/card#me');
+      const result = getIssuerFromWebId(url);
+
+      await expect(result).rejects.toThrow(`Something went wrong getting the issuer for webId"${url.toString()}"`);
+
+    });
+
   });
 
 });

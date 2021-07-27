@@ -10,11 +10,15 @@ export const getWebIdProfile = async (webid: URL): Promise<Quad[]> => {
 
   }
 
-  return getTurtleFileAsQuads(webid).catch((error: unknown) => {
+  try {
+
+    return await getTurtleFileAsQuads(webid);
+
+  } catch(error: unknown) {
 
     throw new Error(`Something went wrong getting the profile for webId"${webid.toString()}": ${error}`);
 
-  });
+  }
 
 };
 
@@ -41,12 +45,16 @@ export const getIssuerFromWebId = async (webid: URL): Promise<Issuer | undefined
 
   }
 
-  const quads = await getWebIdProfile(webid);
+  try {
 
-  return getIssuerFromQuads(quads).catch((error: unknown) => {
+    const quads = await getWebIdProfile(webid);
+
+    return await getIssuerFromQuads(quads);
+
+  } catch(error: unknown) {
 
     throw new Error(`Something went wrong getting the issuer for webId"${webid.toString()}": ${error}`);
 
-  });
+  }
 
 };
