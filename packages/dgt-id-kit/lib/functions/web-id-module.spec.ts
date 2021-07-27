@@ -5,6 +5,12 @@ enableFetchMocks();
 
 describe('WebIdModule', () => {
 
+  beforeEach(() => {
+
+    fetchMock.resetMocks();
+
+  });
+
   describe('getWebIdProfile()', () => {
 
     it('should return all quads for a persons profile', async () => {
