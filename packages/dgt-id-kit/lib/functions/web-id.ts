@@ -1,6 +1,6 @@
 import { Quad } from 'rdf-js';
 import { Issuer } from '../models/issuer.model';
-import { getTurtleFileAsQuads } from './data-module';
+import { getTurtleFileAsQuads } from './data';
 
 /**
  * Transform all data from a profile to a list of Quads

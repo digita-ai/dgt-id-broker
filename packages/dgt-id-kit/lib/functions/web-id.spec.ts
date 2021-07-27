@@ -1,6 +1,6 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { Parser } from 'n3';
-import { getIssuerFromQuads, getIssuerFromWebId, getWebIdProfile } from './web-id-module';
+import { getIssuerFromQuads, getIssuerFromWebId, getWebIdProfile } from './web-id';
 enableFetchMocks();
 
 describe('WebIdModule', () => {

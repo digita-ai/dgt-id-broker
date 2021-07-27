@@ -1,5 +1,5 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { getTurtleFileAsQuads } from './data-module';
+import { getTurtleFileAsQuads } from './data';
 enableFetchMocks();
 
 describe('dataModule', () => {
