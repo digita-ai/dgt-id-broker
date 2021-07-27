@@ -58,7 +58,7 @@ Should get the information from the /.well-known/openid-configuration endpoint o
 
 * `validateIssuer(issuer: string): Promise<boolean>`
 +
-Should validate that the given issuer is valid. The string should be a valid URL, and a valid issuer should advertise that it is solid compliant. Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 19-40] of the solid-sdk.service.ts. Retrieve the configuration using the `getIssuerConfig` function.
+Should validate that the given issuer is valid. The string should be a valid URL, and a valid issuer should advertise that it is solid compliant. If the string is a valid URL, use the URL to get the Issuer's config using `getIssuerConfig`. Check the JSON object it returns for the "solid-oidc-supported" key and value as defined in the https://solid.github.io/authentication-panel/solid-oidc/#discovery[Solid-OIDC spec] Take a look at xref:../../../packages/dgt-id-kit/lib/solid-sdk.service.ts[lines 19-40] of the solid-sdk.service.ts. Retrieve the configuration using the `getIssuerConfig` function.
 
 * `getDiscoveryInfo<T extends DiscoveryField>(issuer: URL, field: T): T extends DiscoveryStringField ? string : string[]`
 +
