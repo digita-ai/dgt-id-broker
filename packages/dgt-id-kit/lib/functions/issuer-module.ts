@@ -1,10 +1,9 @@
 import { DiscoveryField } from '../models/discovery-field.model';
 import { DiscoveryStringField } from '../models/discovery-string-field.model';
-import { Issuer } from '../models/issuer.model';
 
-export const getIssuerConfig = async (issuer: Issuer): Promise<any> => {
+export const getIssuerConfig = async (issuer: URL): Promise<any> => {
 
-  const response = await fetch(issuer.url.toString());
+  const response = await fetch(issuer.toString());
 
 };
 
@@ -18,6 +17,6 @@ T extends DiscoveryStringField ? Promise<string> : Promise<string[]> => {
 
 };
 
-export const getEndpoint = async (issuer: Issuer, endpoint: DiscoveryStringField): Promise<string> => {
+export const getEndpoint = async (issuer: URL, endpoint: DiscoveryStringField): Promise<string> => {
 
 };
