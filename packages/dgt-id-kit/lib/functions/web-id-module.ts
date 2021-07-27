@@ -2,6 +2,12 @@ import { Quad } from 'rdf-js';
 import { Issuer } from '../models/issuer.model';
 import { getTurtleFileAsQuads } from './data-module';
 
+/**
+ * Transform all data from a profile to a list of Quads
+ *
+ * @param webid the webid to convert to Quads
+ * @returns an array of Quads from the profile
+ */
 export const getWebIdProfile = async (webid: URL): Promise<Quad[]> => {
 
   if (!webid) {
@@ -22,6 +28,12 @@ export const getWebIdProfile = async (webid: URL): Promise<Quad[]> => {
 
 };
 
+/**
+ * Get an Issuer instance created from a list of Quads, most likely from a profile
+ *
+ * @param quads list of quads
+ * @returns an Issuer instance if one was found, or undefined when no issuer was found
+ */
 export const getIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | undefined> => {
 
   if (!quads) {
@@ -37,6 +49,13 @@ export const getIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | undefi
 
 };
 
+/**
+ * Provided a webid, this function will return you an Issuer instance or undefined
+ * depending on whether an oidcIssuer is mentioned on the profile of this webid
+ *
+ * @param webid the webid of which you want the Issuer
+ * @returns an Issuer instance if one was found, or undefined when no issuer was found
+ */
 export const getIssuerFromWebId = async (webid: URL): Promise<Issuer | undefined> => {
 
   if (!webid) {
