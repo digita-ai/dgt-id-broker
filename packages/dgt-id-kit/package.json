@@ -27,7 +27,12 @@
   },
   "dependencies": {
     "@digita-ai/inrupt-solid-client": "0.4.0",
+    "@types/n3": "^1.10.2",
+    "@types/node-fetch": "^2.5.11",
     "@types/uuid": "^8.3.0",
+    "jest-fetch-mock": "^3.0.3",
+    "n3": "^1.11.0",
+    "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -55,21 +60,33 @@
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
   },
   "eslintConfig": {
-    "ignorePatterns": [ "lib-old/" ]
+    "ignorePatterns": [
+      "lib-old/"
+    ]
   },
   "jest": {
     "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",
     "coverageThreshold": {
       "global": {
-        "branches": 0,
-        "functions": 0,
-        "lines": 0,
-        "statements": 0
+        "branches": 100,
+        "functions": 87.5,
+        "lines": 96.88,
+        "statements": 97.22
       }
     },
     "testPathIgnorePatterns": [
       "lib-old"
+    ],
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/coverage/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/public-api.ts",
+      "<rootDir>/lib/main.ts",
+      "<rootDir>/lib/index.ts",
+      "<rootDir>/lib-old/"
     ]
   }
 }
