@@ -1,8 +1,11 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { getTurtleFileAsQuads } from './data';
+
 enableFetchMocks();
 
 describe('dataModule', () => {
+
+  const requestUrl: URL = new URL('http://url.com');
 
   beforeEach(() => {
 
@@ -27,8 +30,7 @@ describe('dataModule', () => {
 
       fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
 
-      const url = new URL('https://not.a.pod/profile/card#me');
-      const result = getTurtleFileAsQuads(url);
+      const result = getTurtleFileAsQuads(requestUrl);
 
       await expect(result).resolves.toHaveLength(3);
 
@@ -37,8 +39,8 @@ describe('dataModule', () => {
     it('should throw an error when something goes wrong', async () => {
 
       fetchMock.mockRejectedValueOnce(undefined);
-      const url = new URL('https://not.a.pod/profile/card#me');
-      const result = getTurtleFileAsQuads(url);
+
+      const result = getTurtleFileAsQuads(requestUrl);
 
       await expect(result).rejects.toThrow('Something went wrong while converting to Quads:');
 
@@ -53,20 +55,11 @@ describe('dataModule', () => {
 
     it('should return an empty list when the file does not contain valid turtle', async () => {
 
-      const mockedResponse = `
-        @prefix : <#>.
-        @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-
-        :me
-          privateTypeIndex </settings/privateTypeIndex.ttl>;
-          solid:publicTypeIndex /settings/publicTypeIndex.ttl
-          foaf:name "HRlinkIT".
-      `;
+      const mockedResponse = `This ain't no turtle mate`;
 
       fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
 
-      const url = new URL('https://not.a.pod/profile/card#me');
-      const result = getTurtleFileAsQuads(url);
+      const result = getTurtleFileAsQuads(requestUrl);
 
       await expect(result).resolves.toHaveLength(0);
 
