@@ -3,21 +3,19 @@ import { getTurtleFileAsQuads } from './data';
 
 enableFetchMocks();
 
-describe('dataModule', () => {
+beforeEach(() => {
 
-  const requestUrl: URL = new URL('http://url.com');
+  fetchMock.resetMocks();
 
-  beforeEach(() => {
+});
 
-    fetchMock.resetMocks();
+const requestUrl: URL = new URL('http://url.com');
 
-  });
+describe('getTurtleFileAsQuads()', () => {
 
-  describe('getTurtleFileAsQuads()', () => {
+  it('should return all quads present in the file', async () => {
 
-    it('should return all quads present in the file', async () => {
-
-      const mockedResponse = `
+    const mockedResponse = `
         @prefix : <#>.
         @prefix solid: <http://www.w3.org/ns/solid/terms#>.
         @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -28,42 +26,40 @@ describe('dataModule', () => {
           foaf:name "HRlinkIT".
       `;
 
-      fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
+    fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
 
-      const result = getTurtleFileAsQuads(requestUrl);
+    const result = getTurtleFileAsQuads(requestUrl);
 
-      await expect(result).resolves.toHaveLength(3);
+    await expect(result).resolves.toHaveLength(3);
 
-    });
+  });
 
-    it('should throw an error when something goes wrong', async () => {
+  it('should throw an error when something goes wrong', async () => {
 
-      fetchMock.mockRejectedValueOnce(undefined);
+    fetchMock.mockRejectedValueOnce(undefined);
 
-      const result = getTurtleFileAsQuads(requestUrl);
+    const result = getTurtleFileAsQuads(requestUrl);
 
-      await expect(result).rejects.toThrow('Something went wrong while converting to Quads:');
+    await expect(result).rejects.toThrow('Something went wrong while converting to Quads:');
 
-    });
+  });
 
-    it('should throw when the url parameter is undefined', async () => {
+  it('should throw when the url parameter is undefined', async () => {
 
-      const result = getTurtleFileAsQuads(undefined);
-      await expect(result).rejects.toThrow('Parameter "url" should be defined!');
+    const result = getTurtleFileAsQuads(undefined);
+    await expect(result).rejects.toThrow('Parameter "url" should be defined!');
 
-    });
+  });
 
-    it('should return an empty list when the file does not contain valid turtle', async () => {
+  it('should return an empty list when the file does not contain valid turtle', async () => {
 
-      const mockedResponse = `This ain't no turtle mate`;
+    const mockedResponse = `This ain't no turtle mate`;
 
-      fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
+    fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
 
-      const result = getTurtleFileAsQuads(requestUrl);
+    const result = getTurtleFileAsQuads(requestUrl);
 
-      await expect(result).resolves.toHaveLength(0);
-
-    });
+    await expect(result).resolves.toHaveLength(0);
 
   });
 
