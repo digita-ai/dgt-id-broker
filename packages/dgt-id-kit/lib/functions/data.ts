@@ -9,11 +9,7 @@ import { Parser, Quad as N3Quad } from 'n3';
  */
 export const getTurtleFileAsQuads = async (url: URL): Promise<Quad[]> => {
 
-  if (!url) {
-
-    throw new Error('Parameter "url" should be defined!');
-
-  }
+  if (!url) { throw new Error('Parameter "url" should be defined!'); }
 
   try {
 

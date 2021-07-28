@@ -10,11 +10,7 @@ import { getTurtleFileAsQuads } from './data';
  */
 export const getWebIdProfile = async (webid: URL): Promise<Quad[]> => {
 
-  if (!webid) {
-
-    throw new Error('Parameter "webid" should be defined!');
-
-  }
+  if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
 
   try {
 
@@ -29,50 +25,94 @@ export const getWebIdProfile = async (webid: URL): Promise<Quad[]> => {
 };
 
 /**
- * Get an Issuer instance created from a list of Quads, most likely from a profile
+ * Get all Issuer instances created from a list of Quads, most likely from a profile
  *
  * @param quads list of quads
- * @returns an Issuer instance if one was found, or undefined when no issuer was found
+ * @returns list of Issuer instances if found, or an empty list when no issuer was found
  */
-export const getIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | undefined> => {
+export const getIssuersFromQuads = async (quads: Quad[]): Promise<Issuer[]> => {
 
-  if (!quads) {
+  if (!quads) { throw new Error('Parameter "quads" should be defined!'); }
 
-    throw new Error('Parameter "quads" should be defined!');
-
-  }
-
-  const issuerQuad = quads.find((quad: Quad) =>
+  const issuerQuads = quads.filter((quad: Quad) =>
     quad.predicate?.value === 'http://www.w3.org/ns/solid/terms#oidcIssuer');
 
-  return issuerQuad?.object?.value ? { url: new URL(issuerQuad.object.value) } : undefined;
+  const result: Issuer[] = [];
+
+  issuerQuads.forEach((quad: Quad) => {
+
+    if (quad?.object?.value) {
+
+      result.push({ url: new URL(quad.object.value) });
+
+    }
+
+  });
+
+  return result;
 
 };
 
 /**
- * Provided a webid, this function will return you an Issuer instance or undefined
- * depending on whether an oidcIssuer is mentioned on the profile of this webid
+ * Get the first Issuer instance created from a list of Quads, most likely from a profile
+ *
+ * @param quads list of quads
+ * @returns an Issuer instance if found, or undefined if not
+ */
+export const getFirstIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | undefined> => {
+
+  if (!quads) { throw new Error('Parameter "quads" should be defined!'); }
+
+  const allIssuers = await getIssuersFromQuads(quads);
+
+  return allIssuers.length > 0 ? allIssuers[0] : undefined;
+
+};
+
+/**
+ * Provided a webid, this function will return you all Issuer instances
  *
  * @param webid the webid of which you want the Issuer
- * @returns an Issuer instance if one was found, or undefined when no issuer was found
+ * @returns an list of Issuer instances
  */
-export const getIssuerFromWebId = async (webid: URL): Promise<Issuer | undefined> => {
+export const getIssuersFromWebId = async (webid: URL): Promise<Issuer[]> => {
 
-  if (!webid) {
-
-    throw new Error('Parameter "webid" should be defined!');
-
-  }
+  if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
 
   try {
 
     const quads = await getWebIdProfile(webid);
 
-    return await getIssuerFromQuads(quads);
+    return await getIssuersFromQuads(quads);
 
   } catch(error: unknown) {
 
-    throw new Error(`Something went wrong getting the issuer for webId"${webid.toString()}": ${error}`);
+    throw new Error(`Something went wrong getting the issuer for webId "${webid.toString()}": ${error}`);
+
+  }
+
+};
+
+/**
+ * Provided a webid, this function will return you the first Issuer instance or undefined
+ * depending on whether an oidcIssuer is mentioned on the profile of this webid
+ *
+ * @param webid the webid of which you want the Issuer
+ * @returns an Issuer instance if one was found, or undefined when no issuer was found
+ */
+export const getFirstIssuerFromWebId = async (webid: URL): Promise<Issuer | undefined> => {
+
+  if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
+
+  try {
+
+    const quads = await getWebIdProfile(webid);
+
+    return await getFirstIssuerFromQuads(quads);
+
+  } catch(error: unknown) {
+
+    throw new Error(`Something went wrong getting the issuer for webId "${webid.toString()}": ${error}`);
 
   }
 
