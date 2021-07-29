@@ -13,14 +13,14 @@ export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
   if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
 
   let quads: Quad[];
-  let profileDocumentQuad: Quad | undefined;
+  let profileDocumentQuadPresent: boolean;
 
   try {
 
     quads = await getTurtleFileAsQuads(webid);
 
     // Verify that it is in fact a profile
-    profileDocumentQuad = quads.find((quad: Quad) =>
+    profileDocumentQuadPresent = quads.some((quad: Quad) =>
       quad?.predicate?.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' &&
       quad?.object?.value === 'http://xmlns.com/foaf/0.1/PersonalProfileDocument');
 
@@ -30,7 +30,7 @@ export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
 
   }
 
-  if (!profileDocumentQuad) { throw new Error(`No valid profile found for WebID: "${webid}"`); }
+  if (!profileDocumentQuadPresent) { throw new Error(`No valid profile found for WebID: "${webid}"`); }
 
   return quads;
 

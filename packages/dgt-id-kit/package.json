@@ -86,7 +86,8 @@
       "<rootDir>/lib/public-api.ts",
       "<rootDir>/lib/main.ts",
       "<rootDir>/lib/index.ts",
-      "<rootDir>/lib-old/"
+      "<rootDir>/lib-old/",
+      "<rootDir>/.*test-data.ts"
     ]
   }
 }
