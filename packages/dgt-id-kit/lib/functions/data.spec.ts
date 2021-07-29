@@ -9,7 +9,7 @@ beforeEach(() => {
 
 });
 
-const requestUrl: URL = new URL('http://url.com');
+const requestUrl = 'http://url.com';
 
 describe('getTurtleFileAsQuads()', () => {
 

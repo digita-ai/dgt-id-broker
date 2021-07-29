@@ -1,5 +1,6 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { NamedNode, Parser } from 'n3';
+import { Quad } from 'rdf-js';
 import { getFirstIssuerFromQuads, getFirstIssuerFromWebId, getIssuersFromQuads, getIssuersFromWebId, getWebIdProfile } from './web-id';
 
 enableFetchMocks();
@@ -10,7 +11,7 @@ beforeEach(() => {
 
 });
 
-const requestUrl: URL = new URL('http://url.com');
+const requestUrl = 'http://url.com';
 const issuer1 = { url: new URL('http://mock-issuer.com/') };
 const issuer2 = { url: new URL('http://mocked-issuer.com/') };
 
@@ -18,6 +19,9 @@ const mockedResponseWithIssuers = `
     @prefix : <#>.
     @prefix solid: <http://www.w3.org/ns/solid/terms#>.
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
+    @prefix pro: <./>.
+
+    pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
 
     :me
       solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
@@ -33,6 +37,9 @@ const mockedResponseNoIssuers = `
     @prefix : <#>.
     @prefix solid: <http://www.w3.org/ns/solid/terms#>.
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
+    @prefix pro: <./>.
+
+    pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
 
     :me
       solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
@@ -42,31 +49,45 @@ const mockedResponseNoIssuers = `
 
 const quadsNoIssuers = new Parser().parse(mockedResponseNoIssuers);
 
+const mockedResponseInvalidProfile = `
+    @prefix : <#>.
+    @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+    @prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+    :me
+      solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
+      solid:publicTypeIndex </settings/publicTypeIndex.ttl>;
+      foaf:name "HRlinkIT".
+  `;
+
+const mockedResponsePlainProfile = `
+    @prefix : <#>.
+    @prefix foaf: <http://xmlns.com/foaf/0.1/>.
+    @prefix pro: <./>.
+
+    pro:card a foaf:PersonalProfileDocument; foaf:maker :me; foaf:primaryTopic :me.
+
+    :me
+      foaf:name "HRlinkIT".
+  `;
+
 describe('getWebIdProfile()', () => {
 
   it('should return all quads for a persons profile', async () => {
 
-    const mockedResponse = `
-        @prefix : <#>.
-        @prefix foaf: <http://xmlns.com/foaf/0.1/>.
-
-        :me
-          foaf:name "HRlinkIT".
-      `;
-
-    fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
+    fetchMock.mockResponseOnce(mockedResponsePlainProfile, { status: 200 });
     const result = getWebIdProfile(requestUrl);
-    await expect(result).resolves.toHaveLength(1);
+    await expect(result).resolves.toHaveLength(4);
     const awaitedResult = await result;
+    const nameQuad = awaitedResult.find((quad: Quad) => quad.predicate.value === 'http://xmlns.com/foaf/0.1/name');
 
-    expect(awaitedResult[0].predicate).toEqual(new NamedNode('http://xmlns.com/foaf/0.1/name'));
+    expect(nameQuad).toBeDefined();
 
-    expect(awaitedResult[0].subject).toEqual(new NamedNode('#me'));
-
-    expect(awaitedResult[0].termType).toEqual('Quad');
-
-    expect(awaitedResult[0].object.value).toEqual('HRlinkIT');
-    expect(awaitedResult[0].object.termType).toEqual('Literal');
+    expect(nameQuad.predicate).toEqual(new NamedNode('http://xmlns.com/foaf/0.1/name'));
+    expect(nameQuad.subject).toEqual(new NamedNode('#me'));
+    expect(nameQuad.termType).toEqual('Quad');
+    expect(nameQuad.object.value).toEqual('HRlinkIT');
+    expect(nameQuad.object.termType).toEqual('Literal');
 
   });
 
@@ -82,6 +103,14 @@ describe('getWebIdProfile()', () => {
 
     const result = getWebIdProfile(undefined);
     await expect(result).rejects.toThrow('Parameter "webid" should be defined!');
+
+  });
+
+  it('should throw when the url does not lead to a valid profile', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseInvalidProfile, { status: 200 });
+    const result = getWebIdProfile(requestUrl);
+    await expect(result).rejects.toThrow('No valid profile found for WebID: ');
 
   });
 
