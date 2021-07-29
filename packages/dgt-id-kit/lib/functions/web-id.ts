@@ -8,19 +8,31 @@ import { getTurtleFileAsQuads } from './data';
  * @param webid the webid to convert to Quads
  * @returns an array of Quads from the profile
  */
-export const getWebIdProfile = async (webid: URL): Promise<Quad[]> => {
+export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
 
   if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
 
+  let quads: Quad[];
+  let profileDocumentQuad: Quad | undefined;
+
   try {
 
-    return await getTurtleFileAsQuads(webid);
+    quads = await getTurtleFileAsQuads(webid);
+
+    // Verify that it is in fact a profile
+    profileDocumentQuad = quads.find((quad: Quad) =>
+      quad?.predicate?.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' &&
+      quad?.object?.value === 'http://xmlns.com/foaf/0.1/PersonalProfileDocument');
 
   } catch(error: unknown) {
 
     throw new Error(`Something went wrong getting the profile for webId"${webid.toString()}": ${error}`);
 
   }
+
+  if (!profileDocumentQuad) { throw new Error(`No valid profile found for WebID: "${webid}"`); }
+
+  return quads;
 
 };
 
@@ -75,7 +87,7 @@ export const getFirstIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | u
  * @param webid the webid of which you want the Issuer
  * @returns an list of Issuer instances
  */
-export const getIssuersFromWebId = async (webid: URL): Promise<Issuer[]> => {
+export const getIssuersFromWebId = async (webid: string): Promise<Issuer[]> => {
 
   if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
 
@@ -100,7 +112,7 @@ export const getIssuersFromWebId = async (webid: URL): Promise<Issuer[]> => {
  * @param webid the webid of which you want the Issuer
  * @returns an Issuer instance if one was found, or undefined when no issuer was found
  */
-export const getFirstIssuerFromWebId = async (webid: URL): Promise<Issuer | undefined> => {
+export const getFirstIssuerFromWebId = async (webid: string): Promise<Issuer | undefined> => {
 
   if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
 
