@@ -55,17 +55,19 @@
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
   },
   "eslintConfig": {
-    "ignorePatterns": [ "lib-old/" ]
+    "ignorePatterns": [
+      "lib-old/"
+    ]
   },
   "jest": {
     "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",
     "coverageThreshold": {
       "global": {
-        "branches": 0,
-        "functions": 0,
-        "lines": 0,
-        "statements": 0
+        "branches": 11.76,
+        "functions": 3.03,
+        "lines": 7.69,
+        "statements": 10.49
       }
     },
     "testPathIgnorePatterns": [
