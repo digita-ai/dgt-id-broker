@@ -51,7 +51,7 @@ describe('getTurtleFileAsQuads()', () => {
 
   });
 
-  it('should return an empty list when the file does not contain valid turtle', async () => {
+  it('should throw when the file does not contain valid turtle', async () => {
 
     const mockedResponse = `This ain't no turtle mate`;
 
@@ -59,7 +59,7 @@ describe('getTurtleFileAsQuads()', () => {
 
     const result = getTurtleFileAsQuads(requestUrl);
 
-    await expect(result).resolves.toHaveLength(0);
+    await expect(result).rejects.toThrow('Something went wrong while converting to Quads: ');
 
   });
 

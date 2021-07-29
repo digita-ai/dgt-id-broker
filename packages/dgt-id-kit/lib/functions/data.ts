@@ -13,21 +13,10 @@ export const getTurtleFileAsQuads = async (url: string): Promise<Quad[]> => {
 
   try {
 
-    const quads: Quad[] = [];
-
     const result = await fetch(url);
     const body = await result.text();
 
-    // Choose this way of parsing / pushing to array to be able to return an empty
-    // list when invalid turtle is found
-    new Parser().parse(body, (error: Error, quad: N3Quad, prefixes) => {
-
-      // Loops over all quads + one cycle containing only the prefixes
-      if (quad) { quads.push(quad); }
-
-    });
-
-    return quads;
+    return new Parser().parse(body);
 
   } catch (error: unknown) {
 
