@@ -99,9 +99,9 @@ Send a xref:https://openid.net/specs/openid-connect-core-1_0.html#RefreshingAcce
 Make sure the request is still valid for both the xref:https://datatracker.ietf.org/doc/html/rfc7636#section-4.5[PKCE spec], and the xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-5[DPoP spec].
 
 
-* `accessResource(resource: URL, method: HttpMethod, body?: URLSearchParams): Promise<Response>`
+* `accessResource(resource: URL, method: HttpMethod, body?: string, contentType?: string): Promise<Response>`
 +
-Send a request with the DPoP bound `access_token` from the `store` to the resource server. Check that the `access_token` has not expired and is still valid. If it is not valid, a new one can be requested using the `refresh_token` and the `refreshTokenRequest` function. Make sure to use the `createDpopProof` function as a valid DPoP proof will be necessary for every request to a resource. In this case the `resource` url will be the `htu`, and the `method` will be the `htm`. Check that the body is present for any method that would require it (such as POST). This function should return the fetched Response.
+Send a request with the DPoP bound `access_token` from the `store` to the resource server. Check that the `access_token` has not expired and is still valid. If it is not valid, a new one can be requested using the `refresh_token` and the `refreshTokenRequest` function. Make sure to use the `createDpopProof` function as a valid DPoP proof will be necessary for every request to a resource. In this case the `resource` url will be the `htu`, and the `method` will be the `htm`. Check that the `body` is present for any method that would require it (such as POST). If the `body` is present, but no `contentType` was given, use `application/x-www-form-urlencoded` by default. This function should return the fetched Response.
 
 === Client module
 
