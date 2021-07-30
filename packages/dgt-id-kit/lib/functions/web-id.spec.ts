@@ -1,5 +1,5 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { plainProfile, issuer1, issuer2, requestUrl, profileWithIssuers, profileWithIssuersQuads, profileWithNoIssuers, profileWithNoIssuersQuads, profileInvalid, plainProfileQuads } from './web-id-test-data';
+import { plainProfile, issuer1, issuer2, requestUrl, profileWithIssuers, profileWithIssuersQuads, profileWithNoIssuers, profileWithNoIssuersQuads, profileInvalid, plainProfileQuads } from '../../test/test-data';
 import { getFirstIssuerFromQuads, getFirstIssuerFromWebId, getIssuersFromQuads, getIssuersFromWebId, getWebIdProfile } from './web-id';
 
 enableFetchMocks();
