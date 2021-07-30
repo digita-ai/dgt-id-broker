@@ -8,7 +8,9 @@
     "target": "es2015",
     "strict": true
   },
-  "include": [ "lib" ],
+  "include": [
+    "lib", "test"
+  ],
   "exclude": [
     "**/*.spec.ts",
     "node_modules",
