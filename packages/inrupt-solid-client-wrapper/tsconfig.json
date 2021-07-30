@@ -1,0 +1,17 @@
+{
+  "extends": "@digita-ai/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "lib",
+    "outDir": "dist",
+    "emitDeclarationOnly": true,
+    "module": "es2020",
+    "target": "es2015",
+    "strict": true
+  },
+  "include": [ "lib" ],
+  "exclude": [
+    "**/*.spec.ts",
+    "node_modules",
+    "dist"
+  ]
+}

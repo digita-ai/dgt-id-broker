@@ -19,6 +19,10 @@
     {
       "name": "inrupt-solid-client",
       "path": "packages/inrupt-solid-client"
+    },
+    {
+      "name": "inrupt-solid-client-wrapper",
+      "path": "packages/inrupt-solid-client-wrapper"
     }
   ],
   "settings": {
