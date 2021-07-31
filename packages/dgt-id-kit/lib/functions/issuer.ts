@@ -5,6 +5,16 @@ export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
+  try {
+
+    new URL(issuer);
+
+  } catch(error: unknown) {
+
+    throw new Error('Parameter "issuer" is not a valid URL');
+
+  }
+
   const config = `${issuer.replace(/\/$/, '')}/.well-known/openid-configuration`;
   const response = await fetch(config);
 

@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe('getIssuerConfig()', () => {
 
-  it('should return the config', async () => {
+  it('should return the config if it is present on the server', async () => {
 
     fetchMock.mockResponseOnce(mockedResponseValidSolidOidc, { status: 200 });
     const result = getIssuerConfig(requestUrl);
@@ -55,14 +55,21 @@ describe('getIssuerConfig()', () => {
 
   });
 
-  it('should error when issuer is undefined', async () => {
+  it('should throw when issuer is undefined', async () => {
 
     const result = getIssuerConfig(undefined);
     await expect(result).rejects.toThrow('Parameter "issuer" should be set');
 
   });
 
-  it('should error when there is no oidcConfig to get', async () => {
+  it('should throw when the issuer is not a valid url', async () => {
+
+    const result = getIssuerConfig('notaurl');
+    await expect(result).rejects.toThrow('Parameter "issuer" is not a valid URL');
+
+  });
+
+  it('should throw when the oidc configuration is not found', async () => {
 
     fetchMock.mockResponseOnce('Not Found', { status: 404 });
     const result = getIssuerConfig(requestUrl);
@@ -74,7 +81,7 @@ describe('getIssuerConfig()', () => {
 
 describe('validateIssuer()', () => {
 
-  it('should return true when the required config parameter is set', async () => {
+  it('should return true when the config is found and solid compliance is advertised', async () => {
 
     fetchMock.mockResponseOnce(mockedResponseValidSolidOidc, { status: 200 });
     const result = validateIssuer(requestUrl);
@@ -82,7 +89,7 @@ describe('validateIssuer()', () => {
 
   });
 
-  it('should return false when the required config parameter is not set', async () => {
+  it('should return false when the config is found and solid compliance is not advertised', async () => {
 
     fetchMock.mockResponseOnce(mockedResponseInvalidSolidOidc, { status: 200 });
     const result = validateIssuer(requestUrl);
@@ -114,6 +121,14 @@ describe('getDiscoveryInfo()', () => {
     fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
     const result = getDiscoveryInfo(requestUrl, 'jwks_uri');
     await expect(result).resolves.toBe(validSolidOidcObject.jwks_uri);
+
+  });
+
+  it('should return undefined when the openid config does not contain the requested field', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseInvalidSolidOidc);
+    const result = getDiscoveryInfo(requestUrl, 'solid_oidc_supported');
+    await expect(result).resolves.toBe(undefined);
 
   });
 
