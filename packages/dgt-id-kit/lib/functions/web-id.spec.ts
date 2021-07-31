@@ -1,5 +1,5 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { plainProfile, issuer1, issuer2, requestUrl, profileWithIssuers, profileWithIssuersQuads, profileWithNoIssuers, profileWithNoIssuersQuads, profileInvalid, plainProfileQuads } from '../../test/test-data';
+import { plainProfile, issuer1, issuer2, requestUrl, profileWithIssuers, profileWithIssuersQuads, profileWithNoIssuers, profileWithNoIssuersQuads, profileInvalid, plainProfileQuads, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc } from '../../test/test-data';
 import { getFirstIssuerFromQuads, getFirstIssuerFromWebId, getIssuersFromQuads, getIssuersFromWebId, getWebIdProfile } from './web-id';
 
 enableFetchMocks();
@@ -100,7 +100,12 @@ describe('getIssuersFromWebId()', () => {
 
   it('should return all issuer objects from a profile', async () => {
 
-    fetchMock.mockResponseOnce(profileWithIssuers, { status: 200 });
+    fetchMock.mockResponses(
+      [ profileWithIssuers, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ]
+    );
+
     const result = getIssuersFromWebId(requestUrl);
     await expect(result).resolves.toEqual([ issuer1, issuer2 ]);
 
@@ -129,13 +134,31 @@ describe('getIssuersFromWebId()', () => {
 
   });
 
+  it('should return only a list of valid issuers', async () => {
+
+    fetchMock.mockResponses(
+      [ profileWithIssuers, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200 } ]
+    );
+
+    const result = getIssuersFromWebId(requestUrl);
+    await expect(result).resolves.toEqual([ issuer1 ]);
+
+  });
+
 });
 
 describe('getFirstIssuerFromWebId()', () => {
 
   it('should return the first issuer object from a profile', async () => {
 
-    fetchMock.mockResponseOnce(profileWithIssuers, { status: 200 });
+    fetchMock.mockResponses(
+      [ profileWithIssuers, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ]
+    );
+
     const result = getFirstIssuerFromWebId(requestUrl);
     await expect(result).resolves.toEqual(issuer1);
 
@@ -161,6 +184,19 @@ describe('getFirstIssuerFromWebId()', () => {
     fetchMock.mockRejectedValueOnce(undefined);
     const result = getFirstIssuerFromWebId(requestUrl);
     await expect(result).rejects.toThrow(`Something went wrong getting the issuer for webId "${requestUrl.toString()}"`);
+
+  });
+
+  it('should return the second issuer found if the first issuer is not valid', async () => {
+
+    fetchMock.mockResponses(
+      [ profileWithIssuers, { status: 200 } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ]
+    );
+
+    const result = getFirstIssuerFromWebId(requestUrl);
+    await expect(result).resolves.toEqual(issuer2);
 
   });
 
