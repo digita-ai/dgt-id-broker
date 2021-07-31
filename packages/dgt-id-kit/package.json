@@ -69,10 +69,10 @@
     "preset": "@digita-ai/jest-config",
     "coverageThreshold": {
       "global": {
-        "branches": 58.82,
-        "functions": 12.12,
-        "lines": 20.77,
-        "statements": 26.57
+        "branches": 97.5,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
       }
     },
     "testPathIgnorePatterns": [
