@@ -5,7 +5,7 @@
     "outDir": "dist",
     "emitDeclarationOnly": true,
     "module": "es2020",
-    "target": "es2020",
+    "target": "es2015",
     "strict": true
   },
   "include": [

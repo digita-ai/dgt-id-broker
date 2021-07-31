@@ -99,7 +99,7 @@ export const getIssuersFromWebId = async (webid: string): Promise<Issuer[]> => {
 
     const validatedIssuers = [];
 
-    for await (const iss of issuers) {
+    for (const iss of issuers) {
 
       if (await validateIssuer(iss.url.toString())) {
 
