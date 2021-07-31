@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "@digita-ai/inrupt-solid-client": "0.4.0",
-    "@types/uuid": "^8.3.0",
+    "n3": "^1.11.0",
+    "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -41,7 +42,11 @@
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4",
-    "vite": "2.2.3"
+    "vite": "2.2.3",
+    "@types/n3": "^1.10.2",
+    "@types/node-fetch": "^2.5.11",
+    "@types/uuid": "^8.3.0",
+    "jest-fetch-mock": "^3.0.3"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
@@ -72,6 +77,17 @@
     },
     "testPathIgnorePatterns": [
       "lib-old"
+    ],
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/coverage/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/public-api.ts",
+      "<rootDir>/lib/main.ts",
+      "<rootDir>/lib/index.ts",
+      "<rootDir>/lib-old/",
+      "<rootDir>/test/"
     ]
   }
 }
