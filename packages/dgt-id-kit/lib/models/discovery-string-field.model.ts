@@ -1,10 +1,10 @@
-import { DiscoveryStringEndpointField } from './discovery-string-endpoint-field.model';
+import { DiscoveryEndpointField } from './discovery-endpoint-field.model';
 
 /**
  * Consist of all OIDC discovery fields that return a string
  */
 export type DiscoveryStringField =
-  DiscoveryStringEndpointField |
+  DiscoveryEndpointField |
   'issuer' |
   'jwks_uri' |
   'service_documentation' |

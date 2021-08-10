@@ -1,7 +1,7 @@
 import { Quad } from 'rdf-js';
 import { Issuer } from '../models/issuer.model';
 import { getTurtleFileAsQuads } from './data';
-import { validateIssuer } from './issuer';
+import { isValidIssuer } from './issuer';
 
 /**
  * Transform all data from a profile to a list of Quads
@@ -98,11 +98,9 @@ export const getIssuersFromWebId = async (webid: string): Promise<Issuer[]> => {
     const issuers = await getIssuersFromQuads(quads);
 
     const validatedIssuers = await Promise.all(issuers.map(async (iss: Issuer) =>
-      await validateIssuer(iss.url.toString()) ? iss : undefined));
+      await isValidIssuer(iss.url.toString()) ? iss : undefined));
 
-    const filteredAwaitedValidatedIssuers = validatedIssuers.filter(<T>(maybe: T | undefined): maybe is T => !!maybe);
-
-    return filteredAwaitedValidatedIssuers;
+    return validatedIssuers.filter(<T>(maybe: T | undefined): maybe is T => !!maybe);
 
   } catch(error: unknown) {
 

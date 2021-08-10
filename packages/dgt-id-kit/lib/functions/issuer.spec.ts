@@ -1,6 +1,6 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { mockedResponseInvalidSolidOidc, mockedResponseValidSolidOidc, requestUrl, validSolidOidcObject } from '../../test/test-data';
-import { getIssuerConfig, validateIssuer, getDiscoveryInfo, getEndpoint } from './issuer';
+import { getIssuerConfig, isValidIssuer, getDiscoveryInfo, getEndpoint, validateIssuer } from './issuer';
 
 enableFetchMocks();
 
@@ -44,12 +44,12 @@ describe('getIssuerConfig()', () => {
 
 });
 
-describe('validateIssuer()', () => {
+describe('isValidIssuer()', () => {
 
   it('should return true when the config is found and solid compliance is advertised', async () => {
 
     fetchMock.mockResponseOnce(mockedResponseValidSolidOidc, { status: 200 });
-    const result = validateIssuer(requestUrl);
+    const result = isValidIssuer(requestUrl);
     await expect(result).resolves.toBe(true);
 
   });
@@ -57,7 +57,7 @@ describe('validateIssuer()', () => {
   it('should return false when the config is found and solid compliance is not advertised', async () => {
 
     fetchMock.mockResponseOnce(mockedResponseInvalidSolidOidc, { status: 200 });
-    const result = validateIssuer(requestUrl);
+    const result = isValidIssuer(requestUrl);
     await expect(result).resolves.toBe(false);
 
   });
@@ -65,8 +65,43 @@ describe('validateIssuer()', () => {
   it('should return false when an error occurs', async () => {
 
     fetchMock.mockRejectedValueOnce(undefined);
-    const result = validateIssuer(requestUrl);
+    const result = isValidIssuer(requestUrl);
     await expect(result).resolves.toBe(false);
+
+  });
+
+  it('should throw when parameter issuer is undefined', async () => {
+
+    const result = isValidIssuer(undefined);
+    await expect(result).rejects.toThrow('Parameter "issuer" should be set');
+
+  });
+
+});
+
+describe('validateIssuer()', () => {
+
+  it('should return the issuer when the config is found and solid compliance is advertised', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc, { status: 200 });
+    const result = validateIssuer(requestUrl);
+    await expect(result).resolves.toBe(requestUrl);
+
+  });
+
+  it('should throw when the config is found and solid compliance is not advertised', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseInvalidSolidOidc, { status: 200 });
+    const result = validateIssuer(requestUrl);
+    await expect(result).rejects.toThrow('The issuer is not solid-oidc compliant');
+
+  });
+
+  it('should throw when an error occurs', async () => {
+
+    fetchMock.mockRejectedValueOnce(undefined);
+    const result = validateIssuer(requestUrl);
+    await expect(result).rejects.toThrow('The issuer is not solid-oidc compliant');
 
   });
 

@@ -1,5 +1,5 @@
 import { DiscoveryField } from '../models/discovery-field.model';
-import { DiscoveryStringEndpointField } from '../models/discovery-string-endpoint-field.model';
+import { DiscoveryEndpointField } from '../models/discovery-endpoint-field.model';
 import { DiscoveryStringField } from '../models/discovery-string-field.model';
 import { validateAndFetch } from './validate-and-fetch';
 
@@ -13,8 +13,6 @@ export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
-  let jsonToReturn;
-
   try {
 
     const config = `${issuer.replace(/\/$/, '')}/.well-known/openid-configuration`;
@@ -22,15 +20,13 @@ export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
     if (response.status !== 200) { throw new Error(`No openid-configuration was found on this url: "${config}"`); }
 
-    jsonToReturn = await response.json();
+    return await response.json();
 
   } catch (error: unknown) {
 
     throw new Error(`Something went wrong retrieving the openid-configuration: ${error}`);
 
   }
-
-  return jsonToReturn;
 
 };
 
@@ -40,7 +36,7 @@ export const getIssuerConfig = async (issuer: string): Promise<any> => {
  * @param issuer The issuer you want to validate
  * @returns a boolean stating whether the issuer is valid or not
  */
-export const validateIssuer = async (issuer: string): Promise<boolean> => {
+export const isValidIssuer = async (issuer: string): Promise<boolean> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
@@ -57,6 +53,36 @@ export const validateIssuer = async (issuer: string): Promise<boolean> => {
     return true;
 
   } catch(error: unknown) { return false; }
+
+};
+
+/**
+ * Validate if an issuer is solid-oidc compliant
+ *
+ * @param issuer The issuer you want to validate
+ * @returns the issuer back if it is a valid solid-oidc issuer
+ */
+export const validateIssuer = async (issuer: string): Promise<string> => {
+
+  if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
+
+  try {
+
+    const config = await getIssuerConfig(issuer);
+
+    if (config && config.solid_oidc_supported !== 'https://solidproject.org/TR/solid-oidc') {
+
+      throw new Error();
+
+    }
+
+    return issuer;
+
+  } catch(error: unknown) {
+
+    throw new Error('The issuer is not solid-oidc compliant');
+
+  }
 
 };
 
@@ -96,7 +122,7 @@ Promise<T extends DiscoveryStringField ? string : string[]> => {
  * @param endpoint which endpoint you want to retrieve
  * @returns the requested endpoint if present in the openid-configuration
  */
-export const getEndpoint = async (issuer: string, endpoint: DiscoveryStringEndpointField): Promise<string> => {
+export const getEndpoint = async (issuer: string, endpoint: DiscoveryEndpointField): Promise<string> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
