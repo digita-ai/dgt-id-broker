@@ -97,19 +97,12 @@ export const getIssuersFromWebId = async (webid: string): Promise<Issuer[]> => {
     const quads = await getWebIdProfile(webid);
     const issuers = await getIssuersFromQuads(quads);
 
-    const validatedIssuers = [];
+    const validatedIssuers = await Promise.all(issuers.map(async (iss: Issuer) =>
+      await validateIssuer(iss.url.toString()) ? iss : undefined));
 
-    for (const iss of issuers) {
+    const filteredAwaitedValidatedIssuers = validatedIssuers.filter(<T>(maybe: T | undefined): maybe is T => !!maybe);
 
-      if (await validateIssuer(iss.url.toString())) {
-
-        validatedIssuers.push(iss);
-
-      }
-
-    }
-
-    return validatedIssuers;
+    return filteredAwaitedValidatedIssuers;
 
   } catch(error: unknown) {
 
@@ -134,7 +127,7 @@ export const getFirstIssuerFromWebId = async (webid: string): Promise<Issuer | u
 
     const issuers = await getIssuersFromWebId(webid);
 
-    return issuers?.length > 0 ? issuers[0] : undefined;
+    return issuers?.[0];
 
   } catch(error: unknown) {
 

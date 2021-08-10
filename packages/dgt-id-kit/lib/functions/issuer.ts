@@ -1,26 +1,30 @@
 import { DiscoveryField } from '../models/discovery-field.model';
+import { DiscoveryStringEndpointField } from '../models/discovery-string-endpoint-field.model';
 import { DiscoveryStringField } from '../models/discovery-string-field.model';
+import { validateAndFetch } from './validate-and-fetch';
 
 export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
+  let jsonToReturn;
+
   try {
 
-    new URL(issuer);
+    const config = `${issuer.replace(/\/$/, '')}/.well-known/openid-configuration`;
+    const response = await validateAndFetch(config);
 
-  } catch(error: unknown) {
+    if (response.status !== 200) { throw new Error(`No openid-configuration was found on this url: "${config}"`); }
 
-    throw new Error('Parameter "issuer" is not a valid URL');
+    jsonToReturn = await response.json();
+
+  } catch (error: unknown) {
+
+    throw new Error(`Something went wrong retrieving the openid-configuration: ${error}`);
 
   }
 
-  const config = `${issuer.replace(/\/$/, '')}/.well-known/openid-configuration`;
-  const response = await fetch(config);
-
-  if (response.status !== 200) { throw new Error(`No openid-configuration was found on this url: "${config}"`); }
-
-  return await response.json();
+  return jsonToReturn;
 
 };
 
@@ -66,13 +70,11 @@ Promise<T extends DiscoveryStringField ? string : string[]> => {
 
 };
 
-export const getEndpoint = async (issuer: string, endpoint: DiscoveryStringField): Promise<string> => {
+export const getEndpoint = async (issuer: string, endpoint: DiscoveryStringEndpointField): Promise<string> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
   if (!endpoint) { throw new Error('Parameter "endpoint" should be set'); }
-
-  if (!endpoint.endsWith('_endpoint')) { throw new Error('Parameter "endpoint" should end in "_endpoint"'); }
 
   return await getDiscoveryInfo(issuer, endpoint);
 
