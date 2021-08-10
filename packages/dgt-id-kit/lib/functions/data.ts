@@ -1,5 +1,6 @@
 import { Quad } from 'rdf-js';
-import { Parser, Quad as N3Quad } from 'n3';
+import { Parser } from 'n3';
+import { validateAndFetch } from './validate-and-fetch';
 
 /**
  * Transform all data from a turtle file to a list of Quads
@@ -13,7 +14,7 @@ export const getTurtleFileAsQuads = async (url: string): Promise<Quad[]> => {
 
   try {
 
-    const result = await fetch(url);
+    const result = await validateAndFetch(url);
     const body = await result.text();
 
     return new Parser().parse(body);
