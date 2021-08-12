@@ -3,9 +3,9 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-import * as generateKeyPairSpy from 'jose/util/generate_key_pair';
+import * as generateKeyPairModule from 'jose/util/generate_key_pair';
 import { store } from './storage';
-import { createDPoPProof, generateKeys } from './dpop';
+import { createDpopProof, generateKeys } from './dpop';
 
 beforeEach(() => {
 
@@ -13,7 +13,7 @@ beforeEach(() => {
 
 });
 
-// Tthis describe block NEEDS to be above the other one, if they are switched,
+// This describe block NEEDS to be above the other one, if they are switched,
 // for some reason, you wont be able to set new values in the store.
 // If the person reading this code has any idea why, let me know.
 describe('createDPoPProof()', () => {
@@ -23,7 +23,7 @@ describe('createDPoPProof()', () => {
 
   it('should return a DPoP proof', async () => {
 
-    const result = createDPoPProof('htm', 'htu');
+    const result = createDpopProof('htm', 'htu');
     await expect(result).resolves.toBeDefined();
 
     const header = JSON.parse(atob((await result).split('.')[0]));
@@ -38,14 +38,14 @@ describe('createDPoPProof()', () => {
 
   it('should throw when parameter htm is undefined', async () => {
 
-    const result = createDPoPProof(undefined, 'htu');
+    const result = createDpopProof(undefined, 'htu');
     await expect(result).rejects.toThrow('Parameter "htm" should be set');
 
   });
 
   it('should throw when parameter htu is undefined', async () => {
 
-    const result = createDPoPProof('htm', undefined);
+    const result = createDpopProof('htm', undefined);
     await expect(result).rejects.toThrow('Parameter "htu" should be set');
 
   });
@@ -53,7 +53,7 @@ describe('createDPoPProof()', () => {
   it('should throw when no private key was found in the store', async () => {
 
     await store.delete('privateKey');
-    const result = createDPoPProof('htm', 'htu');
+    const result = createDpopProof('htm', 'htu');
     await expect(result).rejects.toThrow('No private key was found in the store, call generateKeys()');
 
   });
@@ -61,7 +61,7 @@ describe('createDPoPProof()', () => {
   it('should throw when no public key was found in the store', async () => {
 
     await store.delete('publicKey');
-    const result = createDPoPProof('htm', 'htu');
+    const result = createDpopProof('htm', 'htu');
     await expect(result).rejects.toThrow('No public key was found in the store, call generateKeys()');
 
   });
@@ -69,7 +69,7 @@ describe('createDPoPProof()', () => {
   it('should throw when something goes wrong signing the JWT', async () => {
 
     await store.set('publicKey', { ...(await store.get('publicKey')), alg: undefined });
-    const result = createDPoPProof('htm', 'htu');
+    const result = createDpopProof('htm', 'htu');
     await expect(result).rejects.toThrow('An error occurred while creating a DPoP proof: ');
 
   });
@@ -90,7 +90,7 @@ describe('generateKeys()', () => {
 
   it('should use ES256 algorithm by default', async () => {
 
-    const spy = jest.spyOn(generateKeyPairSpy, 'generateKeyPair');
+    const spy = jest.spyOn(generateKeyPairModule, 'generateKeyPair');
 
     const result = generateKeys();
     await expect(result).resolves.toBeUndefined();
@@ -107,7 +107,7 @@ describe('generateKeys()', () => {
 
   it('should use the algorithm provided by the user', async () => {
 
-    const spy = jest.spyOn(generateKeyPairSpy, 'generateKeyPair');
+    const spy = jest.spyOn(generateKeyPairModule, 'generateKeyPair');
 
     const result = generateKeys('ES512');
     await expect(result).resolves.toBeUndefined();

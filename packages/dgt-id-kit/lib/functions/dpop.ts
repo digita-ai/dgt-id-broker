@@ -38,7 +38,7 @@ export const generateKeys = async (algorithm: KeyGenerationAlgorithm = 'ES256'):
  * @param htu htu option
  * @returns DPoP proof string
  */
-export const createDPoPProof = async (htm: string, htu: string): Promise<string> => {
+export const createDpopProof = async (htm: string, htu: string): Promise<string> => {
 
   if (!htm) { throw new Error('Parameter "htm" should be set'); }
 
