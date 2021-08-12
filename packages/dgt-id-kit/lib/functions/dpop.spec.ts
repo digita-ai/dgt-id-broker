@@ -3,16 +3,12 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import * as generateKeyPairSpy from 'jose/util/generate_key_pair';
 import { store } from './storage';
 import { createDPoPProof, generateKeys } from './dpop';
 
-enableFetchMocks();
-
 beforeEach(() => {
 
-  fetchMock.resetMocks();
   jest.clearAllMocks();
 
 });
