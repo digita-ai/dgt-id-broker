@@ -6,6 +6,11 @@ import { parseJwk } from 'jose/jwk/parse';
 import { KeyGenerationAlgorithm } from '../models/key-generation-algorithm.model';
 import { store } from './storage';
 
+/**
+ * Generate a private- and public key and save them to the store in JWK format
+ *
+ * @param algorithm the desired algorithm to be used to generate the key pair
+ */
 export const generateKeys = async (algorithm: KeyGenerationAlgorithm = 'ES256'): Promise<void> => {
 
   try {
@@ -26,6 +31,13 @@ export const generateKeys = async (algorithm: KeyGenerationAlgorithm = 'ES256'):
 
 };
 
+/**
+ * Creates a DPoP proof signed by the private key that is stored in the store
+ *
+ * @param htm htm option
+ * @param htu htu option
+ * @returns DPoP proof string
+ */
 export const createDPoPProof = async (htm: string, htu: string): Promise<string> => {
 
   if (!htm) { throw new Error('Parameter "htm" should be set'); }
