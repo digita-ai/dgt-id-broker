@@ -8,3 +8,4 @@ export * from './functions/issuer';
 export * from './functions/web-id';
 export * from './functions/data';
 export * from './functions/validate-and-fetch';
+export * from './functions/pkce';
