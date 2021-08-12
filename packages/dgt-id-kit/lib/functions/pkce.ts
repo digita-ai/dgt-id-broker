@@ -1,6 +1,24 @@
 import CryptoJS from 'crypto-js';
+// import { store } from './storage';
 
-export const generateCodeVerifier = (length: number): string => {
+export const generateCodeVerifier = async (length: number): Promise<string> => {
+
+  if (!length) { throw new Error('Parameter "length" should be set'); }
+
+  if (length < 43) { throw new Error('A PKCE code_verifier has to be at least 43 characters long'); }
+
+  let codeVerifier = '';
+  const possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+
+  for (let i = 0; i < length; i++) {
+
+    codeVerifier += possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
+
+  }
+
+  // await store.set('codeVerifier', codeVerifier);
+
+  return codeVerifier;
 
 };
 
