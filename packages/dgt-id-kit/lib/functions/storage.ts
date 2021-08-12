@@ -1,8 +1,8 @@
 import { MemoryStore } from '@digita-ai/handlersjs-core';
-import { JWK, KeyLike } from 'jose/webcrypto/types';
+import { JWK } from 'jose/webcrypto/types';
 
 interface storeInterface  {
-  privateKey: KeyLike;
+  privateKey: JWK;
   publicKey: JWK;
 }
 
