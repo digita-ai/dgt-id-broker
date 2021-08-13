@@ -22,14 +22,6 @@ export const generateCodeVerifier = async (length: number): Promise<string> => {
 
 };
 
-export const generateCodeChallenge = (codeVerifier: string): string => {
-
-  console.log('');
-
-  return '';
-
-};
-
 export const base64UrlEncode = (string: string): string => {
 
   if (!string) { throw new Error('Parameter "string" should be set'); }
@@ -37,5 +29,15 @@ export const base64UrlEncode = (string: string): string => {
   const hash = CryptoJS.SHA256(string);
 
   return hash.toString(CryptoJS.enc.Base64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+};
+
+export const generateCodeChallenge = (codeVerifier: string): string => {
+
+  if (!codeVerifier) { throw new Error('Parameter "codeVerifier" should be set'); }
+
+  if (codeVerifier.length < 43) { throw new Error('A PKCE code_verifier has to be at least 43 characters long'); }
+
+  return base64UrlEncode(codeVerifier);
 
 };
