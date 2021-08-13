@@ -22,6 +22,19 @@ describe('validateAndFetch()', () => {
 
   });
 
+  it('should pass on the options to fetch if they were provided', async () => {
+
+    fetchMock.mockResponseOnce('response', { status: 200 });
+    const result = validateAndFetch('http://valid.url/', { method: 'POST' });
+    await expect(result).resolves.toBeTruthy();
+    const awaitedResult = await result;
+    expect(awaitedResult.status).toBe(200);
+    expect(await awaitedResult.text()).toBe('response');
+    // fetchMock does not allow us checking which options were added to the fetch request
+    // This test is only useful for coverage
+
+  });
+
   it('should throw when parameter "url" is undefined', async () => {
 
     const result = validateAndFetch(undefined);

@@ -4,7 +4,7 @@
  * @param url the url you want to fetch from
  * @returns the Response object from the fetch request
  */
-export const validateAndFetch = async (url: string): Promise<Response> => {
+export const validateAndFetch = async (url: string, options?: Record<string, unknown>): Promise<Response> => {
 
   if (!url) { throw new Error('Parameter "url" should be set'); }
 
@@ -18,6 +18,6 @@ export const validateAndFetch = async (url: string): Promise<Response> => {
 
   }
 
-  return fetch(url);
+  return options ? fetch(url, { ...options }) : fetch(url);
 
 };
