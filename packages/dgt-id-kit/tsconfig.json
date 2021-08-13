@@ -5,10 +5,12 @@
     "outDir": "dist",
     "emitDeclarationOnly": true,
     "module": "es2020",
-    "target": "es2015",
+    "target": "es2018",
     "strict": true
   },
-  "include": [ "lib" ],
+  "include": [
+    "lib", "test"
+  ],
   "exclude": [
     "**/*.spec.ts",
     "node_modules",
