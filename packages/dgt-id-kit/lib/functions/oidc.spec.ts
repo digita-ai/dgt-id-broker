@@ -1,3 +1,4 @@
+import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { mockedResponseValidSolidOidc, mockedResponseWithoutAuthEndpoint, validSolidOidcObject } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
@@ -16,7 +17,7 @@ const pkceCodeChallenge = 'pkceCodeChallenge';
 const responseType = 'responseType';
 const scope = 'scope';
 const redirectUri = 'redirectUri';
-const offline_access = false;
+const offlineAccess = false;
 const authorizationCode = 'authorizationCode';
 const refreshToken = 'refreshToken';
 const resource = 'http://resource.com';
@@ -47,93 +48,23 @@ describe('constructAuthRequestUrl()', () => {
 
   });
 
-  it('should throw when parameter issuer is undefined', async () => {
+  const constructAuthResuestUrlParams = { issuer, clientId, pkceCodeChallenge, responseType, scope, redirectUri };
+
+  it.each(Object.keys(constructAuthResuestUrlParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+
+    const testArgs = { ...constructAuthResuestUrlParams };
+    testArgs[keyToBeNull] = undefined;
 
     const result = constructAuthRequestUrl(
-      undefined,
-      clientId,
-      pkceCodeChallenge,
-      responseType,
-      scope,
-      redirectUri,
+      testArgs.issuer,
+      testArgs.clientId,
+      testArgs.pkceCodeChallenge,
+      testArgs.responseType,
+      testArgs.scope,
+      testArgs.redirectUri,
     );
 
-    await expect(result).rejects.toThrow('Parameter "issuer" should be set');
-
-  });
-
-  it('should throw when parameter clientId is undefined', async () => {
-
-    const result = constructAuthRequestUrl(
-      issuer,
-      undefined,
-      pkceCodeChallenge,
-      responseType,
-      scope,
-      redirectUri,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "clientId" should be set');
-
-  });
-
-  it('should throw when parameter pkceCodeChallenge is undefined', async () => {
-
-    const result = constructAuthRequestUrl(
-      issuer,
-      clientId,
-      undefined,
-      responseType,
-      scope,
-      redirectUri,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "pkceCodeChallenge" should be set');
-
-  });
-
-  it('should throw when parameter responseType is undefined', async () => {
-
-    const result = constructAuthRequestUrl(
-      issuer,
-      clientId,
-      pkceCodeChallenge,
-      undefined,
-      scope,
-      redirectUri,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "responseType" should be set');
-
-  });
-
-  it('should throw when parameter scope is undefined', async () => {
-
-    const result = constructAuthRequestUrl(
-      issuer,
-      clientId,
-      pkceCodeChallenge,
-      responseType,
-      undefined,
-      redirectUri,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "scope" should be set');
-
-  });
-
-  it('should throw when parameter redirectUri is undefined', async () => {
-
-    const result = constructAuthRequestUrl(
-      issuer,
-      clientId,
-      pkceCodeChallenge,
-      responseType,
-      scope,
-      undefined,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "redirectUri" should be set');
+    await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
 
   });
 
@@ -158,73 +89,22 @@ describe('constructAuthRequestUrl()', () => {
 
 describe('authRequest()', () => {
 
-  it('should throw when parameter issuer is undefined', async () => {
+  const authRequestParams = { issuer, clientId, scope, responseType, offlineAccess };
+
+  it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+
+    const testArgs = { ...authRequestParams };
+    testArgs[keyToBeNull] = undefined;
 
     const result = authRequest(
-      undefined,
-      clientId,
-      scope,
-      responseType,
-      offline_access,
+      testArgs.issuer,
+      testArgs.clientId,
+      testArgs.scope,
+      testArgs.responseType,
+      testArgs.offlineAccess,
     );
 
-    await expect(result).rejects.toThrow('Parameter "issuer" should be set');
-
-  });
-
-  it('should throw when parameter clientId is undefined', async () => {
-
-    const result = authRequest(
-      issuer,
-      undefined,
-      scope,
-      responseType,
-      offline_access,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "clientId" should be set');
-
-  });
-
-  it('should throw when parameter scope is undefined', async () => {
-
-    const result = authRequest(
-      issuer,
-      clientId,
-      undefined,
-      responseType,
-      offline_access,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "scope" should be set');
-
-  });
-
-  it('should throw when parameter responseType is undefined', async () => {
-
-    const result = authRequest(
-      issuer,
-      clientId,
-      scope,
-      undefined,
-      offline_access,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "responseType" should be set');
-
-  });
-
-  it('should throw when parameter offlineAccess is undefined', async () => {
-
-    const result = authRequest(
-      issuer,
-      clientId,
-      scope,
-      responseType,
-      undefined,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "offlineAccess" should be set');
+    await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
 
   });
 
@@ -232,55 +112,21 @@ describe('authRequest()', () => {
 
 describe('tokenRequest()', () => {
 
-  it('should throw when parameter issuer is undefined', async () => {
+  const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
+
+  it.each(Object.keys(tokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+
+    const testArgs = { ...tokenRequestParams };
+    testArgs[keyToBeNull] = undefined;
 
     const result = tokenRequest(
-      undefined,
-      clientId,
-      authorizationCode,
-      redirectUri,
+      testArgs.issuer,
+      testArgs.clientId,
+      testArgs.authorizationCode,
+      testArgs.redirectUri,
     );
 
-    await expect(result).rejects.toThrow('Parameter "issuer" should be set');
-
-  });
-
-  it('should throw when parameter clientId is undefined', async () => {
-
-    const result = tokenRequest(
-      issuer,
-      undefined,
-      authorizationCode,
-      redirectUri,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "clientId" should be set');
-
-  });
-
-  it('should throw when parameter authorizationCode is undefined', async () => {
-
-    const result = tokenRequest(
-      issuer,
-      clientId,
-      undefined,
-      redirectUri,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "authorizationCode" should be set');
-
-  });
-
-  it('should throw when parameter redirectUri is undefined', async () => {
-
-    const result = tokenRequest(
-      issuer,
-      clientId,
-      authorizationCode,
-      undefined,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "redirectUri" should be set');
+    await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
 
   });
 
@@ -288,55 +134,21 @@ describe('tokenRequest()', () => {
 
 describe('refreshTokenRequest()', () => {
 
-  it('should throw when parameter issuer is undefined', async () => {
+  const refreshTokenRequestParams = { issuer, clientId, refreshToken, scope };
+
+  it.each(Object.keys(refreshTokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+
+    const testArgs = { ...refreshTokenRequestParams };
+    testArgs[keyToBeNull] = undefined;
 
     const result = refreshTokenRequest(
-      undefined,
-      clientId,
-      refreshToken,
-      scope,
+      testArgs.issuer,
+      testArgs.clientId,
+      testArgs.refreshToken,
+      testArgs.scope,
     );
 
-    await expect(result).rejects.toThrow('Parameter "issuer" should be set');
-
-  });
-
-  it('should throw when parameter clientId is undefined', async () => {
-
-    const result = refreshTokenRequest(
-      issuer,
-      undefined,
-      refreshToken,
-      scope,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "clientId" should be set');
-
-  });
-
-  it('should throw when parameter refreshToken is undefined', async () => {
-
-    const result = refreshTokenRequest(
-      issuer,
-      clientId,
-      undefined,
-      scope,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "refreshToken" should be set');
-
-  });
-
-  it('should throw when parameter scope is undefined', async () => {
-
-    const result = refreshTokenRequest(
-      issuer,
-      clientId,
-      refreshToken,
-      undefined,
-    );
-
-    await expect(result).rejects.toThrow('Parameter "scope" should be set');
+    await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
 
   });
 
@@ -344,19 +156,19 @@ describe('refreshTokenRequest()', () => {
 
 describe('accessResource()', () => {
 
-  it('should throw when parameter resource is undefined', async () => {
+  const accessResourceParams = { resource, method };
 
-    const result = accessResource(undefined, method);
+  it.each(Object.keys(accessResourceParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
-    await expect(result).rejects.toThrow('Parameter "resource" should be set');
+    const testArgs = { ...accessResourceParams };
+    testArgs[keyToBeNull] = undefined;
 
-  });
+    const result = accessResource(
+      testArgs.resource,
+      testArgs.method as HttpMethod,
+    );
 
-  it('should throw when parameter method is undefined', async () => {
-
-    const result = accessResource(resource, undefined);
-
-    await expect(result).rejects.toThrow('Parameter "method" should be set');
+    await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
 
   });
 
