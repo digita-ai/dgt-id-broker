@@ -1,4 +1,4 @@
-import { base64UrlEncode, generateCodeVerifier } from './pkce';
+import { base64UrlEncode, generateCodeChallenge, generateCodeVerifier } from './pkce';
 import { store } from './storage';
 
 describe('generateCodeVerifier()', () => {
@@ -50,6 +50,25 @@ describe('generateCodeVerifier()', () => {
 });
 
 describe('generateCodeChallenge()', () => {
+
+  it('should return the right code challenge', async () => {
+
+    const result = generateCodeChallenge('ABCDEFGHIJKLNMOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz');
+    expect(result).toBe('AXtY816us6WnkZW6XWpJUg4GeB9rsKb9-_ZefTqm66U');
+
+  });
+
+  it('should throw when parameter codeVerifier is undefined', async () => {
+
+    expect(() => generateCodeChallenge(undefined)).toThrow('Parameter "codeVerifier" should be set');
+
+  });
+
+  it('should throw when parameter codeVerifier has less than 43 characters', async () => {
+
+    expect(() => generateCodeChallenge('short')).toThrow('A PKCE code_verifier has to be at least 43 characters long');
+
+  });
 
 });
 
