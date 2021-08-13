@@ -26,8 +26,10 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
+    "@digita-ai/handlersjs-core": "0.3.2",
     "@digita-ai/inrupt-solid-client": "0.4.0",
     "crypto-js": "^4.1.1",
+    "jose": "^3.14.3",
     "n3": "^1.11.0",
     "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
@@ -69,9 +71,10 @@
   "jest": {
     "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",
+    "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 97.92,
+        "branches": 98.25,
         "functions": 100,
         "lines": 100,
         "statements": 100
@@ -80,6 +83,9 @@
     "testPathIgnorePatterns": [
       "lib-old"
     ],
+    "moduleNameMapper": {
+      "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
+    },
     "coveragePathIgnorePatterns": [
       "<rootDir>/dist/",
       "<rootDir>/coverage/",
