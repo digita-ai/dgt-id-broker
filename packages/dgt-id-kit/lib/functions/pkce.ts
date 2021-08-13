@@ -13,14 +13,10 @@ export const generateCodeVerifier = async (length: number): Promise<string> => {
 
   if (length < 43) { throw new Error('A PKCE code_verifier has to be at least 43 characters long'); }
 
-  let codeVerifier = '';
+  if (length > 128) { throw new Error('A PKCE code_verifier can not contain more than 128 characters'); }
+
   const possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-
-  for (let i = 0; i < length; i++) {
-
-    codeVerifier += possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
-
-  }
+  const codeVerifier = [ ...Array(length).keys() ].map(() => possibleChars.charAt(Math.floor(Math.random() * possibleChars.length))).join('');
 
   await store.set('codeVerifier', codeVerifier);
 
@@ -55,6 +51,8 @@ export const generateCodeChallenge = (codeVerifier: string): string => {
   if (!codeVerifier) { throw new Error('Parameter "codeVerifier" should be set'); }
 
   if (codeVerifier.length < 43) { throw new Error('A PKCE code_verifier has to be at least 43 characters long'); }
+
+  if (codeVerifier.length > 128) { throw new Error('A PKCE code_verifier can not contain more than 128 characters'); }
 
   return base64UrlEncode(codeVerifier);
 

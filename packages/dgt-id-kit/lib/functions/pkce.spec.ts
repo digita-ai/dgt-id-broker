@@ -8,8 +8,8 @@ describe('generateCodeVerifier()', () => {
     const result = generateCodeVerifier(100);
     await expect(result).resolves.toHaveLength(100);
 
-    const result2 = generateCodeVerifier(200);
-    await expect(result2).resolves.toHaveLength(200);
+    const result2 = generateCodeVerifier(70);
+    await expect(result2).resolves.toHaveLength(70);
 
   });
 
@@ -28,7 +28,7 @@ describe('generateCodeVerifier()', () => {
     const result = await generateCodeVerifier(100);
     expect(result).toBeDefined();
 
-    const regex = /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-\.\_\~]+$/;
+    const regex = /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-\.\_\~]{43,128}$/;
     expect(regex.test(result)).toBe(true);
 
   });
@@ -44,6 +44,13 @@ describe('generateCodeVerifier()', () => {
 
     const result = generateCodeVerifier(42);
     await expect(result).rejects.toThrow('A PKCE code_verifier has to be at least 43 characters long');
+
+  });
+
+  it('should throw when parameter length is greater than 128', async () => {
+
+    const result = generateCodeVerifier(129);
+    await expect(result).rejects.toThrow('A PKCE code_verifier can not contain more than 128 characters');
 
   });
 
@@ -67,6 +74,14 @@ describe('generateCodeChallenge()', () => {
   it('should throw when parameter codeVerifier has less than 43 characters', async () => {
 
     expect(() => generateCodeChallenge('short')).toThrow('A PKCE code_verifier has to be at least 43 characters long');
+
+  });
+
+  it('should throw when parameter length is greater than 128', async () => {
+
+    const temp = 'longlonglonglonglonglonglonglong';
+    const string = temp + temp + temp + temp + temp + temp;
+    expect(() => generateCodeChallenge(string)).toThrow('A PKCE code_verifier can not contain more than 128 characters');
 
   });
 
