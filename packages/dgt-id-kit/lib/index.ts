@@ -11,3 +11,4 @@ export * from './functions/data';
 export * from './functions/dpop';
 export * from './functions/storage';
 export * from './functions/validate-and-fetch';
+export * from './functions/pkce';
