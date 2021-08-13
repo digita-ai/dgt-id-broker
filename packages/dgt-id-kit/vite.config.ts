@@ -6,7 +6,7 @@ export default ({ command, mode }) => {
     return defineConfig({
       root: 'lib',
       build: {
-          target: 'es2015',
+          target: 'es2018',
           outDir: '../dist'
       },
       server: {
@@ -17,7 +17,7 @@ export default ({ command, mode }) => {
     return defineConfig({
       root: 'lib',
       build: {
-          target: 'es2015',
+          target: 'es2018',
           lib: {
               entry: path.resolve(__dirname, 'lib/index.ts'),
               name: '@digita-ai/workid-components'

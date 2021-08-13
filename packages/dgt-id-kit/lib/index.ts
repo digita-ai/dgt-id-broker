@@ -7,4 +7,6 @@ export * from './models/discovery-endpoint-field.model';
 export * from './functions/issuer';
 export * from './functions/web-id';
 export * from './functions/data';
+export * from './functions/dpop';
+export * from './functions/storage';
 export * from './functions/validate-and-fetch';
