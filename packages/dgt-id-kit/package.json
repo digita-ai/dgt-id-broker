@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@digita-ai/handlersjs-core": "0.3.2",
+    "@digita-ai/handlersjs-http": "0.3.2",
     "@digita-ai/inrupt-solid-client": "0.4.0",
     "jose": "^3.14.3",
     "n3": "^1.11.0",
