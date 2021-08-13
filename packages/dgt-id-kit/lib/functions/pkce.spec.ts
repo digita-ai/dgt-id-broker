@@ -1,4 +1,5 @@
 import { base64UrlEncode, generateCodeVerifier } from './pkce';
+import { store } from './storage';
 
 describe('generateCodeVerifier()', () => {
 
@@ -12,15 +13,15 @@ describe('generateCodeVerifier()', () => {
 
   });
 
-  // it('should save the code verifier to the store', async () => {
+  it('should save the code verifier to the store', async () => {
 
-  //   const result = await generateCodeVerifier(50);
-  //   const instore = await store.get('codeVerifier');
-  //   expect(instore).toBeDefined();
-  //   expect(instore).toBe(result);
-  //   await expect(store.has('codeVerifier')).resolves.toBe(true);
+    const result = await generateCodeVerifier(50);
+    const inStore = await store.get('codeVerifier');
+    expect(inStore).toBeDefined();
+    expect(inStore).toBe(result);
+    await expect(store.has('codeVerifier')).resolves.toBe(true);
 
-  // });
+  });
 
   it('should return a code verifier that only contains valid code verifier characters', async () => {
 

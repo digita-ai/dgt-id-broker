@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-// import { store } from './storage';
+import { store } from './storage';
 
 export const generateCodeVerifier = async (length: number): Promise<string> => {
 
@@ -16,13 +16,17 @@ export const generateCodeVerifier = async (length: number): Promise<string> => {
 
   }
 
-  // await store.set('codeVerifier', codeVerifier);
+  await store.set('codeVerifier', codeVerifier);
 
   return codeVerifier;
 
 };
 
 export const generateCodeChallenge = (codeVerifier: string): string => {
+
+  console.log('');
+
+  return '';
 
 };
 
