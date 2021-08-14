@@ -95,11 +95,12 @@ export const validSolidOidcObject = {
   solid_oidc_supported: 'https://solidproject.org/TR/solid-oidc',
 };
 
-export const WithoutAuthEndpointObject = {
+export const WithoutEndpointsObject = {
   ...validSolidOidcObject,
   authorization_endpoint: undefined,
+  token_endpoint: undefined,
 };
 
 export const mockedResponseInvalidSolidOidc = JSON.stringify(invalidSolidOidcObject);
 export const mockedResponseValidSolidOidc = JSON.stringify(validSolidOidcObject);
-export const mockedResponseWithoutAuthEndpoint = JSON.stringify(WithoutAuthEndpointObject);
+export const mockedResponseWithoutEndpoints = JSON.stringify(WithoutEndpointsObject);

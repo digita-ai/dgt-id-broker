@@ -1,7 +1,13 @@
+// Fix to be able to run tests in jsdom
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { mockedResponseValidSolidOidc, mockedResponseWithoutAuthEndpoint, validSolidOidcObject } from '../../test/test-data';
+import { mockedResponseValidSolidOidc, mockedResponseWithoutEndpoints, validSolidOidcObject } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
+import { store } from './storage';
 
 enableFetchMocks();
 
@@ -70,7 +76,7 @@ describe('constructAuthRequestUrl()', () => {
 
   it('should throw when no authorization endpoint was found for the given issuer', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseWithoutAuthEndpoint);
+    fetchMock.mockResponseOnce(mockedResponseWithoutEndpoints);
 
     const result = constructAuthRequestUrl(
       issuer,
@@ -88,6 +94,27 @@ describe('constructAuthRequestUrl()', () => {
 });
 
 describe('authRequest()', () => {
+
+  it('should perform a fetch request to the desired url', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ 'Does not matter', { status: 200 } ]
+    );
+
+    await authRequest(issuer, clientId, scope, responseType, offlineAccess);
+    const requestedUrl = fetchMock.mock.calls[1][0];
+
+    expect(requestedUrl).toBeDefined();
+    expect(requestedUrl).toContain(`${validSolidOidcObject.authorization_endpoint}?`);
+    expect(requestedUrl).toContain(`client_id=${clientId}`);
+    expect(requestedUrl).toContain(`code_challenge=`);
+    expect(requestedUrl).toContain(`code_challenge_method=S256`);
+    expect(requestedUrl).toContain(`response_type=${responseType}`);
+    expect(requestedUrl).toContain(`scope=${scope}`);
+    expect(requestedUrl).toContain(`redirect_uri=`);
+
+  });
 
   const authRequestParams = { issuer, clientId, scope, responseType, offlineAccess };
 
@@ -111,6 +138,70 @@ describe('authRequest()', () => {
 });
 
 describe('tokenRequest()', () => {
+
+  it('should perform a fetch request to the desired url', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({}), { status: 200 } ]
+    );
+
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+
+    expect(fetchMock.mock.calls[1][0]).toBe(validSolidOidcObject.token_endpoint);
+
+  });
+
+  it('should save the tokens returned by the server to the store when they are present', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' }), { status: 200 } ]
+    );
+
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+
+    await expect(store.has('accessToken')).resolves.toBe(true);
+    await expect(store.get('accessToken')).resolves.toBe('at');
+    await store.delete('accessToken');
+    await expect(store.has('idToken')).resolves.toBe(true);
+    await expect(store.get('idToken')).resolves.toBe('it');
+    await store.delete('idToken');
+    await expect(store.has('refreshToken')).resolves.toBe(true);
+    await expect(store.get('refreshToken')).resolves.toBe('rt');
+    await store.delete('refreshToken');
+
+  });
+
+  it('should not save the tokens (not) returned by the server to the store when they are not present', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({}), { status: 200 } ]
+    );
+
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+
+    await expect(store.has('accessToken')).resolves.toBe(false);
+    await expect(store.has('idToken')).resolves.toBe(false);
+    await expect(store.has('refreshToken')).resolves.toBe(false);
+
+  });
+
+  it('should throw when no token endpoint was found for the given issuer', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseWithoutEndpoints);
+
+    const result = tokenRequest(
+      issuer,
+      clientId,
+      authorizationCode,
+      redirectUri,
+    );
+
+    await expect(result).rejects.toThrow(`No token endpoint was found for issuer ${issuer}`);
+
+  });
 
   const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
 
