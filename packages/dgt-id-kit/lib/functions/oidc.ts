@@ -45,7 +45,9 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   responseType: string,
+  redirectUri: string,
   offlineAccess: boolean,
+  // not used yet
 ): Promise<void> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
@@ -56,13 +58,12 @@ export const authRequest = async (
 
   if (!scope) { throw new Error('Parameter "scope" should be set'); }
 
+  if (!redirectUri) { throw new Error('Parameter "redirectUri" should be set'); }
+
   if (offlineAccess === undefined) { throw new Error('Parameter "offlineAccess" should be set'); }
 
   const codeVerifier = await generateCodeVerifier(128);
   const codeChallenge = generateCodeChallenge(codeVerifier);
-  // Not sure what to use here, might need to update the test as well
-  // redirect_uri=http%3A%2F%2F${env.VITE_IP}:${env.VITE_PORT}%2Frequests.html
-  const redirectUri = 'placeholder';
 
   const requestUrl = await constructAuthRequestUrl(
     issuer,
@@ -83,7 +84,6 @@ export const tokenRequest = async (
   authorizationCode: string,
   redirectUri: string,
   clientSecret?: string,
-  // when is clientSecret used ??
 ): Promise<void> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
@@ -99,15 +99,24 @@ export const tokenRequest = async (
   if (!tokenEndpoint) { throw new Error(`No token endpoint was found for issuer ${issuer}`); }
 
   const method = 'POST';
-  const dpopProof = createDpopProof(method, tokenEndpoint);
+  const dpopProof = await createDpopProof(method, tokenEndpoint);
+  const codeVerifier = await store.get('codeVerifier');
+
+  const data = new URLSearchParams();
+  data.set('grant_type', 'authorization_code');
+  data.set('code', authorizationCode);
+  data.set('client_id', clientId);
+  data.set('redirect_uri', redirectUri);
+  data.set('code_verifier', codeVerifier);
+
+  if (clientSecret) { data.set('client_secret', clientSecret); }
 
   const response = await validateAndFetch(tokenEndpoint, {
     method,
     headers: {
       'DPoP': dpopProof,
     },
-    // what is data here ??
-    body: 'blabla',
+    body: data,
   });
 
   const parsed = await response.json();
@@ -134,14 +143,39 @@ export const refreshTokenRequest = async (
 
   if (!scope) { throw new Error('Parameter "scope" should be set'); }
 
+  if (!scope.includes('openid')) { throw new Error('Parameter "scope" should contain the "openid"'); }
+
   if (!refreshToken) { throw new Error('Parameter "refreshToken" should be set'); }
 
-  // NEED PKCE i guess ?
+  const tokenEndpoint = await getEndpoint(issuer, 'token_endpoint');
 
-  // Send a request using a refresh_token. Store the access_token and id_token in
-  // the global store.
+  if (!tokenEndpoint) { throw new Error(`No token endpoint was found for issuer ${issuer}`); }
 
-  // Make sure the request is still valid for both the PKCE spec, and the DPoP spec.
+  const method = 'POST';
+  const dpopProof = await createDpopProof(method, tokenEndpoint);
+  const codeVerifier = await store.get('codeVerifier');
+
+  const data = new URLSearchParams();
+  data.set('grant_type', 'refresh_token');
+  data.set('client_id', clientId);
+  data.set('code_verifier', codeVerifier);
+  data.set('scope', scope);
+
+  if (clientSecret) { data.set('client_secret', clientSecret); }
+
+  const response = await validateAndFetch(tokenEndpoint, {
+    method,
+    headers: {
+      'DPoP': dpopProof,
+    },
+    body: data,
+  });
+
+  const parsed = await response.json();
+
+  if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+
+  if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
 
 };
 
