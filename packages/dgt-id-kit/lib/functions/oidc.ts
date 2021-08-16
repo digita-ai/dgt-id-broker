@@ -94,6 +94,8 @@ export const tokenRequest = async (
   const dpopProof = await createDpopProof(method, tokenEndpoint);
   const codeVerifier = await store.get('codeVerifier');
 
+  if (!codeVerifier) { throw new Error('No code verifier was found in the store'); }
+
   const data = new URLSearchParams();
   data.set('grant_type', 'authorization_code');
   data.set('code', authorizationCode);
@@ -147,6 +149,8 @@ export const refreshTokenRequest = async (
   const dpopProof = await createDpopProof(method, tokenEndpoint);
   const codeVerifier = await store.get('codeVerifier');
 
+  if (!codeVerifier) { throw new Error('No code verifier was found in the store'); }
+
   const data = new URLSearchParams();
   data.set('grant_type', 'refresh_token');
   data.set('client_id', clientId);
@@ -183,6 +187,9 @@ export const accessResource = async (
   if (!method) { throw new Error('Parameter "method" should be set'); }
 
   const accessToken = await store.get('accessToken');
+
+  if (!accessToken) { throw new Error('No access token was found in the store'); }
+
   const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
   const exp = tokenBody?.exp;
 
