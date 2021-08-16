@@ -9,7 +9,6 @@ export const constructAuthRequestUrl = async (
   issuer: string,
   clientId: string,
   pkceCodeChallenge: string,
-  responseType: string,
   scope: string,
   redirectUri: string,
 ): Promise<string> => {
@@ -19,8 +18,6 @@ export const constructAuthRequestUrl = async (
   if (!clientId) { throw new Error('Parameter "clientId" should be set'); }
 
   if (!pkceCodeChallenge) { throw new Error('Parameter "pkceCodeChallenge" should be set'); }
-
-  if (!responseType) { throw new Error('Parameter "responseType" should be set'); }
 
   if (!scope) { throw new Error('Parameter "scope" should be set'); }
 
@@ -34,8 +31,8 @@ export const constructAuthRequestUrl = async (
     `client_id=${clientId}&` +
     `code_challenge=${pkceCodeChallenge}&` +
     `code_challenge_method=S256&` +
-    `response_type=${responseType}&` +
-    `scope=${scope}&` +
+    `response_type=code&` +
+    `scope=${encodeURIComponent(scope)}&` +
     `redirect_uri=${encodeURIComponent(redirectUri)}`;
 
 };
@@ -44,7 +41,6 @@ export const authRequest = async (
   issuer: string,
   clientId: string,
   scope: string,
-  responseType: string,
   redirectUri: string,
   offlineAccess: boolean,
   // not used yet
@@ -53,8 +49,6 @@ export const authRequest = async (
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
   if (!clientId) { throw new Error('Parameter "clientId" should be set'); }
-
-  if (!responseType) { throw new Error('Parameter "responseType" should be set'); }
 
   if (!scope) { throw new Error('Parameter "scope" should be set'); }
 
@@ -69,8 +63,7 @@ export const authRequest = async (
     issuer,
     clientId,
     codeChallenge,
-    responseType,
-    scope,
+    offlineAccess ? `${scope} offline_access`: scope,
     redirectUri,
   );
 

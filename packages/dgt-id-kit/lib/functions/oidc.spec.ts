@@ -21,7 +21,6 @@ beforeEach(() => {
 const issuer = 'http://issuer.com';
 const clientId = 'clientId';
 const pkceCodeChallenge = 'pkceCodeChallenge';
-const responseType = 'responseType';
 const scope = 'scopeopenid';
 const redirectUri = 'redirectUri';
 const offlineAccess = false;
@@ -41,7 +40,6 @@ describe('constructAuthRequestUrl()', () => {
       issuer,
       clientId,
       pkceCodeChallenge,
-      responseType,
       scope,
       redirectUri,
     );
@@ -50,13 +48,13 @@ describe('constructAuthRequestUrl()', () => {
     await expect(result).resolves.toContain(`client_id=${clientId}`);
     await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
     await expect(result).resolves.toContain(`code_challenge_method=S256`);
-    await expect(result).resolves.toContain(`response_type=${responseType}`);
+    await expect(result).resolves.toContain(`response_type=code`);
     await expect(result).resolves.toContain(`scope=${scope}`);
     await expect(result).resolves.toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
 
   });
 
-  const constructAuthResuestUrlParams = { issuer, clientId, pkceCodeChallenge, responseType, scope, redirectUri };
+  const constructAuthResuestUrlParams = { issuer, clientId, pkceCodeChallenge, scope, redirectUri };
 
   it.each(Object.keys(constructAuthResuestUrlParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -67,7 +65,6 @@ describe('constructAuthRequestUrl()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.pkceCodeChallenge,
-      testArgs.responseType,
       testArgs.scope,
       testArgs.redirectUri,
     );
@@ -84,7 +81,6 @@ describe('constructAuthRequestUrl()', () => {
       issuer,
       clientId,
       pkceCodeChallenge,
-      responseType,
       scope,
       redirectUri,
     );
@@ -104,7 +100,7 @@ describe('authRequest()', () => {
       [ 'Does not matter', { status: 200 } ]
     );
 
-    await authRequest(issuer, clientId, scope, responseType, redirectUri, offlineAccess);
+    await authRequest(issuer, clientId, scope, redirectUri, offlineAccess);
     const requestedUrl = fetchMock.mock.calls[1][0];
 
     expect(requestedUrl).toBeDefined();
@@ -112,13 +108,28 @@ describe('authRequest()', () => {
     expect(requestedUrl).toContain(`client_id=${clientId}`);
     expect(requestedUrl).toContain(`code_challenge=`);
     expect(requestedUrl).toContain(`code_challenge_method=S256`);
-    expect(requestedUrl).toContain(`response_type=${responseType}`);
+    expect(requestedUrl).toContain(`response_type=code`);
     expect(requestedUrl).toContain(`scope=${scope}`);
     expect(requestedUrl).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
 
   });
 
-  const authRequestParams = { issuer, clientId, scope, responseType, redirectUri, offlineAccess };
+  it('should add "offline_access" to the scope when parameter offlineAccess is true', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ 'Does not matter', { status: 200 } ]
+    );
+
+    await authRequest(issuer, clientId, scope, redirectUri, true);
+    const requestedUrl = fetchMock.mock.calls[1][0];
+
+    expect(requestedUrl).toBeDefined();
+    expect(/scope.*?offline_access/g.test(requestedUrl.toString())).toBe(true);
+
+  });
+
+  const authRequestParams = { issuer, clientId, scope, redirectUri, offlineAccess };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -129,7 +140,6 @@ describe('authRequest()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.scope,
-      testArgs.responseType,
       testArgs.redirectUri,
       testArgs.offlineAccess,
     );
