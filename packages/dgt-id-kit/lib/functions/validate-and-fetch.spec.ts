@@ -30,8 +30,7 @@ describe('validateAndFetch()', () => {
     const awaitedResult = await result;
     expect(awaitedResult.status).toBe(200);
     expect(await awaitedResult.text()).toBe('response');
-    // fetchMock does not allow us checking which options were added to the fetch request
-    // This test is only useful for coverage
+    expect(fetchMock.mock.calls[0][1].method).toBe('POST');
 
   });
 
