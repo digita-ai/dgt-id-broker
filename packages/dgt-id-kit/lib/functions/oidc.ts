@@ -43,7 +43,6 @@ export const authRequest = async (
   scope: string,
   redirectUri: string,
   offlineAccess: boolean,
-  // not used yet
 ): Promise<void> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
@@ -177,21 +176,39 @@ export const accessResource = async (
   method: HttpMethod,
   body?: string,
   contentType?: string,
-): Promise<void> => {
+): Promise<Response> => {
 
-  // change return type to Response, changed to void to run tests
   if (!resource) { throw new Error('Parameter "resource" should be set'); }
 
   if (!method) { throw new Error('Parameter "method" should be set'); }
 
-  // Send a request with the DPoP bound access_token from the store to the
-  // resource server. Check that the access_token has not expired and is still valid.
-  // If it is not valid, a new one can be requested using the refresh_token and the
-  // refreshTokenRequest function. Make sure to use the createDpopProof function as a
-  // valid DPoP proof will be necessary for every request to a resource.
-  // In this case the resource url will be the htu, and the method will be the htm.
+  const accessToken = await store.get('accessToken');
+  const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
+  const exp = tokenBody?.exp;
+
+  if (+new Date() > exp) {
+
+    // accessToken has expired, refreshing
+
+    // Check that the access_token has not expired and is still valid.
+    // If it is not valid, a new one can be requested using the refresh_token and the
+    // refreshTokenRequest function.
+
+  }
+
+  const dpopProof = await createDpopProof(method, resource);
+
+  return await validateAndFetch(resource, {
+    method,
+    headers: {
+      'Authorization': `DPoP ${accessToken}`,
+      'DPoP': dpopProof,
+      ... (contentType && { 'Content-Type': contentType }),
+    },
+    ... (body && { body }),
+  });
+
   // Check that the body is present for any method that would require it (such as POST).
-  // Content-type is not required. If it’s omitted, don’t add it to the request.
-  // This function should return the fetched Response.
+  // -- Not implementing this check for now as the HTTP spec does not require a body for ANY method
 
 };
