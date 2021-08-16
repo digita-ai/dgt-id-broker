@@ -5,7 +5,7 @@ global.TextDecoder = TextDecoder;
 
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { mockedResponseValidSolidOidc, mockedResponseWithoutEndpoints, validSolidOidcObject } from '../../test/test-data';
+import { dummyValidAccessToken, mockedResponseValidSolidOidc, mockedResponseWithoutEndpoints, validSolidOidcObject } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import { store } from './storage';
 import { generateKeys } from './dpop';
@@ -29,6 +29,8 @@ const refreshToken = 'refreshToken';
 const resource = 'http://resource.com';
 const method = 'GET';
 const clientSecret = 'clientSecret';
+const body = 'body';
+const contentType = 'contentType';
 
 describe('constructAuthRequestUrl()', () => {
 
@@ -446,6 +448,76 @@ describe('refreshTokenRequest()', () => {
 });
 
 describe('accessResource()', () => {
+
+  beforeEach(async (done) => {
+
+    await generateKeys();
+    await store.set('accessToken', dummyValidAccessToken);
+    done();
+
+  });
+
+  it('should perform a fetch request to the desired url with the provided method', async () => {
+
+    fetchMock.mockResponseOnce('');
+
+    await accessResource(resource, 'GET');
+
+    expect(fetchMock.mock.calls[0][0]).toBe(resource);
+    expect(fetchMock.mock.calls[0][1].method).toBe('GET');
+
+  });
+
+  it('should perform a fetch request with the right headers', async () => {
+
+    fetchMock.mockResponseOnce('');
+
+    await accessResource(resource, 'GET');
+    const headers = fetchMock.mock.calls[0][1]?.headers;
+    expect(headers).toBeDefined();
+
+    expect(headers['DPoP']).toBeDefined();
+    expect(headers['DPoP']).toBeTruthy();
+    expect(headers['Authorization']).toBeDefined();
+    expect(headers['Authorization']).toBeTruthy();
+
+    //
+
+    fetchMock.mockResponseOnce('');
+
+    await accessResource(resource, 'POST', body, contentType);
+    const headers2 = fetchMock.mock.calls[1][1]?.headers;
+    expect(headers2).toBeDefined();
+
+    expect(headers2['DPoP']).toBeDefined();
+    expect(headers2['DPoP']).toBeTruthy();
+    expect(headers2['Authorization']).toBeDefined();
+    expect(headers2['Authorization']).toBeTruthy();
+    expect(headers2['Content-Type']).toBeDefined();
+    expect(headers2['Content-Type']).toBe(contentType);
+
+  });
+
+  it('should perform a fetch request with the correct body', async () => {
+
+    fetchMock.mockResponseOnce('');
+
+    await accessResource(resource, 'GET', undefined, contentType);
+
+    const responseBody = fetchMock.mock.calls[0][1]?.body;
+    expect(responseBody).toBeUndefined();
+
+    //
+
+    fetchMock.mockResponseOnce('');
+
+    await accessResource(resource, 'POST', body, contentType);
+
+    const responseBody2 = fetchMock.mock.calls[1][1]?.body;
+    expect(responseBody2).toBeDefined();
+    expect(responseBody2).toBe(body);
+
+  });
 
   const accessResourceParams = { resource, method };
 
