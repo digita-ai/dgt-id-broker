@@ -188,11 +188,11 @@ export const accessResource = async (
 
   if (+new Date() > exp) {
 
-    // accessToken has expired, refreshing
+    // const refreshToken = await store.get('refreshToken');
 
-    // Check that the access_token has not expired and is still valid.
-    // If it is not valid, a new one can be requested using the refresh_token and the
-    // refreshTokenRequest function.
+    // await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+
+    // accessToken = await store.get('accessToken');
 
   }
 
