@@ -203,18 +203,18 @@ describe('tokenRequest()', () => {
 
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
 
-    const body = fetchMock.mock.calls[1][1]?.body;
-    expect(body).toBeDefined();
+    const body1 = fetchMock.mock.calls[1][1]?.body;
+    expect(body1).toBeDefined();
 
-    const stringBody = body.toString();
-    expect(stringBody).toContain('grant_type=authorization_code');
-    expect(stringBody).toContain(`code=${authorizationCode}`);
-    expect(stringBody).toContain(`client_id=${clientId}`);
-    expect(stringBody).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    const stringBody1 = body1.toString();
+    expect(stringBody1).toContain('grant_type=authorization_code');
+    expect(stringBody1).toContain(`code=${authorizationCode}`);
+    expect(stringBody1).toContain(`client_id=${clientId}`);
+    expect(stringBody1).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
     // encodeURIComponent() does not encode ~
     const verifier = await store.get('codeVerifier');
-    expect(stringBody).toContain(`code_verifier=${verifier.split('~').join('%7E')}`);
-    expect(stringBody).not.toContain(`client_secret=`);
+    expect(stringBody1).toContain(`code_verifier=${verifier.split('~').join('%7E')}`);
+    expect(stringBody1).not.toContain(`client_secret=`);
 
     //
 
@@ -370,17 +370,17 @@ describe('refreshTokenRequest()', () => {
 
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
 
-    const body = fetchMock.mock.calls[1][1]?.body;
-    expect(body).toBeDefined();
+    const body1 = fetchMock.mock.calls[1][1]?.body;
+    expect(body1).toBeDefined();
 
-    const stringBody = body.toString();
-    expect(stringBody).toContain('grant_type=refresh_token');
-    expect(stringBody).toContain(`client_id=${clientId}`);
-    expect(stringBody).toContain(`scope=${scope}`);
+    const stringBody1 = body1.toString();
+    expect(stringBody1).toContain('grant_type=refresh_token');
+    expect(stringBody1).toContain(`client_id=${clientId}`);
+    expect(stringBody1).toContain(`scope=${scope}`);
     // encodeURIComponent() does not encode ~
     const verifier = await store.get('codeVerifier');
-    expect(stringBody).toContain(`code_verifier=${verifier.split('~').join('%7E')}`);
-    expect(stringBody).not.toContain(`client_secret=`);
+    expect(stringBody1).toContain(`code_verifier=${verifier.split('~').join('%7E')}`);
+    expect(stringBody1).not.toContain(`client_secret=`);
 
     //
 

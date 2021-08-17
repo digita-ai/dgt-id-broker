@@ -9,6 +9,7 @@ import { validateAndFetch } from './validate-and-fetch';
  * @param issuer the url of the oidc issuer
  * @returns the openid-configuration of the issuer as json
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
