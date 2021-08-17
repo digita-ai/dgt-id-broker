@@ -2,7 +2,8 @@ import { generateKeyPair } from 'jose/util/generate_key_pair'
 import { fromKeyLike } from 'jose/jwk/from_key_like'
 import { SignJWT } from 'jose/jwt/sign'
 import { v4 as uuid } from 'uuid'
-import CryptoJS from 'crypto-js'
+import { Buffer } from 'buffer'
+import { encode as base64UrlEncode } from "jose/util/base64url";
 
 // Importing the environment variables defined in the .env file.
 const env = import.meta.env
@@ -24,11 +25,6 @@ const code = params.get("code");
 // Global variables that are instantiated in instantiateJWTsForDPoP()
 let publicJwk;
 let privateKey;
-
-// function we need to create the 'ath' claim in the dpop proof we send to the resource server.
-function base64URL(string) {
-  return string.toString(CryptoJS.enc.Base64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-}
 
 // Post request to get an access token
 async function postDataToGetAccessToken(url, data) {
@@ -63,11 +59,18 @@ async function postDataToGetAccessToken(url, data) {
 // Get request to the resource we are attempting to view.
 async function getResource(url, access_token) {
 
+    console.log(access_token)
+    // Use web crypto, because normal crypto is not available in the browser
+    const digest = await window.crypto.subtle.digest("SHA-256", Buffer.from(access_token, "ascii"))
+    // digest() returns an ArrayBuffer, but we need a Uint8Array, so we transform it, then base64 URL encode it
+    const ath = base64UrlEncode(new Uint8Array(digest));
+    console.log(ath)
+
     // Create the DPoP-proof for the resource server request.
     const dpopJwtForResource = await new SignJWT({
         'htm': 'GET',
         'htu': `${env.VITE_RESOURCE_URI}`,
-        'ath': base64URL(CryptoJS.SHA256(access_token))
+        'ath': ath
     })
         .setProtectedHeader({
             alg: 'ES256',
