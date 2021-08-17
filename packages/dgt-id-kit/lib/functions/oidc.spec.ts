@@ -465,7 +465,7 @@ describe('refreshTokenRequest()', () => {
 
     const result = refreshTokenRequest(issuer, clientId, refreshToken, 'scope');
 
-    await expect(result).rejects.toThrow(`Parameter "scope" should contain the "openid"`);
+    await expect(result).rejects.toThrow(`Parameter "scope" should contain "openid"`);
 
   });
 

@@ -154,7 +154,7 @@ export const refreshTokenRequest = async (
 
   if (!scope) { throw new Error('Parameter "scope" should be set'); }
 
-  if (!scope.includes('openid')) { throw new Error('Parameter "scope" should contain the "openid"'); }
+  if (!scope.includes('openid')) { throw new Error('Parameter "scope" should contain "openid"'); }
 
   if (!refreshToken) { throw new Error('Parameter "refreshToken" should be set'); }
 
