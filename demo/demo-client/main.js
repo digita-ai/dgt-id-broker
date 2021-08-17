@@ -1,5 +1,5 @@
 import './style.css'
-import CryptoJS from 'crypto-js'
+import { encode as base64UrlEncode } from "jose/util/base64url";
 
 // Importing the environment variables defined in the .env file.
 const env = import.meta.env
@@ -12,7 +12,7 @@ const code_verifier = generateRandomString(128);
 sessionStorage.setItem("pkce_code_verifier", code_verifier);
 
 // Hash and base64-urlencode the code_verifier to use as the code_challenge. We will send the code_challenge on in the url of our redirect to the /auth endpoint.
-const code_challenge = generateCodeChallenge(code_verifier);
+const code_challenge = await generateCodeChallenge(code_verifier);
 
 // Redirect the user to the /auth endpoint of the identity provider to get an authentication code which will later be used to get an access token.
 // The necessary parameters are set in the url.
@@ -30,10 +30,7 @@ function generateRandomString(length) {
   return text;
 }
 
-function generateCodeChallenge(code_verifier) {
-  return base64URL(CryptoJS.SHA256(code_verifier))
-}
-
-function base64URL(string) {
-  return string.toString(CryptoJS.enc.Base64).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+async function generateCodeChallenge(code_verifier) {
+  const hash = await window.crypto.subtle.digest("SHA-256", new TextEncoder("utf-8").encode(code_verifier))
+  return base64UrlEncode(new Uint8Array(hash))
 }
