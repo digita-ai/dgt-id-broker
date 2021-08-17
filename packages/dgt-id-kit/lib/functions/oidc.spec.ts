@@ -23,7 +23,6 @@ const clientId = 'clientId';
 const pkceCodeChallenge = 'pkceCodeChallenge';
 const scope = 'scopeopenid';
 const redirectUri = 'redirectUri';
-const offlineAccess = false;
 const authorizationCode = 'authorizationCode';
 const refreshToken = 'refreshToken';
 const resource = 'http://resource.com';
@@ -102,7 +101,7 @@ describe('authRequest()', () => {
       [ 'Does not matter', { status: 200 } ]
     );
 
-    await authRequest(issuer, clientId, scope, redirectUri, offlineAccess);
+    await authRequest(issuer, clientId, scope, redirectUri);
     const requestedUrl = fetchMock.mock.calls[1][0];
 
     expect(requestedUrl).toBeDefined();
@@ -116,32 +115,17 @@ describe('authRequest()', () => {
 
   });
 
-  it('should add "offline_access" to the scope when parameter offlineAccess is true', async () => {
-
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ 'Does not matter', { status: 200 } ]
-    );
-
-    await authRequest(issuer, clientId, scope, redirectUri, true);
-    const requestedUrl = fetchMock.mock.calls[1][0];
-
-    expect(requestedUrl).toBeDefined();
-    expect(/scope.*?offline_access/g.test(requestedUrl.toString())).toBe(true);
-
-  });
-
   it('should throw when something goes wrong', async () => {
 
     fetchMock.mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await authRequest(issuer, clientId, scope, redirectUri, true)
+      async () => await authRequest(issuer, clientId, scope, redirectUri)
     ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
 
   });
 
-  const authRequestParams = { issuer, clientId, scope, redirectUri, offlineAccess };
+  const authRequestParams = { issuer, clientId, scope, redirectUri };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -153,7 +137,6 @@ describe('authRequest()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.redirectUri,
-      testArgs.offlineAccess,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

@@ -42,7 +42,6 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   redirectUri: string,
-  offlineAccess: boolean,
 ): Promise<void> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
@@ -53,8 +52,6 @@ export const authRequest = async (
 
   if (!redirectUri) { throw new Error('Parameter "redirectUri" should be set'); }
 
-  if (offlineAccess === undefined) { throw new Error('Parameter "offlineAccess" should be set'); }
-
   try {
 
     const codeVerifier = await generateCodeVerifier(128);
@@ -64,7 +61,7 @@ export const authRequest = async (
       issuer,
       clientId,
       codeChallenge,
-      offlineAccess ? `${scope} offline_access`: scope,
+      scope,
       redirectUri,
     );
 
