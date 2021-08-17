@@ -55,18 +55,26 @@ export const authRequest = async (
 
   if (offlineAccess === undefined) { throw new Error('Parameter "offlineAccess" should be set'); }
 
-  const codeVerifier = await generateCodeVerifier(128);
-  const codeChallenge = generateCodeChallenge(codeVerifier);
+  try {
 
-  const requestUrl = await constructAuthRequestUrl(
-    issuer,
-    clientId,
-    codeChallenge,
-    offlineAccess ? `${scope} offline_access`: scope,
-    redirectUri,
-  );
+    const codeVerifier = await generateCodeVerifier(128);
+    const codeChallenge = generateCodeChallenge(codeVerifier);
 
-  await validateAndFetch(requestUrl);
+    const requestUrl = await constructAuthRequestUrl(
+      issuer,
+      clientId,
+      codeChallenge,
+      offlineAccess ? `${scope} offline_access`: scope,
+      redirectUri,
+    );
+
+    await validateAndFetch(requestUrl);
+
+  } catch (error: unknown) {
+
+    throw new Error(`An error occurred while performing an auth request to ${issuer} : ${error}`);
+
+  }
 
 };
 
@@ -90,36 +98,45 @@ export const tokenRequest = async (
 
   if (!tokenEndpoint) { throw new Error(`No token endpoint was found for issuer ${issuer}`); }
 
-  const method = 'POST';
-  const dpopProof = await createDpopProof(method, tokenEndpoint);
   const codeVerifier = await store.get('codeVerifier');
 
   if (!codeVerifier) { throw new Error('No code verifier was found in the store'); }
 
-  const data = new URLSearchParams();
-  data.set('grant_type', 'authorization_code');
-  data.set('code', authorizationCode);
-  data.set('client_id', clientId);
-  data.set('redirect_uri', redirectUri);
-  data.set('code_verifier', codeVerifier);
+  try {
 
-  if (clientSecret) { data.set('client_secret', clientSecret); }
+    const method = 'POST';
+    const dpopProof = await createDpopProof(method, tokenEndpoint);
 
-  const response = await validateAndFetch(tokenEndpoint, {
-    method,
-    headers: {
-      'DPoP': dpopProof,
-    },
-    body: data,
-  });
+    const data = new URLSearchParams();
+    data.set('grant_type', 'authorization_code');
+    data.set('code', authorizationCode);
+    data.set('client_id', clientId);
+    data.set('redirect_uri', redirectUri);
+    data.set('code_verifier', codeVerifier);
 
-  const parsed = await response.json();
+    if (clientSecret) { data.set('client_secret', clientSecret); }
 
-  if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+    const response = await validateAndFetch(tokenEndpoint, {
+      method,
+      headers: {
+        'DPoP': dpopProof,
+      },
+      body: data,
+    });
 
-  if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+    const parsed = await response.json();
 
-  if (parsed?.refresh_token) { await store.set('refreshToken', parsed.refresh_token); }
+    if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+
+    if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+
+    if (parsed?.refresh_token) { await store.set('refreshToken', parsed.refresh_token); }
+
+  } catch (error: unknown) {
+
+    throw new Error(`An error occurred while requesting tokens for issuer "${issuer}" : ${error}`);
+
+  }
 
 };
 
@@ -145,33 +162,42 @@ export const refreshTokenRequest = async (
 
   if (!tokenEndpoint) { throw new Error(`No token endpoint was found for issuer ${issuer}`); }
 
-  const method = 'POST';
-  const dpopProof = await createDpopProof(method, tokenEndpoint);
   const codeVerifier = await store.get('codeVerifier');
 
   if (!codeVerifier) { throw new Error('No code verifier was found in the store'); }
 
-  const data = new URLSearchParams();
-  data.set('grant_type', 'refresh_token');
-  data.set('client_id', clientId);
-  data.set('code_verifier', codeVerifier);
-  data.set('scope', scope);
+  try {
 
-  if (clientSecret) { data.set('client_secret', clientSecret); }
+    const method = 'POST';
+    const dpopProof = await createDpopProof(method, tokenEndpoint);
 
-  const response = await validateAndFetch(tokenEndpoint, {
-    method,
-    headers: {
-      'DPoP': dpopProof,
-    },
-    body: data,
-  });
+    const data = new URLSearchParams();
+    data.set('grant_type', 'refresh_token');
+    data.set('client_id', clientId);
+    data.set('code_verifier', codeVerifier);
+    data.set('scope', scope);
 
-  const parsed = await response.json();
+    if (clientSecret) { data.set('client_secret', clientSecret); }
 
-  if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+    const response = await validateAndFetch(tokenEndpoint, {
+      method,
+      headers: {
+        'DPoP': dpopProof,
+      },
+      body: data,
+    });
 
-  if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+    const parsed = await response.json();
+
+    if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+
+    if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+
+  } catch (error: unknown) {
+
+    throw new Error(`An error occurred while refreshing tokens for issuer "${issuer}" : ${error}`);
+
+  }
 
 };
 
@@ -190,32 +216,40 @@ export const accessResource = async (
 
   if (!accessToken) { throw new Error('No access token was found in the store'); }
 
-  const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
-  const exp = tokenBody?.exp;
+  try{
 
-  if (+new Date() > exp) {
+    const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
+    const exp = tokenBody?.exp;
 
-    // const refreshToken = await store.get('refreshToken');
+    if (+new Date() > exp) {
 
-    // await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+      // const refreshToken = await store.get('refreshToken');
 
-    // accessToken = await store.get('accessToken');
+      // await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+
+      // accessToken = await store.get('accessToken');
+
+    }
+
+    const dpopProof = await createDpopProof(method, resource);
+
+    return await validateAndFetch(resource, {
+      method,
+      headers: {
+        'Authorization': `DPoP ${accessToken}`,
+        'DPoP': dpopProof,
+        ... (contentType && { 'Content-Type': contentType }),
+      },
+      ... (body && { body }),
+    });
+
+    // Check that the body is present for any method that would require it (such as POST).
+    // -- Not implementing this check for now as the HTTP spec does not require a body for ANY method
+
+  } catch (error: unknown) {
+
+    throw new Error(`An error occurred trying to access resource ${resource} : ${error}`);
 
   }
-
-  const dpopProof = await createDpopProof(method, resource);
-
-  return await validateAndFetch(resource, {
-    method,
-    headers: {
-      'Authorization': `DPoP ${accessToken}`,
-      'DPoP': dpopProof,
-      ... (contentType && { 'Content-Type': contentType }),
-    },
-    ... (body && { body }),
-  });
-
-  // Check that the body is present for any method that would require it (such as POST).
-  // -- Not implementing this check for now as the HTTP spec does not require a body for ANY method
 
 };

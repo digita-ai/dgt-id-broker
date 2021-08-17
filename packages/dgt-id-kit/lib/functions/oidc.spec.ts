@@ -131,6 +131,16 @@ describe('authRequest()', () => {
 
   });
 
+  it('should throw when something goes wrong', async () => {
+
+    fetchMock.mockRejectedValueOnce(undefined);
+
+    await expect(
+      async () => await authRequest(issuer, clientId, scope, redirectUri, true)
+    ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
+
+  });
+
   const authRequestParams = { issuer, clientId, scope, redirectUri, offlineAccess };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -281,6 +291,24 @@ describe('tokenRequest()', () => {
 
   });
 
+  it('should throw when something goes wrong', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      undefined
+    );
+
+    const result = tokenRequest(
+      issuer,
+      clientId,
+      authorizationCode,
+      redirectUri,
+    );
+
+    await expect(result).rejects.toThrow(`An error occurred while requesting tokens for issuer "${issuer}" : `);
+
+  });
+
   const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
 
   it.each(Object.keys(tokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -427,6 +455,19 @@ describe('refreshTokenRequest()', () => {
 
   });
 
+  it('should throw when something goes wrong', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      undefined
+    );
+
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+
+    await expect(result).rejects.toThrow(`An error occurred while refreshing tokens for issuer "${issuer}" : `);
+
+  });
+
   const refreshTokenRequestParams = { issuer, clientId, refreshToken, scope };
 
   it.each(Object.keys(refreshTokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -516,6 +557,16 @@ describe('accessResource()', () => {
     const responseBody2 = fetchMock.mock.calls[1][1]?.body;
     expect(responseBody2).toBeDefined();
     expect(responseBody2).toBe(body);
+
+  });
+
+  it('should throw when something goes wrong', async () => {
+
+    fetchMock.mockRejectedValueOnce(undefined);
+
+    await expect(
+      async () => await accessResource(resource, 'GET', undefined, contentType)
+    ).rejects.toThrow(`An error occurred trying to access resource ${resource} : `);
 
   });
 
