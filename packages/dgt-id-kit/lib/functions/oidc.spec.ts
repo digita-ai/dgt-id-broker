@@ -309,6 +309,20 @@ describe('tokenRequest()', () => {
 
   });
 
+  it('should throw when no code verifier was found in the store', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
+    const verifier = await store.get('codeVerifier');
+    await store.delete('codeVerifier');
+
+    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+
+    await expect(result).rejects.toThrow(`No code verifier was found in the store`);
+
+    await store.set('codeVerifier', verifier);
+
+  });
+
   const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
 
   it.each(Object.keys(tokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -468,6 +482,20 @@ describe('refreshTokenRequest()', () => {
 
   });
 
+  it('should throw when no code verifier was found in the store', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
+    const verifier = await store.get('codeVerifier');
+    await store.delete('codeVerifier');
+
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+
+    await expect(result).rejects.toThrow(`No code verifier was found in the store`);
+
+    await store.set('codeVerifier', verifier);
+
+  });
+
   const refreshTokenRequestParams = { issuer, clientId, refreshToken, scope };
 
   it.each(Object.keys(refreshTokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -567,6 +595,20 @@ describe('accessResource()', () => {
     await expect(
       async () => await accessResource(resource, 'GET', undefined, contentType)
     ).rejects.toThrow(`An error occurred trying to access resource ${resource} : `);
+
+  });
+
+  it('should throw when no access token was found in the store', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
+    const accessToken = await store.get('accessToken');
+    await store.delete('accessToken');
+
+    await expect(
+      async () => await accessResource(resource, 'GET', undefined, contentType)
+    ).rejects.toThrow('No access token was found in the store');
+
+    await store.set('accessToken', accessToken);
 
   });
 
