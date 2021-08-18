@@ -65,4 +65,18 @@ export const handleIncomingRedirect = async (
 
   if (!redirectUri) { throw new Error('Parameter "redirectUri" should be set'); }
 
+  const code = new URLSearchParams(window.location.search).get('code');
+
+  if (!code) { throw new Error(`No authorization code was found in window.location.search : ${window.location.search}`); }
+
+  try {
+
+    await tokenRequest(issuer, clientId, code, redirectUri, clientSecret);
+
+  } catch (error: unknown) {
+
+    throw new Error(`An error occurred handling the incoming redirect : ${error}`);
+
+  }
+
 };
