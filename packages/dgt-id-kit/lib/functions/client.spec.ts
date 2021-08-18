@@ -1,5 +1,7 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from './client';
+import { dummyValidAccessToken, issuer, clientId, scope, responseType, idToken, webId, refreshToken, redirectUri } from '../../test/test-data';
+import { handleIncomingRedirect, loginWithIssuer, loginWithWebId, logout } from './client';
+import { store } from './storage';
 
 enableFetchMocks();
 
@@ -8,13 +10,6 @@ beforeEach(() => {
   fetchMock.resetMocks();
 
 });
-
-const issuer = 'https://issuer.com';
-const webId = 'https://web.id';
-const redirectUri = 'https://redirect.uri';
-const clientId = 'clientId';
-const scope = 'scope';
-const responseType = 'responseType';
 
 describe('loginWithIssuer()', () => {
 
@@ -76,6 +71,20 @@ describe('logout()', () => {
 
   it('should delete access token, id token and refresh token from the store', async () => {
 
+    await store.set('accessToken', dummyValidAccessToken);
+    await store.set('idToken', idToken);
+    await store.set('refreshToken', refreshToken);
+
+    await expect(store.has('accessToken')).resolves.toBe(true);
+    await expect(store.has('idToken')).resolves.toBe(true);
+    await expect(store.has('refreshToken')).resolves.toBe(true);
+
+    await logout();
+
+    await expect(store.has('accessToken')).resolves.toBe(false);
+    await expect(store.has('idToken')).resolves.toBe(false);
+    await expect(store.has('refreshToken')).resolves.toBe(false);
+
   });
 
 });
@@ -86,7 +95,7 @@ describe('handleIncomingRedirect()', () => {
 
   it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
-    const testArgs = { ...handleIncommingRedirectParams };
+    const testArgs = { ...handleIncomingRedirectParams };
     testArgs[keyToBeNull] = undefined;
 
     const result = handleIncomingRedirect(
