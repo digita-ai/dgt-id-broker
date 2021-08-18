@@ -1,6 +1,6 @@
 import { store } from './storage';
 import { getFirstIssuerFromWebId } from './web-id';
-// import { authRequest, tokenRequest } from './oidc';
+import { authRequest, tokenRequest } from './oidc';
 
 export const loginWithIssuer = async (
   issuer: string,
@@ -17,7 +17,7 @@ export const loginWithIssuer = async (
 
   if (!responseType) { throw new Error('Parameter "responseType" should be set'); }
 
-  // await authRequest(issuer, clientId, scope, responseType);
+  await authRequest(issuer, clientId, scope, responseType);
 
 };
 
