@@ -28,6 +28,7 @@
   "dependencies": {
     "@digita-ai/handlersjs-core": "0.3.2",
     "@digita-ai/inrupt-solid-client": "0.4.0",
+    "crypto-js": "^4.1.1",
     "jose": "^3.14.3",
     "n3": "^1.11.0",
     "rdf-js": "^4.0.2",
@@ -35,6 +36,7 @@
   },
   "devDependencies": {
     "@digita-ai/typescript-config": "^0.3.3",
+    "@types/crypto-js": "^4.0.2",
     "@types/jest": "^26.0.23",
     "@types/n3": "^1.10.2",
     "@types/node": "^14.14.44",
@@ -72,7 +74,7 @@
     "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 98.25,
+        "branches": 98.59,
         "functions": 100,
         "lines": 100,
         "statements": 100
