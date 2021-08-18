@@ -46,11 +46,9 @@ export const loginWithWebId = async (
 
 export const logout = async (): Promise<void> => {
 
-  if (await store.has('accessToken')) { await store.delete('accessToken'); }
-
-  if (await store.has('idToken')) { await store.delete('idToken'); }
-
-  if (await store.has('refreshToken')) { await store.delete('refreshToken'); }
+  await store.delete('accessToken');
+  await store.delete('idToken');
+  await store.delete('refreshToken');
 
 };
 

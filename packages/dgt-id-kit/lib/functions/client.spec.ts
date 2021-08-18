@@ -1,19 +1,34 @@
+// Fix to be able to run tests in jsdom
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, issuer, clientId, scope, responseType, idToken, webId, refreshToken, redirectUri } from '../../test/test-data';
+import { dummyValidAccessToken, issuer, clientId, scope, responseType, idToken, webId, refreshToken, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1 } from '../../test/test-data';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId, logout } from './client';
 import { store } from './storage';
+import * as clientModule from './client';
+import * as oidcModule from './oidc';
 
 enableFetchMocks();
 
 beforeEach(() => {
 
   fetchMock.resetMocks();
+  jest.clearAllMocks();
 
 });
 
 describe('loginWithIssuer()', () => {
 
   it('should call authRequest from the oidc module', async () => {
+
+    const spy = jest.spyOn(oidcModule, 'authRequest').mockResolvedValueOnce();
+
+    await loginWithIssuer(issuer, clientId, scope, responseType);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType);
 
   });
 
@@ -39,11 +54,33 @@ describe('loginWithIssuer()', () => {
 
 describe('loginWithWebId()', () => {
 
-  it('should throw when no valid issuer was found on the profile of the webid', async () => {
+  it('should throw when no valid issuer was found on the profile of the webId', async () => {
+
+    fetchMock.mockResponses(
+      [ profileWithIssuers, { status: 200 } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200 } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200 } ]
+    );
+
+    const result = loginWithWebId(webId, clientId, scope, responseType);
+    await expect(result).rejects.toThrow(`No issuer was found on the profile of ${webId}`);
 
   });
 
   it('should call loginWithIssuer', async () => {
+
+    fetchMock.mockResponses(
+      [ profileWithIssuers, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ mockedResponseValidSolidOidc, { status: 200 } ]
+    );
+
+    const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce();
+
+    await loginWithWebId(webId, clientId, scope, responseType);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), clientId, scope, responseType);
 
   });
 
