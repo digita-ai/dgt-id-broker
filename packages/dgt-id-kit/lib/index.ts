@@ -3,6 +3,7 @@ export * from './models/key-generation-algorithm.model';
 export * from './models/discovery-string-field.model';
 export * from './models/discovery-array-field.model';
 export * from './models/discovery-field.model';
+export * from './functions/oidc';
 export * from './models/discovery-endpoint-field.model';
 export * from './functions/issuer';
 export * from './functions/web-id';
