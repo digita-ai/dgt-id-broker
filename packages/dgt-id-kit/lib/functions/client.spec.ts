@@ -4,7 +4,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, issuer, clientId, scope, responseType, idToken, webId, refreshToken, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1 } from '../../test/test-data';
+import { dummyValidAccessToken, issuer, clientId, scope, responseType, idToken, webId, refreshToken, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode } from '../../test/test-data';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId, logout } from './client';
 import { store } from './storage';
 import * as clientModule from './client';
@@ -127,6 +127,46 @@ describe('logout()', () => {
 });
 
 describe('handleIncomingRedirect()', () => {
+
+  beforeEach(() => {
+
+    global.window = Object.create(window);
+    delete window.location;
+
+  });
+
+  it('should call tokenEndpoint() with the right parameters', async () => {
+
+    (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
+
+    const spy = jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
+
+    await handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, authorizationCode, redirectUri, clientSecret);
+
+  });
+
+  it('should throw when no authorization code was found in the page\'s url', async () => {
+
+    (window.location as any) = new URL(`http://test.url/test?noCode=noCode`);
+
+    const result = handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+    await expect(result).rejects.toThrow(`No authorization code was found in window.location.search : ${window.location.search}`);
+
+  });
+
+  it('should throw when anything goes wrong', async () => {
+
+    (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
+
+    jest.spyOn(oidcModule, 'tokenRequest').mockRejectedValueOnce(new Error('test error'));
+
+    const result = handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+    await expect(result).rejects.toThrow('An error occurred handling the incoming redirect : Error: test error');
+
+  });
 
   const handleIncomingRedirectParams = { issuer, clientId, redirectUri };
 
