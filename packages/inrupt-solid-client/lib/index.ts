@@ -14,6 +14,7 @@ export {
   addUrl,
   asUrl,
   createThing,
+  createSolidDataset,
   deleteFile,
   getDatetime,
   getInteger,
