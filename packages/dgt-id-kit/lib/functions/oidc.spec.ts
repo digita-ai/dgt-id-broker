@@ -154,7 +154,7 @@ describe('tokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
@@ -167,7 +167,7 @@ describe('tokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
@@ -181,7 +181,7 @@ describe('tokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
@@ -203,7 +203,7 @@ describe('tokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ],
     );
 
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri, clientSecret);
@@ -241,21 +241,6 @@ describe('tokenRequest()', () => {
     await expect(store.has('refreshToken')).resolves.toBe(true);
     await expect(store.get('refreshToken')).resolves.toBe('rt');
     await store.delete('refreshToken');
-
-  });
-
-  it('should not save the tokens (not) returned by the server to the store when they are not present', async () => {
-
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
-    );
-
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
-
-    await expect(store.has('accessToken')).resolves.toBe(false);
-    await expect(store.has('idToken')).resolves.toBe(false);
-    await expect(store.has('refreshToken')).resolves.toBe(false);
 
   });
 
@@ -318,6 +303,26 @@ describe('tokenRequest()', () => {
 
   });
 
+  it('should throw when the response does not contain an access_token and id_token', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({ id_token: 'it' }), { status: 200 } ]
+    );
+
+    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({ access_token: 'at' }), { status: 200 } ]
+    );
+
+    const result2 = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    await expect(result2).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
+
+  });
+
   const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
 
   it.each(Object.keys(tokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -347,7 +352,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
@@ -360,7 +365,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
@@ -374,7 +379,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
@@ -395,7 +400,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
     );
 
     await refreshTokenRequest(issuer, clientId, refreshToken, scope, clientSecret);
@@ -414,7 +419,7 @@ describe('refreshTokenRequest()', () => {
 
   });
 
-  it('should save the tokens returned by the server to the store when they are present', async () => {
+  it('should save the tokens returned by the server to the store', async () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
@@ -432,17 +437,23 @@ describe('refreshTokenRequest()', () => {
 
   });
 
-  it('should not save the tokens (not) returned by the server to the store when they are not present', async () => {
+  it('should throw when the response does not contain an access_token and id_token', async () => {
 
     fetchMock.mockResponses(
       [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({}), { status: 200 } ]
+      [ JSON.stringify({ id_token: 'it' }), { status: 200 } ]
     );
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
-    await expect(store.has('accessToken')).resolves.toBe(false);
-    await expect(store.has('idToken')).resolves.toBe(false);
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({ access_token: 'at' }), { status: 200 } ]
+    );
+
+    const result2 = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await expect(result2).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
 
   });
 

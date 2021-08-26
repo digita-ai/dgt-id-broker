@@ -125,9 +125,13 @@ export const tokenRequest = async (
 
     if (parsed?.error) { throw new Error(parsed.error); }
 
-    if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+    if (!parsed?.access_token) { throw new Error('The tokenRequest response must contain an access_token field, and it did not.'); }
 
-    if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+    if (parsed.access_token) { await store.set('accessToken', parsed.access_token); }
+
+    if (!parsed?.id_token) { throw new Error('The tokenRequest response must contain an id_token field, and it did not.'); }
+
+    if (parsed.id_token) { await store.set('idToken', parsed.id_token); }
 
     if (parsed?.refresh_token) { await store.set('refreshToken', parsed.refresh_token); }
 
@@ -190,9 +194,13 @@ export const refreshTokenRequest = async (
 
     if (parsed?.error) { throw new Error(parsed.error); }
 
-    if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+    if (!parsed?.access_token) { throw new Error('The tokenRequest response must contain an access_token field, and it did not.'); }
 
-    if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+    if (parsed.access_token) { await store.set('accessToken', parsed.access_token); }
+
+    if (!parsed?.id_token) { throw new Error('The tokenRequest response must contain an id_token field, and it did not.'); }
+
+    if (parsed.id_token) { await store.set('idToken', parsed.id_token); }
 
   } catch (error: unknown) {
 
