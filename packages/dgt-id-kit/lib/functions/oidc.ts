@@ -261,9 +261,6 @@ export const accessResource = async (
       ... (body && { body }),
     });
 
-    // Check that the body is present for any method that would require it (such as POST).
-    // -- Not implementing this check for now as the HTTP spec does not require a body for ANY method
-
   } catch (error: unknown) {
 
     throw new Error(`An error occurred trying to access resource ${resource} : ${error}`);
