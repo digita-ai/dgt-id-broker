@@ -323,7 +323,7 @@ describe('refreshTokenRequest()', () => {
 
   // populate the store with DPoP keys
   beforeEach(() => generateKeys());
-  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', id_token: 'it' })));
+  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', refresh_token: 'rt' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
@@ -377,21 +377,21 @@ describe('refreshTokenRequest()', () => {
     await expect(store.has('accessToken')).resolves.toBe(true);
     await expect(store.get('accessToken')).resolves.toBe('at');
     await store.delete('accessToken');
-    await expect(store.has('idToken')).resolves.toBe(true);
-    await expect(store.get('idToken')).resolves.toBe('it');
-    await store.delete('idToken');
+    await expect(store.has('refreshToken')).resolves.toBe(true);
+    await expect(store.get('refreshToken')).resolves.toBe('rt');
+    await store.delete('refreshToken');
 
   });
 
-  it('should throw when the response does not contain an access_token and id_token', async () => {
+  it('should throw when the response does not contain an access_token and refresh_token', async () => {
 
-    fetchMock.mockResponses(JSON.stringify({ id_token: 'it' }));
+    fetchMock.mockResponses(JSON.stringify({ refresh_token: 'rt' }));
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
     fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
     const result2 = refreshTokenRequest(issuer, clientId, refreshToken, scope);
-    await expect(result2).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
+    await expect(result2).rejects.toThrow('The tokenRequest response must contain an refresh_token field, and it did not.');
 
   });
 

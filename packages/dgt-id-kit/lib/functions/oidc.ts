@@ -194,9 +194,11 @@ export const refreshTokenRequest = async (
 
     if (parsed.access_token) { await store.set('accessToken', parsed.access_token); }
 
-    if (!parsed?.id_token) { throw new Error('The tokenRequest response must contain an id_token field, and it did not.'); }
+    if (!parsed?.refresh_token) { throw new Error('The tokenRequest response must contain an refresh_token field, and it did not.'); }
 
-    if (parsed.id_token) { await store.set('idToken', parsed.id_token); }
+    if (parsed.refresh_token) { await store.set('refreshToken', parsed.refresh_token); }
+
+    if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
 
   } catch (error: unknown) {
 
