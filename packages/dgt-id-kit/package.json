@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@digita-ai/handlersjs-core": "0.3.2",
+    "@digita-ai/handlersjs-http": "0.3.2",
     "@digita-ai/inrupt-solid-client": "0.4.1",
     "crypto-js": "^4.1.1",
     "jose": "^3.14.3",
@@ -74,7 +75,7 @@
     "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 98.59,
+        "branches": 99.34,
         "functions": 100,
         "lines": 100,
         "statements": 100
