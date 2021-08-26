@@ -174,6 +174,7 @@ export const refreshTokenRequest = async (
     data.set('grant_type', 'refresh_token');
     data.set('client_id', clientId);
     data.set('scope', scope);
+    data.set('refresh_token', refreshToken);
 
     if (clientSecret) { data.set('client_secret', clientSecret); }
 

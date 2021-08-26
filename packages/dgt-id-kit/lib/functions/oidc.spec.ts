@@ -352,6 +352,7 @@ describe('refreshTokenRequest()', () => {
     expect(stringBody1).toContain(`client_id=${clientId}`);
     expect(stringBody1).toContain(`scope=${scope}`);
     expect(stringBody1).not.toContain(`client_secret=`);
+    expect(stringBody1).toContain(`refresh_token=${refreshToken}`);
 
     //
 
@@ -365,6 +366,7 @@ describe('refreshTokenRequest()', () => {
     expect(stringBody2).toContain(`client_id=${clientId}`);
     expect(stringBody2).toContain(`scope=${scope}`);
     expect(stringBody2).toContain(`client_secret=`);
+    expect(stringBody2).toContain(`refresh_token=${refreshToken}`);
 
   });
 
