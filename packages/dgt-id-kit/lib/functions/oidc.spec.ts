@@ -5,7 +5,7 @@ global.TextDecoder = TextDecoder;
 
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, validSolidOidcObject } from '../../test/test-data';
+import { dummyExpiredAccessToken, dummyValidAccessToken, validSolidOidcObject } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import { store } from './storage';
 import { generateKeys } from './dpop';
@@ -25,6 +25,9 @@ const cleanTokensInStore = async () => {
   await store.delete('accessToken');
   await store.delete('idToken');
   await store.delete('refreshToken');
+  await store.delete('clientId');
+  await store.delete('refreshToken');
+  await store.delete('issuer');
 
 };
 
@@ -554,6 +557,59 @@ describe('accessResource()', () => {
     await expect(
       async () => await accessResource(resource, 'GET', undefined, contentType)
     ).rejects.toThrow('No access token was found in the store');
+
+  });
+
+  it('should call refreshTokenRequest() when the token is expired', async () => {
+
+    await store.set('clientId', clientId);
+    await store.set('issuer', issuer);
+    await store.set('refreshToken', refreshToken);
+    await store.set('accessToken', dummyExpiredAccessToken);
+
+    const spy = jest.spyOn(oidcModule, 'refreshTokenRequest').mockImplementationOnce(async () => {
+
+      await store.set('accessToken', dummyValidAccessToken);
+
+    });
+
+    await accessResource(resource, 'GET');
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, 'openid', undefined);
+
+  });
+
+  it('should throw when the access_token is expired and there is no issuer in the store', async () => {
+
+    await store.set('clientId', clientId);
+    await store.set('refreshToken', refreshToken);
+    await store.set('accessToken', dummyExpiredAccessToken);
+
+    const result = accessResource(resource, 'GET');
+    await expect(result).rejects.toThrow('No issuer was found in the store');
+
+  });
+
+  it('should throw when the access_token is expired and there is no refresh_token in the store', async () => {
+
+    await store.set('clientId', clientId);
+    await store.set('issuer', issuer);
+    await store.set('accessToken', dummyExpiredAccessToken);
+
+    const result = accessResource(resource, 'GET');
+    await expect(result).rejects.toThrow('No refresh token was found in the store');
+
+  });
+
+  it('should throw when the access_token is expired and there is no client_id in the store', async () => {
+
+    await store.set('issuer', issuer);
+    await store.set('refreshToken', refreshToken);
+    await store.set('accessToken', dummyExpiredAccessToken);
+
+    const result = accessResource(resource, 'GET');
+    await expect(result).rejects.toThrow('No client id was found in the store');
 
   });
 

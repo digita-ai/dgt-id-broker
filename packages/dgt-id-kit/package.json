@@ -75,7 +75,7 @@
     "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 98.66,
+        "branches": 99.35,
         "functions": 100,
         "lines": 100,
         "statements": 100

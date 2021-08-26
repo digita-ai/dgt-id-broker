@@ -219,22 +219,40 @@ export const accessResource = async (
 
   if (!method) { throw new Error('Parameter "method" should be set'); }
 
-  const accessToken = await store.get('accessToken');
+  let accessToken = await store.get('accessToken');
 
   if (!accessToken) { throw new Error('No access token was found in the store'); }
 
   try{
 
     const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
-    const exp = tokenBody?.exp;
+    const exp = tokenBody .exp;
 
-    if (+new Date() > exp) {
+    if (+new Date() > exp * 1000) {
 
-      // const refreshToken = await store.get('refreshToken');
+      // handleIncommingRedirect should have saved the clientId, issuer and possibly the
+      // client_secret ( if present ) to the store.
+      // The refresh_token should have been added to the store by tokenRequest()
 
-      // await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+      const refreshToken = await store.get('refreshToken');
 
-      // accessToken = await store.get('accessToken');
+      if (!refreshToken) { throw new Error('No refresh token was found in the store'); }
+
+      const issuer = await store.get('issuer');
+
+      if (!issuer) { throw new Error('No issuer was found in the store'); }
+
+      const clientId = await store.get('clientId');
+
+      if (!clientId) { throw new Error('No client id was found in the store'); }
+
+      // not required, no undefined check needed
+      const clientSecret = await store.get('clientSecret');
+
+      // do we need a special scope for this ?
+      await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+
+      accessToken = await store.get('accessToken');
 
     }
 
