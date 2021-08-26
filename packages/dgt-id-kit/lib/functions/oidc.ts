@@ -123,6 +123,8 @@ export const tokenRequest = async (
 
     const parsed = await response.json();
 
+    if (parsed?.error) { throw new Error(parsed.error); }
+
     if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
 
     if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
@@ -185,6 +187,8 @@ export const refreshTokenRequest = async (
     });
 
     const parsed = await response.json();
+
+    if (parsed?.error) { throw new Error(parsed.error); }
 
     if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
 

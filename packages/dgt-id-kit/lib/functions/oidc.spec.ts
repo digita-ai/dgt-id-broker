@@ -306,6 +306,18 @@ describe('tokenRequest()', () => {
 
   });
 
+  it('should throw when the token request response contains an error field', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({ error: 'abcdefgh', access_token: 'at', id_token: 'it' }), { status: 200 } ]
+    );
+
+    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    await expect(result).rejects.toThrow('abcdefgh');
+
+  });
+
   const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
 
   it.each(Object.keys(tokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
@@ -476,6 +488,18 @@ describe('refreshTokenRequest()', () => {
     await expect(result).rejects.toThrow(`No code verifier was found in the store`);
 
     await store.set('codeVerifier', verifier);
+
+  });
+
+  it('should throw when the refresh request response contains an error field', async () => {
+
+    fetchMock.mockResponses(
+      [ mockedResponseValidSolidOidc, { status: 200 } ],
+      [ JSON.stringify({ error: 'abcdefgh', access_token: 'at', id_token: 'it' }), { status: 200 } ]
+    );
+
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await expect(result).rejects.toThrow('abcdefgh');
 
   });
 
