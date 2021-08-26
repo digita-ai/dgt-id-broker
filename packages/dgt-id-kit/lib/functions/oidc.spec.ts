@@ -5,16 +5,36 @@ global.TextDecoder = TextDecoder;
 
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, mockedResponseValidSolidOidc, mockedResponseWithoutEndpoints, validSolidOidcObject } from '../../test/test-data';
+import { dummyValidAccessToken, validSolidOidcObject } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import { store } from './storage';
 import { generateKeys } from './dpop';
+import * as issuerModule from './issuer';
+import * as oidcModule from './oidc';
 
 enableFetchMocks();
+
+afterAll(() => {
+
+  jest.clearAllMocks();
+
+});
 
 beforeEach(() => {
 
   fetchMock.mockClear();
+
+  jest.spyOn(issuerModule, 'getEndpoint').mockImplementation(async (_issuer: string, endpoint: string): Promise<string> => {
+
+    switch (endpoint) {
+
+      case 'token_endpoint': return validSolidOidcObject.token_endpoint;
+      case 'authorization_endpoint': return validSolidOidcObject.authorization_endpoint;
+      default: return validSolidOidcObject.token_endpoint;
+
+    }
+
+  });
 
 });
 
@@ -34,8 +54,6 @@ const contentType = 'contentType';
 describe('constructAuthRequestUrl()', () => {
 
   it('should return the constructed authentication request url', async () => {
-
-    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
 
     const result = constructAuthRequestUrl(
       issuer,
@@ -76,7 +94,7 @@ describe('constructAuthRequestUrl()', () => {
 
   it('should throw when no authorization endpoint was found for the given issuer', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseWithoutEndpoints);
+    jest.spyOn(issuerModule, 'getEndpoint').mockResolvedValueOnce(undefined);
 
     const result = constructAuthRequestUrl(
       issuer,
@@ -96,13 +114,10 @@ describe('authRequest()', () => {
 
   it('should perform a fetch request to the desired url', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ 'Does not matter', { status: 200 } ]
-    );
+    fetchMock.mockResponse('Does not matter');
 
     await authRequest(issuer, clientId, scope, redirectUri);
-    const requestedUrl = fetchMock.mock.calls[1][0];
+    const requestedUrl = fetchMock.mock.calls[0][0];
 
     expect(requestedUrl).toBeDefined();
     expect(requestedUrl).toContain(`${validSolidOidcObject.authorization_endpoint}?`);
@@ -117,7 +132,7 @@ describe('authRequest()', () => {
 
   it('should throw when something goes wrong', async () => {
 
-    fetchMock.mockRejectedValueOnce(undefined);
+    jest.spyOn(oidcModule, 'constructAuthRequestUrl').mockRejectedValueOnce(undefined);
 
     await expect(
       async () => await authRequest(issuer, clientId, scope, redirectUri)
@@ -149,44 +164,28 @@ describe('tokenRequest()', () => {
 
   // populate the store with DPoP keys
   beforeEach(() => generateKeys());
+  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
-
-    expect(fetchMock.mock.calls[1][0]).toBe(validSolidOidcObject.token_endpoint);
+    expect(fetchMock.mock.calls[0][0]).toBe(validSolidOidcObject.token_endpoint);
 
   });
 
   it('should perform a fetch request with a DPoP header', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
-
-    expect(fetchMock.mock.calls[1][1]?.headers['DPoP']).toBeDefined();
-    expect(fetchMock.mock.calls[1][1]?.headers['DPoP']).toBeTruthy();
+    expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeDefined();
+    expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeTruthy();
 
   });
 
   it('should perform a fetch request with the correct body', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
 
-    const body1 = fetchMock.mock.calls[1][1]?.body;
+    const body1 = fetchMock.mock.calls[0][1]?.body;
     expect(body1).toBeDefined();
 
     const stringBody1 = body1.toString();
@@ -201,14 +200,9 @@ describe('tokenRequest()', () => {
 
     //
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ],
-    );
-
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri, clientSecret);
 
-    const body2 = fetchMock.mock.calls[3][1]?.body;
+    const body2 = fetchMock.mock.calls[1][1]?.body;
     expect(body2).toBeDefined();
 
     const stringBody2 = body2.toString();
@@ -224,11 +218,6 @@ describe('tokenRequest()', () => {
   });
 
   it('should save the tokens returned by the server to the store when they are present', async () => {
-
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' }), { status: 200 } ]
-    );
 
     await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
 
@@ -246,7 +235,7 @@ describe('tokenRequest()', () => {
 
   it('should throw when no token endpoint was found for the given issuer', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseWithoutEndpoints);
+    jest.spyOn(issuerModule, 'getEndpoint').mockResolvedValueOnce(undefined);
 
     const result = tokenRequest(
       issuer,
@@ -261,10 +250,7 @@ describe('tokenRequest()', () => {
 
   it('should throw when something goes wrong', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      undefined
-    );
+    fetchMock.mockResponse(undefined);
 
     const result = tokenRequest(
       issuer,
@@ -279,7 +265,6 @@ describe('tokenRequest()', () => {
 
   it('should throw when no code verifier was found in the store', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
     const verifier = await store.get('codeVerifier');
     await store.delete('codeVerifier');
 
@@ -293,10 +278,7 @@ describe('tokenRequest()', () => {
 
   it('should throw when the token request response contains an error field', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ error: 'abcdefgh', access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
+    fetchMock.mockResponse(JSON.stringify({ error: 'abcdefgh' }));
 
     const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
     await expect(result).rejects.toThrow('abcdefgh');
@@ -305,18 +287,12 @@ describe('tokenRequest()', () => {
 
   it('should throw when the response does not contain an access_token and id_token', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ id_token: 'it' }), { status: 200 } ]
-    );
+    fetchMock.mockResponse(JSON.stringify({ id_token: 'it' }));
 
     const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at' }), { status: 200 } ]
-    );
+    fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
 
     const result2 = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
     await expect(result2).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
@@ -347,44 +323,28 @@ describe('refreshTokenRequest()', () => {
 
   // populate the store with DPoP keys
   beforeEach(() => generateKeys());
+  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', id_token: 'it' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
-
-    expect(fetchMock.mock.calls[1][0]).toBe(validSolidOidcObject.token_endpoint);
+    expect(fetchMock.mock.calls[0][0]).toBe(validSolidOidcObject.token_endpoint);
 
   });
 
   it('should perform a fetch request with a DPoP header', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
-
-    expect(fetchMock.mock.calls[1][1]?.headers['DPoP']).toBeDefined();
-    expect(fetchMock.mock.calls[1][1]?.headers['DPoP']).toBeTruthy();
+    expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeDefined();
+    expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeTruthy();
 
   });
 
   it('should perform a fetch request with the correct body', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
 
-    const body1 = fetchMock.mock.calls[1][1]?.body;
+    const body1 = fetchMock.mock.calls[0][1]?.body;
     expect(body1).toBeDefined();
 
     const stringBody1 = body1.toString();
@@ -398,14 +358,9 @@ describe('refreshTokenRequest()', () => {
 
     //
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
-
     await refreshTokenRequest(issuer, clientId, refreshToken, scope, clientSecret);
 
-    const body2 = fetchMock.mock.calls[3][1]?.body;
+    const body2 = fetchMock.mock.calls[1][1]?.body;
     expect(body2).toBeDefined();
 
     const stringBody2 = body2.toString();
@@ -421,11 +376,6 @@ describe('refreshTokenRequest()', () => {
 
   it('should save the tokens returned by the server to the store', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' }), { status: 200 } ]
-    );
-
     await refreshTokenRequest(issuer, clientId, refreshToken, scope);
 
     await expect(store.has('accessToken')).resolves.toBe(true);
@@ -439,19 +389,11 @@ describe('refreshTokenRequest()', () => {
 
   it('should throw when the response does not contain an access_token and id_token', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ id_token: 'it' }), { status: 200 } ]
-    );
-
+    fetchMock.mockResponses(JSON.stringify({ id_token: 'it' }));
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ access_token: 'at' }), { status: 200 } ]
-    );
-
+    fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
     const result2 = refreshTokenRequest(issuer, clientId, refreshToken, scope);
     await expect(result2).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
 
@@ -459,10 +401,9 @@ describe('refreshTokenRequest()', () => {
 
   it('should throw when no token endpoint was found for the given issuer', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseWithoutEndpoints);
+    jest.spyOn(issuerModule, 'getEndpoint').mockResolvedValueOnce(undefined);
 
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
-
     await expect(result).rejects.toThrow(`No token endpoint was found for issuer ${issuer}`);
 
   });
@@ -477,25 +418,19 @@ describe('refreshTokenRequest()', () => {
 
   it('should throw when something goes wrong', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      undefined
-    );
+    fetchMock.mockRejectedValueOnce(undefined);
 
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
-
     await expect(result).rejects.toThrow(`An error occurred while refreshing tokens for issuer "${issuer}" : `);
 
   });
 
   it('should throw when no code verifier was found in the store', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
     const verifier = await store.get('codeVerifier');
     await store.delete('codeVerifier');
 
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
-
     await expect(result).rejects.toThrow(`No code verifier was found in the store`);
 
     await store.set('codeVerifier', verifier);
@@ -504,10 +439,7 @@ describe('refreshTokenRequest()', () => {
 
   it('should throw when the refresh request response contains an error field', async () => {
 
-    fetchMock.mockResponses(
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ JSON.stringify({ error: 'abcdefgh', access_token: 'at', id_token: 'it' }), { status: 200 } ]
-    );
+    fetchMock.mockResponse(JSON.stringify({ error: 'abcdefgh' }));
 
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
     await expect(result).rejects.toThrow('abcdefgh');
@@ -536,17 +468,11 @@ describe('refreshTokenRequest()', () => {
 
 describe('accessResource()', () => {
 
-  beforeEach(async (done) => {
-
-    await generateKeys();
-    await store.set('accessToken', dummyValidAccessToken);
-    done();
-
-  });
+  beforeEach(() => generateKeys());
+  beforeEach(() => store.set('accessToken', dummyValidAccessToken));
+  beforeEach(() => fetchMock.mockResponse(''));
 
   it('should perform a fetch request to the desired url with the provided method', async () => {
-
-    fetchMock.mockResponseOnce('');
 
     await accessResource(resource, 'GET');
 
@@ -556,8 +482,6 @@ describe('accessResource()', () => {
   });
 
   it('should perform a fetch request with the right headers', async () => {
-
-    fetchMock.mockResponseOnce('');
 
     await accessResource(resource, 'GET');
     const headers = fetchMock.mock.calls[0][1]?.headers;
@@ -586,8 +510,6 @@ describe('accessResource()', () => {
   });
 
   it('should perform a fetch request with the correct body', async () => {
-
-    fetchMock.mockResponseOnce('');
 
     await accessResource(resource, 'GET', undefined, contentType);
 
@@ -618,15 +540,11 @@ describe('accessResource()', () => {
 
   it('should throw when no access token was found in the store', async () => {
 
-    fetchMock.mockResponseOnce(mockedResponseValidSolidOidc);
-    const accessToken = await store.get('accessToken');
     await store.delete('accessToken');
 
     await expect(
       async () => await accessResource(resource, 'GET', undefined, contentType)
     ).rejects.toThrow('No access token was found in the store');
-
-    await store.set('accessToken', accessToken);
 
   });
 
