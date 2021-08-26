@@ -147,17 +147,12 @@ export const refreshTokenRequest = async (
   issuer: string,
   clientId: string,
   refreshToken: string,
-  scope: string,
   clientSecret?: string,
 ): Promise<void> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
 
   if (!clientId) { throw new Error('Parameter "clientId" should be set'); }
-
-  if (!scope) { throw new Error('Parameter "scope" should be set'); }
-
-  if (!scope.includes('openid')) { throw new Error('Parameter "scope" should contain "openid"'); }
 
   if (!refreshToken) { throw new Error('Parameter "refreshToken" should be set'); }
 
@@ -173,7 +168,6 @@ export const refreshTokenRequest = async (
     const data = new URLSearchParams();
     data.set('grant_type', 'refresh_token');
     data.set('client_id', clientId);
-    data.set('scope', scope);
     data.set('refresh_token', refreshToken);
 
     if (clientSecret) { data.set('client_secret', clientSecret); }
@@ -249,8 +243,7 @@ export const accessResource = async (
       // not required, no undefined check needed
       const clientSecret = await store.get('clientSecret');
 
-      // do we need a special scope for this ?
-      await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+      await refreshTokenRequest(issuer, clientId, refreshToken, clientSecret);
 
       accessToken = await store.get('accessToken');
 

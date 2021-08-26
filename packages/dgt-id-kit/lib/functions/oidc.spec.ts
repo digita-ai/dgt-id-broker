@@ -346,14 +346,14 @@ describe('refreshTokenRequest()', () => {
 
   it('should perform a fetch request to the desired url', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await refreshTokenRequest(issuer, clientId, refreshToken);
     expect(fetchMock.mock.calls[0][0]).toBe(validSolidOidcObject.token_endpoint);
 
   });
 
   it('should perform a fetch request with a DPoP header', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await refreshTokenRequest(issuer, clientId, refreshToken);
     expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeDefined();
     expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeTruthy();
 
@@ -361,7 +361,7 @@ describe('refreshTokenRequest()', () => {
 
   it('should perform a fetch request with the correct body', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await refreshTokenRequest(issuer, clientId, refreshToken);
 
     const body1 = fetchMock.mock.calls[0][1]?.body;
     expect(body1).toBeDefined();
@@ -369,13 +369,12 @@ describe('refreshTokenRequest()', () => {
     const stringBody1 = body1.toString();
     expect(stringBody1).toContain('grant_type=refresh_token');
     expect(stringBody1).toContain(`client_id=${clientId}`);
-    expect(stringBody1).toContain(`scope=${scope}`);
     expect(stringBody1).not.toContain(`client_secret=`);
     expect(stringBody1).toContain(`refresh_token=${refreshToken}`);
 
     //
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope, clientSecret);
+    await refreshTokenRequest(issuer, clientId, refreshToken, clientSecret);
 
     const body2 = fetchMock.mock.calls[1][1]?.body;
     expect(body2).toBeDefined();
@@ -383,7 +382,6 @@ describe('refreshTokenRequest()', () => {
     const stringBody2 = body2.toString();
     expect(stringBody2).toContain('grant_type=refresh_token');
     expect(stringBody2).toContain(`client_id=${clientId}`);
-    expect(stringBody2).toContain(`scope=${scope}`);
     expect(stringBody2).toContain(`client_secret=`);
     expect(stringBody2).toContain(`refresh_token=${refreshToken}`);
 
@@ -391,7 +389,7 @@ describe('refreshTokenRequest()', () => {
 
   it('should save the tokens returned by the server to the store', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await refreshTokenRequest(issuer, clientId, refreshToken);
 
     await expect(store.has('accessToken')).resolves.toBe(true);
     await expect(store.get('accessToken')).resolves.toBe('at');
@@ -403,7 +401,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponseOnce(JSON.stringify({ access_token: 'at', refresh_token: 'rt', id_token: 'it' }));
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    await refreshTokenRequest(issuer, clientId, refreshToken);
 
     await expect(store.has('idToken')).resolves.toBe(true);
     await expect(store.get('idToken')).resolves.toBe('it');
@@ -414,11 +412,11 @@ describe('refreshTokenRequest()', () => {
   it('should throw when the response does not contain an access_token and refresh_token', async () => {
 
     fetchMock.mockResponses(JSON.stringify({ refresh_token: 'rt' }));
-    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken);
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
     fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
-    const result2 = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    const result2 = refreshTokenRequest(issuer, clientId, refreshToken);
     await expect(result2).rejects.toThrow('The tokenRequest response must contain an refresh_token field, and it did not.');
 
   });
@@ -427,16 +425,8 @@ describe('refreshTokenRequest()', () => {
 
     jest.spyOn(issuerModule, 'getEndpoint').mockResolvedValueOnce(undefined);
 
-    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken);
     await expect(result).rejects.toThrow(`No token endpoint was found for issuer ${issuer}`);
-
-  });
-
-  it('should throw when parameter scope does not contain "openid"', async () => {
-
-    const result = refreshTokenRequest(issuer, clientId, refreshToken, 'scope');
-
-    await expect(result).rejects.toThrow(`Parameter "scope" should contain "openid"`);
 
   });
 
@@ -444,7 +434,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockRejectedValueOnce(undefined);
 
-    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken);
     await expect(result).rejects.toThrow(`An error occurred while refreshing tokens for issuer "${issuer}" : `);
 
   });
@@ -453,12 +443,12 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponse(JSON.stringify({ error: 'abcdefgh' }));
 
-    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken);
     await expect(result).rejects.toThrow('abcdefgh');
 
   });
 
-  const refreshTokenRequestParams = { issuer, clientId, refreshToken, scope };
+  const refreshTokenRequestParams = { issuer, clientId, refreshToken };
 
   it.each(Object.keys(refreshTokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -469,7 +459,6 @@ describe('refreshTokenRequest()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.refreshToken,
-      testArgs.scope,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -576,7 +565,7 @@ describe('accessResource()', () => {
     await accessResource(resource, 'GET');
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, 'openid', undefined);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, undefined);
 
   });
 
