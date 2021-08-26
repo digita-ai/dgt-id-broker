@@ -20,6 +20,14 @@ afterAll(() => {
 
 });
 
+const cleanTokensInStore = async () => {
+
+  await store.delete('accessToken');
+  await store.delete('idToken');
+  await store.delete('refreshToken');
+
+};
+
 beforeEach(() => {
 
   fetchMock.mockClear();
@@ -37,6 +45,8 @@ beforeEach(() => {
   });
 
 });
+
+afterEach(() => cleanTokensInStore());
 
 const issuer = 'http://issuer.com';
 const clientId = 'clientId';
@@ -164,7 +174,7 @@ describe('tokenRequest()', () => {
 
   // populate the store with DPoP keys
   beforeEach(() => generateKeys());
-  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' })));
+  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', id_token: 'it' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
@@ -227,6 +237,12 @@ describe('tokenRequest()', () => {
     await expect(store.has('idToken')).resolves.toBe(true);
     await expect(store.get('idToken')).resolves.toBe('it');
     await store.delete('idToken');
+    await expect(store.has('refreshToken')).resolves.toBe(false);
+
+    fetchMock.mockResponseOnce(JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' }));
+
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+
     await expect(store.has('refreshToken')).resolves.toBe(true);
     await expect(store.get('refreshToken')).resolves.toBe('rt');
     await store.delete('refreshToken');
@@ -380,6 +396,15 @@ describe('refreshTokenRequest()', () => {
     await expect(store.has('refreshToken')).resolves.toBe(true);
     await expect(store.get('refreshToken')).resolves.toBe('rt');
     await store.delete('refreshToken');
+    await expect(store.has('idToken')).resolves.toBe(false);
+
+    fetchMock.mockResponseOnce(JSON.stringify({ access_token: 'at', refresh_token: 'rt', id_token: 'it' }));
+
+    await refreshTokenRequest(issuer, clientId, refreshToken, scope);
+
+    await expect(store.has('idToken')).resolves.toBe(true);
+    await expect(store.get('idToken')).resolves.toBe('it');
+    await store.delete('idToken');
 
   });
 
