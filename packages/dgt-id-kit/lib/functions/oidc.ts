@@ -165,10 +165,6 @@ export const refreshTokenRequest = async (
 
   if (!tokenEndpoint) { throw new Error(`No token endpoint was found for issuer ${issuer}`); }
 
-  const codeVerifier = await store.get('codeVerifier');
-
-  if (!codeVerifier) { throw new Error('No code verifier was found in the store'); }
-
   try {
 
     const method = 'POST';
@@ -177,7 +173,6 @@ export const refreshTokenRequest = async (
     const data = new URLSearchParams();
     data.set('grant_type', 'refresh_token');
     data.set('client_id', clientId);
-    data.set('code_verifier', codeVerifier);
     data.set('scope', scope);
 
     if (clientSecret) { data.set('client_secret', clientSecret); }

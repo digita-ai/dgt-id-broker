@@ -351,9 +351,6 @@ describe('refreshTokenRequest()', () => {
     expect(stringBody1).toContain('grant_type=refresh_token');
     expect(stringBody1).toContain(`client_id=${clientId}`);
     expect(stringBody1).toContain(`scope=${scope}`);
-    // encodeURIComponent() does not encode ~
-    const verifier = await store.get('codeVerifier');
-    expect(stringBody1).toContain(`code_verifier=${verifier.split('~').join('%7E')}`);
     expect(stringBody1).not.toContain(`client_secret=`);
 
     //
@@ -367,9 +364,6 @@ describe('refreshTokenRequest()', () => {
     expect(stringBody2).toContain('grant_type=refresh_token');
     expect(stringBody2).toContain(`client_id=${clientId}`);
     expect(stringBody2).toContain(`scope=${scope}`);
-    // encodeURIComponent() does not encode ~
-    const verifier2 = await store.get('codeVerifier');
-    expect(stringBody2).toContain(`code_verifier=${verifier2.split('~').join('%7E')}`);
     expect(stringBody2).toContain(`client_secret=`);
 
   });
@@ -422,18 +416,6 @@ describe('refreshTokenRequest()', () => {
 
     const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
     await expect(result).rejects.toThrow(`An error occurred while refreshing tokens for issuer "${issuer}" : `);
-
-  });
-
-  it('should throw when no code verifier was found in the store', async () => {
-
-    const verifier = await store.get('codeVerifier');
-    await store.delete('codeVerifier');
-
-    const result = refreshTokenRequest(issuer, clientId, refreshToken, scope);
-    await expect(result).rejects.toThrow(`No code verifier was found in the store`);
-
-    await store.set('codeVerifier', verifier);
 
   });
 
