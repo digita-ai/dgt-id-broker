@@ -123,9 +123,15 @@ export const tokenRequest = async (
 
     const parsed = await response.json();
 
-    if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+    if (parsed?.error) { throw new Error(parsed.error); }
 
-    if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
+    if (!parsed?.access_token) { throw new Error('The tokenRequest response must contain an access_token field, and it did not.'); }
+
+    await store.set('accessToken', parsed.access_token);
+
+    if (!parsed?.id_token) { throw new Error('The tokenRequest response must contain an id_token field, and it did not.'); }
+
+    await store.set('idToken', parsed.id_token);
 
     if (parsed?.refresh_token) { await store.set('refreshToken', parsed.refresh_token); }
 
@@ -141,7 +147,6 @@ export const refreshTokenRequest = async (
   issuer: string,
   clientId: string,
   refreshToken: string,
-  scope: string,
   clientSecret?: string,
 ): Promise<void> => {
 
@@ -149,19 +154,11 @@ export const refreshTokenRequest = async (
 
   if (!clientId) { throw new Error('Parameter "clientId" should be set'); }
 
-  if (!scope) { throw new Error('Parameter "scope" should be set'); }
-
-  if (!scope.includes('openid')) { throw new Error('Parameter "scope" should contain "openid"'); }
-
   if (!refreshToken) { throw new Error('Parameter "refreshToken" should be set'); }
 
   const tokenEndpoint = await getEndpoint(issuer, 'token_endpoint');
 
   if (!tokenEndpoint) { throw new Error(`No token endpoint was found for issuer ${issuer}`); }
-
-  const codeVerifier = await store.get('codeVerifier');
-
-  if (!codeVerifier) { throw new Error('No code verifier was found in the store'); }
 
   try {
 
@@ -171,8 +168,7 @@ export const refreshTokenRequest = async (
     const data = new URLSearchParams();
     data.set('grant_type', 'refresh_token');
     data.set('client_id', clientId);
-    data.set('code_verifier', codeVerifier);
-    data.set('scope', scope);
+    data.set('refresh_token', refreshToken);
 
     if (clientSecret) { data.set('client_secret', clientSecret); }
 
@@ -186,7 +182,15 @@ export const refreshTokenRequest = async (
 
     const parsed = await response.json();
 
-    if (parsed?.access_token) { await store.set('accessToken', parsed.access_token); }
+    if (parsed?.error) { throw new Error(parsed.error); }
+
+    if (!parsed?.access_token) { throw new Error('The tokenRequest response must contain an access_token field, and it did not.'); }
+
+    await store.set('accessToken', parsed.access_token);
+
+    if (!parsed?.refresh_token) { throw new Error('The tokenRequest response must contain an refresh_token field, and it did not.'); }
+
+    await store.set('refreshToken', parsed.refresh_token);
 
     if (parsed?.id_token) { await store.set('idToken', parsed.id_token); }
 
@@ -209,22 +213,39 @@ export const accessResource = async (
 
   if (!method) { throw new Error('Parameter "method" should be set'); }
 
-  const accessToken = await store.get('accessToken');
+  let accessToken = await store.get('accessToken');
 
   if (!accessToken) { throw new Error('No access token was found in the store'); }
 
   try{
 
     const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
-    const exp = tokenBody?.exp;
+    const exp = tokenBody .exp;
 
-    if (+new Date() > exp) {
+    if (+new Date() > exp * 1000) {
 
-      // const refreshToken = await store.get('refreshToken');
+      // handleIncommingRedirect should have saved the clientId, issuer and possibly the
+      // client_secret ( if present ) to the store.
+      // The refresh_token should have been added to the store by tokenRequest()
 
-      // await refreshTokenRequest(issuer, clientId, refreshToken, 'openid', clientSecret);
+      const refreshToken = await store.get('refreshToken');
 
-      // accessToken = await store.get('accessToken');
+      if (!refreshToken) { throw new Error('No refresh token was found in the store'); }
+
+      const issuer = await store.get('issuer');
+
+      if (!issuer) { throw new Error('No issuer was found in the store'); }
+
+      const clientId = await store.get('clientId');
+
+      if (!clientId) { throw new Error('No client id was found in the store'); }
+
+      // not required, no undefined check needed
+      const clientSecret = await store.get('clientSecret');
+
+      await refreshTokenRequest(issuer, clientId, refreshToken, clientSecret);
+
+      accessToken = await store.get('accessToken');
 
     }
 
@@ -239,9 +260,6 @@ export const accessResource = async (
       },
       ... (body && { body }),
     });
-
-    // Check that the body is present for any method that would require it (such as POST).
-    // -- Not implementing this check for now as the HTTP spec does not require a body for ANY method
 
   } catch (error: unknown) {
 
