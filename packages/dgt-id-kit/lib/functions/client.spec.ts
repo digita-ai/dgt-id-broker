@@ -132,12 +132,19 @@ describe('handleIncomingRedirect()', () => {
 
     global.window = Object.create(window);
     delete window.location;
+    (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
+
+  });
+
+  afterEach(async () => {
+
+    await store.delete('issuer');
+    await store.delete('clientId');
+    await store.delete('clientSecret');
 
   });
 
   it('should call tokenEndpoint() with the right parameters', async () => {
-
-    (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
 
     const spy = jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
 
@@ -159,12 +166,38 @@ describe('handleIncomingRedirect()', () => {
 
   it('should throw when anything goes wrong', async () => {
 
-    (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
-
     jest.spyOn(oidcModule, 'tokenRequest').mockRejectedValueOnce(new Error('test error'));
 
     const result = handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
     await expect(result).rejects.toThrow('An error occurred handling the incoming redirect : Error: test error');
+
+  });
+
+  it('should save the issuer, client id and possibly the client secret to the store', async () => {
+
+    const spy = jest.spyOn(store, 'set');
+    jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
+
+    await handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+
+    expect(spy).toHaveBeenCalledTimes(3);
+    await expect(store.get('issuer')).resolves.toBe(issuer);
+    await expect(store.get('clientId')).resolves.toBe(clientId);
+    await expect(store.get('clientSecret')).resolves.toBe(clientSecret);
+
+  });
+
+  it('should save the issuer, client id and possibly the client secret to the store', async () => {
+
+    const spy = jest.spyOn(store, 'set');
+    jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
+
+    await handleIncomingRedirect(issuer, clientId, redirectUri, undefined);
+
+    expect(spy).toHaveBeenCalledTimes(2);
+    await expect(store.get('issuer')).resolves.toBe(issuer);
+    await expect(store.get('clientId')).resolves.toBe(clientId);
+    await expect(store.has('clientSecret')).resolves.toBe(false);
 
   });
 

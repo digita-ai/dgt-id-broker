@@ -71,6 +71,11 @@ export const handleIncomingRedirect = async (
 
   try {
 
+    await store.set('issuer', issuer);
+    await store.set('clientId', clientId);
+
+    if (clientSecret) { await store.set('clientSecret', clientSecret); }
+
     await tokenRequest(issuer, clientId, code, redirectUri, clientSecret);
 
   } catch (error: unknown) {
