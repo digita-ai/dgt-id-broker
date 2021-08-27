@@ -5,7 +5,7 @@ global.TextDecoder = TextDecoder;
 
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyExpiredAccessToken, dummyValidAccessToken, validSolidOidcObject } from '../../test/test-data';
+import { dummyValidAccessToken, dummyExpiredAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import { store } from './storage';
 import { generateKeys } from './dpop';
@@ -33,8 +33,6 @@ const cleanTokensInStore = async () => {
 
 beforeEach(() => {
 
-  fetchMock.mockClear();
-
   jest.spyOn(issuerModule, 'getEndpoint').mockImplementation(async (_issuer: string, endpoint: string): Promise<string> => {
 
     switch (endpoint) {
@@ -49,20 +47,8 @@ beforeEach(() => {
 
 });
 
+beforeEach(() => fetchMock.mockClear());
 afterEach(() => cleanTokensInStore());
-
-const issuer = 'http://issuer.com';
-const clientId = 'clientId';
-const pkceCodeChallenge = 'pkceCodeChallenge';
-const scope = 'scopeopenid';
-const redirectUri = 'redirectUri';
-const authorizationCode = 'authorizationCode';
-const refreshToken = 'refreshToken';
-const resource = 'http://resource.com';
-const method = 'GET';
-const clientSecret = 'clientSecret';
-const body = 'body';
-const contentType = 'contentType';
 
 describe('constructAuthRequestUrl()', () => {
 
