@@ -125,11 +125,11 @@ This function will handle the redirect after an Authorization Request has been s
 
 * `generateKeys(algorithm: KeyGenerationAlgorithm = 'ES256'): Promise<void>`
 +
-Generate a private and public key pair using the xref:https://github.com/panva/jose[jose library]. Save the private key as a `KeyLike`, and convert the public key to a `JWK` and save it in the `store`. The algorithm should be `ES256` by default.
+Generate a private and public key pair using the xref:https://github.com/panva/jose[jose library]. Save the private key and the public key as a `JWK`  in the `store` (use `fromKeyLike()`). The algorithm should be `ES256` by default.
 
-* `createDpopProof(htu: string, htm: string): Promise<string>`
+* `createDpopProof(htm: string, htu: string): Promise<string>`
 +
-Create a xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-4[DPoP Proof] using the xref:https://github.com/panva/jose[jose library]. Add the public JWK and sign it with the private key from the storage. An example DPoP proof can be found in the xref:../../../demo/demo-client/getAccessTokenAndResource.js[demo-client] (lines 36-50 and 67-79).
+Create a xref:https://datatracker.ietf.org/doc/html/draft-ietf-oauth-dpop-03#section-4[DPoP Proof] using the xref:https://github.com/panva/jose[jose library]. Add the public JWK and sign it with the private key from the storage, you will first have to convert the private key to a `KeyLike` using `parseJwk()`. An example DPoP proof can be found in the xref:../../../demo/demo-client/getAccessTokenAndResource.js[demo-client] (lines 36-50 and 67-79).
 
 
 [[pkce]]
