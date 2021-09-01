@@ -1,4 +1,0 @@
-
-= Background knowledge 
-
-This module contains collected background information and links to useful resources for the development and use of the Identity Broker.

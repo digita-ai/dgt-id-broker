@@ -1,4 +1,4 @@
-= Proxy documentation
+= Overview
 
 This documentation describes all the features of the Identity Proxy and how they can be configured.
 
