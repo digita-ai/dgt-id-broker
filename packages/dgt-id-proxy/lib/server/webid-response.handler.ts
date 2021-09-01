@@ -42,6 +42,8 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
+    // console.log(this)
+
     if (!response) { return throwError(new Error('A response must be provided')); }
 
     if (!response.body) { return throwError(new Error('The response did not contain a body')); }

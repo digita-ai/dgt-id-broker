@@ -1,16 +1,27 @@
-import { request } from 'http';
-import path from 'path';
+import nock = require('nock');
 import { ComponentsManager } from 'componentsjs';
 import fetchMock from 'jest-fetch-mock';
+import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
+
+import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { v4 as uuid } from 'uuid';
+import { SignJWT } from 'jose/jwt/sign';
 import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import { variables, mainModulePath, configPath } from '../setup-tests';
 
 describe('full integration', () => {
 
+  let privateKey1: KeyLike;
+  let privateKey2: KeyLike;
   let manager: ComponentsManager<unknown>;
   let server: NodeHttpServer;
+  let validDpopJwt: string;
+  let publicJwk1: JWK;
+  let publicJwk2: JWK;
+  const host = 'http://localhost:3003';
   const client_id = 'http://client.example.com/clientapp/profile';
   const redirect_uri = `http://client.example.com/requests.html`;
+  const authUrl = 'http://localhost:3003/auth?response_type=code&code_challenge=I-k6SDaSeVEgkBaUbk6E4UxFAyV8Mb_3NNSHf9q6Gu8&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Fclient.example.com%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Fclient.example.com%2Frequests.html';
 
   const clientRegistrationData = JSON.stringify({
     '@context': 'https://www.w3.org/ns/solid/oidc-context.jsonld',
@@ -47,11 +58,47 @@ describe('full integration', () => {
     registration_access_token: 'bsuodFwxgBWR3qE-pyxNeNbDhN1CWBs6oZuqkAooUgb',
   };
 
-  variables['urn:dgt-id-proxy:variables:mainModulePath'] = path.join(__dirname, '../..');
+  const fetchURL = 'http://localhost:3000';
+
+  const formDataForAccessToken = new URLSearchParams();
+  formDataForAccessToken.set('grant_type', 'authorization_code');
+  formDataForAccessToken.set('code', 'DafduCFHR-wyUF2Y3uY_T9TCQwvJ_O8AD5z2c8ksglY');
+  formDataForAccessToken.set('client_id', client_id);
+  formDataForAccessToken.set('redirect_uri', redirect_uri) ;
+  formDataForAccessToken.set('code_verifier', 'FUZp7TTuXnFoVq7vjM4guXg-WUuevyOzEUSpxkDy1eWg3YgG.X5eEdNstK6iQDbgrsCd-rxkLM2xZL-5iNGIET90g8nAXLB81XAOBkAeRD1R37vlu~8hlAuKYj6AGuWq');
+
+  const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
+
+  const payload1 = {
+    'jti': 'mockJti',
+    'sub': 'mockSub',
+    'iat': secondsSinceEpoch(),
+    'exp': secondsSinceEpoch() + 7200,
+    'scope': 'mockScope',
+    'client_id': 'mockClient',
+    'iss': 'http://mock-issuer.com',
+    'aud': 'solid',
+  };
+
+  const header1 = {
+    alg: 'ES256',
+    typ: 'at+jwt',
+    kid: 'mockKeyId',
+  };
 
   beforeAll(async () => {
 
     fetchMock.enableMocks();
+
+    const keyPair = await generateKeyPair('ES256');
+    privateKey1 = keyPair.privateKey;
+    privateKey2 = keyPair.privateKey;
+    publicJwk1 = await fromKeyLike(keyPair.publicKey);
+    publicJwk1.kid = 'mockKeyId';
+    publicJwk1.alg = 'ES256';
+    publicJwk2 = await fromKeyLike(keyPair.publicKey);
+    publicJwk2.kid = 'mockKeyId';
+    publicJwk2.alg = 'ES256';
 
     manager = await ComponentsManager.build({
       mainModulePath,
@@ -61,34 +108,135 @@ describe('full integration', () => {
     await manager.configRegistry.register(configPath);
 
     server = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
+
     await server.start().toPromise();
+
+  });
+
+  const mockedUpstreamJwt = async () => new SignJWT(payload1)
+    .setProtectedHeader(header1)
+    .sign(privateKey2);
+
+  beforeEach(async () => {
+
+    // DPoP-proofs
+    validDpopJwt = await new SignJWT({
+      'htm': 'POST',
+      'htu': 'http://localhost:3003/token',
+    })
+      .setProtectedHeader({
+        alg: 'ES256',
+        typ: 'dpop+jwt',
+        jwk: publicJwk1,
+      })
+      .setJti(uuid())
+      .setIssuedAt()
+      .sign(privateKey1);
 
   });
 
   afterAll(() => {
 
-    // server.stop();
+    server.stop();
 
   });
 
-  describe('GET /auth', () => {
+  describe('full flow ', () => {
 
-    it('should', async () => {
+    it('auth', async () => {
 
-      fetchMock.mockResponses([ clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
+      // prevents the next fetch request from being mocked, resumes normal mocking behaviour after
+      fetchMock.dontMockOnce();
 
-      const req = request(
-        {
-          host: 'localhost:3003',
-          path: '/auth?response_type=code&code_challenge=F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Flocalhost%3A3002%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html',
-          method: 'GET',
-        },
+      // the first empty object is needed for the dontMockOnce (we dont't want to mock the very first fetch request below to the proxy)
+      // the second one is the response to getting the clients registration data
+      // the third one is the response from the register endpoint upon registering the client
+      fetchMock.mockResponses(
+        '{}',
+        [ clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 } ],
+        [ JSON.stringify(mockRegisterResponse), { status: 200 } ],
       );
 
-      req.end();
+      // the authentication request the proxy sends to the upstream server after passing it through all the necessary handlers
+      const clientAuthReq = nock(fetchURL, { encodedQueryParams: true })
+        .get(`/auth`)
+        .query(true)
+        // nock docs state you can't use arrow functions if you want to call this.req
+        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+        .reply(function () {
+
+          // this.req = the original request
+          const params = new URLSearchParams(host + this.req.path);
+          const state = params.get('state');
+
+          expect(params.get('client_id')).toEqual(mockRegisterResponse.client_id);
+          expect(state).toBeDefined();
+
+          return [ 302, 'found', { location: `http://localhost:3001/requests.html?code=DafduCFHR-wyUF2Y3uY_T9TCQwvJ_O8AD5z2c8ksglY&state=${state}` } ];
+
+        });
+
+      // mocks the redirect containing the code
+      const code = nock('http://localhost:3001')
+        .get('/requests.html')
+        .query(true)
+        .reply(200, 'succes');
+
+      // the initial auth request to the proxy
+      const response = await fetch(authUrl, {
+        method: 'GET',
+      });
+
+    });
+
+    it('token', async () => {
+
+      const access_token = await mockedUpstreamJwt();
+      const id_token = await mockedUpstreamJwt();
+
+      const tokenResponseBody = JSON.stringify({
+        access_token,
+        expires_in: 7200,
+        id_token,
+        scope: 'mockScope',
+        token_type: 'Bearer',
+      });
+
+      // mocks the proxy's token request to the upstream server
+      const token = nock(fetchURL)
+        .post('/token')
+        .query(true)
+        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+        .reply(function () {
+
+          // trying to access the original request body with this.req doesn't seem possible
+
+          return [ 200, tokenResponseBody, { 'content-type': 'application/json' } ];
+
+        });
+
+      // prevents the next fetch request from being mocked, resumes normal mocking behavior after
+      fetchMock.dontMockOnce();
+
+      fetchMock.mockResponses(
+        [ clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 } ],
+        [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ],
+        [ JSON.stringify({ keys: [ publicJwk2 ] }), { status: 200 } ]
+      );
+
+      // the initial token request to the proxy
+      const response = await fetch('http://localhost:3003/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+          'DPoP': validDpopJwt,
+        },
+        body: formDataForAccessToken,
+      });
 
     });
 
   });
 
 });
+

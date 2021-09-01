@@ -10,6 +10,11 @@
 
 The following needs to be tested:
 
+Requests:
+
+
+Responses:
+
 . The token endpoint replies with the tokens when all required parameters are present and correct.
 
 . The token endpoint replies with invalid DPoP proof in the following cases:
@@ -31,12 +36,12 @@ The following needs to be tested:
 
 . Check the incoming request parameters on endpoint
 
-. The upstream server replies with access_token when all required parameters are present and correct.
+. The proxy server replies with access_token when all required parameters are present and correct.
 
-. The upstream server replies with invalid_grant when code challenges do not match
-. The upstream server replies with invalid_request when no auth code was given
-. The upstream server replies with invalid_request when no code verifier was given
-. The upstream server replies with invalid_request when the code verifier is too long or short
+. The proxy server replies with invalid_grant when code challenges do not match
+. The proxy server replies with invalid_request when no auth code was given
+. The proxy server replies with invalid_request when no code verifier was given
+. The proxy server replies with invalid_request when the code verifier is too long or short
 
 === Client Registration flow
 
