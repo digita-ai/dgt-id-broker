@@ -16,7 +16,7 @@ Out of the box, none are configured. You will need to configure everything yours
 
 == Enabling Features
 
-It is possible to make a completely Solid-OIDC Compliant Identity Provider using Node OIDC Provider. In fact, we have done just that. Take a look at it xref:../../../../providers/solid-compliant-oidc-provider/README.md[here].
+It is possible to make a completely Solid-OIDC Compliant Identity Provider using Node OIDC Provider. In fact, we have done just that. Take a look at it xref:providers:solid-compliant-oidc-provider/README.md[here].
 
 To get started, panva has provided a https://github.com/panva/node-oidc-provider-example[step by step example] of how you can setup the provider. Note that his example will setup the provider on Heroku. You can instead take the code from that example and use it as a base for your own provider and run it locally.
 
@@ -97,7 +97,7 @@ discovery: {
 +
 . To dereference WebIDs so they can be used as ClientIDs, you will need to make use of https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#pre--and-post-middlewares[middleware] that lets you capture the request. The way we did this was by capturing the request, taking the client_id, checking that it is a valid url, and if it is, checking that it is a valid webid. Then we parse the rdf document, take the `oidcRegistration` claim and validate it. Once that is done, we leverage the Dynamic Registration endpoint on the provider to register the client, but we add an encrypted claim to the data we send to the claim so that we can verify it was sent by us. Then, we verify that claim using the registration.idFactory function.
 +
-This is quite a workaround, but take a look at the code of our xref:../../../../providers/solid-compliant-oidc-provider/README.md[solid-compliant-oidc-provider] if you are interested in doing the same. Otherwise, you can always skip this step and let the proxy take care of using webids as clientIDs.
+This is quite a workaround, but take a look at the code of our xref:providers:solid-compliant-oidc-provider/README.md[solid-compliant-oidc-provider] if you are interested in doing the same. Otherwise, you can always skip this step and let the proxy take care of using webids as clientIDs.
 
 
 
@@ -105,4 +105,4 @@ This is quite a workaround, but take a look at the code of our xref:../../../../
 
 As explained, it is entirely possible to make Node OIDC Provider Solid-OIDC compliant. It might be a good idea to enable as many features as possible that are easily added through configuration such as PKCE and DPoP, and then letting the proxy handle the other things that are a lot more finnicky to implement.
 
-Take a look at the xref:../../proxy/pages/index.adoc[list of features] that the proxy supports and see which ones you might still need to add.
+Take a look at the xref:proxy:index.adoc[list of features] that the proxy supports and see which ones you might still need to add.
