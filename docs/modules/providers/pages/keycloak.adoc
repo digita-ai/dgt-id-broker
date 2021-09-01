@@ -38,6 +38,6 @@ If the claim `webid` exists on the user that is requesting a token, it will then
 
 To make Keycloak Solid-OIDC compliant you will need to configure the following features on the proxy:
 
-* xref:proxy:webids_as_clientids.adoc[Using webids as client IDs]. Can be achieved with the Static Client handlers.
-* xref:proxy:dpop.adoc[Demonstrating Proof of Posession].
-* xref:proxy:claim_extension.adoc#aud[Adding `solid` to the aud claim of Access Tokens].
+* xref:features:webids_as_clientids.adoc[Using webids as client IDs]. Can be achieved with the Static Client handlers.
+* xref:features:dpop.adoc[Demonstrating Proof of Posession].
+* xref:features:claim_extension.adoc#aud[Adding `solid` to the aud claim of Access Tokens].

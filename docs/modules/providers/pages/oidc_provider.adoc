@@ -105,4 +105,4 @@ This is quite a workaround, but take a look at the code of our xref:providers:so
 
 As explained, it is entirely possible to make Node OIDC Provider Solid-OIDC compliant. It might be a good idea to enable as many features as possible that are easily added through configuration such as PKCE and DPoP, and then letting the proxy handle the other things that are a lot more finnicky to implement.
 
-Take a look at the xref:proxy:index.adoc[list of features] that the proxy supports and see which ones you might still need to add.
+Take a look at the xref:features:index.adoc[list of features] that the proxy supports and see which ones you might still need to add.
