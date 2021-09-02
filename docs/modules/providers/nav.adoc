@@ -1,3 +1,4 @@
-* xref:pages/auth0.adoc[Auth0]
-* xref:pages/keycloak.adoc[Keycloak]
-* xref:pages/oidc_provider.adoc[Node OIDC Provider]
+.Providers
+* xref:auth0.adoc[Auth0]
+* xref:keycloak.adoc[Keycloak]
+* xref:oidc_provider.adoc[Node OIDC Provider]
