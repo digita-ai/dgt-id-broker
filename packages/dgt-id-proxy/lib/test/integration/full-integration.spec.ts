@@ -20,8 +20,9 @@ describe('full integration', () => {
   let publicJwk2: JWK;
   const host = 'http://localhost:3003';
   const client_id = 'http://client.example.com/clientapp/profile';
+  const publicClient_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const redirect_uri = `http://client.example.com/requests.html`;
-  const authUrl = 'http://localhost:3003/auth?response_type=code&code_challenge=I-k6SDaSeVEgkBaUbk6E4UxFAyV8Mb_3NNSHf9q6Gu8&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Fclient.example.com%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Fclient.example.com%2Frequests.html';
+  let authUrl: string;
 
   const clientRegistrationData = JSON.stringify({
     '@context': 'https://www.w3.org/ns/solid/oidc-context.jsonld',
@@ -90,6 +91,8 @@ describe('full integration', () => {
 
     fetchMock.enableMocks();
 
+    authUrl = 'http://localhost:3003/auth?response_type=code&code_challenge=I-k6SDaSeVEgkBaUbk6E4UxFAyV8Mb_3NNSHf9q6Gu8&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Fclient.example.com%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Fclient.example.com%2Frequests.html';
+
     const keyPair = await generateKeyPair('ES256');
     privateKey1 = keyPair.privateKey;
     privateKey2 = keyPair.privateKey;
@@ -141,9 +144,12 @@ describe('full integration', () => {
 
   });
 
-  describe('full flow ', () => {
+  describe('Auth flow ', () => {
 
-    it('auth', async () => {
+    let params: URLSearchParams;
+    let state: string;
+
+    beforeEach(async () => {
 
       // prevents the next fetch request from being mocked, resumes normal mocking behaviour after
       fetchMock.dontMockOnce();
@@ -161,16 +167,13 @@ describe('full integration', () => {
       const clientAuthReq = nock(fetchURL, { encodedQueryParams: true })
         .get(`/auth`)
         .query(true)
-        // nock docs state you can't use arrow functions if you want to call this.req
-        // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+      // nock docs state you can't use arrow functions if you want to call this.req
+      // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
         .reply(function () {
 
           // this.req = the original request
-          const params = new URLSearchParams(host + this.req.path);
-          const state = params.get('state');
-
-          expect(params.get('client_id')).toEqual(mockRegisterResponse.client_id);
-          expect(state).toBeDefined();
+          params = new URLSearchParams(host + this.req.path);
+          state = params.get('state');
 
           return [ 302, 'found', { location: `http://localhost:3001/requests.html?code=DafduCFHR-wyUF2Y3uY_T9TCQwvJ_O8AD5z2c8ksglY&state=${state}` } ];
 
@@ -189,7 +192,37 @@ describe('full integration', () => {
 
     });
 
-    it('token', async () => {
+    it('should pass state to the endpoint in the params if not provided in the initial request', async () => {
+
+      // check if state is present in the url params
+      expect(state).toBeDefined();
+
+    });
+
+    it('should pass state to the endpoint in the if provided in the initial request', async () => {
+
+      // add state to the intial request
+      authUrl = 'http://localhost:3003/auth?response_type=code&code_challenge=I-k6SDaSeVEgkBaUbk6E4UxFAyV8Mb_3NNSHf9q6Gu8&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Fclient.example.com%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Fclient.example.com%2Frequests.html&state=123456';
+
+      expect(state).toBeDefined();
+
+    });
+
+    it('should replace the client-id with the one provided in the registration response', async () => {
+
+      // check if the client-id is the one provided in the registration response instead of the one provided in the initial request
+      expect(params.get('client_id')).toEqual(mockRegisterResponse.client_id);
+
+    });
+
+  });
+
+  describe('token flow', () => {
+
+    let reqBody: URLSearchParams;
+    let initialRequest;
+
+    beforeEach(async () => {
 
       const access_token = await mockedUpstreamJwt();
       const id_token = await mockedUpstreamJwt();
@@ -206,10 +239,15 @@ describe('full integration', () => {
       const token = nock(fetchURL)
         .post('/token')
         .query(true)
+        // docs said this does not work with arrow functions hence the line below
         // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-        .reply(function () {
+        .reply(function (uri, body) {
 
-          // trying to access the original request body with this.req doesn't seem possible
+          initialRequest = this.req;
+          // console.log(this.req);
+          // console.log(body);
+
+          reqBody = new URLSearchParams(body.toString());
 
           return [ 200, tokenResponseBody, { 'content-type': 'application/json' } ];
 
@@ -218,6 +256,7 @@ describe('full integration', () => {
       // prevents the next fetch request from being mocked, resumes normal mocking behavior after
       fetchMock.dontMockOnce();
 
+      // mocks the sequencal responses from the endpoints
       fetchMock.mockResponses(
         [ clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 } ],
         [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ],
@@ -233,6 +272,30 @@ describe('full integration', () => {
         },
         body: formDataForAccessToken,
       });
+
+    });
+
+    it('should use the client-id from the registration response', async () => {
+
+      expect(reqBody.get('client_id')).toEqual(mockRegisterResponse.client_id);
+
+    });
+
+    it('should have a recalculated content-length after switching the client id', async () => {
+
+      expect(initialRequest.headers['content-length']).toEqual(Buffer.byteLength(reqBody.toString(), initialRequest.headers['content-type']).toString());
+
+    });
+
+    it('should not contain the code verifier in the query parameters', async () => {
+
+      expect(reqBody.get('code_verifier')).toBeFalsy();
+
+    });
+
+    it('should contain the same redirect_uri as the one provided to the auth request', async () => {
+
+      expect(reqBody.get('redirect_uri')).toEqual(redirect_uri);
 
     });
 
