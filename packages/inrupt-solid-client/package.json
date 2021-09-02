@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/inrupt-solid-client",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Re-bundled version of the Solid client for browser packages.",
   "author": "Wouter Janssens <wouter@digita.ai>",
   "main": "./dist/index.js",

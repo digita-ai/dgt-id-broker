@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.1...v0.5.0) (2021-09-02)
+
+
+### **Features**
+
+* id kit module client ([#201](https://github.com/digita-ai/dgt-id-broker/issues/201)) ([0bc20d1](https://github.com/digita-ai/dgt-id-broker/commit/0bc20d1b01003c231e62463df1f328e1a6cb4cf5))
+* id kit module oidc ([#190](https://github.com/digita-ai/dgt-id-broker/issues/190)) ([31a277b](https://github.com/digita-ai/dgt-id-broker/commit/31a277b3c331ef8d1c0c50f16da6f90f0e6510f6))
+
+
+
 ### [0.4.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.0...v0.4.1) (2021-08-23)
 
 
