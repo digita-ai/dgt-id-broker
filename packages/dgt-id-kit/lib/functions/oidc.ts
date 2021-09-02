@@ -1,9 +1,9 @@
 import { HttpMethod } from '@digita-ai/handlersjs-http';
+import { validateAndFetch } from '../util/validate-and-fetch';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
 import { generateCodeChallenge, generateCodeVerifier } from './pkce';
 import { store } from './storage';
-import { validateAndFetch } from './validate-and-fetch';
 
 export const constructAuthRequestUrl = async (
   issuer: string,
