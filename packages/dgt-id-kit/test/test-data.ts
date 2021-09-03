@@ -111,6 +111,7 @@ export const dummyExpiredAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
 export const issuer = 'http://issuer.com';
 export const clientId = 'clientId';
 export const pkceCodeChallenge = 'pkceCodeChallenge';
+export const codeVerifier = 'codeVerifier';
 export const scope = 'scopeopenid';
 export const redirectUri = 'https://redirect.uri';
 export const webId = 'https://web.id';

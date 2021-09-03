@@ -1,31 +1,17 @@
 import { base64UrlEncode, generateCodeChallenge, generateCodeVerifier } from './pkce';
-import { store } from './storage';
 
 describe('generateCodeVerifier()', () => {
 
   it('should return a code verifier of the desired length', async () => {
 
-    const result = generateCodeVerifier(100);
-    await expect(result).resolves.toHaveLength(100);
-
-    const result2 = generateCodeVerifier(70);
-    await expect(result2).resolves.toHaveLength(70);
-
-  });
-
-  it('should save the code verifier to the store', async () => {
-
-    const result = await generateCodeVerifier(50);
-    const inStore = await store.get('codeVerifier');
-    expect(inStore).toBeDefined();
-    expect(inStore).toBe(result);
-    await expect(store.has('codeVerifier')).resolves.toBe(true);
+    expect(generateCodeVerifier(100)).toHaveLength(100);
+    expect(generateCodeVerifier(70)).toHaveLength(70);
 
   });
 
   it('should return a code verifier that only contains valid code verifier characters', async () => {
 
-    const result = await generateCodeVerifier(100);
+    const result = generateCodeVerifier(100);
     expect(result).toBeDefined();
 
     // eslint-disable-next-line no-useless-escape
@@ -36,22 +22,19 @@ describe('generateCodeVerifier()', () => {
 
   it('should throw when parameter length is undefined', async () => {
 
-    const result = generateCodeVerifier(undefined);
-    await expect(result).rejects.toThrow('Parameter "length" should be set');
+    expect(() => generateCodeVerifier(undefined)).toThrow('Parameter "length" should be set');
 
   });
 
   it('should throw when parameter length is less than 43', async () => {
 
-    const result = generateCodeVerifier(42);
-    await expect(result).rejects.toThrow('A PKCE code_verifier has to be at least 43 characters long');
+    expect(() => generateCodeVerifier(42)).toThrow('A PKCE code_verifier has to be at least 43 characters long');
 
   });
 
   it('should throw when parameter length is greater than 128', async () => {
 
-    const result = generateCodeVerifier(129);
-    await expect(result).rejects.toThrow('A PKCE code_verifier can not contain more than 128 characters');
+    expect(() => generateCodeVerifier(129)).toThrow('A PKCE code_verifier can not contain more than 128 characters');
 
   });
 

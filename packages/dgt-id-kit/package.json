@@ -26,7 +26,6 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "0.3.2",
     "@digita-ai/handlersjs-http": "0.3.2",
     "@digita-ai/inrupt-solid-client": "0.5.0",
     "crypto-js": "^4.1.1",

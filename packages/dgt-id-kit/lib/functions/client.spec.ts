@@ -4,9 +4,8 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, issuer, clientId, scope, responseType, idToken, webId, refreshToken, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode } from '../../test/test-data';
-import { handleIncomingRedirect, loginWithIssuer, loginWithWebId, logout } from './client';
-import { store } from './storage';
+import { issuer, clientId, scope, responseType, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier } from '../../test/test-data';
+import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from './client';
 import * as clientModule from './client';
 import * as oidcModule from './oidc';
 
@@ -104,29 +103,9 @@ describe('loginWithWebId()', () => {
 
 });
 
-describe('logout()', () => {
-
-  it('should delete access token, id token and refresh token from the store', async () => {
-
-    await store.set('accessToken', dummyValidAccessToken);
-    await store.set('idToken', idToken);
-    await store.set('refreshToken', refreshToken);
-
-    await expect(store.has('accessToken')).resolves.toBe(true);
-    await expect(store.has('idToken')).resolves.toBe(true);
-    await expect(store.has('refreshToken')).resolves.toBe(true);
-
-    await logout();
-
-    await expect(store.has('accessToken')).resolves.toBe(false);
-    await expect(store.has('idToken')).resolves.toBe(false);
-    await expect(store.has('refreshToken')).resolves.toBe(false);
-
-  });
-
-});
-
 describe('handleIncomingRedirect()', () => {
+
+  let spy;
 
   beforeEach(() => {
 
@@ -134,24 +113,21 @@ describe('handleIncomingRedirect()', () => {
     delete window.location;
     (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
 
-  });
-
-  afterEach(async () => {
-
-    await store.delete('issuer');
-    await store.delete('clientId');
-    await store.delete('clientSecret');
+    spy = jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValue({
+      accessToken: 'at', idToken: 'it',
+    });
 
   });
 
   it('should call tokenEndpoint() with the right parameters', async () => {
 
-    const spy = jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
-
-    await handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+    await handleIncomingRedirect(issuer, clientId, redirectUri, codeVerifier, {}, {}, clientSecret);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, authorizationCode, redirectUri, clientSecret);
+
+    expect(spy).toHaveBeenCalledWith(
+      issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {}, clientSecret
+    );
 
   });
 
@@ -159,7 +135,7 @@ describe('handleIncomingRedirect()', () => {
 
     (window.location as any) = new URL(`http://test.url/test?noCode=noCode`);
 
-    const result = handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+    const result = handleIncomingRedirect(issuer, clientId, redirectUri, codeVerifier, {}, {}, clientSecret);
     await expect(result).rejects.toThrow(`No authorization code was found in window.location.search : ${window.location.search}`);
 
   });
@@ -168,40 +144,12 @@ describe('handleIncomingRedirect()', () => {
 
     jest.spyOn(oidcModule, 'tokenRequest').mockRejectedValueOnce(new Error('test error'));
 
-    const result = handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
+    const result = handleIncomingRedirect(issuer, clientId, redirectUri, codeVerifier, {}, {}, clientSecret);
     await expect(result).rejects.toThrow('An error occurred handling the incoming redirect : Error: test error');
 
   });
 
-  it('should save the issuer, client id and possibly the client secret to the store', async () => {
-
-    const spy = jest.spyOn(store, 'set');
-    jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
-
-    await handleIncomingRedirect(issuer, clientId, redirectUri, clientSecret);
-
-    expect(spy).toHaveBeenCalledTimes(3);
-    await expect(store.get('issuer')).resolves.toBe(issuer);
-    await expect(store.get('clientId')).resolves.toBe(clientId);
-    await expect(store.get('clientSecret')).resolves.toBe(clientSecret);
-
-  });
-
-  it('should save the issuer, client id and possibly the client secret to the store', async () => {
-
-    const spy = jest.spyOn(store, 'set');
-    jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce();
-
-    await handleIncomingRedirect(issuer, clientId, redirectUri, undefined);
-
-    expect(spy).toHaveBeenCalledTimes(2);
-    await expect(store.get('issuer')).resolves.toBe(issuer);
-    await expect(store.get('clientId')).resolves.toBe(clientId);
-    await expect(store.has('clientSecret')).resolves.toBe(false);
-
-  });
-
-  const handleIncomingRedirectParams = { issuer, clientId, redirectUri };
+  const handleIncomingRedirectParams = { issuer, clientId, redirectUri, codeVerifier, publicKey: {}, privateKey: {} };
 
   it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -212,6 +160,9 @@ describe('handleIncomingRedirect()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.redirectUri,
+      testArgs.codeVerifier,
+      testArgs.publicKey,
+      testArgs.privateKey,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
