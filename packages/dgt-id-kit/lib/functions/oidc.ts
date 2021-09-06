@@ -56,12 +56,14 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   redirectUri: string,
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void>
 ): Promise<void> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
+  if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
   try {
 
@@ -76,7 +78,7 @@ export const authRequest = async (
       redirectUri,
     );
 
-    await validateAndFetch(requestUrl);
+    handleAuthRequestUrl(requestUrl);
 
   } catch (error: unknown) {
 

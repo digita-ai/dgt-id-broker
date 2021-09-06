@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Fix to be able to run tests in jsdom
 import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
@@ -5,9 +6,8 @@ global.TextDecoder = TextDecoder;
 
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, dummyExpiredAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier } from '../../test/test-data';
+import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
-import { generateKeys } from './dpop';
 import * as issuerModule from './issuer';
 import * as oidcModule from './oidc';
 import * as dpopModule from './dpop';
@@ -105,19 +105,13 @@ describe('authRequest()', () => {
 
   it('should perform a fetch request to the desired url', async () => {
 
-    fetchMock.mockResponse('Does not matter');
+    const spy = jest.spyOn(global.console, 'log');
 
-    await authRequest(issuer, clientId, scope, redirectUri);
-    const requestedUrl = fetchMock.mock.calls[0][0];
+    const result = authRequest(issuer, clientId, scope, redirectUri, async () => { console.log('log something'); });
 
-    expect(requestedUrl).toBeDefined();
-    expect(requestedUrl).toContain(`${validSolidOidcObject.authorization_endpoint}?`);
-    expect(requestedUrl).toContain(`client_id=${clientId}`);
-    expect(requestedUrl).toContain(`code_challenge=`);
-    expect(requestedUrl).toContain(`code_challenge_method=S256`);
-    expect(requestedUrl).toContain(`response_type=code`);
-    expect(requestedUrl).toContain(`scope=${scope}`);
-    expect(requestedUrl).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    await expect(result).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith('log something');
 
   });
 
@@ -126,12 +120,15 @@ describe('authRequest()', () => {
     jest.spyOn(oidcModule, 'constructAuthRequestUrl').mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await authRequest(issuer, clientId, scope, redirectUri)
+      async () => await authRequest(issuer, clientId, scope, redirectUri, async () => { console.log('log something'); })
     ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
 
   });
 
-  const authRequestParams = { issuer, clientId, scope, redirectUri };
+  const handleAuthRequestUrl = async () => { console.log('log something'); }
+;
+
+  const authRequestParams = { issuer, clientId, scope, redirectUri, handleAuthRequestUrl };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -143,6 +140,7 @@ describe('authRequest()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.redirectUri,
+      testArgs.handleAuthRequestUrl
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
