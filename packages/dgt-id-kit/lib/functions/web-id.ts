@@ -1,6 +1,6 @@
 import { Quad } from 'rdf-js';
 import { Issuer } from '../models/issuer.model';
-import { getTurtleFileAsQuads } from './data';
+import { getTurtleFileAsQuads } from '../util/data';
 import { isValidIssuer } from './issuer';
 
 /**

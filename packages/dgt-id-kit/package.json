@@ -26,7 +26,6 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-http": "0.3.2",
     "@digita-ai/inrupt-solid-client": "0.5.0",
     "crypto-js": "^4.1.1",
     "jose": "^3.14.3",
@@ -35,6 +34,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@digita-ai/handlersjs-core": "0.3.4",
     "@digita-ai/typescript-config": "^0.3.3",
     "@types/crypto-js": "^4.0.2",
     "@types/jest": "^26.0.23",
@@ -95,7 +95,8 @@
       "<rootDir>/lib/main.ts",
       "<rootDir>/lib/index.ts",
       "<rootDir>/lib-old/",
-      "<rootDir>/test/"
+      "<rootDir>/test/",
+      "<rootDir>/lib/models/http-method.model.ts"
     ]
   }
 }

@@ -4,9 +4,9 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-import { HttpMethod } from '@digita-ai/handlersjs-http';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier } from '../../test/test-data';
+import { HttpMethod } from '../models/http-method.model';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import * as issuerModule from './issuer';
 import * as oidcModule from './oidc';

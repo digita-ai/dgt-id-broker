@@ -1,9 +1,9 @@
-import { HttpMethod } from '@digita-ai/handlersjs-http';
 import { JWK } from 'jose/webcrypto/types';
+import { validateAndFetch } from '../util/validate-and-fetch';
+import { HttpMethod } from '../models/http-method.model';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
 import { generateCodeChallenge, generateCodeVerifier } from './pkce';
-import { validateAndFetch } from './validate-and-fetch';
 
 /**
  * Construct an authentication request url based on the given parameters

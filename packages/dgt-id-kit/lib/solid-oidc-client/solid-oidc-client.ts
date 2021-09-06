@@ -1,11 +1,10 @@
-import { HttpMethod } from '@digita-ai/handlersjs-http';
 import { JWK } from 'jose/webcrypto/types';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from '../functions/client';
 import { generateKeys } from '../functions/dpop';
-import { accessResource, refreshTokenRequest, tokenRequest } from '../functions/oidc';
+import { accessResource, refreshTokenRequest } from '../functions/oidc';
 import { generateCodeVerifier } from '../functions/pkce';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
-
+import { HttpMethod } from '../models/http-method.model';
 export interface storeInterface {
   publicKey: JWK;
   privateKey: JWK;

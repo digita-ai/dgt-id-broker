@@ -1,7 +1,7 @@
 import { DiscoveryField } from '../models/discovery-field.model';
 import { DiscoveryEndpointField } from '../models/discovery-endpoint-field.model';
 import { DiscoveryStringField } from '../models/discovery-string-field.model';
-import { validateAndFetch } from './validate-and-fetch';
+import { validateAndFetch } from '../util/validate-and-fetch';
 
 /**
  * Retrieve the openid-configuration of an issuer

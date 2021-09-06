@@ -4,9 +4,9 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import { JWK } from 'jose/webcrypto/types';
-import { HttpMethod } from '@digita-ai/handlersjs-http';
+import { HttpMethod } from '../models/http-method.model';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
-import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, responseType, webId, issuer1, dummyValidAccessToken, refreshToken, idToken, clientSecret, codeVerifier, dummyExpiredAccessToken, getAuthorizationCode, authorizationCode } from '../../test/test-data';
+import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, responseType, webId, dummyValidAccessToken, refreshToken, idToken, clientSecret, dummyExpiredAccessToken, getAuthorizationCode } from '../../test/test-data';
 import * as oidcModule from '../functions/oidc';
 import * as clientModule from '../functions/client';
 import { SolidOidcClient, storeInterface } from './solid-oidc-client';
