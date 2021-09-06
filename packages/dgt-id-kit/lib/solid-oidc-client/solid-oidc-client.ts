@@ -39,6 +39,7 @@ export class SolidOidcClient {
     issuer: string,
     scope: string,
     responseType: string,
+    handleAuthRequestUrl: (requestUrl: string) => Promise<void>
   ): Promise<void> {
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
@@ -48,7 +49,7 @@ export class SolidOidcClient {
     const clientId = await this.store.get('clientId');
     if (!clientId) throw this.getInitializeError('clientId');
 
-    await authRequest(issuer, clientId, scope, responseType);
+    await authRequest(issuer, clientId, scope, responseType, handleAuthRequestUrl);
 
   }
 
@@ -56,6 +57,7 @@ export class SolidOidcClient {
     webId: string,
     scope: string,
     responseType: string,
+    handleAuthRequestUrl: (requestUrl: string) => Promise<void>
   ): Promise<void> {
 
     if (!webId) throw new Error('Parameter "webId" should be set');
@@ -65,7 +67,7 @@ export class SolidOidcClient {
     const issuer = await getFirstIssuerFromWebId(webId);
     if (!issuer) throw new Error(`No issuer was found on the profile of ${webId}`);
 
-    await this.loginWithIssuer(issuer.url.toString(), scope, responseType);
+    await this.loginWithIssuer(issuer.url.toString(), scope, responseType, handleAuthRequestUrl);
 
   }
 
@@ -80,6 +82,7 @@ export class SolidOidcClient {
   async handleIncomingRedirect(
     issuer: string,
     redirectUri: string,
+    getAuthorizationCode: () => Promise<string>,
     clientSecret?: string,
   ): Promise<void> {
 
@@ -93,7 +96,7 @@ export class SolidOidcClient {
 
     if (clientSecret) await this.store.set('clientSecret', clientSecret);
 
-    const code = new URLSearchParams(window.location.search).get('code');
+    const code = await getAuthorizationCode();
     if (!code) throw new Error(`No authorization code was found in window.location.search : ${window.location.search}`);
 
     const privateKey = await this.store.get('privateKey');
