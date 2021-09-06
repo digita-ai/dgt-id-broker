@@ -1,7 +1,7 @@
 import { DiscoveryField } from '../models/discovery-field.model';
 import { DiscoveryEndpointField } from '../models/discovery-endpoint-field.model';
 import { DiscoveryStringField } from '../models/discovery-string-field.model';
-import { validateAndFetch } from './validate-and-fetch';
+import { validateAndFetch } from '../util/validate-and-fetch';
 
 /**
  * Retrieve the openid-configuration of an issuer
@@ -9,6 +9,7 @@ import { validateAndFetch } from './validate-and-fetch';
  * @param issuer the url of the oidc issuer
  * @returns the openid-configuration of the issuer as json
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
   if (!issuer) { throw new Error('Parameter "issuer" should be set'); }

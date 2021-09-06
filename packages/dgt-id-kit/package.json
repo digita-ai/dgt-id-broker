@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-kit",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Collection of client-side utilities for authentication with Solid services",
   "author": "Wouter Termont <wouter.termont@digita.ai>",
   "main": "./dist/dgt-id-kit.umd.js",
@@ -26,8 +26,7 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "0.3.2",
-    "@digita-ai/inrupt-solid-client": "0.4.0",
+    "@digita-ai/inrupt-solid-client": "0.5.0",
     "crypto-js": "^4.1.1",
     "jose": "^3.14.3",
     "n3": "^1.11.0",
@@ -35,6 +34,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@digita-ai/handlersjs-core": "0.3.4",
     "@digita-ai/typescript-config": "^0.3.3",
     "@types/crypto-js": "^4.0.2",
     "@types/jest": "^26.0.23",
@@ -74,7 +74,7 @@
     "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 98.59,
+        "branches": 99.44,
         "functions": 100,
         "lines": 100,
         "statements": 100
@@ -95,7 +95,8 @@
       "<rootDir>/lib/main.ts",
       "<rootDir>/lib/index.ts",
       "<rootDir>/lib-old/",
-      "<rootDir>/test/"
+      "<rootDir>/test/",
+      "<rootDir>/lib/models/http-method.model.ts"
     ]
   }
 }

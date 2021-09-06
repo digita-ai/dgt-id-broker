@@ -28,6 +28,7 @@ describe('generateCodeVerifier()', () => {
     const result = await generateCodeVerifier(100);
     expect(result).toBeDefined();
 
+    // eslint-disable-next-line no-useless-escape
     const regex = /^[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-\.\_\~]{43,128}$/;
     expect(regex.test(result)).toBe(true);
 

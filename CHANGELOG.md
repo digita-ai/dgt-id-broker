@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.1...v0.5.0) (2021-09-02)
+
+
+### **Features**
+
+* id kit module client ([#201](https://github.com/digita-ai/dgt-id-broker/issues/201)) ([0bc20d1](https://github.com/digita-ai/dgt-id-broker/commit/0bc20d1b01003c231e62463df1f328e1a6cb4cf5))
+* id kit module oidc ([#190](https://github.com/digita-ai/dgt-id-broker/issues/190)) ([31a277b](https://github.com/digita-ai/dgt-id-broker/commit/31a277b3c331ef8d1c0c50f16da6f90f0e6510f6))
+
+
+### **Documentation**
+
+* configure navigation for Antora documentation ([#206](https://github.com/digita-ai/dgt-id-broker/issues/206)) ([be4c8f4](https://github.com/digita-ai/dgt-id-broker/commit/be4c8f49c1ea7a306656084d90c548cd802cc559))
+* id kit analysis ([#182](https://github.com/digita-ai/dgt-id-broker/issues/182)) ([c4a8bdd](https://github.com/digita-ai/dgt-id-broker/commit/c4a8bddddc2b0cef716e3898e8700dcbbac8ad03))
+
+
+
+### [0.4.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.0...v0.4.1) (2021-08-23)
+
+
+### **Documentation**
+
+* meta-analysis id kit ([001c258](https://github.com/digita-ai/dgt-id-broker/commit/001c25822c99e2ffc181f7240b0f8f8e8ce83959))
+
+
+### **Features**
+
+* export inrupt createsoliddataset ([c030306](https://github.com/digita-ai/dgt-id-broker/commit/c0303063c80b127b0b6666d91fddbb214f4732ca))
+* id kit models ([#187](https://github.com/digita-ai/dgt-id-broker/issues/187)) ([1373a02](https://github.com/digita-ai/dgt-id-broker/commit/1373a0266e1823c81b6dbb93d58c028fed152f3b))
+* id kit module DPoP and Storage ([#197](https://github.com/digita-ai/dgt-id-broker/issues/197)) ([39d801f](https://github.com/digita-ai/dgt-id-broker/commit/39d801f49a856f2fd54453c04c74f758bb997c47))
+* id kit module issuer ([#189](https://github.com/digita-ai/dgt-id-broker/issues/189)) ([495d601](https://github.com/digita-ai/dgt-id-broker/commit/495d601fdb4e9d2f71bac7b0bc4fc7db9ece4c60))
+* id kit module pkce ([#200](https://github.com/digita-ai/dgt-id-broker/issues/200)) ([832e9eb](https://github.com/digita-ai/dgt-id-broker/commit/832e9eb97e851ac4556a6bddc001d32048c9b3ba))
+* id kit webid module ([#188](https://github.com/digita-ai/dgt-id-broker/issues/188)) ([848d257](https://github.com/digita-ai/dgt-id-broker/commit/848d25762e6ba23b3da35aa69a2ed1e82f0ed236))
+
+
+
 ## [0.4.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.3.0...v0.4.0) (2021-07-06)
 
 

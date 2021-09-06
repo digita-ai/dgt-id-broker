@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.1...v0.5.0) (2021-09-02)
+
+**Note:** Version bump only for package @digita-ai/inrupt-solid-client
+
+
+
+
+
+### [0.4.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.0...v0.4.1) (2021-08-23)
+
+
+### **Features**
+
+* export inrupt createsoliddataset ([c030306](https://github.com/digita-ai/dgt-id-broker/commit/c0303063c80b127b0b6666d91fddbb214f4732ca))
+
+
+
 ## [0.4.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.3.0...v0.4.0) (2021-07-06)
 
 **Note:** Version bump only for package @digita-ai/inrupt-solid-client
