@@ -4,9 +4,9 @@ import { generateKeys } from '../functions/dpop';
 import { accessResource, authRequest, refreshTokenRequest, tokenRequest } from '../functions/oidc';
 import { generateCodeVerifier } from '../functions/pkce';
 import { getFirstIssuerFromWebId } from '../functions/web-id';
-import { TypedKeyValueStore } from './typed-key-value-store.model';
+import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 
-interface storeInterface {
+export interface storeInterface {
   publicKey: JWK;
   privateKey: JWK;
   codeVerifier: string;
@@ -19,6 +19,7 @@ interface storeInterface {
   clientId: string;
   clientSecret: string;
 }
+
 export class SolidOidcClient {
 
   constructor(private store: TypedKeyValueStore<storeInterface>) { }
@@ -149,7 +150,7 @@ export class SolidOidcClient {
     try{
 
       const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
-      const exp = tokenBody .exp;
+      const exp = tokenBody.exp;
 
       if (+new Date() > exp * 1000) {
 
@@ -185,7 +186,7 @@ export class SolidOidcClient {
 
   private getInitializeError(field: string): Error {
 
-    return new Error('No private key was found, did you call initialize()?');
+    return new Error(`No ${field} was found, did you call initialize()?`);
 
   }
 

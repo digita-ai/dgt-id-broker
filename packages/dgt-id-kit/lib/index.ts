@@ -11,5 +11,5 @@ export * from './functions/data';
 export * from './functions/dpop';
 export * from './functions/validate-and-fetch';
 export * from './functions/pkce';
-export * from './models/solid-oidc-client.model';
 export * from './models/typed-key-value-store.model';
+export * from './solid-oidc-client/solid-oidc-client';
