@@ -38,13 +38,16 @@ export class SolidOidcClient {
     issuer: string,
     scope: string,
     responseType: string,
-    handleAuthRequestUrl: (requestUrl: string) => Promise<void>
+    handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
+
+      window.location.href = requestUrl;
+
+    }
   ): Promise<void> {
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
     if (!responseType) throw new Error('Parameter "responseType" should be set');
-    if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
     const clientId = await this.store.get('clientId');
     if (!clientId) throw this.getInitializeError('clientId');
@@ -57,13 +60,16 @@ export class SolidOidcClient {
     webId: string,
     scope: string,
     responseType: string,
-    handleAuthRequestUrl: (requestUrl: string) => Promise<void>
+    handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
+
+      window.location.href = requestUrl;
+
+    }
   ): Promise<void> {
 
     if (!webId) throw new Error('Parameter "webId" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
     if (!responseType) throw new Error('Parameter "responseType" should be set');
-    if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
     const clientId = await this.store.get('clientId');
     if (!clientId) throw this.getInitializeError('clientId');
@@ -83,7 +89,7 @@ export class SolidOidcClient {
   async handleIncomingRedirect(
     issuer: string,
     redirectUri: string,
-    getAuthorizationCode: () => Promise<string>,
+    getAuthorizationCode: () => Promise<string|null> = async () => new URLSearchParams(window.location.search).get('code'),
     clientSecret?: string,
   ): Promise<void> {
 
@@ -94,7 +100,6 @@ export class SolidOidcClient {
     await this.store.set('issuer', issuer);
 
     if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
-    if (!getAuthorizationCode) throw new Error('Parameter "getAuthorizationCode" should be set');
 
     if (clientSecret) await this.store.set('clientSecret', clientSecret);
 

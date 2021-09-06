@@ -130,7 +130,7 @@ describe('authRequest()', () => {
 
   const authRequestParams = { issuer, clientId, scope, redirectUri, handleAuthRequestUrl };
 
-  it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each([ 'issuer', 'clientId', 'scope', 'redirectUri' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...authRequestParams };
     testArgs[keyToBeNull] = undefined;
@@ -139,8 +139,7 @@ describe('authRequest()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.scope,
-      testArgs.redirectUri,
-      testArgs.handleAuthRequestUrl
+      testArgs.redirectUri
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

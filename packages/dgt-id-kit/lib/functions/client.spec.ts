@@ -33,7 +33,7 @@ describe('loginWithIssuer()', () => {
 
   const loginWithIssuerParams = { issuer, clientId, scope, responseType, handleAuthRequestUrl };
 
-  it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each([ 'issuer', 'clientId', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...loginWithIssuerParams };
     testArgs[keyToBeNull] = undefined;
@@ -43,7 +43,6 @@ describe('loginWithIssuer()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.responseType,
-      testArgs.handleAuthRequestUrl,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -86,7 +85,7 @@ describe('loginWithWebId()', () => {
 
   const loginWithWebIdParams = { webId, clientId, scope, responseType, handleAuthRequestUrl };
 
-  it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each([ 'webId', 'clientId', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...loginWithWebIdParams };
     testArgs[keyToBeNull] = undefined;
@@ -96,7 +95,6 @@ describe('loginWithWebId()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.responseType,
-      testArgs.handleAuthRequestUrl,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -157,7 +155,7 @@ describe('handleIncomingRedirect()', () => {
     issuer, clientId, redirectUri, codeVerifier, publicKey: {}, privateKey: {}, getAuthorizationCode,
   };
 
-  it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each([ 'issuer', 'clientId', 'redirectUri', 'codeVerifier', 'publicKey', 'privateKey' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...handleIncomingRedirectParams };
     testArgs[keyToBeNull] = undefined;
@@ -169,7 +167,6 @@ describe('handleIncomingRedirect()', () => {
       testArgs.codeVerifier,
       testArgs.publicKey,
       testArgs.privateKey,
-      testArgs.getAuthorizationCode,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

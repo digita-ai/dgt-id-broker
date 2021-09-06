@@ -7,14 +7,17 @@ export const loginWithIssuer = async (
   clientId: string,
   scope: string,
   responseType: string,
-  handleAuthRequestUrl: (requestUrl: string) => Promise<void>
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
+
+    window.location.href = requestUrl;
+
+  }
 ): Promise<void> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!responseType) throw new Error('Parameter "responseType" should be set');
-  if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
   await authRequest(issuer, clientId, scope, responseType, handleAuthRequestUrl);
 
@@ -25,14 +28,17 @@ export const loginWithWebId = async (
   clientId: string,
   scope: string,
   responseType: string,
-  handleAuthRequestUrl: (requestUrl: string) => Promise<void>
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
+
+    window.location.href = requestUrl;
+
+  }
 ): Promise<void> => {
 
   if (!webId) throw new Error('Parameter "webId" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!responseType) throw new Error('Parameter "responseType" should be set');
-  if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
   const issuer = await getFirstIssuerFromWebId(webId);
 
@@ -49,7 +55,7 @@ export const handleIncomingRedirect = async (
   codeVerifier: string,
   publicKey: JWK,
   privateKey: JWK,
-  getAuthorizationCode: () => Promise<string>,
+  getAuthorizationCode: () => Promise<string|null> = async () => new URLSearchParams(window.location.search).get('code'),
   clientSecret?: string,
 ): Promise<tokenRequestReturnObject> => {
 
@@ -59,7 +65,6 @@ export const handleIncomingRedirect = async (
   if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
   if (!publicKey) throw new Error('Parameter "publicKey" should be set');
   if (!privateKey) throw new Error('Parameter "privateKey" should be set');
-  if (!getAuthorizationCode) throw new Error('Parameter "getAuthorizationCode" should be set');
 
   const code = await getAuthorizationCode();
   if (!code) throw new Error(`No authorization code was found, make sure you provide the correct function!`);

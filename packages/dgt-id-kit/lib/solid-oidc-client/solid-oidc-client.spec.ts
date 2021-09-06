@@ -131,7 +131,7 @@ describe('SolidOidcClient', () => {
 
     const loginWithIssuerParams = { issuer, scope, responseType, handleAuthRequestUrl };
 
-    it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each([ 'issuer', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
       const testArgs = { ...loginWithIssuerParams };
       testArgs[keyToBeNull] = undefined;
@@ -140,7 +140,6 @@ describe('SolidOidcClient', () => {
         testArgs.issuer,
         testArgs.scope,
         testArgs.responseType,
-        testArgs.handleAuthRequestUrl,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -175,7 +174,7 @@ describe('SolidOidcClient', () => {
 
     const loginWithWebIdParams = { webId, scope, responseType, handleAuthRequestUrl };
 
-    it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each([ 'webId', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
       const testArgs = { ...loginWithWebIdParams };
       testArgs[keyToBeNull] = undefined;
@@ -184,7 +183,6 @@ describe('SolidOidcClient', () => {
         testArgs.webId,
         testArgs.scope,
         testArgs.responseType,
-        testArgs.handleAuthRequestUrl,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -328,7 +326,7 @@ describe('SolidOidcClient', () => {
 
     const handleIncomingRedirectParams = { issuer, redirectUri, getAuthorizationCode };
 
-    it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each([ 'issuer', 'redirectUri' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
       const testArgs = { ...handleIncomingRedirectParams };
       testArgs[keyToBeNull] = undefined;
@@ -336,7 +334,6 @@ describe('SolidOidcClient', () => {
       const result = instance.handleIncomingRedirect(
         testArgs.issuer,
         testArgs.redirectUri,
-        testArgs.getAuthorizationCode,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
