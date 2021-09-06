@@ -172,7 +172,8 @@ describe('full integration', () => {
         .reply(function () {
 
           // this.req = the original request
-          params = new URLSearchParams(host + this.req.path);
+          // console.log(this.req);
+          params = new URLSearchParams(this.req.path.split('?')[1]);
           state = params.get('state');
 
           return [ 302, 'found', { location: `http://localhost:3001/requests.html?code=DafduCFHR-wyUF2Y3uY_T9TCQwvJ_O8AD5z2c8ksglY&state=${state}` } ];
@@ -192,21 +193,55 @@ describe('full integration', () => {
 
     });
 
+    it('should still contain scope', async () => {
+
+      expect(params.get('scope')).toBeTruthy();
+
+    });
+
+    it('should still contain response_type', async () => {
+
+      expect(params.get('response_type')).toBeTruthy();
+
+    });
+
+    it('should still contain client_id', async () => {
+
+      expect(params.get('client_id')).toBeTruthy();
+
+    });
+
+    it('should still contain redirect_uri', async () => {
+
+      expect(params.get('redirect_uri')).toBeTruthy();
+
+    });
+
     it('should pass state to the endpoint in the params if not provided in the initial request', async () => {
 
-      // check if state is present in the url params
+      // check if state is present in the url params of the initial request
       expect(state).toBeDefined();
+      // check if state is 36 digits (like uuids)
+      expect(state.length).toBe(36);
 
     });
 
-    it('should pass state to the endpoint in the if provided in the initial request', async () => {
+    // it('should pass state to the endpoint in the if provided in the initial request', async () => {
 
-      // add state to the intial request
-      authUrl = 'http://localhost:3003/auth?response_type=code&code_challenge=I-k6SDaSeVEgkBaUbk6E4UxFAyV8Mb_3NNSHf9q6Gu8&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Fclient.example.com%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Fclient.example.com%2Frequests.html&state=123456';
+    //   // add state to the intial request
+    //   const authUrlWithState = 'http://localhost:3003/auth?response_type=code&code_challenge=I-k6SDaSeVEgkBaUbk6E4UxFAyV8Mb_3NNSHf9q6Gu8&code_challenge_method=S256&scope=openid&client_id=http%3A%2F%2Fclient.example.com%2Fclientapp%2Fprofile&redirect_uri=http%3A%2F%2Fclient.example.com%2Frequests.html&state=123456';
 
-      expect(state).toBeDefined();
+    //   // the initial auth request to the proxy
+    //   const response = await fetch(authUrlWithState, {
+    //     method: 'GET',
+    //   });
 
-    });
+    //   expect(state).toBeDefined();
+    //   // check thate state is still the same as in the initial request
+
+    //   expect(state).toEqual('123456');
+
+    // });
 
     it('should replace the client-id with the one provided in the registration response', async () => {
 
@@ -244,8 +279,6 @@ describe('full integration', () => {
         .reply(function (uri, body) {
 
           initialRequest = this.req;
-          // console.log(this.req);
-          // console.log(body);
 
           reqBody = new URLSearchParams(body.toString());
 
@@ -260,7 +293,7 @@ describe('full integration', () => {
       fetchMock.mockResponses(
         [ clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 } ],
         [ JSON.stringify({ jwks_uri: 'http://pathtojwks.com' }), { status: 200 } ],
-        [ JSON.stringify({ keys: [ publicJwk2 ] }), { status: 200 } ]
+        [ JSON.stringify({ keys: [ publicJwk2 ] }), { status: 200 } ],
       );
 
       // the initial token request to the proxy
@@ -275,26 +308,54 @@ describe('full integration', () => {
 
     });
 
+    it('should contain client_id in the body parameters', async () => {
+
+      expect(reqBody.get('client_id')).toBeDefined();
+
+    });
+
+    it('should contain  grant_type in the body parameters', async () => {
+
+      expect(reqBody.get('grant_type')).toBeDefined();
+
+    });
+
+    it('should contain code in the body parameters', async () => {
+
+      expect(reqBody.get('code')).toBeDefined();
+
+    });
+
+    it('should contain redirect_uri in the body parameters', async () => {
+
+      expect(reqBody.get('redirect_uri')).toBeDefined();
+
+    });
+
     it('should use the client-id from the registration response', async () => {
 
+      // check that the client id is the one from the registration response
       expect(reqBody.get('client_id')).toEqual(mockRegisterResponse.client_id);
 
     });
 
     it('should have a recalculated content-length after switching the client id', async () => {
 
+      // check that the content-length has been recalculated after switching the client id with the client id from the registration response
       expect(initialRequest.headers['content-length']).toEqual(Buffer.byteLength(reqBody.toString(), initialRequest.headers['content-type']).toString());
 
     });
 
     it('should not contain the code verifier in the query parameters', async () => {
 
+      // check that the code verifier is removed from the query parameters
       expect(reqBody.get('code_verifier')).toBeFalsy();
 
     });
 
     it('should contain the same redirect_uri as the one provided to the auth request', async () => {
 
+      // check that the redirect_uri is the same as the one provided in the initial request
       expect(reqBody.get('redirect_uri')).toEqual(redirect_uri);
 
     });

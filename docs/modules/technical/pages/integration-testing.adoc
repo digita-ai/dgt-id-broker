@@ -2,58 +2,30 @@
 :toclevels: 3
 
 
-= Integration testing
-
-== Overview of the possible different integration tests
-
-=== DPoP flow
-
-The following needs to be tested:
-
-Requests:
+= Integration testin
 
 
-Responses:
 
-. The token endpoint replies with the tokens when all required parameters are present and correct.
+=== Checklist
 
-. The token endpoint replies with invalid DPoP proof in the following cases:
-* There is no DPoP header included in the request.
-* There is no JWK present in the header
-* There is no jti in the payload / jti is not of type string
-* 
-* The DPoP header lacks one of the following required parameters:
-** "typ": type header, value "dpop+jwt"
-** "alg": a digital signature algorithm identifier,  MUST NOT be "none" or an identifier for a symmetric
-      algorithm (MAC).
-** "jwk": representing the public key chosen by the client, in JWK
-      format.  MUST NOT contain the private key.
-* 
+== Auth flow 
+checking parameters incoming on /auth endpoint:
 
-=== PKCE flow
+. checks if state is set in the query parameters (even if it was not provided by the user)
+. checks if present state is a 36 digit uuid if state was generated
+. checks if client_id in the params is switched to the one received from the registration endpoint
+. checks if all required parameters were received (scope, redirect_uri, response_type and client_id)
+. checks if state is the one given in the intitial request parameters (NOT WORKING)
 
-The following needs to be tested:
+== Token flow
+checking parameters incoming on /token endpoint:
 
-. Check the incoming request parameters on endpoint
+. checks if client_id in the params is still to the one received from the registration endpoint
+. checks if the content-length is recalculated after the client_id has been switched
+. checks if the code_verifier has been removed fron the query parameters
+. checks if the redirect_uri is the same as the one received in the initial request
 
-. The proxy server replies with access_token when all required parameters are present and correct.
+== Checking response parameters after passing through the proxy
 
-. The proxy server replies with invalid_grant when code challenges do not match
-. The proxy server replies with invalid_request when no auth code was given
-. The proxy server replies with invalid_request when no code verifier was given
-. The proxy server replies with invalid_request when the code verifier is too long or short
-
-=== Client Registration flow
-
-
-The following needs to be tested:
-
-. The registration endpoint responds with
-   an HTTP 201 Created status code and a body of type "application/json"
-   The response contains the following required parameters:
-       * client_id
-       * All additional registered client metadata
-. The registration endpoint responds with a 400 status code with
-   content type "application/json" consisting of a JSON object
-   describing the error in the response body.
-
+# cannot figure out yet how to get to the response here, 
+# if I log in the passthrough handler it seems like the last token request was succesfully replied to but I can't seem to catch this response yet
