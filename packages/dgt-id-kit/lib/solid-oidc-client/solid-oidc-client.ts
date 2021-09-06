@@ -1,9 +1,9 @@
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import { JWK } from 'jose/webcrypto/types';
+import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from '../functions/client';
 import { generateKeys } from '../functions/dpop';
-import { accessResource, authRequest, refreshTokenRequest, tokenRequest } from '../functions/oidc';
+import { accessResource, refreshTokenRequest, tokenRequest } from '../functions/oidc';
 import { generateCodeVerifier } from '../functions/pkce';
-import { getFirstIssuerFromWebId } from '../functions/web-id';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 
 export interface storeInterface {
@@ -45,11 +45,12 @@ export class SolidOidcClient {
     if (!issuer) throw new Error('Parameter "issuer" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
     if (!responseType) throw new Error('Parameter "responseType" should be set');
+    if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
     const clientId = await this.store.get('clientId');
     if (!clientId) throw this.getInitializeError('clientId');
 
-    await authRequest(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+    await loginWithIssuer(issuer, clientId, scope, responseType, handleAuthRequestUrl);
 
   }
 
@@ -63,11 +64,12 @@ export class SolidOidcClient {
     if (!webId) throw new Error('Parameter "webId" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
     if (!responseType) throw new Error('Parameter "responseType" should be set');
+    if (!handleAuthRequestUrl) throw new Error('Parameter "handleAuthRequestUrl" should be set');
 
-    const issuer = await getFirstIssuerFromWebId(webId);
-    if (!issuer) throw new Error(`No issuer was found on the profile of ${webId}`);
+    const clientId = await this.store.get('clientId');
+    if (!clientId) throw this.getInitializeError('clientId');
 
-    await this.loginWithIssuer(issuer.url.toString(), scope, responseType, handleAuthRequestUrl);
+    await loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
 
   }
 
@@ -93,11 +95,9 @@ export class SolidOidcClient {
     await this.store.set('issuer', issuer);
 
     if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
+    if (!getAuthorizationCode) throw new Error('Parameter "getAuthorizationCode" should be set');
 
     if (clientSecret) await this.store.set('clientSecret', clientSecret);
-
-    const code = await getAuthorizationCode();
-    if (!code) throw new Error(`No authorization code was found in window.location.search : ${window.location.search}`);
 
     const privateKey = await this.store.get('privateKey');
     if (!privateKey) throw this.getInitializeError('privateKey');
@@ -108,8 +108,8 @@ export class SolidOidcClient {
 
     try {
 
-      const tokens = await tokenRequest(
-        issuer, clientId, code, redirectUri, codeVerifier, publicKey, privateKey, clientSecret,
+      const tokens = await handleIncomingRedirect(
+        issuer, clientId, redirectUri, codeVerifier, publicKey, privateKey, getAuthorizationCode, clientSecret,
       );
 
       await this.store.set('accessToken', tokens.accessToken);
@@ -177,7 +177,7 @@ export class SolidOidcClient {
 
       }
 
-      return accessResource(resource, method, accessToken, publicKey, privateKey, body, contentType);
+      return await accessResource(resource, method, accessToken, publicKey, privateKey, body, contentType);
 
     } catch (error: unknown) {
 

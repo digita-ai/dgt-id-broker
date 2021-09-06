@@ -6,9 +6,9 @@ global.TextDecoder = TextDecoder;
 import { JWK } from 'jose/webcrypto/types';
 import { HttpMethod } from '@digita-ai/handlersjs-http';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
-import { clientId, redirectUri, resource, method, issuer, scope, responseType, webId, issuer1, dummyValidAccessToken, refreshToken, idToken, clientSecret, codeVerifier, dummyExpiredAccessToken } from '../../test/test-data';
+import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, responseType, webId, issuer1, dummyValidAccessToken, refreshToken, idToken, clientSecret, codeVerifier, dummyExpiredAccessToken, getAuthorizationCode, authorizationCode } from '../../test/test-data';
 import * as oidcModule from '../functions/oidc';
-import * as webidModule from '../functions/web-id';
+import * as clientModule from '../functions/client';
 import { SolidOidcClient, storeInterface } from './solid-oidc-client';
 
 beforeEach(() => {
@@ -109,13 +109,13 @@ describe('SolidOidcClient', () => {
 
     it('should call authRequest() with the right parameters', async () => {
 
-      const spy = jest.spyOn(oidcModule, 'authRequest').mockResolvedValue(undefined);
+      const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce(undefined);
 
-      const result = instance.loginWithIssuer(issuer, scope, responseType);
+      const result = instance.loginWithIssuer(issuer, scope, responseType, handleAuthRequestUrl);
 
       await expect(result).resolves.toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType);
+      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType, handleAuthRequestUrl);
 
     });
 
@@ -123,15 +123,13 @@ describe('SolidOidcClient', () => {
 
       await store.delete('clientId');
 
-      const result = instance.loginWithIssuer(issuer, scope, responseType);
+      const result = instance.loginWithIssuer(issuer, scope, responseType, handleAuthRequestUrl);
       const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
       await expect(result).rejects.toThrow(expectedErrorMessage);
 
-      await store.set('clientId', clientId);
-
     });
 
-    const loginWithIssuerParams = { issuer, scope, responseType };
+    const loginWithIssuerParams = { issuer, scope, responseType, handleAuthRequestUrl };
 
     it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -142,6 +140,7 @@ describe('SolidOidcClient', () => {
         testArgs.issuer,
         testArgs.scope,
         testArgs.responseType,
+        testArgs.handleAuthRequestUrl,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -152,27 +151,29 @@ describe('SolidOidcClient', () => {
 
   describe('loginWithWebId()', () => {
 
-    beforeEach(() => jest.spyOn(webidModule, 'getFirstIssuerFromWebId').mockResolvedValue(issuer1));
+    beforeEach(() => jest.spyOn(clientModule, 'loginWithWebId').mockResolvedValue(undefined));
 
-    it('should call loginWithIssuer() with the correct parameters', async () => {
+    it('should call loginWithWebId() with the correct parameters', async () => {
 
-      const spy = jest.spyOn(instance, 'loginWithIssuer').mockResolvedValueOnce(undefined);
-      const result = instance.loginWithWebId(webId, scope, responseType);
+      const spy = jest.spyOn(clientModule, 'loginWithWebId');
+      const result = instance.loginWithWebId(webId, scope, responseType, handleAuthRequestUrl);
       await expect(result).resolves.toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), scope, responseType);
+      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, responseType, handleAuthRequestUrl);
 
     });
 
-    it ('should throw when no issuer was found on the webid\'s profile', async () => {
+    it ('should throw when no clientId was found in the store', async () => {
 
-      jest.spyOn(webidModule, 'getFirstIssuerFromWebId').mockResolvedValueOnce(undefined);
-      const result = instance.loginWithWebId(webId, scope, responseType);
-      await expect(result).rejects.toThrow(`No issuer was found on the profile of ${webId}`);
+      await store.delete('clientId');
+
+      const result = instance.loginWithWebId(webId, scope, responseType, handleAuthRequestUrl);
+      const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
+      await expect(result).rejects.toThrow(expectedErrorMessage);
 
     });
 
-    const loginWithWebIdParams = { webId, scope, responseType };
+    const loginWithWebIdParams = { webId, scope, responseType, handleAuthRequestUrl };
 
     it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -183,6 +184,7 @@ describe('SolidOidcClient', () => {
         testArgs.webId,
         testArgs.scope,
         testArgs.responseType,
+        testArgs.handleAuthRequestUrl,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -213,134 +215,135 @@ describe('SolidOidcClient', () => {
 
   });
 
-  // describe('handleIncomingRedirect()', () => {
+  describe('handleIncomingRedirect()', () => {
 
-  //   beforeEach(() => jest.spyOn(oidcModule, 'tokenRequest')
-  //     .mockResolvedValue({ accessToken: dummyValidAccessToken, idToken }));
+    beforeEach(() => jest.spyOn(clientModule, 'handleIncomingRedirect')
+      .mockResolvedValue({ accessToken: dummyValidAccessToken, idToken }));
 
-  //   it('should call tokenRequest() with the correct parameters', async () => {
+    it('should call handleIncomingRedirect() with the correct parameters', async () => {
 
-  //     const spy = jest.spyOn(oidcModule, 'tokenRequest');
+      const spy = jest.spyOn(clientModule, 'handleIncomingRedirect');
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
 
-  //     await expect(result).resolves.toBeUndefined();
-  //     expect(spy).toHaveBeenCalledTimes(1);
-  //     expect(spy).toHaveBeenCalledWith(issuer, clientId, 'code', redirectUri, codeVerifier, {}, {}, undefined);
+      await expect(result).resolves.toBeUndefined();
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(issuer, clientId, redirectUri, await store.get('codeVerifier'), await store.get('publicKey'), await store.get('privateKey'), getAuthorizationCode, undefined);
 
-  //   });
+    });
 
-  //   it('should save the tokens to the store', async () => {
+    it('should save the tokens to the store', async () => {
 
-  //     await expect(store.get('accessToken')).resolves.toBeUndefined();
-  //     await expect(store.get('idToken')).resolves.toBeUndefined();
-  //     await expect(store.get('refreshToken')).resolves.toBeUndefined();
+      await expect(store.get('accessToken')).resolves.toBeUndefined();
+      await expect(store.get('idToken')).resolves.toBeUndefined();
+      await expect(store.get('refreshToken')).resolves.toBeUndefined();
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
-  //     await expect(result).resolves.toBeUndefined();
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      await expect(result).resolves.toBeUndefined();
 
-  //     await expect(store.get('accessToken')).resolves.toBe(dummyValidAccessToken);
-  //     await expect(store.get('idToken')).resolves.toBe(idToken);
-  //     await expect(store.get('refreshToken')).resolves.toBeUndefined();
+      await expect(store.get('accessToken')).resolves.toBe(dummyValidAccessToken);
+      await expect(store.get('idToken')).resolves.toBe(idToken);
+      await expect(store.get('refreshToken')).resolves.toBeUndefined();
 
-  //   });
+    });
 
-  //   it('should save the refreshToken to the store if present', async () => {
+    it('should save the refreshToken to the store if present', async () => {
 
-  //     jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValueOnce({ accessToken: dummyValidAccessToken, idToken, refreshToken });
+      jest.spyOn(clientModule, 'handleIncomingRedirect').mockResolvedValueOnce({ accessToken: dummyValidAccessToken, idToken, refreshToken });
 
-  //     await expect(store.get('refreshToken')).resolves.toBeUndefined();
+      await expect(store.get('refreshToken')).resolves.toBeUndefined();
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
-  //     await expect(result).resolves.toBeUndefined();
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      await expect(result).resolves.toBeUndefined();
 
-  //     await expect(store.get('refreshToken')).resolves.toBe(refreshToken);
+      await expect(store.get('refreshToken')).resolves.toBe(refreshToken);
 
-  //   });
+    });
 
-  //   it('should throw when something goes wrong in the try catch', async () => {
+    it('should throw when something goes wrong in the try catch', async () => {
 
-  //     jest.spyOn(oidcModule, 'tokenRequest').mockRejectedValueOnce(undefined);
+      jest.spyOn(clientModule, 'handleIncomingRedirect').mockRejectedValueOnce(undefined);
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
 
-  //     await expect(result).rejects.toThrow('An error occurred handling the incoming redirect : ');
+      await expect(result).rejects.toThrow('An error occurred handling the incoming redirect : ');
 
-  //   });
+    });
 
-  //   it('should throw when no clientId was found in the store', async () => {
+    it('should throw when no clientId was found in the store', async () => {
 
-  //     await store.delete('clientId');
+      await store.delete('clientId');
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
-  //     const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
-  //     await expect(result).rejects.toThrow(expectedErrorMessage);
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
+      await expect(result).rejects.toThrow(expectedErrorMessage);
 
-  //   });
+    });
 
-  //   it('should throw when no publicKey was found in the store', async () => {
+    it('should throw when no publicKey was found in the store', async () => {
 
-  //     await store.delete('publicKey');
+      await store.delete('publicKey');
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
-  //     const expectedErrorMessage: string = (instance as any).getInitializeError('publicKey').message;
-  //     await expect(result).rejects.toThrow(expectedErrorMessage);
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      const expectedErrorMessage: string = (instance as any).getInitializeError('publicKey').message;
+      await expect(result).rejects.toThrow(expectedErrorMessage);
 
-  //   });
+    });
 
-  //   it('should throw when no privateKey was found in the store', async () => {
+    it('should throw when no privateKey was found in the store', async () => {
 
-  //     await store.delete('privateKey');
+      await store.delete('privateKey');
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
-  //     const expectedErrorMessage: string = (instance as any).getInitializeError('privateKey').message;
-  //     await expect(result).rejects.toThrow(expectedErrorMessage);
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      const expectedErrorMessage: string = (instance as any).getInitializeError('privateKey').message;
+      await expect(result).rejects.toThrow(expectedErrorMessage);
 
-  //   });
+    });
 
-  //   it('should throw when no codeVerifier was found in the store', async () => {
+    it('should throw when no codeVerifier was found in the store', async () => {
 
-  //     await store.delete('codeVerifier');
+      await store.delete('codeVerifier');
 
-  //     const result = instance.handleIncomingRedirect(issuer, redirectUri);
-  //     const expectedErrorMessage: string = (instance as any).getInitializeError('codeVerifier').message;
-  //     await expect(result).rejects.toThrow(expectedErrorMessage);
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      const expectedErrorMessage: string = (instance as any).getInitializeError('codeVerifier').message;
+      await expect(result).rejects.toThrow(expectedErrorMessage);
 
-  //   });
+    });
 
-  //   it('should save the issuer to the store', async () => {
+    it('should save the issuer to the store', async () => {
 
-  //     await expect(store.get('issuer')).resolves.toBeUndefined();
-  //     await instance.handleIncomingRedirect(issuer, redirectUri);
-  //     await expect(store.get('issuer')).toBe(issuer);
+      await expect(store.get('issuer')).resolves.toBeUndefined();
+      await instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      await expect(store.get('issuer')).resolves.toBe(issuer);
 
-  //   });
+    });
 
-  //   it('should save the clientSecret to the store if present', async () => {
+    it('should save the clientSecret to the store if present', async () => {
 
-  //     await expect(store.get('clientSecret')).resolves.toBeUndefined();
-  //     await instance.handleIncomingRedirect(issuer, redirectUri, clientSecret);
-  //     await expect(store.get('clientSecret')).toBe(clientSecret);
+      await expect(store.get('clientSecret')).resolves.toBeUndefined();
+      await instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode, clientSecret);
+      await expect(store.get('clientSecret')).resolves.toBe(clientSecret);
 
-  //   });
+    });
 
-  //   const handleIncomingRedirectParams = { issuer, redirectUri };
+    const handleIncomingRedirectParams = { issuer, redirectUri, getAuthorizationCode };
 
-  //   it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
-  //     const testArgs = { ...handleIncomingRedirectParams };
-  //     testArgs[keyToBeNull] = undefined;
+      const testArgs = { ...handleIncomingRedirectParams };
+      testArgs[keyToBeNull] = undefined;
 
-  //     const result = instance.handleIncomingRedirect(
-  //       testArgs.issuer,
-  //       testArgs.redirectUri,
-  //     );
+      const result = instance.handleIncomingRedirect(
+        testArgs.issuer,
+        testArgs.redirectUri,
+        testArgs.getAuthorizationCode,
+      );
 
-  //     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
+      await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
 
-  //   });
+    });
 
-  // });
+  });
 
   describe('accessResource()', () => {
 
@@ -414,6 +417,64 @@ describe('SolidOidcClient', () => {
     describe('When accessToken is expired', () => {
 
       beforeEach(() => store.set('accessToken', dummyExpiredAccessToken));
+      beforeEach(() => store.set('issuer', issuer));
+      beforeEach(() => store.set('refreshToken', refreshToken));
+      beforeEach(() => jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken }));
+
+      it('should call refreshTokenRequest() with the correct parameters', async () => {
+
+        const spy = jest.spyOn(oidcModule, 'refreshTokenRequest');
+        const result = instance.accessResource(resource, method);
+        await expect(result).resolves.toBeUndefined();
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, await store.get('publicKey'), await store.get('privateKey'), undefined);
+
+      });
+
+      it('should save the new accessToken and refreshToken to the store', async () => {
+
+        const result = instance.accessResource(resource, method);
+        await expect(result).resolves.toBeUndefined();
+        await expect(store.get('accessToken')).resolves.toBe(dummyValidAccessToken);
+        await expect(store.get('refreshToken')).resolves.toBe(refreshToken);
+        await expect(store.get('idToken')).resolves.toBeUndefined();
+
+      });
+
+      it('should save the idToken to the store if present', async () => {
+
+        jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken, idToken });
+        await expect(store.get('idToken')).resolves.toBeUndefined();
+        const result = instance.accessResource(resource, method);
+        await expect(result).resolves.toBeUndefined();
+        await expect(store.get('idToken')).resolves.toBe(idToken);
+
+      });
+
+      it('should throw when no refreshToken was found in the store', async () => {
+
+        await store.delete('refreshToken');
+        const result = instance.accessResource(resource, method);
+        await expect(result).rejects.toThrow('No refreshToken available, did you login with "offline_access" in the scope?');
+
+      });
+
+      it('should throw when no issuer was found in the store', async () => {
+
+        await store.delete('issuer');
+        const result = instance.accessResource(resource, method);
+        await expect(result).rejects.toThrow('No issuer available, did you login correctly?');
+
+      });
+
+      it('should throw when no clientId was found in the store', async () => {
+
+        await store.delete('clientId');
+        const result = instance.accessResource(resource, method);
+        const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
+        await expect(result).rejects.toThrow(expectedErrorMessage);
+
+      });
 
     });
 

@@ -4,7 +4,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { issuer, clientId, scope, responseType, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier } from '../../test/test-data';
+import { issuer, clientId, scope, responseType, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier, handleAuthRequestUrl, getAuthorizationCode } from '../../test/test-data';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from './client';
 import * as clientModule from './client';
 import * as oidcModule from './oidc';
@@ -24,14 +24,14 @@ describe('loginWithIssuer()', () => {
 
     const spy = jest.spyOn(oidcModule, 'authRequest').mockResolvedValueOnce();
 
-    await loginWithIssuer(issuer, clientId, scope, responseType);
+    await loginWithIssuer(issuer, clientId, scope, responseType, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType, handleAuthRequestUrl);
 
   });
 
-  const loginWithIssuerParams = { issuer, clientId, scope, responseType };
+  const loginWithIssuerParams = { issuer, clientId, scope, responseType, handleAuthRequestUrl };
 
   it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -43,6 +43,7 @@ describe('loginWithIssuer()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.responseType,
+      testArgs.handleAuthRequestUrl,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -61,7 +62,7 @@ describe('loginWithWebId()', () => {
       [ mockedResponseInvalidSolidOidc, { status: 200 } ]
     );
 
-    const result = loginWithWebId(webId, clientId, scope, responseType);
+    const result = loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
     await expect(result).rejects.toThrow(`No issuer was found on the profile of ${webId}`);
 
   });
@@ -76,14 +77,14 @@ describe('loginWithWebId()', () => {
 
     const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce();
 
-    await loginWithWebId(webId, clientId, scope, responseType);
+    await loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), clientId, scope, responseType);
+    expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), clientId, scope, responseType, handleAuthRequestUrl);
 
   });
 
-  const loginWithWebIdParams = { webId, clientId, scope, responseType };
+  const loginWithWebIdParams = { webId, clientId, scope, responseType, handleAuthRequestUrl };
 
   it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -95,6 +96,7 @@ describe('loginWithWebId()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.responseType,
+      testArgs.handleAuthRequestUrl,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -109,10 +111,6 @@ describe('handleIncomingRedirect()', () => {
 
   beforeEach(() => {
 
-    global.window = Object.create(window);
-    delete window.location;
-    (window.location as any) = new URL(`http://test.url/test?code=${authorizationCode}`);
-
     spy = jest.spyOn(oidcModule, 'tokenRequest').mockResolvedValue({
       accessToken: 'at', idToken: 'it',
     });
@@ -121,7 +119,9 @@ describe('handleIncomingRedirect()', () => {
 
   it('should call tokenEndpoint() with the right parameters', async () => {
 
-    await handleIncomingRedirect(issuer, clientId, redirectUri, codeVerifier, {}, {}, clientSecret);
+    await handleIncomingRedirect(
+      issuer, clientId, redirectUri, codeVerifier, {}, {}, getAuthorizationCode, clientSecret
+    );
 
     expect(spy).toHaveBeenCalledTimes(1);
 
@@ -133,10 +133,11 @@ describe('handleIncomingRedirect()', () => {
 
   it('should throw when no authorization code was found in the page\'s url', async () => {
 
-    (window.location as any) = new URL(`http://test.url/test?noCode=noCode`);
+    const result = handleIncomingRedirect(
+      issuer, clientId, redirectUri, codeVerifier, {}, {}, () => undefined, clientSecret,
+    );
 
-    const result = handleIncomingRedirect(issuer, clientId, redirectUri, codeVerifier, {}, {}, clientSecret);
-    await expect(result).rejects.toThrow(`No authorization code was found in window.location.search : ${window.location.search}`);
+    await expect(result).rejects.toThrow('No authorization code was found, make sure you provide the correct function!');
 
   });
 
@@ -144,12 +145,17 @@ describe('handleIncomingRedirect()', () => {
 
     jest.spyOn(oidcModule, 'tokenRequest').mockRejectedValueOnce(new Error('test error'));
 
-    const result = handleIncomingRedirect(issuer, clientId, redirectUri, codeVerifier, {}, {}, clientSecret);
+    const result = handleIncomingRedirect(
+      issuer, clientId, redirectUri, codeVerifier, {}, {}, getAuthorizationCode, clientSecret,
+    );
+
     await expect(result).rejects.toThrow('An error occurred handling the incoming redirect : Error: test error');
 
   });
 
-  const handleIncomingRedirectParams = { issuer, clientId, redirectUri, codeVerifier, publicKey: {}, privateKey: {} };
+  const handleIncomingRedirectParams = {
+    issuer, clientId, redirectUri, codeVerifier, publicKey: {}, privateKey: {}, getAuthorizationCode,
+  };
 
   it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -163,6 +169,7 @@ describe('handleIncomingRedirect()', () => {
       testArgs.codeVerifier,
       testArgs.publicKey,
       testArgs.privateKey,
+      testArgs.getAuthorizationCode,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
