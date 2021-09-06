@@ -1,4 +1,4 @@
-import { HttpMethod } from '@digita-ai/handlersjs-http';
+import { HttpMethod } from '../models/http-method.model';
 import { validateAndFetch } from '../util/validate-and-fetch';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
