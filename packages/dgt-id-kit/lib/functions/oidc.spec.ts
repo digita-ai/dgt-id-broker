@@ -55,7 +55,7 @@ describe('constructAuthRequestUrl()', () => {
     );
 
     await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
-    await expect(result).resolves.toContain(`client_id=${clientId}`);
+    await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
     await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
     await expect(result).resolves.toContain(`code_challenge_method=S256`);
     await expect(result).resolves.toContain(`response_type=code`);

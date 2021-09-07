@@ -35,7 +35,7 @@ export const constructAuthRequestUrl = async (
   if (!authorizationEndpoint) throw new Error(`No authorization endpoint was found for issuer ${issuer}`);
 
   return `${authorizationEndpoint}?` +
-    `client_id=${clientId}&` +
+    `client_id=${encodeURIComponent(clientId)}&` +
     `code_challenge=${pkceCodeChallenge}&` +
     `code_challenge_method=S256&` +
     `response_type=code&` +
