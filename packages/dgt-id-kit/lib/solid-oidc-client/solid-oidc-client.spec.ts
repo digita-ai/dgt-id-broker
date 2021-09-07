@@ -114,11 +114,11 @@ describe('SolidOidcClient', () => {
 
       const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce(undefined);
 
-      const result = instance.loginWithIssuer(issuer, scope, responseType, handleAuthRequestUrl);
+      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
 
       await expect(result).resolves.toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
 
     });
 
@@ -128,12 +128,12 @@ describe('SolidOidcClient', () => {
         (key) => key === 'clientId' ? undefined : 'randomValue',
       );
 
-      const result = instance.loginWithIssuer(issuer, scope, responseType, handleAuthRequestUrl);
+      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
 
-    const loginWithIssuerParams = { issuer, scope, responseType };
+    const loginWithIssuerParams = { issuer, scope, redirectUri };
 
     it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -143,7 +143,7 @@ describe('SolidOidcClient', () => {
       const result = instance.loginWithIssuer(
         testArgs.issuer,
         testArgs.scope,
-        testArgs.responseType,
+        testArgs.redirectUri,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -159,10 +159,10 @@ describe('SolidOidcClient', () => {
     it('should call loginWithWebId() with the correct parameters', async () => {
 
       const spy = jest.spyOn(clientModule, 'loginWithWebId');
-      const result = instance.loginWithWebId(webId, scope, responseType, handleAuthRequestUrl);
+      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
       await expect(result).resolves.toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, responseType, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
 
     });
 
@@ -172,12 +172,12 @@ describe('SolidOidcClient', () => {
         (key) => key === 'clientId' ? undefined : 'randomValue',
       );
 
-      const result = instance.loginWithWebId(webId, scope, responseType, handleAuthRequestUrl);
+      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
 
-    const loginWithWebIdParams = { webId, scope, responseType };
+    const loginWithWebIdParams = { webId, scope, redirectUri };
 
     it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -187,7 +187,7 @@ describe('SolidOidcClient', () => {
       const result = instance.loginWithWebId(
         testArgs.webId,
         testArgs.scope,
-        testArgs.responseType,
+        testArgs.redirectUri,
       );
 
       await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

@@ -24,14 +24,14 @@ describe('loginWithIssuer()', () => {
 
     const spy = jest.spyOn(oidcModule, 'authRequest').mockResolvedValueOnce();
 
-    await loginWithIssuer(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
 
   });
 
-  const loginWithIssuerParams = { issuer, clientId, scope, responseType };
+  const loginWithIssuerParams = { issuer, clientId, scope, redirectUri };
 
   it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -42,7 +42,7 @@ describe('loginWithIssuer()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.scope,
-      testArgs.responseType,
+      testArgs.redirectUri,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -61,7 +61,7 @@ describe('loginWithWebId()', () => {
       [ mockedResponseInvalidSolidOidc, { status: 200 } ]
     );
 
-    const result = loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
+    const result = loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
     await expect(result).rejects.toThrow(`No issuer was found on the profile of ${webId}`);
 
   });
@@ -76,14 +76,14 @@ describe('loginWithWebId()', () => {
 
     const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce();
 
-    await loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
+    await loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), clientId, scope, responseType, handleAuthRequestUrl);
+    expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), clientId, scope, redirectUri, handleAuthRequestUrl);
 
   });
 
-  const loginWithWebIdParams = { webId, clientId, scope, responseType };
+  const loginWithWebIdParams = { webId, clientId, scope, redirectUri };
 
   it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -94,7 +94,7 @@ describe('loginWithWebId()', () => {
       testArgs.webId,
       testArgs.clientId,
       testArgs.scope,
-      testArgs.responseType,
+      testArgs.redirectUri,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

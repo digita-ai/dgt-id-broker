@@ -61,36 +61,36 @@ export class SolidOidcClient {
   async loginWithIssuer(
     issuer: string,
     scope: string,
-    responseType: string,
+    redirectUri: string,
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
-    if (!responseType) throw new Error('Parameter "responseType" should be set');
+    if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
     const clientId = await this.getSafelyFromStore('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
-    await loginWithIssuer(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
 
   }
 
   async loginWithWebId(
     webId: string,
     scope: string,
-    responseType: string,
+    redirectUri: string,
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
     if (!webId) throw new Error('Parameter "webId" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
-    if (!responseType) throw new Error('Parameter "responseType" should be set');
+    if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
     const clientId = await this.getSafelyFromStore('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
-    await loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
+    await loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
 
   }
 
