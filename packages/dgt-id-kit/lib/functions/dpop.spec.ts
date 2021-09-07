@@ -91,7 +91,7 @@ describe('generateKeys()', () => {
     expect(awaitedResult.publicKey.alg).toBe('ES256');
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('ES256');
+    expect(spy).toHaveBeenCalledWith('ES256', { extractable: true });
 
   });
 
@@ -106,7 +106,7 @@ describe('generateKeys()', () => {
     expect(awaitedResult.publicKey.alg).toBe('ES512');
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith('ES512');
+    expect(spy).toHaveBeenCalledWith('ES512', { extractable: true });
 
   });
 
