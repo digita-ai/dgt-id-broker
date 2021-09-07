@@ -301,7 +301,7 @@ describe('tokenRequest()', () => {
 
 describe('refreshTokenRequest()', () => {
 
-  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', refresh_token: 'rt' })));
+  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', refresh_token: 'rt', id_token: 'it' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
@@ -353,28 +353,23 @@ describe('refreshTokenRequest()', () => {
     const awaitedResult = await result;
     expect(awaitedResult.accessToken).toBe('at');
     expect(awaitedResult.refreshToken).toBe('rt');
-    expect(awaitedResult.idToken).toBeUndefined();
-
-    fetchMock.mockResponseOnce(JSON.stringify({ access_token: 'at', refresh_token: 'rt', id_token: 'it' }));
-
-    const result2 = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
-    await expect(result2).resolves.toBeDefined();
-    const awaitedResult2 = await result2;
-    expect(awaitedResult2.accessToken).toBe('at');
-    expect(awaitedResult2.refreshToken).toBe('rt');
-    expect(awaitedResult2.idToken).toBe('it');
+    expect(awaitedResult.idToken).toBe('it');
 
   });
 
-  it('should throw when the response does not contain an access_token and refresh_token', async () => {
+  it('should throw when the response does not contain an access_token, id_token and refresh_token', async () => {
 
-    fetchMock.mockResponses(JSON.stringify({ refresh_token: 'rt' }));
+    fetchMock.mockResponses(JSON.stringify({ refresh_token: 'rt', id_token: 'it' }));
     const result = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
-    fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
+    fetchMock.mockResponses(JSON.stringify({ access_token: 'at', id_token: 'it' }));
     const result2 = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result2).rejects.toThrow('The tokenRequest response must contain an refresh_token field, and it did not.');
+
+    fetchMock.mockResponses(JSON.stringify({ access_token: 'at', refresh_token: 'rt' }));
+    const result3 = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
+    await expect(result3).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
 
   });
 

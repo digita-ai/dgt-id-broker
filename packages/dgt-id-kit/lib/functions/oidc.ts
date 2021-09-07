@@ -173,7 +173,7 @@ export const tokenRequest = async (
 export interface refreshTokenRequestReturnObject {
   accessToken: string;
   refreshToken: string;
-  idToken?: string;
+  idToken: string;
 }
 
 /**
@@ -229,6 +229,7 @@ export const refreshTokenRequest = async (
     if (parsed?.error) throw new Error(parsed.error);
     if (!parsed?.access_token) throw new Error('The tokenRequest response must contain an access_token field, and it did not.');
     if (!parsed?.refresh_token) throw new Error('The tokenRequest response must contain an refresh_token field, and it did not.');
+    if (!parsed?.id_token) throw new Error('The tokenRequest response must contain an id_token field, and it did not.');
 
     return {
       accessToken: parsed.access_token,

@@ -416,7 +416,7 @@ describe('SolidOidcClient', () => {
       beforeEach(() => store.set('accessToken', dummyExpiredAccessToken));
       beforeEach(() => store.set('issuer', issuer));
       beforeEach(() => store.set('refreshToken', refreshToken));
-      beforeEach(() => jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken }));
+      beforeEach(() => jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken, idToken }));
 
       it('should call refreshTokenRequest() with the correct parameters', async () => {
 
@@ -428,22 +428,12 @@ describe('SolidOidcClient', () => {
 
       });
 
-      it('should save the new accessToken and refreshToken to the store', async () => {
+      it('should save the new accessToken, idToken and refreshToken to the store', async () => {
 
         const result = instance.accessResource(resource, method);
         await expect(result).resolves.toBeUndefined();
         await expect(store.get('accessToken')).resolves.toBe(dummyValidAccessToken);
         await expect(store.get('refreshToken')).resolves.toBe(refreshToken);
-        await expect(store.get('idToken')).resolves.toBeUndefined();
-
-      });
-
-      it('should save the idToken to the store if present', async () => {
-
-        jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken, idToken });
-        await expect(store.get('idToken')).resolves.toBeUndefined();
-        const result = instance.accessResource(resource, method);
-        await expect(result).resolves.toBeUndefined();
         await expect(store.get('idToken')).resolves.toBe(idToken);
 
       });

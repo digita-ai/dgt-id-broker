@@ -178,7 +178,7 @@ export class SolidOidcClient {
 
         await this.store.set('accessToken', result.accessToken);
         await this.store.set('refreshToken', result.refreshToken);
-        if (result.idToken) await this.store.set('idToken', result.idToken);
+        await this.store.set('idToken', result.idToken);
 
       }
 
