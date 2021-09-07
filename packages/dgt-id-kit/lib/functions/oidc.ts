@@ -1,6 +1,7 @@
 import { JWK } from 'jose/webcrypto/types';
 import { validateAndFetch } from '../util/validate-and-fetch';
 import { HttpMethod } from '../models/http-method.model';
+import { defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
 import { generateCodeChallenge, generateCodeVerifier } from './pkce';
@@ -56,11 +57,7 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   redirectUri: string,
-  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
-
-    window.location.href = requestUrl;
-
-  }
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');

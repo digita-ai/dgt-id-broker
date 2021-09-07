@@ -1,4 +1,5 @@
 import { JWK } from 'jose/webcrypto/types';
+import { defaultGetAuthorizationCode, defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';
 import { getFirstIssuerFromWebId } from './web-id';
 import { authRequest, tokenRequest, tokenRequestReturnObject } from './oidc';
 
@@ -7,11 +8,7 @@ export const loginWithIssuer = async (
   clientId: string,
   scope: string,
   responseType: string,
-  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
-
-    window.location.href = requestUrl;
-
-  }
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');
@@ -28,11 +25,7 @@ export const loginWithWebId = async (
   clientId: string,
   scope: string,
   responseType: string,
-  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
-
-    window.location.href = requestUrl;
-
-  }
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
   if (!webId) throw new Error('Parameter "webId" should be set');
@@ -55,7 +48,7 @@ export const handleIncomingRedirect = async (
   codeVerifier: string,
   publicKey: JWK,
   privateKey: JWK,
-  getAuthorizationCode: () => Promise<string|null> = async () => new URLSearchParams(window.location.search).get('code'),
+  getAuthorizationCode: () => Promise<string|null> = defaultGetAuthorizationCode,
   clientSecret?: string,
 ): Promise<tokenRequestReturnObject> => {
 

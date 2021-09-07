@@ -31,9 +31,9 @@ describe('loginWithIssuer()', () => {
 
   });
 
-  const loginWithIssuerParams = { issuer, clientId, scope, responseType, handleAuthRequestUrl };
+  const loginWithIssuerParams = { issuer, clientId, scope, responseType };
 
-  it.each([ 'issuer', 'clientId', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...loginWithIssuerParams };
     testArgs[keyToBeNull] = undefined;
@@ -83,9 +83,9 @@ describe('loginWithWebId()', () => {
 
   });
 
-  const loginWithWebIdParams = { webId, clientId, scope, responseType, handleAuthRequestUrl };
+  const loginWithWebIdParams = { webId, clientId, scope, responseType };
 
-  it.each([ 'webId', 'clientId', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...loginWithWebIdParams };
     testArgs[keyToBeNull] = undefined;
@@ -151,11 +151,9 @@ describe('handleIncomingRedirect()', () => {
 
   });
 
-  const handleIncomingRedirectParams = {
-    issuer, clientId, redirectUri, codeVerifier, publicKey: {}, privateKey: {}, getAuthorizationCode,
-  };
+  const handleIncomingRedirectParams = { issuer, clientId, redirectUri, codeVerifier, publicKey: {}, privateKey: {} };
 
-  it.each([ 'issuer', 'clientId', 'redirectUri', 'codeVerifier', 'publicKey', 'privateKey' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...handleIncomingRedirectParams };
     testArgs[keyToBeNull] = undefined;

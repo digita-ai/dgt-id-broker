@@ -18,6 +18,15 @@ export interface storeInterface {
   clientId: string;
   clientSecret: string;
 }
+/* istanbul ignore next */
+export const defaultGetAuthorizationCode = async (): Promise<string> => new URLSearchParams(window.location.search).get('code') ?? '';
+
+/* istanbul ignore next */
+export const defaultHandleAuthRequestUrl = async (requestUrl: string): Promise<void> => {
+
+  window.location.href = requestUrl;
+
+};
 
 export class SolidOidcClient {
 
@@ -38,11 +47,7 @@ export class SolidOidcClient {
     issuer: string,
     scope: string,
     responseType: string,
-    handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
-
-      window.location.href = requestUrl;
-
-    }
+    handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
@@ -60,11 +65,7 @@ export class SolidOidcClient {
     webId: string,
     scope: string,
     responseType: string,
-    handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
-
-      window.location.href = requestUrl;
-
-    }
+    handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
     if (!webId) throw new Error('Parameter "webId" should be set');
@@ -89,7 +90,7 @@ export class SolidOidcClient {
   async handleIncomingRedirect(
     issuer: string,
     redirectUri: string,
-    getAuthorizationCode: () => Promise<string|null> = async () => new URLSearchParams(window.location.search).get('code'),
+    getAuthorizationCode: () => Promise<string|null> = defaultGetAuthorizationCode,
     clientSecret?: string,
   ): Promise<void> {
 

@@ -125,12 +125,9 @@ describe('authRequest()', () => {
 
   });
 
-  const handleAuthRequestUrl = async () => { console.log('log something'); }
-;
+  const authRequestParams = { issuer, clientId, scope, redirectUri };
 
-  const authRequestParams = { issuer, clientId, scope, redirectUri, handleAuthRequestUrl };
-
-  it.each([ 'issuer', 'clientId', 'scope', 'redirectUri' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+  it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
     const testArgs = { ...authRequestParams };
     testArgs[keyToBeNull] = undefined;

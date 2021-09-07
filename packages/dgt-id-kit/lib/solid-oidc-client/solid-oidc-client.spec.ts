@@ -129,9 +129,9 @@ describe('SolidOidcClient', () => {
 
     });
 
-    const loginWithIssuerParams = { issuer, scope, responseType, handleAuthRequestUrl };
+    const loginWithIssuerParams = { issuer, scope, responseType };
 
-    it.each([ 'issuer', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
       const testArgs = { ...loginWithIssuerParams };
       testArgs[keyToBeNull] = undefined;
@@ -172,9 +172,9 @@ describe('SolidOidcClient', () => {
 
     });
 
-    const loginWithWebIdParams = { webId, scope, responseType, handleAuthRequestUrl };
+    const loginWithWebIdParams = { webId, scope, responseType };
 
-    it.each([ 'webId', 'scope', 'responseType' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
       const testArgs = { ...loginWithWebIdParams };
       testArgs[keyToBeNull] = undefined;
@@ -324,9 +324,9 @@ describe('SolidOidcClient', () => {
 
     });
 
-    const handleIncomingRedirectParams = { issuer, redirectUri, getAuthorizationCode };
+    const handleIncomingRedirectParams = { issuer, redirectUri };
 
-    it.each([ 'issuer', 'redirectUri' ])('should throw when parameter %s is undefined', async (keyToBeNull) => {
+    it.each(Object.keys(handleIncomingRedirectParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
       const testArgs = { ...handleIncomingRedirectParams };
       testArgs[keyToBeNull] = undefined;
