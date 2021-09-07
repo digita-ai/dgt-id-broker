@@ -54,26 +54,27 @@ describe('SolidOidcClient', () => {
   let store: TypedKeyValueStore<storeInterface>;
   let instance: SolidOidcClient;
 
-  beforeEach(async (done) => {
+  beforeEach(() => {
 
     store = new testStore();
-    instance = new SolidOidcClient(store);
-    await instance.initialize(clientId);
-    done();
+    instance = new SolidOidcClient(store, clientId);
 
   });
 
   describe('constructor()', () => {
 
-    it('should set the given store to this.store', async () => {
+    it('should set the given store to this.store and client id', async () => {
 
       expect((instance as any).store).toEqual(store);
+      expect((instance as any).clientId).toEqual(clientId);
 
     });
 
   });
 
   describe('initialize()', () => {
+
+    beforeEach(() => instance.initialize());
 
     it('should create a public key, private key and a codeVerifier and set it to the store', async () => {
 
@@ -89,17 +90,19 @@ describe('SolidOidcClient', () => {
 
     });
 
-    it('should not overwrite the pubkey, privkey or codeverifier when already present in the store', async () => {
+    it('should not overwrite the pubkey, privkey, codeverifier or clientId when already present in the store', async () => {
 
       const originalPubkey = await store.get('publicKey');
       const originalPrivkey = await store.get('privateKey');
       const originalCodeVerifier = await store.get('codeVerifier');
+      const originalClientId = await store.get('clientId');
 
-      await instance.initialize(clientId);
+      await instance.initialize();
 
       await expect(store.get('publicKey')).resolves.toEqual(originalPubkey);
       await expect(store.get('privateKey')).resolves.toEqual(originalPrivkey);
       await expect(store.get('codeVerifier')).resolves.toBe(originalCodeVerifier);
+      await expect(store.get('clientId')).resolves.toBe(originalClientId);
 
     });
 
@@ -121,11 +124,12 @@ describe('SolidOidcClient', () => {
 
     it ('should throw when no clientId was found in the store', async () => {
 
-      await store.delete('clientId');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'clientId' ? undefined : 'randomValue',
+      );
 
       const result = instance.loginWithIssuer(issuer, scope, responseType, handleAuthRequestUrl);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
 
@@ -164,11 +168,12 @@ describe('SolidOidcClient', () => {
 
     it ('should throw when no clientId was found in the store', async () => {
 
-      await store.delete('clientId');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'clientId' ? undefined : 'randomValue',
+      );
 
       const result = instance.loginWithWebId(webId, scope, responseType, handleAuthRequestUrl);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
 
@@ -270,41 +275,45 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no clientId was found in the store', async () => {
 
-      await store.delete('clientId');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'clientId' ? undefined : 'randomValue',
+      );
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
-
-    });
-
-    it('should throw when no publicKey was found in the store', async () => {
-
-      await store.delete('publicKey');
-
-      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('publicKey').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
 
     it('should throw when no privateKey was found in the store', async () => {
 
-      await store.delete('privateKey');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'privateKey' ? undefined : 'randomValue',
+      );
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('privateKey').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No private key available in the store');
+
+    });
+
+    it('should throw when no publicKey was found in the store', async () => {
+
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'publicKey' ? undefined : 'randomValue',
+      );
+
+      const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
+      await expect(result).rejects.toThrow('No public key available in the store');
 
     });
 
     it('should throw when no codeVerifier was found in the store', async () => {
 
-      await store.delete('codeVerifier');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'codeVerifier' ? undefined : 'randomValue',
+      );
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('codeVerifier').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No code verifier available in the store');
 
     });
 
@@ -369,21 +378,23 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no publicKey was found in the store', async () => {
 
-      await store.delete('publicKey');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'publicKey' ? undefined : 'randomValue',
+      );
 
       const result = instance.accessResource(resource, method);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('publicKey').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No public key available in the store');
 
     });
 
     it('should throw when no privateKey was found in the store', async () => {
 
-      await store.delete('privateKey');
+      (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+        (key) => key === 'privateKey' ? undefined : 'randomValue',
+      );
 
       const result = instance.accessResource(resource, method);
-      const expectedErrorMessage: string = (instance as any).getInitializeError('privateKey').message;
-      await expect(result).rejects.toThrow(expectedErrorMessage);
+      await expect(result).rejects.toThrow('No private key available in the store');
 
     });
 
@@ -456,23 +467,14 @@ describe('SolidOidcClient', () => {
 
       it('should throw when no clientId was found in the store', async () => {
 
-        await store.delete('clientId');
+        (instance as any).getSafelyFromStore = jest.fn().mockImplementation(
+          (key) => key === 'clientId' ? undefined : key === 'accessToken' ? dummyExpiredAccessToken : 'randomValue',
+        );
+
         const result = instance.accessResource(resource, method);
-        const expectedErrorMessage: string = (instance as any).getInitializeError('clientId').message;
-        await expect(result).rejects.toThrow(expectedErrorMessage);
+        await expect(result).rejects.toThrow('No client_id available in the store');
 
       });
-
-    });
-
-  });
-
-  describe('getInitializeError()', () => {
-
-    it('should return an error with the correct message', async () => {
-
-      expect((instance as any).getInitializeError('test'))
-        .toEqual(new Error('No test was found, did you call initialize()?'));
 
     });
 
