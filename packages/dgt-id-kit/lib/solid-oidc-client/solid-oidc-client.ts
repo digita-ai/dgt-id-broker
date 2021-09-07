@@ -32,29 +32,24 @@ export class SolidOidcClient {
 
   constructor(
     private store: TypedKeyValueStore<storeInterface>,
-    private clientId: string,
-  ) { }
+    private initialized = true,
+    private clientId?: string,
+  ) {
 
-  async initialize(): Promise<void> {
-
-    if (!(await this.store.get('privateKey')) || !(await this.store.get('publicKey'))) {
-
-      const keys = await generateKeys();
-      await this.store.set('privateKey', keys.privateKey);
-      await this.store.set('publicKey', keys.publicKey);
-
-    }
-
-    if (!(await this.store.has('codeVerifier'))) await this.store.set('codeVerifier', generateCodeVerifier(120));
-    if (!(await this.store.has('clientId'))) await this.store.set('clientId', this.clientId);
+    if (!clientId && !initialized) throw new Error('Parameter initialized can not be false when no clientId was provided');
 
   }
 
-  private async getSafelyFromStore<T extends keyof storeInterface>(key: T): Promise<storeInterface[T] | undefined> {
+  private async initialize(): Promise<void> {
 
-    if (!(await this.store.has(key))) await this.initialize();
+    const keys = await generateKeys();
+    await this.store.set('privateKey', keys.privateKey);
+    await this.store.set('publicKey', keys.publicKey);
 
-    return await this.store.get(key);
+    await this.store.set('codeVerifier', generateCodeVerifier(120));
+    if (this.clientId) await this.store.set('clientId', this.clientId);
+
+    this.initialized = true;
 
   }
 
@@ -65,11 +60,13 @@ export class SolidOidcClient {
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
+    if (!this.initialized) await this.initialize();
+
     if (!issuer) throw new Error('Parameter "issuer" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
     if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
-    const clientId = await this.getSafelyFromStore('clientId');
+    const clientId = await this.store.get('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
     await loginWithIssuer(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
@@ -83,11 +80,13 @@ export class SolidOidcClient {
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
+    if (!this.initialized) await this.initialize();
+
     if (!webId) throw new Error('Parameter "webId" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
     if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
-    const clientId = await this.getSafelyFromStore('clientId');
+    const clientId = await this.store.get('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
     await loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
@@ -109,7 +108,9 @@ export class SolidOidcClient {
     clientSecret?: string,
   ): Promise<void> {
 
-    const clientId = await this.getSafelyFromStore('clientId');
+    if (!this.initialized) await this.initialize();
+
+    const clientId = await this.store.get('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
@@ -119,11 +120,11 @@ export class SolidOidcClient {
 
     if (clientSecret) await this.store.set('clientSecret', clientSecret);
 
-    const privateKey = await this.getSafelyFromStore('privateKey');
+    const privateKey = await this.store.get('privateKey');
     if (!privateKey) throw new Error('No private key available in the store');
-    const publicKey = await this.getSafelyFromStore('publicKey');
+    const publicKey = await this.store.get('publicKey');
     if (!publicKey) throw new Error('No public key available in the store');
-    const codeVerifier = await this.getSafelyFromStore('codeVerifier');
+    const codeVerifier = await this.store.get('codeVerifier');
     if (!codeVerifier) throw new Error('No code verifier available in the store');
 
     try {
@@ -160,14 +161,16 @@ export class SolidOidcClient {
     contentType?: string,
   ): Promise<Response> {
 
+    if (!this.initialized) await this.initialize();
+
     if (!resource) throw new Error('Parameter "resource" should be set');
     if (!method) throw new Error('Parameter "method" should be set');
 
-    const privateKey = await this.getSafelyFromStore('privateKey');
+    const privateKey = await this.store.get('privateKey');
     if (!privateKey) throw new Error('No private key available in the store');
-    const publicKey = await this.getSafelyFromStore('publicKey');
+    const publicKey = await this.store.get('publicKey');
     if (!publicKey) throw new Error('No public key available in the store');
-    let accessToken = await this.getSafelyFromStore('accessToken');
+    let accessToken = await this.store.get('accessToken');
     if (!accessToken) throw new Error('No accessToken available, did you login correctly?');
 
     try{
@@ -183,7 +186,7 @@ export class SolidOidcClient {
         if (!refreshToken) throw new Error('No refreshToken available, did you login with "offline_access" in the scope?');
         const issuer = await this.store.get('issuer');
         if (!issuer) throw new Error('No issuer available, did you login correctly?');
-        const clientId = await this.getSafelyFromStore('clientId');
+        const clientId = await this.store.get('clientId');
         if (!clientId) throw new Error('No client_id available in the store');
         const clientSecret = await this.store.get('clientSecret');
 
