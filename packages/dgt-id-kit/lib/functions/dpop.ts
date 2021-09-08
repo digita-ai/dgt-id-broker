@@ -23,7 +23,7 @@ export const generateKeys = async (
 
   try {
 
-    const keyPair = await generateKeyPair(algorithm);
+    const keyPair = await generateKeyPair(algorithm, { extractable: true });
 
     const privateKey = await fromKeyLike(keyPair.privateKey);
     const publicKey = await fromKeyLike(keyPair.publicKey);

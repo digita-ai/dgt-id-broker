@@ -3,7 +3,7 @@ import { validateAndFetch } from '../util/validate-and-fetch';
 import { HttpMethod } from '../models/http-method.model';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
-import { generateCodeChallenge, generateCodeVerifier } from './pkce';
+import { generateCodeChallenge } from './pkce';
 
 /**
  * Construct an authentication request url based on the given parameters
@@ -34,7 +34,7 @@ export const constructAuthRequestUrl = async (
   if (!authorizationEndpoint) throw new Error(`No authorization endpoint was found for issuer ${issuer}`);
 
   return `${authorizationEndpoint}?` +
-    `client_id=${clientId}&` +
+    `client_id=${encodeURIComponent(clientId)}&` +
     `code_challenge=${pkceCodeChallenge}&` +
     `code_challenge_method=S256&` +
     `response_type=code&` +
@@ -56,6 +56,7 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   redirectUri: string,
+  codeVerifier: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
 
     window.location.href = requestUrl;
@@ -70,7 +71,6 @@ export const authRequest = async (
 
   try {
 
-    const codeVerifier = generateCodeVerifier(128);
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
     const requestUrl = await constructAuthRequestUrl(

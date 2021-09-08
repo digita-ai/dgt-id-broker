@@ -29,7 +29,7 @@ export class SolidOidcClient {
     if (!(await this.store.has('privateKey'))) await this.store.set('privateKey', keys.privateKey);
     if (!(await this.store.has('publicKey'))) await this.store.set('publicKey', keys.publicKey);
 
-    if (!(await this.store.has('codeVerifier'))) await this.store.set('codeVerifier', generateCodeVerifier(120));
+    if (!(await this.store.has('codeVerifier'))) await this.store.set('codeVerifier', generateCodeVerifier(128));
     await this.store.set('clientId', clientId);
 
   }
@@ -37,7 +37,7 @@ export class SolidOidcClient {
   async loginWithIssuer(
     issuer: string,
     scope: string,
-    responseType: string,
+    redirectUri: string,
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
 
       window.location.href = requestUrl;
@@ -47,12 +47,14 @@ export class SolidOidcClient {
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
     if (!scope) throw new Error('Parameter "scope" should be set');
-    if (!responseType) throw new Error('Parameter "responseType" should be set');
+    if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
     const clientId = await this.store.get('clientId');
     if (!clientId) throw this.getInitializeError('clientId');
 
-    await loginWithIssuer(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+    const codeVerifier = await this.store.get('codeVerifier') ?? '';
+
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
   }
 
@@ -74,7 +76,9 @@ export class SolidOidcClient {
     const clientId = await this.store.get('clientId');
     if (!clientId) throw this.getInitializeError('clientId');
 
-    await loginWithWebId(webId, clientId, scope, responseType, handleAuthRequestUrl);
+    const codeVerifier = await this.store.get('codeVerifier') ?? '';
+
+    await loginWithWebId(webId, clientId, scope, responseType, codeVerifier, handleAuthRequestUrl);
 
   }
 

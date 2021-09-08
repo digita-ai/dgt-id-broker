@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "nodemon main.js",
-    "demo:panva": "nodemon -r dotenv/config main.js dotenv_config_path=./.env.panva"
+    "demo:panva": "nodemon -r dotenv/config main.js dotenv_config_path=./.env.panva",
+    "demo:id-kit": "npm run demo:panva"
   },
   "keywords": [],
   "author": "JasperVandenberghen",

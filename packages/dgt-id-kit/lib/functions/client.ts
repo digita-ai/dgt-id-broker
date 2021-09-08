@@ -6,7 +6,8 @@ export const loginWithIssuer = async (
   issuer: string,
   clientId: string,
   scope: string,
-  responseType: string,
+  redirectUri: string,
+  codeVerifier: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
 
     window.location.href = requestUrl;
@@ -17,9 +18,9 @@ export const loginWithIssuer = async (
   if (!issuer) throw new Error('Parameter "issuer" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
-  if (!responseType) throw new Error('Parameter "responseType" should be set');
+  if (!redirectUri) throw new Error('Parameter "responseType" should be set');
 
-  await authRequest(issuer, clientId, scope, responseType, handleAuthRequestUrl);
+  await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
 };
 
@@ -28,6 +29,7 @@ export const loginWithWebId = async (
   clientId: string,
   scope: string,
   responseType: string,
+  codeVerifier: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
 
     window.location.href = requestUrl;
@@ -44,7 +46,7 @@ export const loginWithWebId = async (
 
   if (!issuer) throw new Error(`No issuer was found on the profile of ${webId}`);
 
-  await loginWithIssuer(issuer.url.toString(), clientId, scope, responseType, handleAuthRequestUrl);
+  await loginWithIssuer(issuer.url.toString(), clientId, scope, responseType, codeVerifier, handleAuthRequestUrl);
 
 };
 
