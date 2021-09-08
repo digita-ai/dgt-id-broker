@@ -55,6 +55,8 @@ export class LocalStorageStore<M> implements TypedKeyValueStore<M> {
 
     localStorageStore[key] = undefined;
 
+    localStorage.setItem('localStorageStore', JSON.stringify(localStorageStore));
+
     return this.has(key);
 
   }
