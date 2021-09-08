@@ -1,6 +1,7 @@
 import { JWK } from 'jose/webcrypto/types';
 import { validateAndFetch } from '../util/validate-and-fetch';
 import { HttpMethod } from '../models/http-method.model';
+import { defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
 import { generateCodeChallenge } from './pkce';
@@ -57,17 +58,14 @@ export const authRequest = async (
   scope: string,
   redirectUri: string,
   codeVerifier: string,
-  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = async (requestUrl: string) => {
-
-    window.location.href = requestUrl;
-
-  }
+  handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
+  if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
 
   try {
 
@@ -176,7 +174,7 @@ export const tokenRequest = async (
 export interface refreshTokenRequestReturnObject {
   accessToken: string;
   refreshToken: string;
-  idToken?: string;
+  idToken: string;
 }
 
 /**
@@ -232,6 +230,7 @@ export const refreshTokenRequest = async (
     if (parsed?.error) throw new Error(parsed.error);
     if (!parsed?.access_token) throw new Error('The tokenRequest response must contain an access_token field, and it did not.');
     if (!parsed?.refresh_token) throw new Error('The tokenRequest response must contain an refresh_token field, and it did not.');
+    if (!parsed?.id_token) throw new Error('The tokenRequest response must contain an id_token field, and it did not.');
 
     return {
       accessToken: parsed.access_token,
