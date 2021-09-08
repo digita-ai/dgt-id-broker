@@ -96,7 +96,8 @@
       "<rootDir>/lib/index.ts",
       "<rootDir>/lib-old/",
       "<rootDir>/test/",
-      "<rootDir>/lib/models/http-method.model.ts"
+      "<rootDir>/lib/models/http-method.model.ts",
+      "<rootDir>/lib/models/local-storage-store.ts"
     ]
   }
 }
