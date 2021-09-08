@@ -117,11 +117,12 @@ describe('SolidOidcClient', () => {
 
       const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce(undefined);
 
-      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      const result = await instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      const codeVerifier = await store.get('codeVerifier');
 
-      await expect(result).resolves.toBeUndefined();
+      expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
     });
 
@@ -133,6 +134,17 @@ describe('SolidOidcClient', () => {
 
       const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No client_id available in the store');
+
+    });
+
+    it('should throw when no codeVerifier was found in the store', async () => {
+
+      store.get = jest.fn().mockImplementation(
+        (key) => key === 'codeVerifier' ? undefined : 'randomValue',
+      );
+
+      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      await expect(result).rejects.toThrow('No code verifier available in the store');
 
     });
 
@@ -172,10 +184,11 @@ describe('SolidOidcClient', () => {
     it('should call loginWithWebId() with the correct parameters', async () => {
 
       const spy = jest.spyOn(clientModule, 'loginWithWebId');
-      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
-      await expect(result).resolves.toBeUndefined();
+      const result = await instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
+      const codeVerifier = await store.get('codeVerifier');
+      expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
     });
 
@@ -187,6 +200,17 @@ describe('SolidOidcClient', () => {
 
       const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No client_id available in the store');
+
+    });
+
+    it('should throw when no clientId was found in the store', async () => {
+
+      store.get = jest.fn().mockImplementation(
+        (key) => key === 'codeVerifier' ? undefined : 'randomValue',
+      );
+
+      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
+      await expect(result).rejects.toThrow('No code verifier available in the store');
 
     });
 

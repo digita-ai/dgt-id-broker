@@ -57,6 +57,7 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   redirectUri: string,
+  codeVerifier: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
@@ -64,10 +65,10 @@ export const authRequest = async (
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
+  if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
 
   try {
 
-    const codeVerifier = generateCodeVerifier(128);
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
     const requestUrl = await constructAuthRequestUrl(

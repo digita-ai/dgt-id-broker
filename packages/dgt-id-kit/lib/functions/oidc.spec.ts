@@ -107,7 +107,7 @@ describe('authRequest()', () => {
 
     const spy = jest.spyOn(global.console, 'log');
 
-    const result = authRequest(issuer, clientId, scope, redirectUri, async () => { console.log('log something'); });
+    const result = authRequest(issuer, clientId, scope, redirectUri, codeVerifier, async () => { console.log('log something'); });
 
     await expect(result).resolves.toBeUndefined();
     expect(spy).toHaveBeenCalledTimes(1);
@@ -120,12 +120,12 @@ describe('authRequest()', () => {
     jest.spyOn(oidcModule, 'constructAuthRequestUrl').mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await authRequest(issuer, clientId, scope, redirectUri, async () => { console.log('log something'); })
+      async () => await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, async () => { console.log('log something'); })
     ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
 
   });
 
-  const authRequestParams = { issuer, clientId, scope, redirectUri };
+  const authRequestParams = { issuer, clientId, scope, redirectUri, codeVerifier };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -136,7 +136,8 @@ describe('authRequest()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.scope,
-      testArgs.redirectUri
+      testArgs.redirectUri,
+      testArgs.codeVerifier,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

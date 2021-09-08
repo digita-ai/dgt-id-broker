@@ -46,7 +46,8 @@ export class SolidOidcClient {
     await this.store.set('privateKey', keys.privateKey);
     await this.store.set('publicKey', keys.publicKey);
 
-    await this.store.set('codeVerifier', generateCodeVerifier(120));
+    await this.store.set('codeVerifier', generateCodeVerifier(128));
+
     if (this.clientId) await this.store.set('clientId', this.clientId);
 
     this.initialized = true;
@@ -69,7 +70,10 @@ export class SolidOidcClient {
     const clientId = await this.store.get('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
-    await loginWithIssuer(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
+    const codeVerifier = await this.store.get('codeVerifier');
+    if (!codeVerifier) throw new Error('No code verifier available in the store');
+
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
   }
 
@@ -89,7 +93,10 @@ export class SolidOidcClient {
     const clientId = await this.store.get('clientId');
     if (!clientId) throw new Error('No client_id available in the store');
 
-    await loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
+    const codeVerifier = await this.store.get('codeVerifier');
+    if (!codeVerifier) throw new Error('No code verifier available in the store');
+
+    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
   }
 

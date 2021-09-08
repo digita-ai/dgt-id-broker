@@ -4,7 +4,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { issuer, clientId, scope, responseType, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier, handleAuthRequestUrl, getAuthorizationCode } from '../../test/test-data';
+import { issuer, clientId, scope, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier, handleAuthRequestUrl, getAuthorizationCode } from '../../test/test-data';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from './client';
 import * as clientModule from './client';
 import * as oidcModule from './oidc';
@@ -24,14 +24,14 @@ describe('loginWithIssuer()', () => {
 
     const spy = jest.spyOn(oidcModule, 'authRequest').mockResolvedValueOnce();
 
-    await loginWithIssuer(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, handleAuthRequestUrl);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
   });
 
-  const loginWithIssuerParams = { issuer, clientId, scope, redirectUri };
+  const loginWithIssuerParams = { issuer, clientId, scope, redirectUri, codeVerifier };
 
   it.each(Object.keys(loginWithIssuerParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -43,6 +43,7 @@ describe('loginWithIssuer()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.redirectUri,
+      testArgs.codeVerifier,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -61,7 +62,7 @@ describe('loginWithWebId()', () => {
       [ mockedResponseInvalidSolidOidc, { status: 200 } ]
     );
 
-    const result = loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
+    const result = loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
     await expect(result).rejects.toThrow(`No issuer was found on the profile of ${webId}`);
 
   });
@@ -76,14 +77,17 @@ describe('loginWithWebId()', () => {
 
     const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce();
 
-    await loginWithWebId(webId, clientId, scope, redirectUri, handleAuthRequestUrl);
+    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer1.url.toString(), clientId, scope, redirectUri, handleAuthRequestUrl);
+
+    expect(spy).toHaveBeenCalledWith(
+      issuer1.url.toString(), clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl
+    );
 
   });
 
-  const loginWithWebIdParams = { webId, clientId, scope, redirectUri };
+  const loginWithWebIdParams = { webId, clientId, scope, redirectUri, codeVerifier };
 
   it.each(Object.keys(loginWithWebIdParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -95,6 +99,7 @@ describe('loginWithWebId()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.redirectUri,
+      testArgs.codeVerifier,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
