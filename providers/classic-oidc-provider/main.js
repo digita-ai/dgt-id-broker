@@ -14,8 +14,9 @@ const jwks = require('./jwks.json');
 const clients = [{
     client_id: `${process.env.CLIENT_ID}`,
     client_secret: `${process.env.CLIENT_SECRET}`,
-    grant_types: ['authorization_code'],
+    grant_types: ['authorization_code', 'refresh_token'],
     response_types: ['code'],
+    scope: 'openid offline_access',
     redirect_uris: [`http://${process.env.VITE_IP}:${process.env.VITE_PORT}/requests.html`]
 }];
 
@@ -49,6 +50,10 @@ const configuration = {
         dPoP: {
             enabled: false
         }
+    },
+    issueRefreshToken: async (ctx, client, code) => {
+        console.log('test:', client.grantTypeAllowed('refresh_token'), ' ', code.scopes.has('offline_access'), ' ', code.scopes)
+        return client.grantTypeAllowed('refresh_token') && code.scopes.has('offline_access');
     },
     jwks,
 

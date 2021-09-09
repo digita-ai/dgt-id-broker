@@ -13,4 +13,4 @@ const store = new LocalStorageStore();
 const solidOidcClient = new SolidOidcClient(store, false, `${env.VITE_CLIENT_ID}`)
 
 // login to the issuer and redirect to our redirectUri
-solidOidcClient.loginWithIssuer(`http://localhost:${env.VITE_OIDC_PORT}`, 'openid', `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`)
+solidOidcClient.loginWithIssuer(`http://localhost:${env.VITE_OIDC_PORT}`, 'openid offline_access', `http://${env.VITE_IP}:${env.VITE_PORT}/requests.html`)
