@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.5.0...v0.6.0) (2021-09-09)
+
+
+### **Features**
+
+* major refactor of inner workings and usage of store ([#211](https://github.com/digita-ai/dgt-id-broker/issues/211)) ([ca5ccc7](https://github.com/digita-ai/dgt-id-broker/commit/ca5ccc7997024e474682198010abd1e249873f16))
+
+
+
 ## [0.5.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.1...v0.5.0) (2021-09-02)
 
 
