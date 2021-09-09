@@ -28,6 +28,10 @@ export const constructAuthRequestUrl = async (
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!pkceCodeChallenge) throw new Error('Parameter "pkceCodeChallenge" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
+
+  let prompt = '';
+  if (scope.split(' ').includes('offline_access')) prompt = '&prompt=consent';
+
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
   const authorizationEndpoint = await getEndpoint(issuer, 'authorization_endpoint');
@@ -40,7 +44,8 @@ export const constructAuthRequestUrl = async (
     `code_challenge_method=S256&` +
     `response_type=code&` +
     `scope=${encodeURIComponent(scope)}&` +
-    `redirect_uri=${encodeURIComponent(redirectUri)}`;
+    `redirect_uri=${encodeURIComponent(redirectUri)}` +
+    prompt;
 
 };
 
