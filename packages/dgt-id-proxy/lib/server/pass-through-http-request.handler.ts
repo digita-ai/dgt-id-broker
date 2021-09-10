@@ -281,8 +281,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
       delete response.headers['content-encoding'];
 
-      // console.log('RESOLVING...', response);
-
       resolve(response);
 
     });
