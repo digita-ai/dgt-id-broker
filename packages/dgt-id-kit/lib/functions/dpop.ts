@@ -3,25 +3,35 @@ import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { SignJWT } from 'jose/jwt/sign';
 import { v4 } from 'uuid';
 import { parseJwk } from 'jose/jwk/parse';
+import { JWK } from 'jose/webcrypto/types';
 import { KeyGenerationAlgorithm } from '../models/key-generation-algorithm.model';
-import { store } from './storage';
+
+export interface generateKeysReturnObject {
+  privateKey: JWK;
+  publicKey: JWK;
+}
 
 /**
- * Generate a private- and public key and save them to the store in JWK format
+ * Generate a private- and public key
  *
  * @param algorithm the desired algorithm to be used to generate the key pair
+ * @returns an object containing the public and private key
  */
-export const generateKeys = async (algorithm: KeyGenerationAlgorithm = 'ES256'): Promise<void> => {
+export const generateKeys = async (
+  algorithm: KeyGenerationAlgorithm = 'ES256',
+): Promise<generateKeysReturnObject> => {
 
   try {
 
-    const keyPair = await generateKeyPair(algorithm);
+    const keyPair = await generateKeyPair(algorithm, { extractable: true });
 
     const privateKey = await fromKeyLike(keyPair.privateKey);
     const publicKey = await fromKeyLike(keyPair.publicKey);
 
-    await store.set('privateKey', privateKey);
-    await store.set('publicKey', { ...publicKey, alg: algorithm });
+    return {
+      privateKey,
+      publicKey: { ...publicKey, alg: algorithm },
+    };
 
   } catch (error: unknown) {
 
@@ -32,25 +42,25 @@ export const generateKeys = async (algorithm: KeyGenerationAlgorithm = 'ES256'):
 };
 
 /**
- * Creates a DPoP proof signed by the private key that is stored in the store
+ * Creates a DPoP proof signed by the private key
  *
  * @param htm htm option
  * @param htu htu option
+ * @param publicKey the public key
+ * @param privateKey the private key
  * @returns DPoP proof string
  */
-export const createDpopProof = async (htm: string, htu: string): Promise<string> => {
+export const createDpopProof = async (
+  htm: string,
+  htu: string,
+  publicKey: JWK,
+  privateKey: JWK,
+): Promise<string> => {
 
-  if (!htm) { throw new Error('Parameter "htm" should be set'); }
-
-  if (!htu) { throw new Error('Parameter "htu" should be set'); }
-
-  const privateKey = await store.get('privateKey');
-
-  if (!privateKey) { throw new Error('No private key was found in the store, call generateKeys()'); }
-
-  const publicKey = await store.get('publicKey');
-
-  if (!publicKey) { throw new Error('No public key was found in the store, call generateKeys()'); }
+  if (!htm) throw new Error('Parameter "htm" should be set');
+  if (!htu) throw new Error('Parameter "htu" should be set');
+  if (!publicKey) throw new Error('Parameter "publicKey" should be set');
+  if (!privateKey) throw new Error('Parameter "privateKey" should be set');
 
   try {
 

@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-kit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Collection of client-side utilities for authentication with Solid services",
   "author": "Wouter Termont <wouter.termont@digita.ai>",
   "main": "./dist/dgt-id-kit.umd.js",
@@ -26,7 +26,7 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/inrupt-solid-client": "0.5.0",
+    "@digita-ai/inrupt-solid-client": "0.6.0",
     "crypto-js": "^4.1.1",
     "jose": "^3.14.3",
     "n3": "^1.11.0",
@@ -74,7 +74,7 @@
     "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 99.44,
+        "branches": 99.63,
         "functions": 100,
         "lines": 100,
         "statements": 100
