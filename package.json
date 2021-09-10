@@ -4,7 +4,8 @@
   "scripts": {
     "start": "lerna run start --parallel --no-bail",
     "postinstall": "husky install",
-    "release": "lerna version --no-private",
+    "release": "lerna version",
+    "release:docs": "echo \"$(yaml set docs/antora.yml version $(dot-json lerna.json version))\" > docs/antora.yml",
     "bootstrap": "npm ci && lerna bootstrap",
     "bootstrap:no-ci": "npm i && lerna bootstrap --no-ci",
     "build": "lerna run build --since HEAD",
@@ -19,7 +20,8 @@
     "test:ci": "lerna run test:ci",
     "demo:auth0": "lerna run demo:auth0 --parallel --no-bail",
     "demo:panva": "lerna run demo:panva --parallel --no-bail",
-    "demo:keycloak": "lerna run demo:keycloak --parallel --no-bail"
+    "demo:keycloak": "lerna run demo:keycloak --parallel --no-bail",
+    "version": "npm run release:docs"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",
@@ -30,6 +32,7 @@
     "@types/jest": "^26.0.22",
     "@types/node": "^14.14.41",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "dot-json": "^1.2.2",
     "eslint": "^7.22.0",
     "eslint-import-resolver-typescript": "^2.4.0",
     "eslint-plugin-import": "^2.22.1",
@@ -41,7 +44,8 @@
     "lint-staged": "^10.5.4",
     "ts-jest": "^26.5.5",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.3"
+    "typescript": "^4.2.3",
+    "yaml-cli": "^1.1.8"
   },
   "commitlint": {
     "extends": [

@@ -2,11 +2,10 @@ import nock = require('nock');
 import { ComponentsManager } from 'componentsjs';
 import fetchMock from 'jest-fetch-mock';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
-
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { v4 as uuid } from 'uuid';
 import { SignJWT } from 'jose/jwt/sign';
-import { NodeHttpServer } from '@digita-ai/handlersjs-http';
+import { NodeHttpServer, NotFoundHttpError } from '@digita-ai/handlersjs-http';
 import { variables, mainModulePath, configPath } from '../setup-tests';
 
 describe('full integration', () => {
@@ -18,9 +17,7 @@ describe('full integration', () => {
   let validDpopJwt: string;
   let publicJwk1: JWK;
   let publicJwk2: JWK;
-  const host = 'http://localhost:3003';
   const client_id = 'http://client.example.com/clientapp/profile';
-  const publicClient_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const redirect_uri = `http://client.example.com/requests.html`;
   let authUrl: string;
 

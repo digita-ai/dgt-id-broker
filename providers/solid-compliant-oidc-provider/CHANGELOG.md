@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.1...v0.5.0) (2021-09-02)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.4.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.0...v0.4.1) (2021-08-23)
+
+
+### **Features**
+
+* id kit models ([#187](https://github.com/digita-ai/dgt-id-broker/issues/187)) ([1373a02](https://github.com/digita-ai/dgt-id-broker/commit/1373a0266e1823c81b6dbb93d58c028fed152f3b))
+
+
+
 ## [0.4.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.3.0...v0.4.0) (2021-07-06)
 
 

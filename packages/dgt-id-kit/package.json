@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-kit",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Collection of client-side utilities for authentication with Solid services",
   "author": "Wouter Termont <wouter.termont@digita.ai>",
   "main": "./dist/dgt-id-kit.umd.js",
@@ -26,17 +26,26 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/inrupt-solid-client": "0.4.0",
-    "@types/uuid": "^8.3.0",
+    "@digita-ai/inrupt-solid-client": "0.5.0",
+    "crypto-js": "^4.1.1",
+    "jose": "^3.14.3",
+    "n3": "^1.11.0",
+    "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
+    "@digita-ai/handlersjs-core": "0.3.4",
     "@digita-ai/typescript-config": "^0.3.3",
+    "@types/crypto-js": "^4.0.2",
     "@types/jest": "^26.0.23",
+    "@types/n3": "^1.10.2",
     "@types/node": "^14.14.44",
+    "@types/node-fetch": "^2.5.11",
+    "@types/uuid": "^8.3.0",
     "eslint": "^7.16.0",
     "jest": "^26.6.3",
     "jest-coverage-thresholds-bumper": "0.0.4",
+    "jest-fetch-mock": "^3.0.3",
     "lint-staged": "^10.5.4",
     "rimraf": "^3.0.2",
     "ts-node": "^9.1.1",
@@ -54,16 +63,40 @@
   "bugs": {
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
   },
+  "eslintConfig": {
+    "ignorePatterns": [
+      "lib-old/"
+    ]
+  },
   "jest": {
     "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",
+    "testEnvironment": "jsdom",
     "coverageThreshold": {
       "global": {
-        "branches": 85.56,
-        "functions": 96.88,
-        "lines": 88.34,
-        "statements": 88.69
+        "branches": 99.44,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
       }
-    }
+    },
+    "testPathIgnorePatterns": [
+      "lib-old"
+    ],
+    "moduleNameMapper": {
+      "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
+    },
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/coverage/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/public-api.ts",
+      "<rootDir>/lib/main.ts",
+      "<rootDir>/lib/index.ts",
+      "<rootDir>/lib-old/",
+      "<rootDir>/test/",
+      "<rootDir>/lib/models/http-method.model.ts"
+    ]
   }
 }
