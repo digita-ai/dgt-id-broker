@@ -76,8 +76,8 @@
       "global": {
         "branches": 99.63,
         "functions": 100,
-        "lines": 100,
-        "statements": 100
+        "lines": 99.4,
+        "statements": 99.58
       }
     },
     "testPathIgnorePatterns": [
