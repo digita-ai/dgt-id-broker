@@ -64,6 +64,27 @@ describe('constructAuthRequestUrl()', () => {
 
   });
 
+  it('should add prompt=consent to eh request url when scope contains "offline_access"', async () => {
+
+    const result = constructAuthRequestUrl(
+      issuer,
+      clientId,
+      pkceCodeChallenge,
+      scope + ' offline_access',
+      redirectUri,
+    );
+
+    await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
+    await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
+    await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge_method=S256`);
+    await expect(result).resolves.toContain(`response_type=code`);
+    await expect(result).resolves.toContain(`scope=${scope + '%20offline_access'}`);
+    await expect(result).resolves.toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    await expect(result).resolves.toContain(`prompt=consent`);
+
+  });
+
   const constructAuthResuestUrlParams = { issuer, clientId, pkceCodeChallenge, scope, redirectUri };
 
   it.each(Object.keys(constructAuthResuestUrlParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
