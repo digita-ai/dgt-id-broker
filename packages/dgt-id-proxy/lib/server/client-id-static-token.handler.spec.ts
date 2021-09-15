@@ -23,11 +23,16 @@ describe('ClientIdStaticTokenHandler', () => {
   const noClientIDRequestBody = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`;
   const noGrantTypeRequestBody = `code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const noRedirectUriRequestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
+  const noRefreshTokenRequestBody = `grant_type=refresh_token&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
   const requestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+  const requestBodyWithRefreshToken = `grant_type=refresh_token&refresh_token=refreshTokenMock&client_id=${encodeURIComponent(client_id)}`;
   const publicClientRequestBody = `grant_type=authorization_code&code=${code}&client_id=http://www.w3.org/ns/solid/terms#PublicOidcClient&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
-  const requestBodyWithOtherGrantType = `grant_type=implicit&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+  const requestBodyWithOtherGrantType = `grant_type=refresh_token&refresh_token=refreshTokenMock&client_id=${encodeURIComponent(client_id)}`;
+  const requestBodyWithIncorrectGrantType = `grant_type=implicit&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const requestBodyWithStaticClient = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id_constructor)}&redirect_uri=${encodeURIComponent(redirect_uri_constructor)}&code_verifier=${code_verifier}&client_secret=${client_secret}`;
+  const requestBodyWithStaticClientAndRefreshToken = `grant_type=refresh_token&refresh_token=refreshTokenMock&client_id=${encodeURIComponent(client_id_constructor)}&client_secret=${client_secret}`;
+
   let context: HttpHandlerContext;
 
   const clientRegistrationData = {
@@ -40,7 +45,7 @@ describe('ClientIdStaticTokenHandler', () => {
     'logo_uri' : 'https://app.example/logo.png',
     'tos_uri' : 'https://app.example/tos.html',
     'scope' : 'openid offline_access',
-    'grant_types' : [ 'refresh_token', 'authorization_code' ],
+    'grant_types' : [ 'authorization_code' ],
     'response_types' : [ 'code' ],
     'default_max_age' : 60000,
     'require_auth_time' : true,
@@ -129,10 +134,24 @@ describe('ClientIdStaticTokenHandler', () => {
 
     });
 
-    it('should error when no redirect_uri was provided', async () => {
+    it('should error when grant_type is not refresh_token or authorization_code was provided', async () => {
+
+      const testContext = { ... context, request: { ...context.request, body: requestBodyWithIncorrectGrantType } };
+      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('grant_type must be either "authorization_code" or "refresh_token"');
+
+    });
+
+    it('should error when no redirect_uri was provided and grant type is authorization_code', async () => {
 
       const noRedirectUriContext = { ... context, request: { ...context.request, body:  noRedirectUriRequestBody } };
       await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+
+    });
+
+    it('should error when no refresh_token was provided and grant type is refresh_token', async () => {
+
+      const noRefreshTokenContext = { ... context, request: { ...context.request, body:  noRefreshTokenRequestBody } };
+      await expect(() => handler.handle(noRefreshTokenContext).toPromise()).rejects.toThrow('No refresh_token was provided');
 
     });
 
@@ -239,7 +258,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
     });
 
-    it('should handle the context if all data is correct', async () => {
+    it('should handle the context if all data is correct and grant type is authorization_code', async () => {
 
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
@@ -249,6 +268,24 @@ describe('ClientIdStaticTokenHandler', () => {
 
       expect(httpHandler.handle)
         .toHaveBeenCalledWith({ ...context, request: { ...context.request, body: requestBodyWithStaticClient } });
+
+    });
+
+    it('should handle the context if all data is correct and grant type is refresh_token', async () => {
+
+      const testRegistrationData = { ...clientRegistrationData, 'grant_types': [ 'refresh_token' ] };
+
+      fetchMock.once(JSON.stringify(testRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
+
+      context = { ...context, request: { ...context.request, body: requestBodyWithRefreshToken } };
+
+      await handler.handle(context).toPromise();
+
+      expect(httpHandler.handle).toHaveBeenCalledTimes(1);
+
+      expect(httpHandler.handle)
+        .toHaveBeenCalledWith({ ...context,
+          request: { ...context.request, body: requestBodyWithStaticClientAndRefreshToken } });
 
     });
 
