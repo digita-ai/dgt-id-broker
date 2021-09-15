@@ -21,6 +21,8 @@
     "demo:auth0": "lerna run demo:auth0 --parallel --no-bail",
     "demo:panva": "lerna run demo:panva --parallel --no-bail",
     "demo:keycloak": "lerna run demo:keycloak --parallel --no-bail",
+    "demo:id-kit:panva": "lerna run demo:id-kit:panva --parallel --no-bail",
+    "demo:id-kit:auth0": "lerna run demo:id-kit:auth0 --parallel --no-bail",
     "version": "npm run release:docs"
   },
   "devDependencies": {

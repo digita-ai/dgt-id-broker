@@ -4,7 +4,7 @@ import { HttpMethod } from '../models/http-method.model';
 import { defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
-import { generateCodeChallenge, generateCodeVerifier } from './pkce';
+import { generateCodeChallenge } from './pkce';
 
 /**
  * Construct an authentication request url based on the given parameters

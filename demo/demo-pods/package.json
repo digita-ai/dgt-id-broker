@@ -8,7 +8,9 @@
     "start": "shx rm -rf rundata && shx cp -r data rundata && community-solid-server -p 3002 --rootFilePath ./rundata -c config/config-file.json",
     "demo:auth0": "npm run start",
     "demo:panva": "npm run start",
-    "demo:keycloak": "npm run start"
+    "demo:keycloak": "npm run start",
+    "demo:id-kit:panva": "npm run start",
+    "demo:id-kit:auth0": "npm run start"
   },
   "dependencies": {
     "@solid/community-server": "1.1.0",
