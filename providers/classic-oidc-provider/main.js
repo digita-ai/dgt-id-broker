@@ -51,10 +51,6 @@ const configuration = {
             enabled: false
         }
     },
-    issueRefreshToken: async (ctx, client, code) => {
-        console.log('test:', client.grantTypeAllowed('refresh_token'), ' ', code.scopes.has('offline_access'), ' ', code.scopes)
-        return client.grantTypeAllowed('refresh_token') && code.scopes.has('offline_access');
-    },
     jwks,
 
 }
