@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.6.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.0...v0.6.1) (2021-09-16)
+
+
+### **Bug Fixes**
+
+* refresh tokens support in proxy ([#218](https://github.com/digita-ai/dgt-id-broker/issues/218)) ([4440152](https://github.com/digita-ai/dgt-id-broker/commit/44401528fc71fac52e222341ac6cb33d4f529800))
+
+
+### **Features**
+
+* id-kit demo ([#212](https://github.com/digita-ai/dgt-id-broker/issues/212)) ([b54a287](https://github.com/digita-ai/dgt-id-broker/commit/b54a287ce3bdaac8b1f7130ed3b68bb9e1f9e977))
+
+
+
 ## [0.6.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.5.0...v0.6.0) (2021-09-09)
 
 
