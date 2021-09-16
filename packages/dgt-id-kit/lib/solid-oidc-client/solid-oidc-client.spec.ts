@@ -3,7 +3,7 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
-import { JWK } from 'jose/webcrypto/types';
+import { JWK } from 'jose/types';
 import { HttpMethod } from '../models/http-method.model';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, state, webId, dummyValidAccessToken, refreshToken, idToken, clientSecret, dummyExpiredAccessToken, getAuthorizationCode } from '../../test/test-data';

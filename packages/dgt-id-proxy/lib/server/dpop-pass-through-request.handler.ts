@@ -4,7 +4,7 @@ import { switchMap, catchError, tap, map } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWTVerifyResult } from 'jose/webcrypto/types';
+import { JWTVerifyResult } from 'jose/types';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { SignJWT } from 'jose/jwt/sign';
