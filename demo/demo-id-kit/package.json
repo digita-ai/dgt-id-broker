@@ -12,7 +12,7 @@
     "vite": "^2.1.0"
   },
   "dependencies": {
-    "@digita-ai/dgt-id-kit": "^0.6.0",
+    "@digita-ai/dgt-id-kit": "^0.6.1",
     "@digita-ai/handlersjs-core": "0.3.4",
     "buffer": "^6.0.3",
     "dotenv": "^8.2.0",

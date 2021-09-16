@@ -1,4 +1,4 @@
-import { JWK } from 'jose/webcrypto/types';
+import { JWK } from 'jose/types';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from '../functions/client';
 import { generateKeys } from '../functions/dpop';
 import { accessResource, refreshTokenRequest } from '../functions/oidc';

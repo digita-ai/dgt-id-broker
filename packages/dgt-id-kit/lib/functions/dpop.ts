@@ -3,7 +3,7 @@ import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { SignJWT } from 'jose/jwt/sign';
 import { v4 } from 'uuid';
 import { parseJwk } from 'jose/jwk/parse';
-import { JWK } from 'jose/webcrypto/types';
+import { JWK } from 'jose/types';
 import { KeyGenerationAlgorithm } from '../models/key-generation-algorithm.model';
 
 export interface generateKeysReturnObject {
