@@ -4,7 +4,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { issuer, clientId, scope, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier, handleAuthRequestUrl, getAuthorizationCode } from '../../test/test-data';
+import { issuer, clientId, scope, webId, redirectUri, profileWithIssuers, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc, issuer1, clientSecret, authorizationCode, codeVerifier, handleAuthRequestUrl, getAuthorizationCode, state } from '../../test/test-data';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from './client';
 import * as clientModule from './client';
 import * as oidcModule from './oidc';
@@ -24,10 +24,10 @@ describe('loginWithIssuer()', () => {
 
     const spy = jest.spyOn(oidcModule, 'authRequest').mockResolvedValueOnce();
 
-    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+    expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
   });
 
@@ -62,7 +62,7 @@ describe('loginWithWebId()', () => {
       [ mockedResponseInvalidSolidOidc, { status: 200 } ]
     );
 
-    const result = loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+    const result = loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
     await expect(result).rejects.toThrow(`No issuer was found on the profile of ${webId}`);
 
   });
@@ -77,12 +77,12 @@ describe('loginWithWebId()', () => {
 
     const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce();
 
-    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
     expect(spy).toHaveBeenCalledTimes(1);
 
     expect(spy).toHaveBeenCalledWith(
-      issuer1.url.toString(), clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl
+      issuer1.url.toString(), clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl
     );
 
   });

@@ -6,7 +6,7 @@ global.TextDecoder = TextDecoder;
 import { JWK } from 'jose/webcrypto/types';
 import { HttpMethod } from '../models/http-method.model';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
-import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, responseType, webId, dummyValidAccessToken, refreshToken, idToken, clientSecret, dummyExpiredAccessToken, getAuthorizationCode } from '../../test/test-data';
+import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, state, webId, dummyValidAccessToken, refreshToken, idToken, clientSecret, dummyExpiredAccessToken, getAuthorizationCode } from '../../test/test-data';
 import * as oidcModule from '../functions/oidc';
 import * as clientModule from '../functions/client';
 import { SolidOidcClient, storeInterface } from './solid-oidc-client';
@@ -117,12 +117,12 @@ describe('SolidOidcClient', () => {
 
       const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce(undefined);
 
-      const result = await instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      const result = await instance.loginWithIssuer(issuer, scope, redirectUri, state, handleAuthRequestUrl);
       const codeVerifier = await store.get('codeVerifier');
 
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
     });
 
@@ -132,7 +132,7 @@ describe('SolidOidcClient', () => {
         (key) => key === 'clientId' ? undefined : 'randomValue',
       );
 
-      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      const result = instance.loginWithIssuer(issuer, scope, redirectUri, state, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
@@ -143,7 +143,7 @@ describe('SolidOidcClient', () => {
         (key) => key === 'codeVerifier' ? undefined : 'randomValue',
       );
 
-      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      const result = instance.loginWithIssuer(issuer, scope, redirectUri, state, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No code verifier available in the store');
 
     });
@@ -152,7 +152,7 @@ describe('SolidOidcClient', () => {
 
       instance = new SolidOidcClient(store);
       const spy = jest.spyOn((instance as any), 'initialize');
-      const result = instance.loginWithIssuer(issuer, scope, redirectUri, handleAuthRequestUrl);
+      const result = instance.loginWithIssuer(issuer, scope, redirectUri, state, handleAuthRequestUrl);
       await expect(result).rejects.toThrow(); // Not what we are testing
       expect(spy).toHaveBeenCalledTimes(0);
 
@@ -184,11 +184,11 @@ describe('SolidOidcClient', () => {
     it('should call loginWithWebId() with the correct parameters', async () => {
 
       const spy = jest.spyOn(clientModule, 'loginWithWebId');
-      const result = await instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
+      const result = await instance.loginWithWebId(webId, scope, redirectUri, state, handleAuthRequestUrl);
       const codeVerifier = await store.get('codeVerifier');
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
     });
 
@@ -198,7 +198,7 @@ describe('SolidOidcClient', () => {
         (key) => key === 'clientId' ? undefined : 'randomValue',
       );
 
-      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
+      const result = instance.loginWithWebId(webId, scope, redirectUri, state, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No client_id available in the store');
 
     });
@@ -209,7 +209,7 @@ describe('SolidOidcClient', () => {
         (key) => key === 'codeVerifier' ? undefined : 'randomValue',
       );
 
-      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
+      const result = instance.loginWithWebId(webId, scope, redirectUri, state, handleAuthRequestUrl);
       await expect(result).rejects.toThrow('No code verifier available in the store');
 
     });
@@ -218,7 +218,7 @@ describe('SolidOidcClient', () => {
 
       instance = new SolidOidcClient(store);
       const spy = jest.spyOn((instance as any), 'initialize');
-      const result = instance.loginWithWebId(webId, scope, redirectUri, handleAuthRequestUrl);
+      const result = instance.loginWithWebId(webId, scope, redirectUri, state, handleAuthRequestUrl);
       await expect(result).rejects.toThrow(); // Not what we are testing
       expect(spy).toHaveBeenCalledTimes(0);
 

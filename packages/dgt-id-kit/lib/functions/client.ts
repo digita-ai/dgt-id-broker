@@ -9,6 +9,7 @@ export const loginWithIssuer = async (
   scope: string,
   redirectUri: string,
   codeVerifier: string,
+  state?: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
@@ -18,7 +19,7 @@ export const loginWithIssuer = async (
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
   if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
 
-  await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+  await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
 };
 
@@ -28,6 +29,7 @@ export const loginWithWebId = async (
   scope: string,
   redirectUri: string,
   codeVerifier: string,
+  state?: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
@@ -41,7 +43,7 @@ export const loginWithWebId = async (
 
   if (!issuer) throw new Error(`No issuer was found on the profile of ${webId}`);
 
-  await loginWithIssuer(issuer.url.toString(), clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+  await loginWithIssuer(issuer.url.toString(), clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
 };
 

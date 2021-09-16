@@ -5,7 +5,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier } from '../../test/test-data';
+import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier, state } from '../../test/test-data';
 import { HttpMethod } from '../models/http-method.model';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import * as issuerModule from './issuer';
@@ -64,7 +64,7 @@ describe('constructAuthRequestUrl()', () => {
 
   });
 
-  it('should add prompt=consent to eh request url when scope contains "offline_access"', async () => {
+  it('should add prompt=consent to the request url when scope contains "offline_access"', async () => {
 
     const result = constructAuthRequestUrl(
       issuer,
@@ -82,6 +82,28 @@ describe('constructAuthRequestUrl()', () => {
     await expect(result).resolves.toContain(`scope=${scope + '%20offline_access'}`);
     await expect(result).resolves.toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
     await expect(result).resolves.toContain(`prompt=consent`);
+
+  });
+
+  it('should add state to the request url when state is defined', async () => {
+
+    const result = constructAuthRequestUrl(
+      issuer,
+      clientId,
+      pkceCodeChallenge,
+      scope,
+      redirectUri,
+      state
+    );
+
+    await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
+    await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
+    await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge_method=S256`);
+    await expect(result).resolves.toContain(`response_type=code`);
+    await expect(result).resolves.toContain(`scope=${scope}`);
+    await expect(result).resolves.toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    await expect(result).resolves.toContain(`state=${state}`);
 
   });
 
@@ -128,7 +150,7 @@ describe('authRequest()', () => {
 
     const spy = jest.spyOn(global.console, 'log');
 
-    const result = authRequest(issuer, clientId, scope, redirectUri, codeVerifier, async () => { console.log('log something'); });
+    const result = authRequest(issuer, clientId, scope, redirectUri, codeVerifier, state, async () => { console.log('log something'); });
 
     await expect(result).resolves.toBeUndefined();
     expect(spy).toHaveBeenCalledTimes(1);
@@ -141,7 +163,7 @@ describe('authRequest()', () => {
     jest.spyOn(oidcModule, 'constructAuthRequestUrl').mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, async () => { console.log('log something'); })
+      async () => await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, state, async () => { console.log('log something'); })
     ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
 
   });
