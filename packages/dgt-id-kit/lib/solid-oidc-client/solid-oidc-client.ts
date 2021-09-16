@@ -58,6 +58,7 @@ export class SolidOidcClient {
     issuer: string,
     scope: string,
     redirectUri: string,
+    state?: string,
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
@@ -73,7 +74,7 @@ export class SolidOidcClient {
     const codeVerifier = await this.store.get('codeVerifier');
     if (!codeVerifier) throw new Error('No code verifier available in the store');
 
-    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
   }
 
@@ -81,6 +82,7 @@ export class SolidOidcClient {
     webId: string,
     scope: string,
     redirectUri: string,
+    state?: string,
     handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
   ): Promise<void> {
 
@@ -96,7 +98,7 @@ export class SolidOidcClient {
     const codeVerifier = await this.store.get('codeVerifier');
     if (!codeVerifier) throw new Error('No code verifier available in the store');
 
-    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, handleAuthRequestUrl);
+    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
 
   }
 

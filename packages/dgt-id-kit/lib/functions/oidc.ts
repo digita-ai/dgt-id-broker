@@ -22,15 +22,13 @@ export const constructAuthRequestUrl = async (
   pkceCodeChallenge: string,
   scope: string,
   redirectUri: string,
+  state?: string
 ): Promise<string> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!pkceCodeChallenge) throw new Error('Parameter "pkceCodeChallenge" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
-
-  let prompt = '';
-  if (scope.split(' ').includes('offline_access')) prompt = '&prompt=consent';
 
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
@@ -45,7 +43,8 @@ export const constructAuthRequestUrl = async (
     `response_type=code&` +
     `scope=${encodeURIComponent(scope)}&` +
     `redirect_uri=${encodeURIComponent(redirectUri)}` +
-    prompt;
+    (state ? `&state=${state}` : '') +
+    (scope.split(' ').includes('offline_access') ? '&prompt=consent' : '');
 
 };
 
@@ -63,6 +62,7 @@ export const authRequest = async (
   scope: string,
   redirectUri: string,
   codeVerifier: string,
+  state?: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 

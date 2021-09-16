@@ -124,6 +124,7 @@ export const clientSecret = 'clientSecret';
 export const body = 'body';
 export const contentType = 'contentType';
 export const responseType = 'responseType';
+export const state = 'mockState';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 export const handleAuthRequestUrl = async (url: string): Promise<void> => { };
