@@ -82,6 +82,7 @@ export const authRequest = async (
       codeChallenge,
       scope,
       redirectUri,
+      state,
     );
 
     handleAuthRequestUrl(requestUrl);
