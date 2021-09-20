@@ -6,7 +6,7 @@
     "module": "commonjs",
   },
   "include": [ 
-      "lib" 
+      "lib", "assets"
   ],
   "exclude": [
       "dist",
