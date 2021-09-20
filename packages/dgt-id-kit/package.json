@@ -28,7 +28,8 @@
   "dependencies": {
     "@digita-ai/inrupt-solid-client": "0.6.2",
     "crypto-js": "^4.1.1",
-    "jose": "^3.14.3",
+    "jest-environment-jsdom": "^27.2.0",
+    "jose": "3.14.3",
     "n3": "^1.11.0",
     "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
@@ -65,13 +66,14 @@
   },
   "eslintConfig": {
     "ignorePatterns": [
-      "lib-old/"
+      "lib-old/",
+      "jest.env.js"
     ]
   },
   "jest": {
     "displayName": "id-kit",
     "preset": "@digita-ai/jest-config",
-    "testEnvironment": "jsdom",
+    "testEnvironment": "<rootDir>/jest.env.js",
     "coverageThreshold": {
       "global": {
         "branches": 99.63,
@@ -97,7 +99,8 @@
       "<rootDir>/lib-old/",
       "<rootDir>/test/",
       "<rootDir>/lib/models/http-method.model.ts",
-      "<rootDir>/lib/models/local-storage-store.ts"
+      "<rootDir>/lib/models/local-storage-store.ts",
+      "<rootDir>/jest.env.js"
     ]
   }
 }

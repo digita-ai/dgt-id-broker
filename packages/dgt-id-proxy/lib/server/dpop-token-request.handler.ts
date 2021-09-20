@@ -4,7 +4,7 @@ import { switchMap, catchError, tap } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { jwtVerify } from 'jose/jwt/verify';
-import { JWK, JWTVerifyResult } from 'jose/webcrypto/types';
+import { JWK, JWTVerifyResult } from 'jose/types';
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**

@@ -5,7 +5,7 @@ global.TextDecoder = TextDecoder;
 
 import * as generateKeyPairModule from 'jose/util/generate_key_pair';
 import * as parseModule from 'jose/jwk/parse';
-import { JWK } from 'jose/webcrypto/types';
+import { JWK } from 'jose/types';
 import { createDpopProof, generateKeys } from './dpop';
 
 beforeEach(() => jest.clearAllMocks());
