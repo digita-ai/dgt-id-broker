@@ -8,7 +8,7 @@ export const loginWithIssuer = async (
   clientId: string,
   scope: string,
   redirectUri: string,
-  codeVerifier: string,
+  codeChallenge: string,
   state?: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
@@ -17,9 +17,9 @@ export const loginWithIssuer = async (
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
-  if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
+  if (!codeChallenge) throw new Error('Parameter "codeChallenge" should be set');
 
-  await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
+  await authRequest(issuer, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl);
 
 };
 
@@ -28,7 +28,7 @@ export const loginWithWebId = async (
   clientId: string,
   scope: string,
   redirectUri: string,
-  codeVerifier: string,
+  codeChallenge: string,
   state?: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
@@ -37,13 +37,15 @@ export const loginWithWebId = async (
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
-  if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
+  if (!codeChallenge) throw new Error('Parameter "codeChallenge" should be set');
 
   const issuer = await getFirstIssuerFromWebId(webId);
 
   if (!issuer) throw new Error(`No issuer was found on the profile of ${webId}`);
 
-  await loginWithIssuer(issuer.url.toString(), clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
+  await loginWithIssuer(
+    issuer.url.toString(), clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl
+  );
 
 };
 
