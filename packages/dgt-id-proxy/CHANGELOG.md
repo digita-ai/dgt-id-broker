@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.6.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.1...v0.6.3) (2021-09-20)
+
+
+### **Bug Fixes**
+
+* add state to function call in authRequest ([#221](https://github.com/digita-ai/dgt-id-broker/issues/221)) ([c75fc35](https://github.com/digita-ai/dgt-id-broker/commit/c75fc35221ade38dede25e9ad00855d58163eb59))
+
+
+
 ### [0.6.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.1...v0.6.2) (2021-09-16)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-proxy
