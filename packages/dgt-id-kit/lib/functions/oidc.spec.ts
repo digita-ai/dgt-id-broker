@@ -5,7 +5,7 @@ global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier, state } from '../../test/test-data';
+import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, codeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier, state } from '../../test/test-data';
 import { HttpMethod } from '../models/http-method.model';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
 import * as issuerModule from './issuer';
@@ -49,14 +49,14 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       issuer,
       clientId,
-      pkceCodeChallenge,
+      codeChallenge,
       scope,
       redirectUri,
     );
 
     await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
     await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
-    await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge=${codeChallenge}`);
     await expect(result).resolves.toContain(`code_challenge_method=S256`);
     await expect(result).resolves.toContain(`response_type=code`);
     await expect(result).resolves.toContain(`scope=${scope}`);
@@ -69,14 +69,14 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       issuer,
       clientId,
-      pkceCodeChallenge,
+      codeChallenge,
       scope + ' offline_access',
       redirectUri,
     );
 
     await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
     await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
-    await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge=${codeChallenge}`);
     await expect(result).resolves.toContain(`code_challenge_method=S256`);
     await expect(result).resolves.toContain(`response_type=code`);
     await expect(result).resolves.toContain(`scope=${scope + '%20offline_access'}`);
@@ -90,7 +90,7 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       issuer,
       clientId,
-      pkceCodeChallenge,
+      codeChallenge,
       scope,
       redirectUri,
       state
@@ -98,7 +98,7 @@ describe('constructAuthRequestUrl()', () => {
 
     await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
     await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
-    await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge=${codeChallenge}`);
     await expect(result).resolves.toContain(`code_challenge_method=S256`);
     await expect(result).resolves.toContain(`response_type=code`);
     await expect(result).resolves.toContain(`scope=${scope}`);
@@ -107,7 +107,7 @@ describe('constructAuthRequestUrl()', () => {
 
   });
 
-  const constructAuthResuestUrlParams = { issuer, clientId, pkceCodeChallenge, scope, redirectUri };
+  const constructAuthResuestUrlParams = { issuer, clientId, codeChallenge, scope, redirectUri };
 
   it.each(Object.keys(constructAuthResuestUrlParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -117,7 +117,7 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       testArgs.issuer,
       testArgs.clientId,
-      testArgs.pkceCodeChallenge,
+      testArgs.codeChallenge,
       testArgs.scope,
       testArgs.redirectUri,
     );
@@ -133,7 +133,7 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       issuer,
       clientId,
-      pkceCodeChallenge,
+      codeChallenge,
       scope,
       redirectUri,
     );
@@ -150,7 +150,7 @@ describe('authRequest()', () => {
 
     const spy = jest.spyOn(global.console, 'log');
 
-    const result = authRequest(issuer, clientId, scope, redirectUri, codeVerifier, state, async () => { console.log('log something'); });
+    const result = authRequest(issuer, clientId, scope, redirectUri, codeChallenge, state, async () => { console.log('log something'); });
 
     await expect(result).resolves.toBeUndefined();
     expect(spy).toHaveBeenCalledTimes(1);
@@ -163,12 +163,12 @@ describe('authRequest()', () => {
     jest.spyOn(oidcModule, 'constructAuthRequestUrl').mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await authRequest(issuer, clientId, scope, redirectUri, codeVerifier, state, async () => { console.log('log something'); })
+      async () => await authRequest(issuer, clientId, scope, redirectUri, codeChallenge, state, async () => { console.log('log something'); })
     ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
 
   });
 
-  const authRequestParams = { issuer, clientId, scope, redirectUri, codeVerifier };
+  const authRequestParams = { issuer, clientId, scope, redirectUri, codeChallenge };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -180,7 +180,7 @@ describe('authRequest()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.redirectUri,
-      testArgs.codeVerifier,
+      testArgs.codeChallenge,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

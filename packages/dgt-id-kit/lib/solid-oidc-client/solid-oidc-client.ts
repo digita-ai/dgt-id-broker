@@ -2,7 +2,7 @@ import { JWK } from 'jose/types';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from '../functions/client';
 import { generateKeys } from '../functions/dpop';
 import { accessResource, refreshTokenRequest } from '../functions/oidc';
-import { generateCodeVerifier } from '../functions/pkce';
+import { generateCodeChallenge, generateCodeVerifier } from '../functions/pkce';
 import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 import { HttpMethod } from '../models/http-method.model';
 export interface storeInterface {
@@ -74,7 +74,9 @@ export class SolidOidcClient {
     const codeVerifier = await this.store.get('codeVerifier');
     if (!codeVerifier) throw new Error('No code verifier available in the store');
 
-    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
+    const codeChallenge = generateCodeChallenge(codeVerifier);
+
+    await loginWithIssuer(issuer, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl);
 
   }
 
@@ -98,7 +100,9 @@ export class SolidOidcClient {
     const codeVerifier = await this.store.get('codeVerifier');
     if (!codeVerifier) throw new Error('No code verifier available in the store');
 
-    await loginWithWebId(webId, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
+    const codeChallenge = generateCodeChallenge(codeVerifier);
+
+    await loginWithWebId(webId, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl);
 
   }
 

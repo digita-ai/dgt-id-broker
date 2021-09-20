@@ -9,6 +9,7 @@ import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, state, webId, dummyValidAccessToken, refreshToken, idToken, clientSecret, dummyExpiredAccessToken, getAuthorizationCode } from '../../test/test-data';
 import * as oidcModule from '../functions/oidc';
 import * as clientModule from '../functions/client';
+import { generateCodeChallenge } from '../functions/pkce';
 import { SolidOidcClient, storeInterface } from './solid-oidc-client';
 
 beforeEach(() => {
@@ -119,10 +120,14 @@ describe('SolidOidcClient', () => {
 
       const result = await instance.loginWithIssuer(issuer, scope, redirectUri, state, handleAuthRequestUrl);
       const codeVerifier = await store.get('codeVerifier');
+      const codeChallenge = generateCodeChallenge(codeVerifier);
 
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(issuer, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
+
+      expect(spy).toHaveBeenCalledWith(
+        issuer, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl
+      );
 
     });
 
@@ -186,9 +191,11 @@ describe('SolidOidcClient', () => {
       const spy = jest.spyOn(clientModule, 'loginWithWebId');
       const result = await instance.loginWithWebId(webId, scope, redirectUri, state, handleAuthRequestUrl);
       const codeVerifier = await store.get('codeVerifier');
+      const codeChallenge = generateCodeChallenge(codeVerifier);
+
       expect(result).toBeUndefined();
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, codeVerifier, state, handleAuthRequestUrl);
+      expect(spy).toHaveBeenCalledWith(webId, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl);
 
     });
 
