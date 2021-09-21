@@ -4,7 +4,7 @@
  * Usage: npm run generate:oidc -- [upstream server issuer url] [proxy issuer url] [relative path to file (optional)]
  */
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import * as path from 'path';
 import fetch from 'node-fetch';
 
 const args = process.argv.slice(2);
@@ -41,9 +41,9 @@ if (args.length < 2) {
 
     data.solid_oidc_supported = 'https://solidproject.org/TR/solid-oidc';
 
-    writeFileSync(join(process.cwd(), filePath), JSON.stringify(data));
+    writeFileSync(path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath), JSON.stringify(data));
 
-    console.log(`Successfully wrote the config "${join(process.cwd(), filePath)}"`);
+    console.log(`Successfully wrote the config "${path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)}"`);
 
   });
 

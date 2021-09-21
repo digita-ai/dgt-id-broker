@@ -56,11 +56,15 @@ export const checkFile = (filePath: string): void => {
 export const launch: (variables: Record<string, any>) => Promise<void> = async (variables: Record<string, any>) => {
 
   const mainModulePath = variables['urn:dgt-id-proxy:variables:mainModulePath']
-    ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath'])
+    ? path.isAbsolute(variables['urn:dgt-id-proxy:variables:mainModulePath'])
+      ? variables['urn:dgt-id-proxy:variables:mainModulePath']
+      : path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath'])
     : path.join(__dirname, '../');
 
   const configPath = variables['urn:dgt-id-proxy:variables:customConfigPath']
-    ? path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:customConfigPath'])
+    ? path.isAbsolute(variables['urn:dgt-id-proxy:variables:customConfigPath'])
+      ? variables['urn:dgt-id-proxy:variables:customConfigPath']
+      : path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:customConfigPath'])
     : path.join(__dirname, '../config/presets/solid-compliant-opaque-access-tokens.json');
 
   const manager = await ComponentsManager.build({
@@ -92,12 +96,36 @@ export const createVariables = (args: string[]): Record<string, any> => {
   const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003', host: 'localhost', port: '3003' };
   const { uri: upstreamUri, host: upstreamHost, port: upstreamPort, scheme: upstreamScheme } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000', scheme: 'http:' };
 
-  checkFile(params.openidConfigurationFilePath ?? 'assets/openid-configuration.json');
-  checkFile(params.jwksFilePath ?? 'assets/jwks.json');
+  const mainModulePath = params.mainModulePath
+    ? path.isAbsolute(params.mainModulePath)
+      ? params.mainModulePath
+      : path.join(process.cwd(), params.mainModulePath)
+    : path.join(__dirname, '../');
+
+  const configPath = params.config
+    ? path.isAbsolute(params.config)
+      ? params.config
+      : path.join(process.cwd(), params.config)
+    : path.join(__dirname, '../config/presets/solid-compliant-opaque-access-tokens.json');
+
+  const openidConfigurationFilePath = params.openidConfigurationFilePath
+    ? path.isAbsolute(params.openidConfigurationFilePath)
+      ? params.openidConfigurationFilePath
+      : path.join(process.cwd(), params.openidConfigurationFilePath)
+    : path.join(mainModulePath, 'assets/openid-configuration.json');
+
+  const jwksFilePath = params.jwksFilePath
+    ? path.isAbsolute(params.jwksFilePath)
+      ? params.jwksFilePath
+      : path.join(process.cwd(), params.jwksFilePath)
+    : path.join(mainModulePath, 'assets/jwks.json');
+
+  checkFile(openidConfigurationFilePath);
+  checkFile(jwksFilePath);
 
   return {
-    'urn:dgt-id-proxy:variables:customConfigPath': params.config,
-    'urn:dgt-id-proxy:variables:mainModulePath': params.mainModulePath,
+    'urn:dgt-id-proxy:variables:customConfigPath': configPath,
+    'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
     'urn:dgt-id-proxy:variables:proxyUri': proxyUri,
     'urn:dgt-id-proxy:variables:proxyHost': proxyHost,
     'urn:dgt-id-proxy:variables:proxyPort': proxyPort,
@@ -105,8 +133,8 @@ export const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:upstreamHost': upstreamHost,
     'urn:dgt-id-proxy:variables:upstreamPort': upstreamPort,
     'urn:dgt-id-proxy:variables:upstreamScheme': upstreamScheme,
-    'urn:dgt-id-proxy:variables:openidConfigurationFilePath': params.openidConfigurationFilePath ? params.openidConfigurationFilePath : 'assets/openid-configuration.json',
-    'urn:dgt-id-proxy:variables:jwksFilePath': params.jwksFilePath ? params.jwksFilePath : 'assets/jwks.json',
+    'urn:dgt-id-proxy:variables:openidConfigurationFilePath': openidConfigurationFilePath,
+    'urn:dgt-id-proxy:variables:jwksFilePath': jwksFilePath,
   };
 
 };

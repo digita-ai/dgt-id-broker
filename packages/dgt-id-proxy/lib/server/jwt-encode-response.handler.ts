@@ -1,6 +1,6 @@
 
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+import * as path from 'path';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, zip, from, Observable } from 'rxjs';
@@ -101,10 +101,13 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
   }
 
-  private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
+  private getSigningKit = () => from(readFile(
+    path.isAbsolute(this.pathToJwks) ? this.pathToJwks : path.join(process.cwd(), this.pathToJwks)
+  )).pipe(
     switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
     switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
-  );
+  )
+  ;
 
   private signJwtPayload = (jwtPayload: JWTPayload, typ: string) => zip(of(jwtPayload), this.getSigningKit()).pipe(
     switchMap(([ payload, [ alg, kid, key ] ]) => from(

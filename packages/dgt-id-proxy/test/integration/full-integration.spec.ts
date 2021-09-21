@@ -402,9 +402,7 @@ describe('full integration', () => {
 
       beforeAll(async () => {
 
-        const res = new Response(response.body);
-        const blob = await res.blob();
-        responseBodyJSON = JSON.parse(await blob.text());
+        responseBodyJSON = await response.json();
 
         access_token = responseBodyJSON.access_token;
         decodedHeaderAccessToken = JSON.parse(decode(access_token.split('.')[0]).toString());
