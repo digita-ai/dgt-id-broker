@@ -86,6 +86,10 @@ describe('full integration', () => {
     kid: 'mockKeyId',
   };
 
+  const mockedUpstreamJwt = async () => new SignJWT(payload1)
+    .setProtectedHeader(header1)
+    .sign(privateKey2);
+
   beforeAll(async () => {
 
     fetchMock.enableMocks();
@@ -115,10 +119,6 @@ describe('full integration', () => {
 
   });
 
-  const mockedUpstreamJwt = async () => new SignJWT(payload1)
-    .setProtectedHeader(header1)
-    .sign(privateKey2);
-
   beforeEach(async () => {
 
     // DPoP-proofs
@@ -137,9 +137,9 @@ describe('full integration', () => {
 
   });
 
-  afterAll(() => {
+  afterAll(async () => {
 
-    server.stop();
+    await server.stop().toPromise();
 
   });
 
@@ -196,7 +196,7 @@ describe('full integration', () => {
 
     describe('checking auth parameters incoming at the upstream server after passing the proxy', () => {
 
-      it('should still contain the same scope', () => {
+      fit('should still contain the same scope', () => {
 
         expect(params.get('scope')).toBeTruthy();
         expect(params.get('scope')).toEqual('openid');
