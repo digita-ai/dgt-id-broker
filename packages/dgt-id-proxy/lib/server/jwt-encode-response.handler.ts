@@ -106,8 +106,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
   )).pipe(
     switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
     switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
-  )
-  ;
+  );
 
   private signJwtPayload = (jwtPayload: JWTPayload, typ: string) => zip(of(jwtPayload), this.getSigningKit()).pipe(
     switchMap(([ payload, [ alg, kid, key ] ]) => from(
