@@ -196,41 +196,41 @@ describe('full integration', () => {
 
     describe('checking auth parameters incoming at the upstream server after passing the proxy', () => {
 
-      fit('should still contain the same scope', () => {
+      it('should still contain the same scope', () => {
 
         expect(params.get('scope')).toBeTruthy();
         expect(params.get('scope')).toEqual('openid');
 
       });
 
-      it('should still contain the same response_type', () => {
+      xit('should still contain the same response_type', () => {
 
         expect(params.get('response_type')).toBeTruthy();
         expect(params.get('response_type')).toEqual('code');
 
       });
 
-      it('should still contain client_id', () => {
+      xit('should still contain client_id', () => {
 
         expect(params.get('client_id')).toBeTruthy();
 
       });
 
-      it('should replace the client-id with the one provided in the registration response', () => {
+      xit('should replace the client-id with the one provided in the registration response', () => {
 
         // check if the client-id is the one provided in the registration response instead of the one provided in the initial request
         expect(params.get('client_id')).toEqual(mockRegisterResponse.client_id);
 
       });
 
-      it('should still contain the same redirect_uri', () => {
+      xit('should still contain the same redirect_uri', () => {
 
         expect(params.get('redirect_uri')).toBeTruthy();
         expect(params.get('redirect_uri')).toEqual(redirect_uri);
 
       });
 
-      it('should pass state to the endpoint in the params if not provided in the initial request', () => {
+      xit('should pass state to the endpoint in the params if not provided in the initial request', () => {
 
         // check if state is present in the url params of the initial request
         expect(state).toBeDefined();
@@ -239,7 +239,7 @@ describe('full integration', () => {
 
       });
 
-      it('should not contain the code_challenge & code_challenge_method', () => {
+      xit('should not contain the code_challenge & code_challenge_method', () => {
 
         expect(params.get('code_challenge')).toBeFalsy();
         expect(params.get('code_challenge_method')).toBeFalsy();
@@ -250,13 +250,13 @@ describe('full integration', () => {
 
     describe('checking parameters coming from the upstream server outgoing to the client after passing the proxy', () => {
 
-      it('should not contain state as a url parameter anymore if none was provided in the initial request', () => {
+      xit('should not contain state as a url parameter anymore if none was provided in the initial request', () => {
 
         expect(response.url).toEqual('http://localhost:3001/requests.html?code=DafduCFHR-wyUF2Y3uY_T9TCQwvJ_O8AD5z2c8ksglY');
 
       });
 
-      it('should contain a code ', () => {
+      xit('should contain a code ', () => {
 
         const paramsAtClient = new URLSearchParams(response.url.split('?')[1]);
 
@@ -327,60 +327,60 @@ describe('full integration', () => {
 
     describe('checking token parameters incoming at the upstream server after passing the proxy', () => {
 
-      it('should contain client_id in the body parameters', () => {
+      xit('should contain client_id in the body parameters', () => {
 
         expect(reqBody.get('client_id')).toBeDefined();
 
       });
 
-      it('should use the client-id from the registration response', () => {
+      xit('should use the client-id from the registration response', () => {
 
         // check that the client id is the one from the registration response
         expect(reqBody.get('client_id')).toEqual(mockRegisterResponse.client_id);
 
       });
 
-      it('should contain grant_type in the body parameters', () => {
+      xit('should contain grant_type in the body parameters', () => {
 
         expect(reqBody.get('grant_type')).toBeDefined();
         expect(reqBody.get('grant_type')).toEqual('authorization_code');
 
       });
 
-      it('should contain code in the body parameters', () => {
+      xit('should contain code in the body parameters', () => {
 
         expect(reqBody.get('code')).toBeDefined();
 
       });
 
-      it('should contain redirect_uri in the body parameters', () => {
+      xit('should contain redirect_uri in the body parameters', () => {
 
         expect(reqBody.get('redirect_uri')).toBeDefined();
 
       });
 
-      it('should contain the same redirect_uri as the one provided to the auth request', () => {
+      xit('should contain the same redirect_uri as the one provided to the auth request', () => {
 
         // check that the redirect_uri is the same as the one provided in the initial request
         expect(reqBody.get('redirect_uri')).toEqual(redirect_uri);
 
       });
 
-      it('should have a recalculated content-length after switching the client id', () => {
+      xit('should have a recalculated content-length after switching the client id', () => {
 
         // check that the content-length has been recalculated after switching the client id with the client id from the registration response
         expect(initialRequest.headers['content-length']).toEqual(Buffer.byteLength(reqBody.toString(), initialRequest.headers['content-type']).toString());
 
       });
 
-      it('should not contain the code verifier in the query parameters', () => {
+      xit('should not contain the code verifier in the query parameters', () => {
 
         // check that the code verifier is removed from the query parameters
         expect(reqBody.get('code_verifier')).toBeFalsy();
 
       });
 
-      it('should not contain a DPoP token header if one was provided in the initial request', () => {
+      xit('should not contain a DPoP token header if one was provided in the initial request', () => {
 
         expect(initialRequest.headers.dpop).toBeFalsy();
 
@@ -414,19 +414,19 @@ describe('full integration', () => {
 
       });
 
-      it('should have an access token with an expiration time of 2 hours', async () => {
+      xit('should have an access token with an expiration time of 2 hours', async () => {
 
         expect(responseBodyJSON.expires_in).toEqual(7200);
 
       });
 
-      it('should have a token_type of DPoP', () => {
+      xit('should have a token_type of DPoP', () => {
 
         expect(responseBodyJSON.token_type).toEqual('DPoP');
 
       });
 
-      it('should contain JWT tokens with valid lengths', async () => {
+      xit('should contain JWT tokens with valid lengths', async () => {
 
         const splitAccessToken = access_token.split('.');
         expect(splitAccessToken.length).toBeGreaterThan(2);
@@ -437,7 +437,7 @@ describe('full integration', () => {
 
       describe('checking access token parameters', () => {
 
-        it('should have a kid header that contains the correct kid', () => {
+        xit('should have a kid header that contains the correct kid', () => {
 
           expect(decodedHeaderAccessToken.kid).toBeDefined();
           expect(decodedHeaderAccessToken.kid).not.toEqual('mockKeyId');
@@ -445,32 +445,32 @@ describe('full integration', () => {
 
         });
 
-        it('should contain an alg header of ES256', () => {
+        xit('should contain an alg header of ES256', () => {
 
           expect(decodedHeaderAccessToken.alg).toBeDefined();
           expect(decodedHeaderAccessToken.alg).toEqual('ES256');
 
         });
 
-        it('should contain the correct client id', () => {
+        xit('should contain the correct client id', () => {
 
           expect(decodedPayloadAccessToken.client_id).toEqual(client_id);
 
         });
 
-        it('should contain a correct minted webid as webid claim', () => {
+        xit('should contain a correct minted webid as webid claim', () => {
 
           expect(decodedPayloadAccessToken.webid).toEqual(`http://localhost:3002/${payload1.sub}/profile/card#me`);
 
         });
 
-        it('should contain a aud claim with solid audience', () => {
+        xit('should contain a aud claim with solid audience', () => {
 
           expect(decodedPayloadAccessToken.aud).toContain('solid');
 
         });
 
-        it('should contain a correct jti claim and of the correct length', () => {
+        xit('should contain a correct jti claim and of the correct length', () => {
 
           expect(decodedPayloadAccessToken.jti).toBeTruthy();
           expect(decodedPayloadAccessToken.jti.length).toEqual(36); // correct length of a 4 UUID
@@ -478,20 +478,20 @@ describe('full integration', () => {
 
         });
 
-        it('should contain iss claim with a valid URL of the proxy', () => {
+        xit('should contain iss claim with a valid URL of the proxy', () => {
 
           expect(decodedPayloadAccessToken.iss).toEqual(proxyUrl);
 
         });
 
-        it('should contain iat and exp claims', () => {
+        xit('should contain iat and exp claims', () => {
 
           expect(decodedPayloadAccessToken.iat).toBeDefined();
           expect(decodedPayloadAccessToken.exp).toBeDefined();
 
         });
 
-        it('should contain a cnf claim containing a jkt', () => {
+        xit('should contain a cnf claim containing a jkt', () => {
 
           expect(decodedPayloadAccessToken.cnf).toBeTruthy();
           expect(decodedPayloadAccessToken.cnf.jkt).toBeTruthy();
@@ -502,7 +502,7 @@ describe('full integration', () => {
 
       describe('checking id_token parameters', () => {
 
-        it('should have a kid header that contains the correct kid', () => {
+        xit('should have a kid header that contains the correct kid', () => {
 
           expect(decodedHeaderIdToken.kid).toBeDefined();
           expect(decodedHeaderIdToken.kid).not.toEqual('mockKeyId');
@@ -510,27 +510,27 @@ describe('full integration', () => {
 
         });
 
-        it('should contain a typ header of jwt', () => {
+        xit('should contain a typ header of jwt', () => {
 
           expect(decodedHeaderIdToken.typ).toBeDefined();
           expect(decodedHeaderIdToken.typ).toEqual('JWT');
 
         });
 
-        it('should contain an alg header of ES256', () => {
+        xit('should contain an alg header of ES256', () => {
 
           expect(decodedHeaderIdToken.alg).toBeDefined();
           expect(decodedHeaderIdToken.alg).toEqual('ES256');
 
         });
 
-        it('should contain a correct minted webid claim', () => {
+        xit('should contain a correct minted webid claim', () => {
 
           expect(decodedPayloadIdToken.webid).toEqual(`http://localhost:3002/${payload1.sub}/profile/card#me`);
 
         });
 
-        it('should contain a correct jti claim and of the correct length', () => {
+        xit('should contain a correct jti claim and of the correct length', () => {
 
           expect(decodedPayloadIdToken.jti).toBeTruthy();
           expect(decodedPayloadIdToken.jti.length).toEqual(36); // correct length of a 4 UUID
