@@ -40,26 +40,26 @@
       {
         "@id": "urn:handlersjs-http:default:NodeHttpServer",
         "@type": "NodeHttpServer",
-        "NodeHttpServer:_port": {
+        "port": {
           "@id": "urn:dgt-id-proxy:variables:proxyPort"
         },
-        "NodeHttpServer:_host": {
+        "host": {
           "@id": "urn:dgt-id-proxy:variables:proxyHost"
         },
-        "NodeHttpServer:_nodeHttpStreamsHandler": {
+        "nodeHttpStreamsHandler": {
           "@id": "urn:handlersjs-http:default:NodeHttpRequestResponseHandler",
           "@type": "NodeHttpRequestResponseHandler",
-          "NodeHttpRequestResponseHandler:_httpHandler": {
+          "httpHandler": {
             "@type": "HttpCorsRequestHandler",
-            "HttpCorsRequestHandler:_handler": {
+            "handler": {
               "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
               "@type": "RoutedHttpRequestHandler",
-              "RoutedHttpRequestHandler:_handlerControllerList": [
+              "handlerControllerList": [
                 {
                   "@id": "urn:handlersjs-http:default:HttpHandlerController",
                   "@type": "HttpHandlerController",
-                  "HttpHandlerController:_label": "ControllerList",
-                  "HttpHandlerController:_routes": [
+                  "label": "ControllerList",
+                  "routes": [
                     {
                       "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
                     },
@@ -97,97 +97,97 @@
       {
         "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
         "@type": "JwtDecodeHandler",
-        "JwtDecodeHandler:_jwtFields": [
+        "jwtFields": [
           "access_token",
           "id_token"
         ],
-        "JwtDecodeHandler:_upstreamUrl": {
+        "upstreamUrl": {
           "@id": "urn:dgt-id-proxy:variables:upstreamUri"
         },
-        "JwtDecodeHandler:_verifyJwk": true
+        "verifyJwk": true
       },
       {
         "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
         "@type": "JwtEncodeHandler",
-        "JwtEncodeHandler:_jwtFields":[
+        "jwtFields":[
           { 
             "@type": "JwtField",
-            "JwtField:_field": "access_token", 
-            "JwtField:_type": "at+jwt" 
+            "field": "access_token", 
+            "type": "at+jwt" 
           },
           { 
             "@type": "JwtField",
-            "JwtField:_field": "id_token", 
-            "JwtField:_type": "JWT" 
+            "field": "id_token", 
+            "type": "JWT" 
           }
         ],
-        "JwtEncodeHandler:_pathToJwks": {
+        "pathToJwks": {
           "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
         },
-        "JwtEncodeHandler:_proxyUrl": {
+        "proxyUrl": {
           "@id": "urn:dgt-id-proxy:variables:proxyUri"
         }
       },
       {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
         "@type": "PassThroughHttpRequestHandler",
-        "PassThroughHttpRequestHandler:_host": {
+        "host": {
           "@id": "urn:dgt-id-proxy:variables:upstreamHost"
         },
-        "PassThroughHttpRequestHandler:_port": {
+        "port": {
           "@id": "urn:dgt-id-proxy:variables:upstreamPort"
         }
       },
       {
         "@id": "urn:dgt-id-proxy:default:GetOperation",
         "@type": "HttpHandlerOperation",
-        "HttpHandlerOperation:_method": "GET",
-        "HttpHandlerOperation:_publish": false
+        "method": "GET",
+        "publish": false
       },
       {
         "@id": "urn:dgt-id-proxy:default:PostOperation",
         "@type": "HttpHandlerOperation",
-        "HttpHandlerOperation:_method": "POST",
-        "HttpHandlerOperation:_publish": false
+        "method": "POST",
+        "publish": false
       },
       {
         "@id": "urn:dgt-id-proxy:default:OptionsOperation",
         "@type": "HttpHandlerOperation",
-        "HttpHandlerOperation:_method": "OPTIONS",
-        "HttpHandlerOperation:_publish": false
+        "method": "OPTIONS",
+        "publish": false
       },
       {
         "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:GetOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "HttpHandlerRoute:_path": "/auth"
+        "path": "/auth"
       },
       {
         "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "HttpHandlerRoute:_path": "/auth/:dynamic"
+        "path": "/auth/:dynamic"
       },
       {
         "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:PostOperation"
           },
@@ -195,15 +195,15 @@
             "@id": "urn:dgt-id-proxy:default:OptionsOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "HttpHandlerRoute:_path": "/reg"
+        "path": "/reg"
       },
       {
         "@id": "urn:dgt-id-proxy:default:InteractionEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:GetOperation"
           },
@@ -211,55 +211,55 @@
             "@id": "urn:dgt-id-proxy:default:PostOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "HttpHandlerRoute:_path": "/interaction/:dynamic"
+        "path": "/interaction/:dynamic"
       },
       {
         "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
           },
           {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "HttpHandlerRoute:_path": "/interaction/:dynamic/login"
+        "path": "/interaction/:dynamic/login"
       },
       {
         "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
           },
           {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
         },
-        "HttpHandlerRoute:_path": "/interaction/:dynamic/confirm"
+        "path": "/interaction/:dynamic/confirm"
       },
       {
         "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:PostOperation"
           },
@@ -267,14 +267,14 @@
             "@id": "urn:dgt-id-proxy:default:OptionsOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@type": "PipeThroughHandler",
-          "PipeThroughHandler:_handlers": [
+          "handlers": [
             {
               "@type": "DpopTokenRequestHandler",
-              "DpopTokenRequestHandler:_handler": {
+              "handler": {
                 "@type": "PipeThroughHandler",
-                "PipeThroughHandler:_handlers": [
+                "handlers": [
                   {
                     "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
                   },
@@ -283,13 +283,13 @@
                   }
                 ]
               },
-              "DpopTokenRequestHandler:_keyValueStore": {
+              "keyValueStore": {
                 "@type": "InMemoryStore"
               },
-              "DpopTokenRequestHandler:_pathToJwks": {
+              "pathToJwks": {
                 "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
               },
-              "DpopTokenRequestHandler:_proxyUrl": {
+              "proxyUrl": {
                 "@id": "urn:dgt-id-proxy:variables:proxyUri"
               }
             },
@@ -298,45 +298,45 @@
             }
           ]
         },
-        "HttpHandlerRoute:_path": "/token"
+        "path": "/token"
       },
       {
         "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:GetOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@type": "HttpHandlerStaticAssetService",
-          "HttpHandlerStaticAssetService:_logger": {
+          "logger": {
             "@type": "ConsoleLogger",
-            "ConsoleLogger:_minimumLevel": 1,
-            "ConsoleLogger:_minimumLevelPrintData": 1
+            "minimumLevel": 1,
+            "minimumLevelPrintData": 1
           },
-          "HttpHandlerStaticAssetService:_path": {
+          "path": {
             "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath"
           },
-          "HttpHandlerStaticAssetService:_contentType": "application/json"
+          "contentType": "application/json"
         },
-        "HttpHandlerRoute:_path": "/.well-known/openid-configuration"
+        "path": "/.well-known/openid-configuration"
       },
       {
         "@id": "urn:dgt-id-proxy:default:JwksEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:GetOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
           "@type": "JwkRequestHandler",
-          "JwkRequestHandler:_path": {
+          "path": {
             "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
           }
         },
-        "HttpHandlerRoute:_path": "/jwks"
+        "path": "/jwks"
       }
     ]
   }

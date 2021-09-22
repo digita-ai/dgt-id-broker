@@ -16,10 +16,10 @@ The `PassThroughHttpRequestHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:PassThroughHandler",
     "@type": "PassThroughHttpRequestHandler",
-    "PassThroughHttpRequestHandler:_host": "upstreamhost.com",
-    "PassThroughHttpRequestHandler:_port": 80,
-    "PassThroughHttpRequestHandler:_scheme": "http:",
-    "PassThroughHttpRequestHandler:_proxyUrl": "http://proxyhost.com"
+    "host": "upstreamhost.com",
+    "port": 80,
+    "scheme": "http:",
+    "proxyUrl": "http://proxyhost.com"
 }
 ----
 
@@ -44,11 +44,11 @@ The config for the `JwtDecodeHandler` is as follows:
 {
     "@id": "urn:dgt-id-proxy:default:JwtDecodeHandler",
     "@type": "JwtDecodeHandler",
-    "JwtDecodeHandler:_jwtFields": [
+    "jwtFields": [
         "token_field"
     ],
-    "JwtDecodeHandler:_upstreamUrl": "http://urlofupstream.com",
-    "JwtDecodeHandler:_verifyJwk": true
+    "upstreamUrl": "http://urlofupstream.com",
+    "verifyJwk": true
 }
 ----
 
@@ -64,15 +64,15 @@ The config for the `JwtEncodeHandler` is as follows:
 {
     "@id": "urn:dgt-id-proxy:default:JwtEncodeHandler",
     "@type": "JwtEncodeHandler",
-    "JwtEncodeHandler:_jwtFields":[
+    "jwtFields":[
         { 
             "@type": "JwtField",
-            "JwtField:_field": "token_field", 
-            "JwtField:_type": "at+jwt" 
+            "field": "token_field", 
+            "type": "at+jwt" 
         }
     ],
-    "JwtEncodeHandler:_pathToJwks": "/path/to/jwk-file.json",
-    "JwtEncodeHandler:_proxyUrl": "http://urlofproxy.com"
+    "pathToJwks": "/path/to/jwk-file.json",
+    "proxyUrl": "http://urlofproxy.com"
 }
 ----
 
@@ -88,21 +88,21 @@ We can put all of these handlers together on an endpoint (the token endpoint) as
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
         },
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "OPTIONS",
-            "HttpHandlerOperation:_publish": false
+            "method": "OPTIONS",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
               "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -114,7 +114,7 @@ We can put all of these handlers together on an endpoint (the token endpoint) as
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 

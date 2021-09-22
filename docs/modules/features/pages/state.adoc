@@ -36,7 +36,7 @@ The `AuthStateRequestHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
     "@type": "AuthStateRequestHandler",
-    "AuthStateRequestHandler:_keyValueStore": {
+    "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StateStore"
     }
 }
@@ -55,7 +55,7 @@ The `AuthStateResponseHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler",
     "@type": "AuthStateResponseHandler",
-    "AuthStateResponseHandler:_keyValueStore": {
+    "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StateStore"
     }
 }
@@ -74,16 +74,16 @@ The config for the `authorization` endpoint can be as follows:
 {
     "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
             },
@@ -95,19 +95,19 @@ The config for the `authorization` endpoint can be as follows:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/auth"
+    "path": "/auth"
 },
 {
     "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@id": "urn:dgt-id-proxy:default:GetOperation"
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -116,7 +116,7 @@ The config for the `authorization` endpoint can be as follows:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/authorize/resume"
+    "path": "/authorize/resume"
 }
 ----
 
