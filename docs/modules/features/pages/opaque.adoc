@@ -17,9 +17,9 @@ The `OpaqueAccessTokenHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
     "@type": "OpaqueAccessTokenHandler",
-    "OpaqueAccessTokenHandler:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-          "PipeThroughHandler:_handlers": [
+          "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -46,7 +46,7 @@ The `OpaqueAccessTokenHandler` works on the token endpoint. This endpoint can be
 {
         "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
         "@type": "HttpHandlerRoute",
-        "HttpHandlerRoute:_operations": [
+        "operations": [
           {
             "@id": "urn:dgt-id-proxy:default:PostOperation"
           },
@@ -54,9 +54,9 @@ The `OpaqueAccessTokenHandler` works on the token endpoint. This endpoint can be
             "@id": "urn:dgt-id-proxy:default:OptionsOperation"
           }
         ],
-        "HttpHandlerRoute:_handler": {
+        "handler": {
             "@type": "PipeThroughHandler",
-            "PipeThroughHandler:_handlers": [
+            "handlers": [
                 {
                     "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler"
                 },
@@ -65,7 +65,7 @@ The `OpaqueAccessTokenHandler` works on the token endpoint. This endpoint can be
                 }
             ]
         },
-        "HttpHandlerRoute:_path": "/token"
+        "path": "/token"
       }
 ----
 
