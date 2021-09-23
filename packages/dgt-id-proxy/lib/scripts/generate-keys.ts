@@ -5,13 +5,13 @@
  */
 
 import { writeFileSync } from 'fs';
-import { join } from 'path';
+import * as path from 'path';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { v4 as uuid } from 'uuid';
 
 const args = process.argv.slice(2);
-const filePath = args[0] ?? 'assets/jwks.json';
+const filePath = args[0] ?? '../../assets/jwks.json';
 
 const generateKeys = async () => {
 
@@ -34,9 +34,9 @@ const generateKeys = async () => {
     ],
   };
 
-  writeFileSync(join(process.cwd(), filePath), JSON.stringify(jwks));
+  writeFileSync(path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath), JSON.stringify(jwks));
 
-  console.log(`Successfully wrote the keys to "${join(process.cwd(), filePath)}"`);
+  console.log(`Successfully wrote the keys to "${path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)}"`);
 
 };
 

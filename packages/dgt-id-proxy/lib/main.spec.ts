@@ -20,9 +20,14 @@ import { checkFile, checkUri, createVariables, launch } from './main';
 
 describe('Main.ts', () => {
 
+  const mainModulePath = path.join(__dirname, '../');
+  const configPath = path.join(__dirname, '../config/presets/auth0-config.json');
+  const oidcPath = path.join(__dirname, '../assets/other-openid-config.json');
+  const jwkPath = path.join(__dirname, '../assets/other-jwks.json');
+
   const variables = {
-    'urn:dgt-id-proxy:variables:customConfigPath': 'config/presets/auth0-config.json',
-    'urn:dgt-id-proxy:variables:mainModulePath': 'lib/main.ts',
+    'urn:dgt-id-proxy:variables:customConfigPath': configPath,
+    'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
     'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
     'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
     'urn:dgt-id-proxy:variables:proxyPort': '3003',
@@ -30,8 +35,8 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:upstreamHost': 'digita-ai.eu.auth0.com',
     'urn:dgt-id-proxy:variables:upstreamPort': '443',
     'urn:dgt-id-proxy:variables:upstreamScheme': 'https:',
-    'urn:dgt-id-proxy:variables:openidConfigurationFilePath': 'assets/openid-configuration.json',
-    'urn:dgt-id-proxy:variables:jwksFilePath': 'assets/jwks.json',
+    'urn:dgt-id-proxy:variables:openidConfigurationFilePath': path.join(mainModulePath, 'assets/openid-configuration.json'),
+    'urn:dgt-id-proxy:variables:jwksFilePath': path.join(mainModulePath, 'assets/jwks.json'),
   } as Record<string, any>;
 
   const handler = {
@@ -112,10 +117,10 @@ describe('Main.ts', () => {
 
     it('should return the correct variables of the given arguments', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', 'config/presets/auth0-config.json', '-o', 'assets/other-openid-config.json', '-j', 'assets/other-jwks.json' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath ]))
         .toEqual({
-          'urn:dgt-id-proxy:variables:customConfigPath': 'config/presets/auth0-config.json',
-          'urn:dgt-id-proxy:variables:mainModulePath': undefined,
+          'urn:dgt-id-proxy:variables:customConfigPath': configPath,
+          'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
           'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
           'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
           'urn:dgt-id-proxy:variables:proxyPort': '3003',
@@ -123,22 +128,22 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:upstreamHost': 'localhost',
           'urn:dgt-id-proxy:variables:upstreamPort': '3000',
           'urn:dgt-id-proxy:variables:upstreamScheme': 'http:',
-          'urn:dgt-id-proxy:variables:openidConfigurationFilePath': 'assets/other-openid-config.json',
-          'urn:dgt-id-proxy:variables:jwksFilePath': 'assets/other-jwks.json',
+          'urn:dgt-id-proxy:variables:openidConfigurationFilePath': oidcPath,
+          'urn:dgt-id-proxy:variables:jwksFilePath': jwkPath,
         });
 
     });
 
     it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', 'config/presets/auth0-config.json', '-U', 'https://digita-ai.eu.auth0.com/' ]))
-        .toEqual({ ...variables, ['urn:dgt-id-proxy:variables:mainModulePath'] : undefined });
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/' ]))
+        .toEqual(variables);
 
     });
 
     it('should return the variables with the given proxyUri & upstreamUri', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', 'config/presets/auth0-config.json', '-u', 'http://digita-ai.proxy.com', '-U', 'https://digita-ai.eu.auth0.com/', '-o', 'assets/other-openid-config.json', '-j', 'assets/other-jwks.json' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-u', 'http://digita-ai.proxy.com', '-U', 'https://digita-ai.eu.auth0.com/', '-o', oidcPath, '-j', jwkPath ]))
         .toMatchObject({
           'urn:dgt-id-proxy:variables:proxyUri': 'http://digita-ai.proxy.com',
           'urn:dgt-id-proxy:variables:proxyHost': 'digita-ai.proxy.com',
@@ -153,7 +158,7 @@ describe('Main.ts', () => {
 
     it('should return 3003 as proxyPort and 3000 as upstreamPort if none were provided', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', 'config/presets/auth0-config.json', '-o', 'assets/other-openid-config.json', '-j', 'assets/other-jwks.json' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath ]))
         .toMatchObject({
           'urn:dgt-id-proxy:variables:proxyPort': '3003',
           'urn:dgt-id-proxy:variables:upstreamPort': '3000',
@@ -168,8 +173,6 @@ describe('Main.ts', () => {
 
     it('should call build with __dirname if no mainModulePath provided', async () => {
 
-      const mainModulePath = path.join(__dirname, '../');
-
       await launch({ ...variables, ['urn:dgt-id-proxy:variables:mainModulePath'] : undefined });
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
@@ -178,8 +181,6 @@ describe('Main.ts', () => {
     });
 
     it('should call build with process.cwd and mainModulePath if provided', async () => {
-
-      const mainModulePath = path.join(process.cwd(), variables['urn:dgt-id-proxy:variables:mainModulePath']);
 
       await launch(variables);
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
@@ -190,13 +191,13 @@ describe('Main.ts', () => {
 
     it('should call register with __dirname & default if no configPath was provided', async () => {
 
-      const configPath = path.join(__dirname, '../config/presets/solid-compliant-opaque-access-tokens.json');
+      const defaultConfigPath = path.join(__dirname, '../config/presets/solid-compliant-opaque-access-tokens.json');
 
       await launch({ ...variables, ['urn:dgt-id-proxy:variables:customConfigPath'] : undefined });
 
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
-      expect(manager.configRegistry.register).toHaveBeenCalledWith(configPath);
+      expect(manager.configRegistry.register).toHaveBeenCalledWith(defaultConfigPath);
 
     });
 
