@@ -10,7 +10,7 @@ import fetch from 'node-fetch';
 const args = process.argv.slice(2);
 const upstreamUrl = args[0];
 const proxyUrl = args[1];
-const filePath = args[2] ?? 'assets/openid-configuration.json';
+const filePath = args[2] ?? '../../assets/openid-configuration.json';
 
 const fetchOpenidConfig = async (url: string) => {
 

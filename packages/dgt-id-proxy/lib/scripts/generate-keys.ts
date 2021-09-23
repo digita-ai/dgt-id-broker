@@ -11,7 +11,7 @@ import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { v4 as uuid } from 'uuid';
 
 const args = process.argv.slice(2);
-const filePath = args[0] ?? 'assets/jwks.json';
+const filePath = args[0] ?? '../../assets/jwks.json';
 
 const generateKeys = async () => {
 

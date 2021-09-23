@@ -30,9 +30,10 @@ export class JwkRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
-    return of({ path: path.isAbsolute(this.jwkPath) ? this.jwkPath : path.join(process.cwd(), this.jwkPath) })
+    const jwkPath = path.isAbsolute(this.jwkPath) ? this.jwkPath : path.join(process.cwd(), this.jwkPath);
+
+    return from(readFile(jwkPath))
       .pipe(
-        switchMap((data) => from(readFile(data.path))),
         map((file) => JSON.parse(file.toString())),
         switchMap((jwks) => {
 
