@@ -121,7 +121,7 @@ describe('full integration', () => {
 
   beforeEach(async () => {
 
-    // DPoP-proofs
+    // generate DPoP-proofs
     validDpopJwt = await new SignJWT({
       'htm': 'POST',
       'htu': 'http://localhost:3003/token',
