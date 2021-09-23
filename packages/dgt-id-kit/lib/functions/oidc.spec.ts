@@ -1,16 +1,16 @@
+/* eslint-disable no-console */
 // Fix to be able to run tests in jsdom
 import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
+import { dummyValidAccessToken, validSolidOidcObject, issuer, clientId, scope, codeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode, codeVerifier, state } from '../../test/test-data';
 import { HttpMethod } from '../models/http-method.model';
-import { dummyValidAccessToken, dummyExpiredAccessToken, validSolidOidcObject, issuer, clientId, scope, pkceCodeChallenge, redirectUri, resource, method, contentType, refreshToken, body, clientSecret, authorizationCode } from '../../test/test-data';
 import { constructAuthRequestUrl, authRequest, tokenRequest, refreshTokenRequest, accessResource } from './oidc';
-import { store } from './storage';
-import { generateKeys } from './dpop';
 import * as issuerModule from './issuer';
 import * as oidcModule from './oidc';
+import * as dpopModule from './dpop';
 
 enableFetchMocks();
 
@@ -19,17 +19,6 @@ afterAll(() => {
   jest.clearAllMocks();
 
 });
-
-const cleanTokensInStore = async () => {
-
-  await store.delete('accessToken');
-  await store.delete('idToken');
-  await store.delete('refreshToken');
-  await store.delete('clientId');
-  await store.delete('refreshToken');
-  await store.delete('issuer');
-
-};
 
 beforeEach(() => {
 
@@ -45,10 +34,13 @@ beforeEach(() => {
 
   });
 
+  jest.spyOn(dpopModule, 'createDpopProof').mockImplementation(
+    async (): Promise<string> => 'dpopProof'
+  );
+
 });
 
 beforeEach(() => fetchMock.mockClear());
-afterEach(() => cleanTokensInStore());
 
 describe('constructAuthRequestUrl()', () => {
 
@@ -57,14 +49,14 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       issuer,
       clientId,
-      pkceCodeChallenge,
+      codeChallenge,
       scope,
       redirectUri,
     );
 
     await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
-    await expect(result).resolves.toContain(`client_id=${clientId}`);
-    await expect(result).resolves.toContain(`code_challenge=${pkceCodeChallenge}`);
+    await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
+    await expect(result).resolves.toContain(`code_challenge=${codeChallenge}`);
     await expect(result).resolves.toContain(`code_challenge_method=S256`);
     await expect(result).resolves.toContain(`response_type=code`);
     await expect(result).resolves.toContain(`scope=${scope}`);
@@ -72,7 +64,50 @@ describe('constructAuthRequestUrl()', () => {
 
   });
 
-  const constructAuthResuestUrlParams = { issuer, clientId, pkceCodeChallenge, scope, redirectUri };
+  it('should add prompt=consent to the request url when scope contains "offline_access"', async () => {
+
+    const result = constructAuthRequestUrl(
+      issuer,
+      clientId,
+      codeChallenge,
+      scope + ' offline_access',
+      redirectUri,
+    );
+
+    await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
+    await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
+    await expect(result).resolves.toContain(`code_challenge=${codeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge_method=S256`);
+    await expect(result).resolves.toContain(`response_type=code`);
+    await expect(result).resolves.toContain(`scope=${scope + '%20offline_access'}`);
+    await expect(result).resolves.toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    await expect(result).resolves.toContain(`prompt=consent`);
+
+  });
+
+  it('should add state to the request url when state is defined', async () => {
+
+    const result = constructAuthRequestUrl(
+      issuer,
+      clientId,
+      codeChallenge,
+      scope,
+      redirectUri,
+      state
+    );
+
+    await expect(result).resolves.toContain(`${validSolidOidcObject.authorization_endpoint}?`);
+    await expect(result).resolves.toContain(`client_id=${encodeURIComponent(clientId)}`);
+    await expect(result).resolves.toContain(`code_challenge=${codeChallenge}`);
+    await expect(result).resolves.toContain(`code_challenge_method=S256`);
+    await expect(result).resolves.toContain(`response_type=code`);
+    await expect(result).resolves.toContain(`scope=${scope}`);
+    await expect(result).resolves.toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    await expect(result).resolves.toContain(`state=${state}`);
+
+  });
+
+  const constructAuthResuestUrlParams = { issuer, clientId, codeChallenge, scope, redirectUri };
 
   it.each(Object.keys(constructAuthResuestUrlParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -82,7 +117,7 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       testArgs.issuer,
       testArgs.clientId,
-      testArgs.pkceCodeChallenge,
+      testArgs.codeChallenge,
       testArgs.scope,
       testArgs.redirectUri,
     );
@@ -98,7 +133,7 @@ describe('constructAuthRequestUrl()', () => {
     const result = constructAuthRequestUrl(
       issuer,
       clientId,
-      pkceCodeChallenge,
+      codeChallenge,
       scope,
       redirectUri,
     );
@@ -113,19 +148,13 @@ describe('authRequest()', () => {
 
   it('should perform a fetch request to the desired url', async () => {
 
-    fetchMock.mockResponse('Does not matter');
+    const spy = jest.spyOn(global.console, 'log');
 
-    await authRequest(issuer, clientId, scope, redirectUri);
-    const requestedUrl = fetchMock.mock.calls[0][0];
+    const result = authRequest(issuer, clientId, scope, redirectUri, codeChallenge, state, async () => { console.log('log something'); });
 
-    expect(requestedUrl).toBeDefined();
-    expect(requestedUrl).toContain(`${validSolidOidcObject.authorization_endpoint}?`);
-    expect(requestedUrl).toContain(`client_id=${clientId}`);
-    expect(requestedUrl).toContain(`code_challenge=`);
-    expect(requestedUrl).toContain(`code_challenge_method=S256`);
-    expect(requestedUrl).toContain(`response_type=code`);
-    expect(requestedUrl).toContain(`scope=${scope}`);
-    expect(requestedUrl).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
+    await expect(result).resolves.toBeUndefined();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith('log something');
 
   });
 
@@ -134,12 +163,12 @@ describe('authRequest()', () => {
     jest.spyOn(oidcModule, 'constructAuthRequestUrl').mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await authRequest(issuer, clientId, scope, redirectUri)
+      async () => await authRequest(issuer, clientId, scope, redirectUri, codeChallenge, state, async () => { console.log('log something'); })
     ).rejects.toThrow(`An error occurred while performing an auth request to ${issuer} : `);
 
   });
 
-  const authRequestParams = { issuer, clientId, scope, redirectUri };
+  const authRequestParams = { issuer, clientId, scope, redirectUri, codeChallenge };
 
   it.each(Object.keys(authRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -151,6 +180,7 @@ describe('authRequest()', () => {
       testArgs.clientId,
       testArgs.scope,
       testArgs.redirectUri,
+      testArgs.codeChallenge,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -161,20 +191,18 @@ describe('authRequest()', () => {
 
 describe('tokenRequest()', () => {
 
-  // populate the store with DPoP keys
-  beforeEach(() => generateKeys());
   beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', id_token: 'it' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
     expect(fetchMock.mock.calls[0][0]).toBe(validSolidOidcObject.token_endpoint);
 
   });
 
   it('should perform a fetch request with a DPoP header', async () => {
 
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
     expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeDefined();
     expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeTruthy();
 
@@ -182,7 +210,7 @@ describe('tokenRequest()', () => {
 
   it('should perform a fetch request with the correct body', async () => {
 
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
 
     const body1 = fetchMock.mock.calls[0][1]?.body;
     expect(body1).toBeDefined();
@@ -192,14 +220,12 @@ describe('tokenRequest()', () => {
     expect(stringBody1).toContain(`code=${authorizationCode}`);
     expect(stringBody1).toContain(`client_id=${clientId}`);
     expect(stringBody1).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
-    // encodeURIComponent() does not encode ~
-    const verifier = await store.get('codeVerifier');
-    expect(stringBody1).toContain(`code_verifier=${verifier.split('~').join('%7E')}`);
+    expect(stringBody1).toContain(`code_verifier=${codeVerifier}`);
     expect(stringBody1).not.toContain(`client_secret=`);
 
     //
 
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri, clientSecret);
+    await tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {}, clientSecret);
 
     const body2 = fetchMock.mock.calls[1][1]?.body;
     expect(body2).toBeDefined();
@@ -209,32 +235,28 @@ describe('tokenRequest()', () => {
     expect(stringBody2).toContain(`code=${authorizationCode}`);
     expect(stringBody2).toContain(`client_id=${clientId}`);
     expect(stringBody2).toContain(`redirect_uri=${encodeURIComponent(redirectUri)}`);
-    // encodeURIComponent() does not encode ~
-    const verifier2 = await store.get('codeVerifier');
-    expect(stringBody2).toContain(`code_verifier=${verifier2.split('~').join('%7E')}`);
+    expect(stringBody2).toContain(`code_verifier=${codeVerifier}`);
     expect(stringBody2).toContain(`client_secret=${clientSecret}`);
 
   });
 
-  it('should save the tokens returned by the server to the store when they are present', async () => {
+  it('should return an object containing the tokens returned by the server', async () => {
 
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
-
-    await expect(store.has('accessToken')).resolves.toBe(true);
-    await expect(store.get('accessToken')).resolves.toBe('at');
-    await store.delete('accessToken');
-    await expect(store.has('idToken')).resolves.toBe(true);
-    await expect(store.get('idToken')).resolves.toBe('it');
-    await store.delete('idToken');
-    await expect(store.has('refreshToken')).resolves.toBe(false);
+    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
+    await expect(result).resolves.toBeDefined();
+    const awaitedResult = await result;
+    expect(awaitedResult.accessToken).toBe('at');
+    expect(awaitedResult.idToken).toBe('it');
+    expect(awaitedResult.refreshToken).toBeUndefined();
 
     fetchMock.mockResponseOnce(JSON.stringify({ access_token: 'at', id_token: 'it', refresh_token: 'rt' }));
 
-    await tokenRequest(issuer, clientId, authorizationCode, redirectUri);
-
-    await expect(store.has('refreshToken')).resolves.toBe(true);
-    await expect(store.get('refreshToken')).resolves.toBe('rt');
-    await store.delete('refreshToken');
+    const result2 = tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
+    await expect(result2).resolves.toBeDefined();
+    const awaitedResult2 = await result2;
+    expect(awaitedResult2.accessToken).toBe('at');
+    expect(awaitedResult2.idToken).toBe('it');
+    expect(awaitedResult2.refreshToken).toBe('rt');
 
   });
 
@@ -247,6 +269,9 @@ describe('tokenRequest()', () => {
       clientId,
       authorizationCode,
       redirectUri,
+      codeVerifier,
+      {},
+      {},
     );
 
     await expect(result).rejects.toThrow(`No token endpoint was found for issuer ${issuer}`);
@@ -262,22 +287,12 @@ describe('tokenRequest()', () => {
       clientId,
       authorizationCode,
       redirectUri,
+      codeVerifier,
+      {},
+      {}
     );
 
     await expect(result).rejects.toThrow(`An error occurred while requesting tokens for issuer "${issuer}" : `);
-
-  });
-
-  it('should throw when no code verifier was found in the store', async () => {
-
-    const verifier = await store.get('codeVerifier');
-    await store.delete('codeVerifier');
-
-    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
-
-    await expect(result).rejects.toThrow(`No code verifier was found in the store`);
-
-    await store.set('codeVerifier', verifier);
 
   });
 
@@ -285,7 +300,7 @@ describe('tokenRequest()', () => {
 
     fetchMock.mockResponse(JSON.stringify({ error: 'abcdefgh' }));
 
-    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
     await expect(result).rejects.toThrow('abcdefgh');
 
   });
@@ -294,17 +309,18 @@ describe('tokenRequest()', () => {
 
     fetchMock.mockResponse(JSON.stringify({ id_token: 'it' }));
 
-    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    const result = tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
     fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
 
-    const result2 = tokenRequest(issuer, clientId, authorizationCode, redirectUri);
+    const result2 = tokenRequest(issuer, clientId, authorizationCode, redirectUri, codeVerifier, {}, {});
     await expect(result2).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
 
   });
 
-  const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri };
+  const tokenRequestParams = { issuer, clientId, authorizationCode, redirectUri,
+    codeVerifier, publicKey: {}, privateKey: {} };
 
   it.each(Object.keys(tokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -316,6 +332,9 @@ describe('tokenRequest()', () => {
       testArgs.clientId,
       testArgs.authorizationCode,
       testArgs.redirectUri,
+      testArgs.codeVerifier,
+      testArgs.publicKey,
+      testArgs.privateKey,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -326,20 +345,18 @@ describe('tokenRequest()', () => {
 
 describe('refreshTokenRequest()', () => {
 
-  // populate the store with DPoP keys
-  beforeEach(() => generateKeys());
-  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', refresh_token: 'rt' })));
+  beforeEach(() => fetchMock.mockResponse(JSON.stringify({ access_token: 'at', refresh_token: 'rt', id_token: 'it' })));
 
   it('should perform a fetch request to the desired url', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken);
+    await refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     expect(fetchMock.mock.calls[0][0]).toBe(validSolidOidcObject.token_endpoint);
 
   });
 
   it('should perform a fetch request with a DPoP header', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken);
+    await refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeDefined();
     expect(fetchMock.mock.calls[0][1]?.headers['DPoP']).toBeTruthy();
 
@@ -347,7 +364,7 @@ describe('refreshTokenRequest()', () => {
 
   it('should perform a fetch request with the correct body', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken);
+    await refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
 
     const body1 = fetchMock.mock.calls[0][1]?.body;
     expect(body1).toBeDefined();
@@ -360,7 +377,7 @@ describe('refreshTokenRequest()', () => {
 
     //
 
-    await refreshTokenRequest(issuer, clientId, refreshToken, clientSecret);
+    await refreshTokenRequest(issuer, clientId, refreshToken, {}, {}, clientSecret);
 
     const body2 = fetchMock.mock.calls[1][1]?.body;
     expect(body2).toBeDefined();
@@ -373,37 +390,30 @@ describe('refreshTokenRequest()', () => {
 
   });
 
-  it('should save the tokens returned by the server to the store', async () => {
+  it('should return all tokens returned by the server', async () => {
 
-    await refreshTokenRequest(issuer, clientId, refreshToken);
-
-    await expect(store.has('accessToken')).resolves.toBe(true);
-    await expect(store.get('accessToken')).resolves.toBe('at');
-    await store.delete('accessToken');
-    await expect(store.has('refreshToken')).resolves.toBe(true);
-    await expect(store.get('refreshToken')).resolves.toBe('rt');
-    await store.delete('refreshToken');
-    await expect(store.has('idToken')).resolves.toBe(false);
-
-    fetchMock.mockResponseOnce(JSON.stringify({ access_token: 'at', refresh_token: 'rt', id_token: 'it' }));
-
-    await refreshTokenRequest(issuer, clientId, refreshToken);
-
-    await expect(store.has('idToken')).resolves.toBe(true);
-    await expect(store.get('idToken')).resolves.toBe('it');
-    await store.delete('idToken');
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
+    await expect(result).resolves.toBeDefined();
+    const awaitedResult = await result;
+    expect(awaitedResult.accessToken).toBe('at');
+    expect(awaitedResult.refreshToken).toBe('rt');
+    expect(awaitedResult.idToken).toBe('it');
 
   });
 
-  it('should throw when the response does not contain an access_token and refresh_token', async () => {
+  it('should throw when the response does not contain an access_token, id_token and refresh_token', async () => {
 
-    fetchMock.mockResponses(JSON.stringify({ refresh_token: 'rt' }));
-    const result = refreshTokenRequest(issuer, clientId, refreshToken);
+    fetchMock.mockResponses(JSON.stringify({ refresh_token: 'rt', id_token: 'it' }));
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result).rejects.toThrow('The tokenRequest response must contain an access_token field, and it did not.');
 
-    fetchMock.mockResponses(JSON.stringify({ access_token: 'at' }));
-    const result2 = refreshTokenRequest(issuer, clientId, refreshToken);
+    fetchMock.mockResponses(JSON.stringify({ access_token: 'at', id_token: 'it' }));
+    const result2 = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result2).rejects.toThrow('The tokenRequest response must contain an refresh_token field, and it did not.');
+
+    fetchMock.mockResponses(JSON.stringify({ access_token: 'at', refresh_token: 'rt' }));
+    const result3 = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
+    await expect(result3).rejects.toThrow('The tokenRequest response must contain an id_token field, and it did not.');
 
   });
 
@@ -411,7 +421,7 @@ describe('refreshTokenRequest()', () => {
 
     jest.spyOn(issuerModule, 'getEndpoint').mockResolvedValueOnce(undefined);
 
-    const result = refreshTokenRequest(issuer, clientId, refreshToken);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result).rejects.toThrow(`No token endpoint was found for issuer ${issuer}`);
 
   });
@@ -420,7 +430,7 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockRejectedValueOnce(undefined);
 
-    const result = refreshTokenRequest(issuer, clientId, refreshToken);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result).rejects.toThrow(`An error occurred while refreshing tokens for issuer "${issuer}" : `);
 
   });
@@ -429,12 +439,12 @@ describe('refreshTokenRequest()', () => {
 
     fetchMock.mockResponse(JSON.stringify({ error: 'abcdefgh' }));
 
-    const result = refreshTokenRequest(issuer, clientId, refreshToken);
+    const result = refreshTokenRequest(issuer, clientId, refreshToken, {}, {});
     await expect(result).rejects.toThrow('abcdefgh');
 
   });
 
-  const refreshTokenRequestParams = { issuer, clientId, refreshToken };
+  const refreshTokenRequestParams = { issuer, clientId, refreshToken, publicKey: {}, privateKey: {} };
 
   it.each(Object.keys(refreshTokenRequestParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -445,6 +455,8 @@ describe('refreshTokenRequest()', () => {
       testArgs.issuer,
       testArgs.clientId,
       testArgs.refreshToken,
+      testArgs.publicKey,
+      testArgs.privateKey,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);
@@ -455,13 +467,11 @@ describe('refreshTokenRequest()', () => {
 
 describe('accessResource()', () => {
 
-  beforeEach(() => generateKeys());
-  beforeEach(() => store.set('accessToken', dummyValidAccessToken));
   beforeEach(() => fetchMock.mockResponse(''));
 
   it('should perform a fetch request to the desired url with the provided method', async () => {
 
-    await accessResource(resource, 'GET');
+    await accessResource(resource, 'GET', dummyValidAccessToken, {}, {});
 
     expect(fetchMock.mock.calls[0][0]).toBe(resource);
     expect(fetchMock.mock.calls[0][1].method).toBe('GET');
@@ -470,7 +480,7 @@ describe('accessResource()', () => {
 
   it('should perform a fetch request with the right headers', async () => {
 
-    await accessResource(resource, 'GET');
+    await accessResource(resource, 'GET', dummyValidAccessToken, {}, {});
     const headers = fetchMock.mock.calls[0][1]?.headers;
     expect(headers).toBeDefined();
 
@@ -481,9 +491,7 @@ describe('accessResource()', () => {
 
     //
 
-    fetchMock.mockResponseOnce('');
-
-    await accessResource(resource, 'POST', body, contentType);
+    await accessResource(resource, 'POST', dummyValidAccessToken, {}, {}, body, contentType);
     const headers2 = fetchMock.mock.calls[1][1]?.headers;
     expect(headers2).toBeDefined();
 
@@ -498,16 +506,14 @@ describe('accessResource()', () => {
 
   it('should perform a fetch request with the correct body', async () => {
 
-    await accessResource(resource, 'GET', undefined, contentType);
+    await accessResource(resource, 'GET', dummyValidAccessToken, {}, {}, undefined, contentType);
 
     const responseBody = fetchMock.mock.calls[0][1]?.body;
     expect(responseBody).toBeUndefined();
 
     //
 
-    fetchMock.mockResponseOnce('');
-
-    await accessResource(resource, 'POST', body, contentType);
+    await accessResource(resource, 'POST', dummyValidAccessToken, {}, {}, body, contentType);
 
     const responseBody2 = fetchMock.mock.calls[1][1]?.body;
     expect(responseBody2).toBeDefined();
@@ -520,75 +526,12 @@ describe('accessResource()', () => {
     fetchMock.mockRejectedValueOnce(undefined);
 
     await expect(
-      async () => await accessResource(resource, 'GET', undefined, contentType)
+      async () => await accessResource(resource, 'GET', dummyValidAccessToken, {}, {}, undefined, contentType)
     ).rejects.toThrow(`An error occurred trying to access resource ${resource} : `);
 
   });
 
-  it('should throw when no access token was found in the store', async () => {
-
-    await store.delete('accessToken');
-
-    await expect(
-      async () => await accessResource(resource, 'GET', undefined, contentType)
-    ).rejects.toThrow('No access token was found in the store');
-
-  });
-
-  it('should call refreshTokenRequest() when the token is expired', async () => {
-
-    await store.set('clientId', clientId);
-    await store.set('issuer', issuer);
-    await store.set('refreshToken', refreshToken);
-    await store.set('accessToken', dummyExpiredAccessToken);
-
-    const spy = jest.spyOn(oidcModule, 'refreshTokenRequest').mockImplementationOnce(async () => {
-
-      await store.set('accessToken', dummyValidAccessToken);
-
-    });
-
-    await accessResource(resource, 'GET');
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, undefined);
-
-  });
-
-  it('should throw when the access_token is expired and there is no issuer in the store', async () => {
-
-    await store.set('clientId', clientId);
-    await store.set('refreshToken', refreshToken);
-    await store.set('accessToken', dummyExpiredAccessToken);
-
-    const result = accessResource(resource, 'GET');
-    await expect(result).rejects.toThrow('No issuer was found in the store');
-
-  });
-
-  it('should throw when the access_token is expired and there is no refresh_token in the store', async () => {
-
-    await store.set('clientId', clientId);
-    await store.set('issuer', issuer);
-    await store.set('accessToken', dummyExpiredAccessToken);
-
-    const result = accessResource(resource, 'GET');
-    await expect(result).rejects.toThrow('No refresh token was found in the store');
-
-  });
-
-  it('should throw when the access_token is expired and there is no client_id in the store', async () => {
-
-    await store.set('issuer', issuer);
-    await store.set('refreshToken', refreshToken);
-    await store.set('accessToken', dummyExpiredAccessToken);
-
-    const result = accessResource(resource, 'GET');
-    await expect(result).rejects.toThrow('No client id was found in the store');
-
-  });
-
-  const accessResourceParams = { resource, method };
+  const accessResourceParams = { resource, method, accessToken: dummyValidAccessToken, publicKey: {}, privateKey: {} };
 
   it.each(Object.keys(accessResourceParams))('should throw when parameter %s is undefined', async (keyToBeNull) => {
 
@@ -598,6 +541,9 @@ describe('accessResource()', () => {
     const result = accessResource(
       testArgs.resource,
       testArgs.method as HttpMethod,
+      testArgs.accessToken,
+      testArgs.publicKey,
+      testArgs.privateKey,
     );
 
     await expect(result).rejects.toThrow(`Parameter "${keyToBeNull}" should be set`);

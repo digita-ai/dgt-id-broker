@@ -110,7 +110,8 @@ export const dummyExpiredAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ
 
 export const issuer = 'http://issuer.com';
 export const clientId = 'clientId';
-export const pkceCodeChallenge = 'pkceCodeChallenge';
+export const codeChallenge = 'pkceCodeChallenge';
+export const codeVerifier = 'MockOfACodeVerifierThatIsAtLeast43CharactersLong';
 export const scope = 'scopeopenid';
 export const redirectUri = 'https://redirect.uri';
 export const webId = 'https://web.id';
@@ -123,3 +124,9 @@ export const clientSecret = 'clientSecret';
 export const body = 'body';
 export const contentType = 'contentType';
 export const responseType = 'responseType';
+export const state = 'mockState';
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+export const handleAuthRequestUrl = async (url: string): Promise<void> => { };
+
+export const getAuthorizationCode = async (): Promise<string> => authorizationCode;

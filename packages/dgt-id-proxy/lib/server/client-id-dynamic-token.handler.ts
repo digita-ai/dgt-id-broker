@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
-import { switchMap, tap, map } from 'rxjs/operators';
+import { switchMap, tap, map, mapTo } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
 import { RegistrationStore } from '../util/process-client-registration-data';
 import { recalculateContentLength } from '../util/recalculate-content-length';
@@ -53,11 +53,20 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
-    const redirect_uri = params.get('redirect_uri');
 
     if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
-    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
+    const grant_type = params.get('grant_type');
+
+    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
+
+    const refresh_token = params.get('refresh_token') ?? '';
+
+    if (grant_type === 'refresh_token' && refresh_token === '') return throwError(new Error('No refresh_token was provided'));
+
+    const redirect_uri = params.get('redirect_uri') ?? '';
+
+    if (grant_type === 'authorization_code' && redirect_uri === '') { return throwError(new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -69,7 +78,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
     }
 
-    return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? redirect_uri : client_id)).pipe(
+    return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? (grant_type === 'authorization_code' ? redirect_uri : refresh_token) : client_id)).pipe(
 
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)
@@ -102,6 +111,29 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
           return of(response);
 
         }
+
+      }),
+      switchMap((response) => {
+
+        if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' && grant_type === 'authorization_code' && response.body.refresh_token) {
+
+          return from(this.store.get(redirect_uri)).pipe(
+            map((registerInfo) => {
+
+              if (registerInfo) {
+
+                this.store.delete(redirect_uri);
+                this.store.set(response.body.refresh_token, registerInfo);
+
+              }
+
+            }),
+            mapTo(response),
+          );
+
+        }
+
+        return of(response);
 
       })
     );

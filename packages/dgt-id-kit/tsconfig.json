@@ -3,18 +3,17 @@
   "compilerOptions": {
     "baseUrl": "lib",
     "outDir": "dist",
-    "emitDeclarationOnly": true,
-    "module": "es2020",
-    "target": "es2018",
+    "module": "commonjs",
     "strict": true
   },
   "include": [
-    "lib", "test"
+    "lib"
   ],
   "exclude": [
     "**/*.spec.ts",
     "node_modules",
     "dist",
-    "lib-old"
+    "lib-old",
+    "test"
   ]
 }

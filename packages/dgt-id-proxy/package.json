@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.5.0",
+  "version": "0.6.3",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
@@ -32,9 +32,11 @@
     "lint:staged": "lint-staged",
     "generate:oidc": "node dist/scripts/generate-openid-configuration.js",
     "generate:keys": "node dist/scripts/generate-keys.js",
-    "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/",
+    "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/ -o assets/auth0-configuration.json",
     "demo:panva": "npm run start",
-    "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita"
+    "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita",
+    "demo:id-kit:panva": "npm run start",
+    "demo:id-kit:auth0": "npm run demo:auth0"
   },
   "devDependencies": {
     "@digita-ai/typescript-config": "^0.3.3",
@@ -53,8 +55,8 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "^0.2.1",
-    "@digita-ai/handlersjs-http": "^0.2.1",
+    "@digita-ai/handlersjs-core": "0.2.1",
+    "@digita-ai/handlersjs-http": "0.2.1",
     "@types/uuid": "^8.3.0",
     "@types/yargs": "^16.0.1",
     "componentsjs": "^4.0.6",

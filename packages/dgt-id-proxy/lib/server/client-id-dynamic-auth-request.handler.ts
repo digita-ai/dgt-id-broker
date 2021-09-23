@@ -162,6 +162,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       'tos_uri',
       'jwks_uri',
       'jwks',
+      'scope',
       'sector_identifier_uri',
       'subject_type',
       'id_token_signed_response_alg',

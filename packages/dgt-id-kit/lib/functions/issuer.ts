@@ -12,14 +12,14 @@ import { validateAndFetch } from '../util/validate-and-fetch';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getIssuerConfig = async (issuer: string): Promise<any> => {
 
-  if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
+  if (!issuer) throw new Error('Parameter "issuer" should be set');
 
   try {
 
     const config = `${issuer.replace(/\/$/, '')}/.well-known/openid-configuration`;
     const response = await validateAndFetch(config);
 
-    if (response.status !== 200) { throw new Error(`No openid-configuration was found on this url: "${config}"`); }
+    if (response.status !== 200) throw new Error(`No openid-configuration was found on this url: "${config}"`);
 
     return await response.json();
 
@@ -39,7 +39,7 @@ export const getIssuerConfig = async (issuer: string): Promise<any> => {
  */
 export const isValidIssuer = async (issuer: string): Promise<boolean> => {
 
-  if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
+  if (!issuer) throw new Error('Parameter "issuer" should be set');
 
   try {
 
@@ -65,7 +65,7 @@ export const isValidIssuer = async (issuer: string): Promise<boolean> => {
  */
 export const validateIssuer = async (issuer: string): Promise<string> => {
 
-  if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
+  if (!issuer) throw new Error('Parameter "issuer" should be set');
 
   try {
 
@@ -98,9 +98,8 @@ export const getDiscoveryInfo =
 async <T extends DiscoveryField>(issuer: string, field: T):
 Promise<T extends DiscoveryStringField ? string : string[]> => {
 
-  if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
-
-  if (!field) { throw new Error('Parameter "field" should be set'); }
+  if (!issuer) throw new Error('Parameter "issuer" should be set');
+  if (!field) throw new Error('Parameter "field" should be set');
 
   try {
 
@@ -125,9 +124,8 @@ Promise<T extends DiscoveryStringField ? string : string[]> => {
  */
 export const getEndpoint = async (issuer: string, endpoint: DiscoveryEndpointField): Promise<string> => {
 
-  if (!issuer) { throw new Error('Parameter "issuer" should be set'); }
-
-  if (!endpoint) { throw new Error('Parameter "endpoint" should be set'); }
+  if (!issuer) throw new Error('Parameter "issuer" should be set');
+  if (!endpoint) throw new Error('Parameter "endpoint" should be set');
 
   return await getDiscoveryInfo(issuer, endpoint);
 

@@ -19,9 +19,12 @@ describe('ClientIdDynamicTokenHandler', () => {
   const public_id = 'http://www.w3.org/ns/solid/terms#PublicOidcClient';
   const requestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const requestBodyWithPublicId = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(public_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
+  const requestBodyWithPublicIdRefreshToken = `grant_type=refresh_token&refresh_token=refreshTokenMock&client_id=${encodeURIComponent(public_id)}`;
   const swappedBody = `grant_type=authorization_code&code=${code}&client_id=jnO4LverDPv4AP2EghUSG&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const noClientIDRequestBody = `grant_type=authorization_code&code=${code}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`;
   const noRedirectURIRequestBody = `grant_type=authorization_code&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
+  const noRefreshTokenRequestBody = `grant_type=refresh_token&code=${code}&client_id=${encodeURIComponent(client_id)}&code_verifier=${code_verifier}`;
+  const requestBodyWithIncorrectGrantType = `grant_type=implicit&code=${code}&client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
   const headers = { 'content-length': '302', 'content-type': 'application/json;charset=utf-8' };
   const context = { request: { headers, body: requestBody, method: 'POST', url } } as HttpHandlerContext;
   const newContext = { request: { headers, body: swappedBody, method: 'POST', url } } as HttpHandlerContext;
@@ -54,7 +57,7 @@ describe('ClientIdDynamicTokenHandler', () => {
 
   const registerInfo = {
     application_type: 'web',
-    grant_types: [ 'refresh_token', 'authorization_code' ],
+    grant_types: [ 'authorization_code' ],
     id_token_signed_response_alg: 'RS256',
     post_logout_redirect_uris: [],
     require_auth_time: true,
@@ -139,10 +142,24 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     });
 
-    it('should error when no client_id was provided', async () => {
+    it('should error when grant_type is not refresh_token or authorization_code', async () => {
+
+      const testContext = { ... context, request: { ...context.request, body: requestBodyWithIncorrectGrantType } };
+      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('grant_type must be either "authorization_code" or "refresh_token"');
+
+    });
+
+    it('should error when no redirect_uri was provided when grant_type is authorization_code', async () => {
 
       const noRedirectURIContext = { ... context, request: { ...context.request, body:  noRedirectURIRequestBody } };
       await expect(() => handler.handle(noRedirectURIContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+
+    });
+
+    it('should error when no refresh_token was provided and grant type is refresh_token', async () => {
+
+      const noRefreshTokenContext = { ... context, request: { ...context.request, body:  noRefreshTokenRequestBody } };
+      await expect(() => handler.handle(noRefreshTokenContext).toPromise()).rejects.toThrow('No refresh_token was provided');
 
     });
 
@@ -164,7 +181,7 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     });
 
-    it('should use the redirect_uri as key for the store if a public webid is used', async () => {
+    it('should use the redirect_uri as key for the store if a public webid is used and grant_type is authorization_code', async () => {
 
       const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
       = new InMemoryStore();
@@ -174,15 +191,36 @@ describe('ClientIdDynamicTokenHandler', () => {
 
       public_store.set(redirect_uri, registerInfo);
 
-      const registeredInfo = public_store.get(redirect_uri);
+      const registeredInfo = await public_store.get(redirect_uri);
 
-      public_store.get = jest.fn().mockReturnValueOnce(registeredInfo);
+      public_store.get = jest.fn().mockResolvedValueOnce(registeredInfo);
 
       await handler2
         .handle({ ...context, request: { ...context.request, body:  requestBodyWithPublicId } })
         .toPromise();
 
       expect(public_store.get).toHaveBeenCalledWith(redirect_uri);
+
+    });
+
+    it('should get the registration info from the store using the refresh_token when grant_type is refresh_token', async () => {
+
+      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
+      = new InMemoryStore();
+
+      const handler2
+      = new ClientIdDynamicTokenHandler(public_store, httpHandler);
+
+      public_store.set('refreshTokenMock', registerInfo);
+
+      public_store.get = jest.fn().mockResolvedValueOnce(registerInfo);
+
+      await handler2
+        .handle({ ...context, request: { ...context.request, body:  requestBodyWithPublicIdRefreshToken } })
+        .toPromise();
+
+      expect(public_store.get).toHaveBeenCalledTimes(1);
+      expect(public_store.get).toHaveBeenCalledWith('refreshTokenMock');
 
     });
 
@@ -246,6 +284,76 @@ describe('ClientIdDynamicTokenHandler', () => {
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
 
       await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
+
+    });
+
+    it('should replace the refresh_token from the upstream when it is present in the response with the redirect_uri in the store as key when client is public and grant_type is authorization', async () => {
+
+      const testResponse = { ... response, body: { ...response.body, refresh_token: 'refreshTokenMock' } };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(testResponse));
+
+      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
+      = new InMemoryStore();
+
+      const handler2
+      = new ClientIdDynamicTokenHandler(public_store, httpHandler);
+
+      public_store.set(redirect_uri, registerInfo);
+
+      const registeredInfo = await public_store.get(redirect_uri);
+
+      public_store.set = jest.fn().mockReturnValue({});
+
+      public_store.delete = jest.fn().mockReturnValue({});
+
+      await handler2
+        .handle({ ...context, request: { ...context.request, body:  requestBodyWithPublicId } })
+        .toPromise();
+
+      expect(public_store.delete).toHaveBeenCalledWith(redirect_uri);
+      expect(public_store.set).toHaveBeenCalledWith('refreshTokenMock', registeredInfo);
+
+    });
+
+    // The store should always have registration info, otherwise it would error much earlier. However, typescript doesn't know that,
+    // so we have to check again.
+    it('should not replace the refresh_token from the upstream when there is no registration info in the store', async () => {
+
+      const testResponse = { ... response, body: { ...response.body, refresh_token: 'refreshTokenMock' } };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(testResponse));
+
+      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
+      = new InMemoryStore();
+
+      const handler2
+      = new ClientIdDynamicTokenHandler(public_store, httpHandler);
+
+      public_store.set(redirect_uri, registerInfo);
+
+      let count = 0;
+
+      public_store.get = jest.fn(async (item) => {
+
+        if (count === 1) return undefined;
+
+        count++;
+
+        return registerInfo;
+
+      });
+
+      public_store.set = jest.fn().mockReturnValue({});
+
+      public_store.delete = jest.fn().mockReturnValue({});
+
+      await handler2
+        .handle({ ...context, request: { ...context.request, body:  requestBodyWithPublicId } })
+        .toPromise();
+
+      expect(public_store.delete).toHaveBeenCalledTimes(0);
+      expect(public_store.set).toHaveBeenCalledTimes(0);
 
     });
 
