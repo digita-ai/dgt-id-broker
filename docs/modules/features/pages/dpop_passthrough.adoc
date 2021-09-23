@@ -13,9 +13,9 @@ The `DpopPassThroughHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:DpopPassThroughHandler",
     "@type": "DpopPassThroughHandler",
-    "DpopPassThroughHandler:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -24,8 +24,8 @@ The `DpopPassThroughHandler` can be configured as follows:
             }
         ]
     },
-    "DpopPassThroughHandler:_proxyTokenUrl": "http://proxy.com/token",
-    "DpopPassThroughHandler:_upstreamTokenUrl": "http://upstream.com/token"
+    "proxyTokenUrl": "http://proxy.com/token",
+    "upstreamTokenUrl": "http://upstream.com/token"
 }
 ----
 
@@ -44,7 +44,7 @@ The token endpoint can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@id": "urn:dgt-id-proxy:default:PostOperation"
         },
@@ -52,9 +52,9 @@ The token endpoint can be configured as follows:
             "@id": "urn:dgt-id-proxy:default:OptionsOperation"
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:DpopPassThroughHandler"
             },
@@ -63,7 +63,7 @@ The token endpoint can be configured as follows:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 

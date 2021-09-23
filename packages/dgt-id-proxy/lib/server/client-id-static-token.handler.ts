@@ -71,14 +71,22 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
-    const grant_type = params.get('grant_type');
-    const redirect_uri = params.get('redirect_uri');
 
     if (!client_id) { return throwError(new Error('No client_id was provided')); }
 
+    const grant_type = params.get('grant_type');
+
     if (!grant_type) { return throwError(new Error('No grant_type was provided')); }
 
-    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
+    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
+
+    const redirect_uri = params.get('redirect_uri');
+
+    if (grant_type === 'authorization_code' && !redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
+
+    const refresh_token = params.get('refresh_token');
+
+    if (grant_type === 'refresh_token' && !refresh_token) { return throwError(new Error('No refresh_token was provided')); }
 
     try {
 
@@ -96,7 +104,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
         params.set('client_id', this.clientId);
         params.set('client_secret', this.clientSecret);
-        params.set('redirect_uri', this.redirectUri);
+        if (grant_type === 'authorization_code') params.set('redirect_uri', this.redirectUri);
 
         return { ...context, request: { ...context.request, body: params.toString() } };
 
@@ -141,7 +149,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       .pipe(
         switchMap((registrationData) => (registrationData.grant_types?.includes(grantType))
           ? of(registrationData)
-          : throwError(new Error('The grant type in the request is not included in the client registration data'))),
+          : (throwError(new Error('The grant type in the request is not included in the client registration data')))),
       );
 
   }

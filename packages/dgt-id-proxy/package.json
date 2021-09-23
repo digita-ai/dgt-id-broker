@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.6.0",
+  "version": "0.6.3",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
@@ -23,7 +23,7 @@
     "start": "node ./bin/server.js",
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
-    "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
+    "build:components": "componentsjs-generator --typeScopedContexts -s lib -c dist/components -i .componentsignore",
     "test": "jest",
     "test:ci": "jest --runInBand",
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json",
@@ -32,16 +32,19 @@
     "lint:staged": "lint-staged",
     "generate:oidc": "node dist/scripts/generate-openid-configuration.js",
     "generate:keys": "node dist/scripts/generate-keys.js",
-    "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/",
+    "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/ -o assets/auth0-configuration.json",
     "demo:panva": "npm run start",
-    "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita"
+    "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita",
+    "demo:id-kit:panva": "npm run start",
+    "demo:id-kit:auth0": "npm run demo:auth0"
   },
   "devDependencies": {
     "@digita-ai/typescript-config": "^0.3.3",
     "@types/jest": "^26.0.22",
+    "@types/n3": "1.10.0",
     "@types/node": "^14.14.37",
     "@types/node-fetch": "^2.5.10",
-    "componentsjs-generator": "^2.1.0",
+    "componentsjs-generator": "^2.6.0",
     "eslint": "^7.26.0",
     "jest": "^26.6.3",
     "jest-coverage-thresholds-bumper": "0.0.4",
@@ -53,11 +56,11 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "^0.2.1",
-    "@digita-ai/handlersjs-http": "^0.2.1",
+    "@digita-ai/handlersjs-core": "^0.4.0",
+    "@digita-ai/handlersjs-http": "^0.4.0",
     "@types/uuid": "^8.3.0",
     "@types/yargs": "^16.0.1",
-    "componentsjs": "^4.0.6",
+    "componentsjs": "^4.5.0",
     "jose": "^3.11.6",
     "lint-staged": "^10.5.4",
     "nock": "^13.1.1",
@@ -83,7 +86,7 @@
     "preset": "@digita-ai/jest-config",
     "displayName": "proxy",
     "testEnvironment": "node",
-    "testTimeout": 10000,
+    "testTimeout": 15000,
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
@@ -97,8 +100,8 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 98.53,
-        "functions": 99.49,
+        "branches": 98.77,
+        "functions": 99.5,
         "lines": 100,
         "statements": 99.89
       }

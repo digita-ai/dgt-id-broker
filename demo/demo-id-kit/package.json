@@ -1,0 +1,24 @@
+{
+  "name": "demo-id-kit",
+  "version": "0.3.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "demo:id-kit:panva": "npm run dev -- --mode panva --port 3001",
+    "demo:id-kit:auth0": "npm run dev -- --mode auth0 --port 3001"
+  },
+  "devDependencies": {
+    "vite": "^2.1.0"
+  },
+  "dependencies": {
+    "@digita-ai/dgt-id-kit": "^0.6.1",
+    "@digita-ai/handlersjs-core": "0.3.4",
+    "buffer": "^6.0.3",
+    "dotenv": "^8.2.0",
+    "esbuild": "^0.9.6",
+    "jose": "^3.11.0",
+    "uuid": "^8.3.2"
+  },
+  "private": true
+}

@@ -40,7 +40,7 @@ export const checkFile = (filePath: string): void => {
     const file = readFileSync(filePath);
     JSON.parse(file.toString());
 
-  } catch (e) {
+  } catch (e: any) {
 
     throw new Error(`Reading file '${filePath}' failed with Error: ${e.message}`);
 

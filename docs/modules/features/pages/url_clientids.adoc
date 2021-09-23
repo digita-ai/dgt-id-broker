@@ -36,9 +36,9 @@ The `ClientIdStaticAuthRequestHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler",
     "@type": "ClientIdStaticAuthRequestHandler",
-    "ClientIdStaticAuthRequestHandler:_clientId": "upstreamStaticClientId",
-    "ClientIdStaticAuthRequestHandler:_redirectUri": "http://upstream-server.com/redirect",
-    "ClientIdStaticAuthRequestHandler:_keyValueStore": {
+    "clientId": "upstreamStaticClientId",
+    "redirectUri": "http://upstream-server.com/redirect",
+    "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
     }
 }
@@ -59,7 +59,7 @@ The `ClientIdStaticAuthRequestHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler",
     "@type": "ClientIdStaticAuthResponseHandler",
-    "ClientIdStaticAuthResponseHandler:_keyValueStore": {
+    "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
     }
 }
@@ -79,9 +79,9 @@ The `ClientIdStaticTokenHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler",
     "@type": "ClientIdStaticTokenHandler",
-    "ClientIdStaticTokenHandler:_httpHandler": {
+    "httpHandler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -90,9 +90,9 @@ The `ClientIdStaticTokenHandler` can be configured as follows:
             }
         ]
     },
-    "ClientIdStaticTokenHandler:_clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
-    "ClientIdStaticTokenHandler:_clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
-    "ClientIdStaticTokenHandler:_redirectUri": "http://localhost:3003/redirect"
+    "clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+    "clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
+    "redirectUri": "http://localhost:3003/redirect"
 }
 ----
 
@@ -115,16 +115,16 @@ These endpoints can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
             },
@@ -142,19 +142,19 @@ These endpoints can be configured as follows:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/auth"
+    "path": "/auth"
 },
 {
     "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@id": "urn:dgt-id-proxy:default:GetOperation"
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -166,7 +166,7 @@ These endpoints can be configured as follows:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/authorize/resume"
+    "path": "/authorize/resume"
 }
 ----
 
@@ -194,21 +194,21 @@ This endpoint can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
         },
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "OPTIONS",
-            "HttpHandlerOperation:_publish": false
+            "method": "OPTIONS",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler"
           },
@@ -217,7 +217,7 @@ This endpoint can be configured as follows:
           }
         ]
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 
@@ -265,7 +265,7 @@ The `ClientIdDynamicAuthRequestHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthRequestHandler",
     "@type": "ClientIdDynamicAuthRequestHandler",
-    "ClientIdDynamicAuthRequestHandler:_store": {
+    "store": {
         "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
     },
     "ClientIdDynamicAuthRequestHandler:_registration_uri": "http://upstream-server.com/reg"
@@ -286,10 +286,10 @@ The `ClientIdDynamicTokenHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler",
     "@type": "ClientIdDynamicTokenHandler",
-    "ClientIdDynamicTokenHandler:_store": {
+    "store": {
         "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
     },
-    "ClientIdDynamicTokenHandler:_httpHandler": {
+    "httpHandler": {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
     }
 }
@@ -309,16 +309,16 @@ We will configure two endpoints, an authorization endpoint and a token endpoint:
 {
     "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthRequestHandler"
             },
@@ -327,27 +327,27 @@ We will configure two endpoints, an authorization endpoint and a token endpoint:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/auth"
+    "path": "/auth"
 },
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
         },
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "OPTIONS",
-            "HttpHandlerOperation:_publish": false
+            "method": "OPTIONS",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@id": "urn:dgt-id-proxy:default:SolidClientDynamicTokenRegistrationHandler"
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 

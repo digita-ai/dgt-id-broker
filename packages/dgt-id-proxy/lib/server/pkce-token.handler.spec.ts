@@ -42,6 +42,9 @@ describe('PkceTokenHandler', () => {
   const code_verifier = generateRandomString(128);
   const code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
 
+  const authCodeBody = `grant_type=authorization_code&code=${code}&client_id=${client_id}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`;
+  const refreshTokenBody = `grant_type=refresh_token&refresh_token=refreshTokenMock&client_id=${client_id}`;
+
   beforeEach(async () => {
 
     httpHandler = {
@@ -52,7 +55,7 @@ describe('PkceTokenHandler', () => {
 
     store = new InMemoryStore();
 
-    context = { request: { headers: {}, body: `grant_type=authorization_code&code=${code}&client_id=${client_id}&redirect_uri=${redirect_uri}&code_verifier=${code_verifier}`, method: 'POST', url } };
+    context = { request: { headers: {}, body: authCodeBody, method: 'POST', url } };
 
     pkceTokenRequestHandler = new PkceTokenHandler(httpHandler, store);
 
@@ -105,6 +108,17 @@ describe('PkceTokenHandler', () => {
 
       await expect(() => pkceTokenRequestHandler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
       await expect(() => pkceTokenRequestHandler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
+
+    });
+
+    it('should pass the request to the httpHandler when grant_type is refresh_token', async () => {
+
+      context = { request: { headers: {}, body: refreshTokenBody, method: 'POST', url } };
+
+      await pkceTokenRequestHandler.handle(context).toPromise();
+
+      expect(httpHandler.handle).toHaveBeenCalledTimes(1);
+      expect(httpHandler.handle).toHaveBeenCalledWith(context);
 
     });
 

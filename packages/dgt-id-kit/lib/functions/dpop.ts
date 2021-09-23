@@ -3,7 +3,7 @@ import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { SignJWT } from 'jose/jwt/sign';
 import { v4 } from 'uuid';
 import { parseJwk } from 'jose/jwk/parse';
-import { JWK } from 'jose/webcrypto/types';
+import { JWK } from 'jose/types';
 import { KeyGenerationAlgorithm } from '../models/key-generation-algorithm.model';
 
 export interface generateKeysReturnObject {
@@ -44,8 +44,8 @@ export const generateKeys = async (
 /**
  * Creates a DPoP proof signed by the private key
  *
- * @param htm htm option
- * @param htu htu option
+ * @param htm The HTTP method for the request to which the JWT is attached
+ * @param htu The HTTP URI used for the request, without query and fragment parts
  * @param publicKey the public key
  * @param privateKey the private key
  * @returns DPoP proof string

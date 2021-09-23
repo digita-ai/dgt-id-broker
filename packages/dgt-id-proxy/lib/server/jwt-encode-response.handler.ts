@@ -5,7 +5,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, zip, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
-import { JWK, JWTPayload } from 'jose/webcrypto/types';
+import { JWK, JWTPayload } from 'jose/types';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';

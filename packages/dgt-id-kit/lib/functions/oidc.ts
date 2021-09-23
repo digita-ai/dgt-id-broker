@@ -1,10 +1,9 @@
-import { JWK } from 'jose/webcrypto/types';
+import { JWK } from 'jose/types';
 import { validateAndFetch } from '../util/validate-and-fetch';
 import { HttpMethod } from '../models/http-method.model';
 import { defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';
 import { createDpopProof } from './dpop';
 import { getEndpoint } from './issuer';
-import { generateCodeChallenge, generateCodeVerifier } from './pkce';
 
 /**
  * Construct an authentication request url based on the given parameters
@@ -19,18 +18,16 @@ import { generateCodeChallenge, generateCodeVerifier } from './pkce';
 export const constructAuthRequestUrl = async (
   issuer: string,
   clientId: string,
-  pkceCodeChallenge: string,
+  codeChallenge: string,
   scope: string,
   redirectUri: string,
+  state?: string
 ): Promise<string> => {
 
   if (!issuer) throw new Error('Parameter "issuer" should be set');
   if (!clientId) throw new Error('Parameter "clientId" should be set');
-  if (!pkceCodeChallenge) throw new Error('Parameter "pkceCodeChallenge" should be set');
+  if (!codeChallenge) throw new Error('Parameter "codeChallenge" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
-
-  let prompt = '';
-  if (scope.split(' ').includes('offline_access')) prompt = '&prompt=consent';
 
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
@@ -40,12 +37,13 @@ export const constructAuthRequestUrl = async (
 
   return `${authorizationEndpoint}?` +
     `client_id=${encodeURIComponent(clientId)}&` +
-    `code_challenge=${pkceCodeChallenge}&` +
+    `code_challenge=${codeChallenge}&` +
     `code_challenge_method=S256&` +
     `response_type=code&` +
     `scope=${encodeURIComponent(scope)}&` +
     `redirect_uri=${encodeURIComponent(redirectUri)}` +
-    prompt;
+    (state ? `&state=${state}` : '') +
+    (scope.split(' ').includes('offline_access') ? '&prompt=consent' : '');
 
 };
 
@@ -62,7 +60,8 @@ export const authRequest = async (
   clientId: string,
   scope: string,
   redirectUri: string,
-  codeVerifier: string,
+  codeChallenge: string,
+  state?: string,
   handleAuthRequestUrl: (requestUrl: string) => Promise<void> = defaultHandleAuthRequestUrl,
 ): Promise<void> => {
 
@@ -70,11 +69,9 @@ export const authRequest = async (
   if (!clientId) throw new Error('Parameter "clientId" should be set');
   if (!scope) throw new Error('Parameter "scope" should be set');
   if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
-  if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
+  if (!codeChallenge) throw new Error('Parameter "codeChallenge" should be set');
 
   try {
-
-    const codeChallenge = generateCodeChallenge(codeVerifier);
 
     const requestUrl = await constructAuthRequestUrl(
       issuer,
@@ -82,6 +79,7 @@ export const authRequest = async (
       codeChallenge,
       scope,
       redirectUri,
+      state,
     );
 
     handleAuthRequestUrl(requestUrl);
