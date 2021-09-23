@@ -239,6 +239,16 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     });
 
+    it('should pass the upstream error in an error response when needed and set status to 400', async () => {
+
+      const resp = { body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
+
+    });
+
   });
 
   describe('canHandle', () => {

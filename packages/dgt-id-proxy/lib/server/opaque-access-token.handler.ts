@@ -33,7 +33,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    *
    * @param {HttpHandlerContext} context
    */
-  handle(context: HttpHandlerContext) {
+  handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
 

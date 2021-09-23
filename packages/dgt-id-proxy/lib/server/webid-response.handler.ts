@@ -2,6 +2,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 import slugify from 'slugify';
+import { checkError, createErrorResponse } from '../public-api';
 
 /**
  * A {HttpHandler} that adds the webid claim to the payload of the access token field in the response body.
@@ -43,6 +44,16 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
     if (!response) { return throwError(new Error('A response must be provided')); }
+
+    if (checkError(response)) {
+
+      return of(createErrorResponse(
+        checkError(response).error_description,
+        checkError(response).error,
+        response.headers
+      ));
+
+    }
 
     if (!response.body) { return throwError(new Error('The response did not contain a body')); }
 
