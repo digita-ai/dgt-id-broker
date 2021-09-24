@@ -1,4 +1,4 @@
-import { join } from 'path';
+import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, from, of } from 'rxjs';
@@ -13,9 +13,9 @@ export class JwkRequestHandler extends HttpHandler {
   /**
    * Creates a {JwkRequestHandler} that returns a json response of the JWK keys from the file in the given path.
    *
-   * @param {string} path - the relative path to the file containing JWK keys.
+   * @param {string} jwkPath - the relative path to the file containing JWK keys.
    */
-  constructor(private path: string) {
+  constructor(private jwkPath: string) {
 
     super();
 
@@ -30,9 +30,10 @@ export class JwkRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
-    return of({ path: join(process.cwd(), this.path) })
+    const jwkPath = path.isAbsolute(this.jwkPath) ? this.jwkPath : path.join(process.cwd(), this.jwkPath);
+
+    return from(readFile(jwkPath))
       .pipe(
-        switchMap((data) => from(readFile(data.path))),
         map((file) => JSON.parse(file.toString())),
         switchMap((jwks) => {
 

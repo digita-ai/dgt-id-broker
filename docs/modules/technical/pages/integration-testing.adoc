@@ -1,0 +1,31 @@
+:toc:
+:toclevels: 3
+
+
+= Integration testin
+
+
+
+=== Checklist
+
+== Auth flow 
+checking parameters incoming on /auth endpoint:
+
+. checks if state is set in the query parameters (even if it was not provided by the user)
+. checks if present state is a 36 digit uuid if state was generated
+. checks if client_id in the params is switched to the one received from the registration endpoint
+. checks if all required parameters were received (scope, redirect_uri, response_type and client_id)
+. checks if state is the one given in the intitial request parameters (NOT WORKING)
+
+== Token flow
+checking parameters incoming on /token endpoint:
+
+. checks if client_id in the params is still to the one received from the registration endpoint
+. checks if the content-length is recalculated after the client_id has been switched
+. checks if the code_verifier has been removed fron the query parameters
+. checks if the redirect_uri is the same as the one received in the initial request
+
+== Checking response parameters after passing through the proxy
+
+# cannot figure out yet how to get to the response here, 
+# if I log in the passthrough handler it seems like the last token request was succesfully replied to but I can't seem to catch this response yet

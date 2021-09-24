@@ -11,9 +11,9 @@ It can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler",
     "@type": "DpopTokenRequestHandler",
-    "DpopTokenRequestHandler:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
               "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -22,10 +22,10 @@ It can be configured as follows:
             }
         ]
     },
-    "DpopTokenRequestHandler:_keyValueStore": {
+    "keyValueStore": {
         "@type": "InMemoryStore"
     },
-    "DpopTokenRequestHandler:_proxyTokenUrl": "http://urlofproxy.com/token"
+    "proxyTokenUrl": "http://urlofproxy.com/token"
 }
 ----
 
@@ -47,21 +47,21 @@ A handler doesn't do anything unless it's added to an endpoint. So let's put tog
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
         },
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "OPTIONS",
-            "HttpHandlerOperation:_publish": false
+            "method": "OPTIONS",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
             }
@@ -70,7 +70,7 @@ A handler doesn't do anything unless it's added to an endpoint. So let's put tog
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 

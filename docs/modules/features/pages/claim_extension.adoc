@@ -38,8 +38,8 @@ The `WebIDResponseHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
     "@type": "WebIDResponseHandler",
-    "WebIDResponseHandler:_webIdPattern": "http://hostofwebids.com/:customclaim/profile/card#me",
-    "WebIDResponseHandler:_claim": "custom"
+    "webIdPattern": "http://hostofwebids.com/:customclaim/profile/card#me",
+    "claim": "custom"
 }
 ----
 
@@ -79,7 +79,7 @@ Configuring the token endpoint:
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@id": "urn:dgt-id-proxy:default:PostOperation"
         },
@@ -87,9 +87,9 @@ Configuring the token endpoint:
             "@id": "urn:dgt-id-proxy:default:OptionsOperation"
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -107,7 +107,7 @@ Configuring the token endpoint:
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 
