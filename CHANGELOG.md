@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.6.4](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.3...v0.6.4) (2021-09-27)
+
+
+### **Documentation**
+
+* update createDpopProof function params ([#225](https://github.com/digita-ai/dgt-id-broker/issues/225)) ([0e68a2c](https://github.com/digita-ai/dgt-id-broker/commit/0e68a2c95953db1845ad13a0b889ffd2cc645d3b))
+
+
+
 ### [0.6.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.1...v0.6.3) (2021-09-20)
 
 
