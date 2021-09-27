@@ -371,7 +371,7 @@
         ],
         "handler": {
           "@type": "JwkRequestHandler",
-          "path": {
+          "jwkPath": {
             "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
           }
         },
