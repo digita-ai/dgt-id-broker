@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.6.5](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.4...v0.6.5) (2021-09-27)
+
+
+### **Bug Fixes**
+
+* use server.js to start server in Dockerfile ([e95a069](https://github.com/digita-ai/dgt-id-broker/commit/e95a0695082a6ec85b60432b1627af78f1d08df2))
+
+
+
 ### [0.6.4](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.3...v0.6.4) (2021-09-27)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-proxy
