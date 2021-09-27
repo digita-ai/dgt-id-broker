@@ -137,7 +137,7 @@ jobs:
           context: packages/dgt-id-proxy/
           push: true
           tags: |
-            digita-ai/dgt-id-proxy:latest
-            digita-ai/dgt-id-proxy:${{ steps.extract-tag.outputs.tag }}
+            ghcr.io/digita-ai/dgt-id-proxy:latest
+            ghcr.io/digita-ai/dgt-id-proxy:${{ steps.extract-tag.outputs.tag }}
           build-args: |
             NPM_TOKEN=${{secrets.GA_TOKEN}}
