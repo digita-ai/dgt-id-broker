@@ -277,6 +277,16 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     });
 
+    it('should pass the upstream error in an error response when needed and set status to 400', async () => {
+
+      const resp = { body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(resp));
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
+
+    });
+
     it('should replace the refresh_token from the upstream when it is present in the response with the redirect_uri in the store as key when client is public and grant_type is authorization', async () => {
 
       const testResponse = { ... response, body: { ...response.body, refresh_token: 'refreshTokenMock' } };

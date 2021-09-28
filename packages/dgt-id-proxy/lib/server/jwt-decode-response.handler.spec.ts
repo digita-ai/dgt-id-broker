@@ -88,19 +88,19 @@ describe('JwtDecodeResponseHandler', () => {
 
   it('should be error when no upstreamUrl is provided', async () => {
 
-    await expect(() => new JwtDecodeResponseHandler(null, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
-    await expect(() => new JwtDecodeResponseHandler(undefined, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
-    await expect(() => new JwtDecodeResponseHandler(jwtFields, null, false)).toThrow('upstreamUrl must be defined');
-    await expect(() => new JwtDecodeResponseHandler(jwtFields, undefined, false)).toThrow('upstreamUrl must be defined');
-    await expect(() => new JwtDecodeResponseHandler(jwtFields, url, null)).toThrow('verifyJwk must be defined');
-    await expect(() => new JwtDecodeResponseHandler(jwtFields, url, undefined)).toThrow('verifyJwk must be defined');
+    expect(() => new JwtDecodeResponseHandler(null, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtDecodeResponseHandler(undefined, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtDecodeResponseHandler(jwtFields, null, false)).toThrow('upstreamUrl must be defined');
+    expect(() => new JwtDecodeResponseHandler(jwtFields, undefined, false)).toThrow('upstreamUrl must be defined');
+    expect(() => new JwtDecodeResponseHandler(jwtFields, url, null)).toThrow('verifyJwk must be defined');
+    expect(() => new JwtDecodeResponseHandler(jwtFields, url, undefined)).toThrow('verifyJwk must be defined');
 
   });
 
   it('should be error when passed an empty list of jwtFields', async () => {
 
     jwtFields = [];
-    await expect(() => new JwtDecodeResponseHandler(jwtFields, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
+    expect(() => new JwtDecodeResponseHandler(jwtFields, url, false)).toThrow('jwtFields must be defined and must contain at least 1 field');
 
   });
 
@@ -113,11 +113,10 @@ describe('JwtDecodeResponseHandler', () => {
 
     });
 
-    it('should return the response unedited if the status is not 200', async () => {
+    it('should pass the upstream error in an error response when needed and set status to 400', async () => {
 
-      response.status =  400;
-
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(response);
+      await expect(handler.handle({ ...response, body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 })
+        .toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
 
     });
 

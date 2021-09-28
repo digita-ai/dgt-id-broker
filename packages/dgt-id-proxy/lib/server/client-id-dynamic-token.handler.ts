@@ -1,6 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map, mapTo } from 'rxjs/operators';
+import { checkError, createErrorResponse } from '../public-api';
 import { RegistrationStore } from '../util/process-client-registration-data';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 
@@ -92,15 +93,24 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
       switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
       tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
-      switchMap((response) => {
+      switchMap((response) => zip(of(response), of(checkError(response)))),
+      switchMap(([ response, isError ]) => {
 
-        if (!response.body.access_token) { return throwError(new Error('response body did not contain an access_token')); }
+        if (isError) {
 
-        if (!response.body.access_token.payload) { return throwError(new Error('Access token in response body did not contain a decoded payload')); }
+          return of(createErrorResponse(isError.error_description, isError.error, response.headers));
 
-        response.body.access_token.payload.client_id = client_id;
+        } else {
 
-        return of(response);
+          if (!response.body.access_token) { return throwError(new Error('response body did not contain an access_token')); }
+
+          if (!response.body.access_token.payload) { return throwError(new Error('Access token in response body did not contain a decoded payload')); }
+
+          response.body.access_token.payload.client_id = client_id;
+
+          return of(response);
+
+        }
 
       }),
       switchMap((response) => {
