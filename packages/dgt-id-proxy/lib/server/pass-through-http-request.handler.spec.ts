@@ -139,6 +139,15 @@ describe('PassThroughHttpRequestHandler', () => {
 
     });
 
+    it('should call write on the request with a stringified JSON string when the request includes a JSON object body', async () => {
+
+      context.request.body = { mockKey: 'mockValue' };
+      await handler.handle(context).toPromise();
+      expect(httpRequest.write).toHaveBeenCalledTimes(1);
+      expect(httpRequest.write).toHaveBeenCalledWith(JSON.stringify(context.request.body));
+
+    });
+
     it('should replace the upstream url with the proxyUrl in the location header', async () => {
 
       resp.headers = {

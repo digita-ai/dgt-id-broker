@@ -169,6 +169,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     // Make sure headers are lowercase for consistency
     headers = this.cleanHeaders(headers);
     headers.host = this.host + ':' + this.port;
+
     const outgoingHttpHeaders: OutgoingHttpHeaders = headers;
 
     const requestOpts = {
@@ -182,7 +183,16 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     requestOpts.headers['accept-encoding'] = 'gzip, br, deflate';
 
-    return from(this.resolveResponse(requestOpts, body));
+    // This should become more robust. See issue https://github.com/digita-ai/dgt-id-broker/issues/230
+    // should be able to transform different kinds of content-type
+    if (body && typeof body !== 'string' && !(body instanceof Buffer)) {
+
+      const stringifiedBody = JSON.stringify(body);
+      headers['content-length'] = Buffer.byteLength(stringifiedBody).toString();
+
+      return from(this.resolveResponse(requestOpts, stringifiedBody));
+
+    } else return from(this.resolveResponse(requestOpts, body));
 
   }
 
@@ -192,11 +202,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     const req = this.scheme === 'http:' ? httpRequest(requestOpts, responseCallback) : httpsRequest(requestOpts, responseCallback);
 
-    if (body) {
-
-      req.write(body);
-
-    }
+    if (body) req.write(body);
 
     req.on('error', (err) => reject(new Error('Error resolving the response in the PassThroughHandler: ' + err.message)));
 
@@ -220,6 +226,9 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
       // Make sure headers are lowercase for consistency
       res.headers = this.cleanHeaders(res.headers);
+
+      // Temporary fix for https://github.com/digita-ai/handlersjs/issues/112
+      delete res.headers['transfer-encoding'];
 
       try {
 
