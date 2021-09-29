@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.6.7](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.6...v0.6.7) (2021-09-29)
+
+
+### **Bug Fixes**
+
+* save state + redirecturi if client isnt a url ([#233](https://github.com/digita-ai/dgt-id-broker/issues/233)) ([c770bba](https://github.com/digita-ai/dgt-id-broker/commit/c770bba89145c7d4a70835057f856c350c8de1e5))
+
+
+
 ### [0.6.6](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.5...v0.6.6) (2021-09-29)
 
 
