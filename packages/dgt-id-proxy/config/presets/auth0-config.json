@@ -89,6 +89,9 @@
                     },
                     {
                       "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint"
                     }
                   ]
                 }
@@ -408,6 +411,19 @@
         }
       },
       "path": "/jwks"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:PostOperation"
+        }
+      ],
+      "handler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "path": "/oidc/register"
     }
   ]
 }
