@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.6.6](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.5...v0.6.6) (2021-09-29)
+
+
+### **Features**
+
+* returning-upstream-error-responses ([#226](https://github.com/digita-ai/dgt-id-broker/issues/226)) ([1435256](https://github.com/digita-ai/dgt-id-broker/commit/1435256c77b6ca8cad53a2405e05633e6006f100))
+
+
+### **Bug Fixes**
+
+* stringify request body ([#231](https://github.com/digita-ai/dgt-id-broker/issues/231)) ([72b9a48](https://github.com/digita-ai/dgt-id-broker/commit/72b9a48c022c329a59f4ea7d9aab7a125d3eac26))
+
+
+
 ### [0.6.5](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.4...v0.6.5) (2021-09-27)
 
 
