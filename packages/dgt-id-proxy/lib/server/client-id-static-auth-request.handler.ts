@@ -86,6 +86,10 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     }
 
+    if (!state) { return throwError(new Error('Request must contain a state. Add state handlers to the proxy.')); }
+
+    this.keyValueStore.set(state, new URL(redirect_uri));
+
     try {
 
       new URL(client_id);
@@ -95,10 +99,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
       return of(context);
 
     }
-
-    if (!state) { return throwError(new Error('Request must contain a state. Add state handlers to the proxy.')); }
-
-    this.keyValueStore.set(state, new URL(redirect_uri));
 
     return of(client_id).pipe(
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : retrieveAndValidateClientRegistrationData(clientId, context.request.url.searchParams)),

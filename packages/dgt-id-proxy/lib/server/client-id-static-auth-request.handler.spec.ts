@@ -142,6 +142,15 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     });
 
+    it('should add state to the store as key with clients redirect uri as value even if client_id is not a url to a webid document', async () => {
+
+      url.searchParams.set('client_id', 'notAUrlToAWebIdDocument');
+      await expect(store.get('1234')).resolves.toBeUndefined();
+      await handler.handle({ ...context, request: { ...context.request, url } }).toPromise();
+      await expect(store.get('1234')).resolves.toEqual(new URL(redirect_uri));
+
+    });
+
     it('should error when no redirect_uri was provided', async () => {
 
       context.request.url.searchParams.set('redirect_uri', '');
