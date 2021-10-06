@@ -1,4 +1,6 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { WebIdFactory } from '../public-api';
+import { SingleClaimWebIdFactory } from '../util/single-claim-webid-factory';
 import { WebIDResponseHandler } from './webid-response.handler';
 
 describe('WebIDResponseHandler', () => {
@@ -10,7 +12,8 @@ describe('WebIDResponseHandler', () => {
   const webIdWithSubClaim = 'http://solid.community.com/123456789/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
   const claim = 'username';
-  const webIDResponseHandler = new WebIDResponseHandler(webIdPattern, claim);
+  const singleClaimWebIdFactory: WebIdFactory = new SingleClaimWebIdFactory(webIdPattern, claim);
+  const webIDResponseHandler = new WebIDResponseHandler(singleClaimWebIdFactory);
 
   beforeEach(() => {
 
@@ -46,23 +49,17 @@ describe('WebIDResponseHandler', () => {
 
   it('should error when no webIDPattern is provided', () => {
 
-    expect(() => new WebIDResponseHandler(null, claim)).toThrow('A WebID pattern must be provided');
-    expect(() => new WebIDResponseHandler(undefined, claim)).toThrow('A WebID pattern must be provided');
-
-  });
-
-  it('should error when no claim is provided', () => {
-
-    expect(() => new WebIDResponseHandler(webIdPattern, null)).toThrow('A claim id must be provided');
+    expect(() => new WebIDResponseHandler(null)).toThrow('A webIdFactory must be provided');
+    expect(() => new WebIDResponseHandler(undefined)).toThrow('A webIdFactory must be provided');
 
   });
 
   describe('handle', () => {
 
-    it('should set the claim as sub if no clain was provided', async () => {
+    it('should set the claim as sub if no claim was provided', async () => {
 
       delete response.body.id_token.payload.webid;
-      const handler = new WebIDResponseHandler(webIdPattern);
+      const handler = new WebIDResponseHandler(new SingleClaimWebIdFactory(webIdPattern));
       const responseGotten = await handler.handle(response).toPromise();
       expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithSubClaim);
 
