@@ -22,3 +22,5 @@ export * from './server/auth-state-response.handler';
 export * from './server/client-compression.handler';
 export * from './util/error-response-factory';
 export * from './util/code-challenge-method';
+export * from './util/webid-factory';
+export * from './util/single-claim-webid-factory';
