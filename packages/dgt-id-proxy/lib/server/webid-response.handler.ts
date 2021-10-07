@@ -14,7 +14,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   /**
    * Creates a {WebIDResponseHandler}.
    *
-   * @param {WebIdFactory} webIDFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param {WebIDFactory} webIDFactory - a WebIDFactory implementation that receives a WebIdPattern and Claim parameters
    */
   constructor(private webIDFactory: WebIDFactory) {
 
