@@ -1,15 +1,15 @@
 import { Observable, of, throwError } from 'rxjs';
 import slugify from 'slugify';
-import { WebIdFactory } from './webid-factory';
+import { WebIDFactory } from './webid-factory';
 
 /**
- * A {SingleClaimWebIdFactory} class that implements the WebIdFactory interface and creates a minted webid
+ * A {SingleClaimWebIDFactory} class that implements the WebIdFactory interface and creates a minted webid
  * using the webid pattern en custom claim provided
  */
-export class SingleClaimWebIdFactory implements WebIdFactory {
+export class SingleClaimWebIDFactory implements WebIDFactory {
 
   /**
-   * Creates a {SingleClaimWebIdFactory}.
+   * Creates a {SingleClaimWebIDFactory}.
    *
    * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the custom claim in the id token.
@@ -19,8 +19,6 @@ export class SingleClaimWebIdFactory implements WebIdFactory {
   constructor(public webIdPattern: string, public claim: string = 'sub') {
 
     if (!webIdPattern) { throw new Error('A WebID pattern must be provided'); }
-
-    if (!claim) { throw new Error('A claim id must be provided'); }
 
   }
 
@@ -33,15 +31,21 @@ export class SingleClaimWebIdFactory implements WebIdFactory {
    * We also remove the character '|', and the character ':'.
    */
 
-  handle(input: { [x: string]: string }): Observable<string> {
+  handle(payload: { [x: string]: string }): Observable<string> {
 
-    if (!input[this.claim]){
+    if (!payload){
+
+      return throwError(new Error('No payload was provided'));
+
+    }
+
+    if (!payload[this.claim]){
 
       return throwError(new Error('The custom claim provided was not found in the id token payload'));
 
     }
 
-    const custom_claim = input[this.claim].replace(/[|:]/g, '');
+    const custom_claim = payload[this.claim].replace(/[|:]/g, '');
     const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
 
     return of(minted_webid);
@@ -49,22 +53,13 @@ export class SingleClaimWebIdFactory implements WebIdFactory {
   }
 
   /**
-   * Returns true if the input is defined. Otherwise it returns false.
+   * Returns true if the payload is defined. Otherwise it returns false.
    *
-   * @param {{ [x: string]: string })} input
+   * @param {{ [x: string]: string })} payload
    */
-  canHandle(input: { [x: string]: string }): Observable<boolean> {
+  canHandle(payload: { [x: string]: string }): Observable<boolean> {
 
-    return input ? of(true) : of(false);
-
-  }
-
-  /**
-   * Returns the custom claim provided in the constructor parameters
-   */
-  getClaim(): string {
-
-    return this.claim;
+    return payload ? of(true) : of(false);
 
   }
 

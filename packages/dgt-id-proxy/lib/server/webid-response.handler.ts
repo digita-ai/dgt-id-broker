@@ -3,7 +3,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
-import { WebIdFactory } from '../util/webid-factory';
+import { WebIDFactory } from '../util/webid-factory';
 
 /**
  * A {HttpHandler} that swaps the webid claim with the minted webid if the id token has no webid or
@@ -14,13 +14,13 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   /**
    * Creates a {WebIDResponseHandler}.
    *
-   * @param {WebIdFactory} webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param {WebIdFactory} webIDFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
    */
-  constructor(private webIdFactory: WebIdFactory) {
+  constructor(private webIDFactory: WebIDFactory) {
 
     super();
 
-    if (!webIdFactory) { throw new Error('A webIdFactory must be provided'); }
+    if (!webIDFactory) { throw new Error('A webIdFactory must be provided'); }
 
   }
 
@@ -57,19 +57,13 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     const access_token_payload = response.body.access_token.payload;
     const id_token_payload = response.body.id_token.payload;
 
-    if (!id_token_payload[this.webIdFactory.getClaim()]){
-
-      return throwError(new Error('The custom claim provided was not found in the id token payload'));
-
-    }
-
     if (id_token_payload.webid) {
 
       access_token_payload.webid = id_token_payload.webid;
 
     } else {
 
-      return this.webIdFactory.handle(id_token_payload).pipe(
+      return this.webIDFactory.handle(id_token_payload).pipe(
         switchMap((minted_webid) => {
 
           access_token_payload.webid = minted_webid;
