@@ -1,5 +1,4 @@
 export * from './models/resource.model';
-export * from './models/store.model';
 export * from './solid-sdk.service';
 export * from './solid.service';
 export * from './models/holder.model';
