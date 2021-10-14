@@ -77,8 +77,8 @@
       "global": {
         "branches": 1.96,
         "functions": 12.2,
-        "lines": 9.57,
-        "statements": 9.28
+        "lines": 9.09,
+        "statements": 8.81
       }
     },
     "moduleNameMapper": {
