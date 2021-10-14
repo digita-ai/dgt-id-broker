@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.7...v0.7.0) (2021-10-14)
+
+
+### **Documentation**
+
+* add license and readme ([#238](https://github.com/digita-ai/dgt-id-broker/issues/238)) ([5bcc7b9](https://github.com/digita-ai/dgt-id-broker/commit/5bcc7b90901b7720a4cadb95d1d2e0128216af03))
+
+
+### **Features**
+
+* port solid (sdk) service from dgt-shared ([#244](https://github.com/digita-ai/dgt-id-broker/issues/244)) ([dd20110](https://github.com/digita-ai/dgt-id-broker/commit/dd20110fe1ba387d15e9e9fe496fdabf7ebe893a))
+
+
+
 ### [0.6.7](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.6...v0.6.7) (2021-09-29)
 
 
