@@ -36,4 +36,5 @@ export {
   setThing,
   Thing,
   ThingPersisted,
+  SolidDataset,
 } from '@inrupt/solid-client';
