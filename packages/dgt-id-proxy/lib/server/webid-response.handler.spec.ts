@@ -82,6 +82,13 @@ describe('WebIDResponseHandler', () => {
 
     });
 
+    it('should pass the upstream error in an error response when needed and set status to 400', async () => {
+
+      await expect(webIDResponseHandler.handle({ ...response, body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 })
+        .toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
+
+    });
+
     it('should error when response.body has no access_token', async () => {
 
       delete response.body.access_token;

@@ -1,0 +1,102 @@
+{
+  "name": "@digita-ai/inrupt-solid-service",
+  "version": "0.7.1",
+  "description": "Collection of client-side utilities for authentication with Solid services",
+  "author": "Wouter Termont <wouter.termont@digita.ai>",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/dgt-id-kit.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/dgt-id-kit.es.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "demo": "vite",
+    "build": "rimraf ./dist && vite build && tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "lint:staged": "lint-staged",
+    "test": "jest --passWithNoTests",
+    "test:ci": "jest --silent --runInBand --passWithNoTests",
+    "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
+  },
+  "dependencies": {
+    "@digita-ai/inrupt-solid-client": "0.7.1",
+    "crypto-js": "^4.1.1",
+    "jest-environment-jsdom": "^27.2.0",
+    "jose": "3.14.3",
+    "n3": "^1.11.0",
+    "rdf-js": "^4.0.2",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@digita-ai/handlersjs-core": "0.3.4",
+    "@digita-ai/typescript-config": "^0.3.3",
+    "@types/crypto-js": "^4.0.2",
+    "@types/jest": "^26.0.23",
+    "@types/n3": "^1.10.2",
+    "@types/node": "^14.14.44",
+    "@types/node-fetch": "^2.5.11",
+    "@types/uuid": "^8.3.0",
+    "eslint": "^7.16.0",
+    "jest": "^26.6.3",
+    "jest-coverage-thresholds-bumper": "0.0.4",
+    "jest-fetch-mock": "^3.0.3",
+    "lint-staged": "^10.5.4",
+    "rimraf": "^3.0.2",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4",
+    "vite": "2.2.3"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digita-ai/dgt-id-broker.git",
+    "directory": "packages/dgt-id-kit"
+  },
+  "bugs": {
+    "url": "https://github.com/digita-ai/dgt-id-broker/issues"
+  },
+  "eslintConfig": {
+    "ignorePatterns": [
+      "jest.env.js"
+    ]
+  },
+  "jest": {
+    "displayName": "id-kit",
+    "preset": "@digita-ai/jest-config",
+    "testEnvironment": "<rootDir>/jest.env.js",
+    "coverageThreshold": {
+      "global": {
+        "branches": 3.85,
+        "functions": 21.74,
+        "lines": 18.68,
+        "statements": 17.89
+      }
+    },
+    "moduleNameMapper": {
+      "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
+    },
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/coverage/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/public-api.ts",
+      "<rootDir>/lib/main.ts",
+      "<rootDir>/lib/index.ts",
+      "<rootDir>/lib-old/",
+      "<rootDir>/test/",
+      "<rootDir>/lib/models/http-method.model.ts",
+      "<rootDir>/lib/models/local-storage-store.ts",
+      "<rootDir>/jest.env.js"
+    ]
+  }
+}

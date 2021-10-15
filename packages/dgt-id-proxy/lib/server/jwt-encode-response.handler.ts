@@ -1,11 +1,11 @@
 
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+import * as path from 'path';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, zip, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
-import { JWK, JWTPayload } from 'jose/webcrypto/types';
+import { JWK, JWTPayload } from 'jose/types';
 import { SignJWT } from 'jose/jwt/sign';
 import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';
@@ -101,7 +101,9 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
   }
 
-  private getSigningKit = () => from(readFile(join(process.cwd(), this.pathToJwks))).pipe(
+  private getSigningKit = () => from(readFile(
+    path.isAbsolute(this.pathToJwks) ? this.pathToJwks : path.join(process.cwd(), this.pathToJwks)
+  )).pipe(
     switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
     switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
   );

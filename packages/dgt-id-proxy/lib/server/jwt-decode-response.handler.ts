@@ -5,6 +5,7 @@ import { of, throwError, Observable, zip } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { decode } from 'jose/util/base64url';
 import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
+import { checkError, createErrorResponse } from '../util/error-response-factory';
 
 /**
  * A {Handler} decoding JWTs for the specified fields of a {HttpHandlerResponse} body. Optionally verifies
@@ -43,7 +44,15 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     if (!response) { return throwError(new Error('response cannot be null or undefined')); }
 
-    if (response.status !== 200) { return of(response); }
+    if (checkError(response)) {
+
+      return of(createErrorResponse(
+        checkError(response).error_description,
+        checkError(response).error,
+        response.headers
+      ));
+
+    }
 
     const parsedBody = JSON.parse(response.body);
 

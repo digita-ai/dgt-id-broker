@@ -18,9 +18,9 @@ COPY . /usr/src/app
 
 RUN rm -f /usr/src/app/.npmrc
 RUN npm run build
-RUN chmod +x ./dist/main.js
+RUN chmod +x ./bin/server.js
 
 # Expose ports.
 EXPOSE 3003
-ENTRYPOINT [ "./dist/main.js" ]
+ENTRYPOINT [ "./bin/server.js" ]
 CMD [ "-u", "http://0.0.0.0:3003" ]

@@ -3,6 +3,107 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.7.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.0...v0.7.1) (2021-10-14)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+## [0.7.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.7...v0.7.0) (2021-10-14)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.6.7](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.6...v0.6.7) (2021-09-29)
+
+
+### **Bug Fixes**
+
+* save state + redirecturi if client isnt a url ([#233](https://github.com/digita-ai/dgt-id-broker/issues/233)) ([c770bba](https://github.com/digita-ai/dgt-id-broker/commit/c770bba89145c7d4a70835057f856c350c8de1e5))
+
+
+
+### [0.6.6](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.5...v0.6.6) (2021-09-29)
+
+
+### **Features**
+
+* returning-upstream-error-responses ([#226](https://github.com/digita-ai/dgt-id-broker/issues/226)) ([1435256](https://github.com/digita-ai/dgt-id-broker/commit/1435256c77b6ca8cad53a2405e05633e6006f100))
+
+
+### **Bug Fixes**
+
+* stringify request body ([#231](https://github.com/digita-ai/dgt-id-broker/issues/231)) ([72b9a48](https://github.com/digita-ai/dgt-id-broker/commit/72b9a48c022c329a59f4ea7d9aab7a125d3eac26))
+
+
+
+### [0.6.5](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.4...v0.6.5) (2021-09-27)
+
+
+### **Bug Fixes**
+
+* use server.js to start server in Dockerfile ([e95a069](https://github.com/digita-ai/dgt-id-broker/commit/e95a0695082a6ec85b60432b1627af78f1d08df2))
+
+
+
+### [0.6.4](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.3...v0.6.4) (2021-09-27)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.6.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.1...v0.6.3) (2021-09-20)
+
+
+### **Bug Fixes**
+
+* add state to function call in authRequest ([#221](https://github.com/digita-ai/dgt-id-broker/issues/221)) ([c75fc35](https://github.com/digita-ai/dgt-id-broker/commit/c75fc35221ade38dede25e9ad00855d58163eb59))
+
+
+
+### [0.6.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.1...v0.6.2) (2021-09-16)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.6.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.6.0...v0.6.1) (2021-09-16)
+
+
+### **Bug Fixes**
+
+* refresh tokens support in proxy ([#218](https://github.com/digita-ai/dgt-id-broker/issues/218)) ([4440152](https://github.com/digita-ai/dgt-id-broker/commit/44401528fc71fac52e222341ac6cb33d4f529800))
+
+
+### **Features**
+
+* id-kit demo ([#212](https://github.com/digita-ai/dgt-id-broker/issues/212)) ([b54a287](https://github.com/digita-ai/dgt-id-broker/commit/b54a287ce3bdaac8b1f7130ed3b68bb9e1f9e977))
+
+
+
+## [0.6.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.5.0...v0.6.0) (2021-09-09)
+
+
+### **Bug Fixes**
+
+* calculate ath claim correctly ([#202](https://github.com/digita-ai/dgt-id-broker/issues/202)) ([965cd6d](https://github.com/digita-ai/dgt-id-broker/commit/965cd6d9f9f633040a42c88740464fdf3952edb4))
+
+
+### **Features**
+
+* major refactor of inner workings and usage of store ([#211](https://github.com/digita-ai/dgt-id-broker/issues/211)) ([ca5ccc7](https://github.com/digita-ai/dgt-id-broker/commit/ca5ccc7997024e474682198010abd1e249873f16))
+
+
+
 ## [0.5.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.4.1...v0.5.0) (2021-09-02)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-proxy

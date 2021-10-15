@@ -114,3 +114,6 @@ coverage-summary.json
 
 # pod data
 rundata
+
+# mac file
+.DS_store

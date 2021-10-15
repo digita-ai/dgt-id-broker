@@ -53,6 +53,13 @@ export class PkceTokenHandler extends HttpHandler {
     const request = context.request;
 
     const params  = new URLSearchParams(request.body);
+
+    if (params.get('grant_type') === 'refresh_token') {
+
+      return this.httpHandler.handle(context);
+
+    }
+
     const encodedCode_verifier = params.get('code_verifier');
 
     if (!encodedCode_verifier) { return of(createErrorResponse('Code verifier is required.', 'invalid_request')); }

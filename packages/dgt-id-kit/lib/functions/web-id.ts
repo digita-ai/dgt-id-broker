@@ -1,6 +1,6 @@
 import { Quad } from 'rdf-js';
 import { Issuer } from '../models/issuer.model';
-import { getTurtleFileAsQuads } from './data';
+import { getTurtleFileAsQuads } from '../util/data';
 import { isValidIssuer } from './issuer';
 
 /**
@@ -11,7 +11,7 @@ import { isValidIssuer } from './issuer';
  */
 export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
 
-  if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
+  if (!webid) throw new Error('Parameter "webid" should be defined!');
 
   let quads: Quad[];
   let profileDocumentQuadPresent: boolean;
@@ -31,7 +31,7 @@ export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
 
   }
 
-  if (!profileDocumentQuadPresent) { throw new Error(`No valid profile found for WebID: "${webid}"`); }
+  if (!profileDocumentQuadPresent) throw new Error(`No valid profile found for WebID: "${webid}"`);
 
   return quads;
 
@@ -45,7 +45,7 @@ export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
  */
 export const getIssuersFromQuads = async (quads: Quad[]): Promise<Issuer[]> => {
 
-  if (!quads) { throw new Error('Parameter "quads" should be defined!'); }
+  if (!quads) throw new Error('Parameter "quads" should be defined!');
 
   const issuerQuads = quads.filter((quad: Quad) =>
     quad.predicate?.value === 'http://www.w3.org/ns/solid/terms#oidcIssuer');
@@ -74,7 +74,7 @@ export const getIssuersFromQuads = async (quads: Quad[]): Promise<Issuer[]> => {
  */
 export const getFirstIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | undefined> => {
 
-  if (!quads) { throw new Error('Parameter "quads" should be defined!'); }
+  if (!quads) throw new Error('Parameter "quads" should be defined!');
 
   const allIssuers = await getIssuersFromQuads(quads);
 
@@ -90,7 +90,7 @@ export const getFirstIssuerFromQuads = async (quads: Quad[]): Promise<Issuer | u
  */
 export const getIssuersFromWebId = async (webid: string): Promise<Issuer[]> => {
 
-  if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
+  if (!webid) throw new Error('Parameter "webid" should be defined!');
 
   try {
 
@@ -119,7 +119,7 @@ export const getIssuersFromWebId = async (webid: string): Promise<Issuer[]> => {
  */
 export const getFirstIssuerFromWebId = async (webid: string): Promise<Issuer | undefined> => {
 
-  if (!webid) { throw new Error('Parameter "webid" should be defined!'); }
+  if (!webid) throw new Error('Parameter "webid" should be defined!');
 
   try {
 

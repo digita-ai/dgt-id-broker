@@ -1,24 +1,19 @@
 import CryptoJS from 'crypto-js';
-import { store } from './storage';
 
 /**
- * generate a PKCE code verifier with a desired length and save it to the store
+ * generate a PKCE code verifier with a desired length
  *
  * @param length the desired length of the code verifier
- * @returns the generate code verifier
+ * @returns the generated code verifier
  */
-export const generateCodeVerifier = async (length: number): Promise<string> => {
+export const generateCodeVerifier = (length: number): string => {
 
-  if (!length) { throw new Error('Parameter "length" should be set'); }
-
-  if (length < 43) { throw new Error('A PKCE code_verifier has to be at least 43 characters long'); }
-
-  if (length > 128) { throw new Error('A PKCE code_verifier can not contain more than 128 characters'); }
+  if (!length) throw new Error('Parameter "length" should be set');
+  if (length < 43) throw new Error('A PKCE code_verifier has to be at least 43 characters long');
+  if (length > 128) throw new Error('A PKCE code_verifier can not contain more than 128 characters');
 
   const possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
   const codeVerifier = [ ...Array(length).keys() ].map(() => possibleChars.charAt(Math.floor(Math.random() * possibleChars.length))).join('');
-
-  await store.set('codeVerifier', codeVerifier);
 
   return codeVerifier;
 
@@ -32,7 +27,7 @@ export const generateCodeVerifier = async (length: number): Promise<string> => {
  */
 export const base64UrlEncode = (string: string): string => {
 
-  if (!string) { throw new Error('Parameter "string" should be set'); }
+  if (!string) throw new Error('Parameter "string" should be set');
 
   const hash = CryptoJS.SHA256(string);
 
@@ -48,11 +43,9 @@ export const base64UrlEncode = (string: string): string => {
  */
 export const generateCodeChallenge = (codeVerifier: string): string => {
 
-  if (!codeVerifier) { throw new Error('Parameter "codeVerifier" should be set'); }
-
-  if (codeVerifier.length < 43) { throw new Error('A PKCE code_verifier has to be at least 43 characters long'); }
-
-  if (codeVerifier.length > 128) { throw new Error('A PKCE code_verifier can not contain more than 128 characters'); }
+  if (!codeVerifier) throw new Error('Parameter "codeVerifier" should be set');
+  if (codeVerifier.length < 43) throw new Error('A PKCE code_verifier has to be at least 43 characters long');
+  if (codeVerifier.length > 128) throw new Error('A PKCE code_verifier can not contain more than 128 characters');
 
   return base64UrlEncode(codeVerifier);
 

@@ -37,9 +37,9 @@ The `PkceAuthRequestHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:PkceAuthRequestHandler",
     "@type": "PkceAuthRequestHandler",
-    "PkceAuthRequestHandler:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
             },
@@ -49,7 +49,7 @@ The `PkceAuthRequestHandler` can be configured as follows:
         ]
       }
     },
-    "PkceAuthRequestHandler:_store": {
+    "store": {
         "@id": "urn:dgt-id-proxy:default:PkceStore"
     }
 }
@@ -69,7 +69,7 @@ The `PkceCodeResponseHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler",
     "@type": "PkceCodeResponseHandler",
-    "PkceCodeResponseHandler:_store": {
+    "store": {
         "@id": "urn:dgt-id-proxy:default:PkceStore"
     }
 }
@@ -90,10 +90,10 @@ The `PkceTokenHandler` can be configured as follows:
 {
     "@id": "urn:dgt-id-proxy:default:PkceTokenHandler",
     "@type": "PkceTokenHandler",
-    "PkceTokenHandler:_httpHandler": {
+    "httpHandler": {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
     },
-    "PkceTokenHandler:_store": {
+    "store": {
         "@id": "urn:dgt-id-proxy:default:PkceStore"
     }
 }
@@ -114,16 +114,16 @@ We will need to configure three seperate endpoints. The authorization endpoint, 
 {
     "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "GET",
-            "HttpHandlerOperation:_publish": false
+            "method": "GET",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
             },
@@ -135,21 +135,21 @@ We will need to configure three seperate endpoints. The authorization endpoint, 
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/auth"
+    "path": "/auth"
 },
 {
     "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
         "@type": "HttpHandlerOperation",
-        "HttpHandlerOperation:_method": "GET",
-        "HttpHandlerOperation:_publish": false
+        "method": "GET",
+        "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@type": "PipeThroughHandler",
-        "PipeThroughHandler:_handlers": [
+        "handlers": [
             {
                 "@id": "urn:dgt-id-proxy:default:PkceCodeResponseHandler"
             },
@@ -158,27 +158,27 @@ We will need to configure three seperate endpoints. The authorization endpoint, 
             }
         ]
     },
-    "HttpHandlerRoute:_path": "/auth/:dynamic"
+    "path": "/auth/:dynamic"
 },
 {
     "@id": "urn:dgt-id-proxy:default:TokenEndpoint",
     "@type": "HttpHandlerRoute",
-    "HttpHandlerRoute:_operations": [
+    "operations": [
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "POST",
-            "HttpHandlerOperation:_publish": false
+            "method": "POST",
+            "publish": false
         },
         {
             "@type": "HttpHandlerOperation",
-            "HttpHandlerOperation:_method": "OPTIONS",
-            "HttpHandlerOperation:_publish": false
+            "method": "OPTIONS",
+            "publish": false
         }
     ],
-    "HttpHandlerRoute:_handler": {
+    "handler": {
         "@id": "urn:dgt-id-proxy:default:PkceTokenHandler"
     },
-    "HttpHandlerRoute:_path": "/token"
+    "path": "/token"
 }
 ----
 
