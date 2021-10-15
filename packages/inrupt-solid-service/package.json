@@ -1,14 +1,14 @@
 {
   "name": "@digita-ai/inrupt-solid-service",
   "version": "0.7.1",
-  "description": "Collection of client-side utilities for authentication with Solid services",
+  "description": "Collection of client-side utilities for interaction with Solid services",
   "author": "Wouter Termont <wouter.termont@digita.ai>",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "module": "./dist/dgt-id-kit.es.js",
+  "module": "./dist/inrupt-solid-service.es.js",
   "exports": {
     ".": {
-      "import": "./dist/dgt-id-kit.es.js",
+      "import": "./dist/inrupt-solid-service.es.js",
       "require": "./dist/index.js"
     }
   },
@@ -59,7 +59,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/digita-ai/dgt-id-broker.git",
-    "directory": "packages/dgt-id-kit"
+    "directory": "packages/inrupt-solid-service"
   },
   "bugs": {
     "url": "https://github.com/digita-ai/dgt-id-broker/issues"
@@ -70,7 +70,7 @@
     ]
   },
   "jest": {
-    "displayName": "id-kit",
+    "displayName": "inrupt-solid-service",
     "preset": "@digita-ai/jest-config",
     "testEnvironment": "<rootDir>/jest.env.js",
     "coverageThreshold": {
