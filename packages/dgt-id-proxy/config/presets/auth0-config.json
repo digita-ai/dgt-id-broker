@@ -104,7 +104,8 @@
     {
       "@id": "urn:dgt-id-proxy:default:SingleClaimWebIDFactory",
       "@type": "SingleClaimWebIDFactory",
-      "SingleClaimWebIDFactory:_webIdPattern": "http://localhost:3002/:customclaim/profile/card#me"
+      "webIdPattern": "http://localhost:3002/:customclaim/profile/card#me",
+      "claim": "http://digita.ai/nickname"
     },
     {
       "@id": "urn:dgt-id-proxy:default:StaticAuthStore",
@@ -371,8 +372,7 @@
             "@type": "WebIDResponseHandler",
             "webIDFactory": {
               "@id": "urn:dgt-id-proxy:default:SingleClaimWebIDFactory"
-            },
-            "claim": "http://digita.ai/nickname"
+            }
           },
           {
             "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
