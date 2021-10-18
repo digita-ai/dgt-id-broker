@@ -20,7 +20,7 @@ export default ({ command, mode }) => {
           target: 'es2018',
           lib: {
               entry: path.resolve(__dirname, 'lib/index.ts'),
-              name: '@digita-ai/workid-components'
+              name: '@digita-ai/dgt-id-kit'
           },
           outDir: '../dist'
       }
