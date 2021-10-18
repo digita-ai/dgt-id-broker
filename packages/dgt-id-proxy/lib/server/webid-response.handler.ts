@@ -3,7 +3,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
-import { WebIDFactory } from '../util/webid-factory';
+import { WebIDFactory } from '../webid/webid-factory';
 
 /**
  * A {HttpHandler} that swaps the webid claim with the minted webid if the id token has no webid or

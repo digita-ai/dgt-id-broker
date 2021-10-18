@@ -1,18 +1,19 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import {  of } from 'rxjs';
 import { WebIDFactory } from '../public-api';
-import { SingleClaimWebIDFactory } from '../util/single-claim-webid-factory';
 import { WebIDResponseHandler } from './webid-response.handler';
 
 describe('WebIdResponseHandler', () => {
 
   let response: HttpHandlerResponse;
-
-  const webIdPattern = 'http://solid.community.com/:uuid/profile/card#me';
   const webIdWithCustomClaim = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
-  const webIdWithSubClaim = 'http://solid.community.com/123456789/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
-  const claim = 'username';
-  const singleClaimWebIdFactory: WebIDFactory = new SingleClaimWebIDFactory(webIdPattern, claim);
+
+  const singleClaimWebIdFactory: WebIDFactory = {
+    handle: jest.fn().mockReturnValue(of(webIdWithCustomClaim)),
+    canHandle: jest.fn().mockRejectedValue(of(true)),
+  };
+
   const webIdResponseHandler = new WebIDResponseHandler(singleClaimWebIdFactory);
 
   beforeEach(() => {
@@ -56,12 +57,14 @@ describe('WebIdResponseHandler', () => {
 
   describe('handle', () => {
 
-    it('should set the claim as sub if no claim was provided', async () => {
+    it('should call the factory with the given id token payload', async() => {
 
-      delete response.body.id_token.payload.webid;
-      const handler = new WebIDResponseHandler(new SingleClaimWebIDFactory(webIdPattern));
-      const responseGotten = await handler.handle(response).toPromise();
-      expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithSubClaim);
+      response.body.id_token.payload.webid = undefined;
+
+      await webIdResponseHandler.handle(response).toPromise();
+
+      expect(singleClaimWebIdFactory.handle).toHaveBeenCalledTimes(1);
+      expect(singleClaimWebIdFactory.handle).toHaveBeenCalledWith(response.body.id_token.payload);
 
     });
 
