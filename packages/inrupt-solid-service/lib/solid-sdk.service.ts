@@ -4,6 +4,7 @@ import { Profile } from './models/profile.model';
 import { Issuer } from './models/issuer.model';
 import { Source } from './models/source.model';
 import { SolidService } from './solid.service';
+import { Client } from './models/client.model';
 
 /**
  * An implementation of the Solid service which uses Solid Client.
@@ -13,7 +14,11 @@ export class SolidSDKService implements SolidService {
   /**
    * Instantiates a solid sdk service.
    */
-  constructor (private clientName: string) {}
+  constructor (private client: Client) {
+
+    if (client.clientSecret && !client.clientId) throw new Error('clientId must be set if clientSecret is set');
+
+  }
 
   async validateIssuer(issuer: string): Promise<boolean> {
 
@@ -174,7 +179,7 @@ export class SolidSDKService implements SolidService {
   /**
    * Redirects the user to their OIDC provider
    */
-  async login(webId: string): Promise<void> {
+  async login(webId: string, client: Client): Promise<void> {
 
     if (!webId) {
 
@@ -193,7 +198,9 @@ export class SolidSDKService implements SolidService {
     await login({
       oidcIssuer: issuer.uri,
       redirectUrl: window.location.href,
-      clientName: this.clientName,
+      clientName: this.client.clientName,
+      clientId: this.client.clientId,
+      clientSecret: this.client.clientSecret,
     });
 
   }
@@ -212,7 +219,9 @@ export class SolidSDKService implements SolidService {
     await login({
       oidcIssuer: issuer.uri,
       redirectUrl: window.location.href,
-      clientName: this.clientName,
+      clientName: this.client.clientName,
+      clientId: this.client.clientId,
+      clientSecret: this.client.clientSecret,
     });
 
   }

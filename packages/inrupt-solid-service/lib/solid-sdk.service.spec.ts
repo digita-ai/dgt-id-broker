@@ -14,13 +14,19 @@ describe('SolidSDKService', () => {
 
   beforeEach(async () => {
 
-    service = new SolidSDKService('test');
+    service = new SolidSDKService({ clientName: 'test' });
 
   });
 
   it('should be correctly instantiated', () => {
 
     expect(service).toBeTruthy();
+
+  });
+
+  it('should error when clientSecret is set but clientId is not', () => {
+
+    expect(() => new SolidSDKService({ clientName: 'test', clientSecret: 'mockSecret' })).toThrow('clientId must be set if clientSecret is set');
 
   });
 

@@ -2,6 +2,7 @@ import { Session } from './models/session.model';
 import { Profile } from './models/profile.model';
 import { Issuer } from './models/issuer.model';
 import { Source } from './models/source.model';
+import { Client } from './models/client.model';
 
 /**
  * Service for interacting with Solid pods
@@ -49,12 +50,12 @@ export interface SolidService {
   /**
    * Redirects the user to their OIDC provider
    */
-  login(webId: string): Promise<void>;
+  login(webId: string, client: Client): Promise<void>;
 
   /**
    * Redirects the user to their OIDC provider
    */
-  loginWithIssuer(issuer: Issuer): Promise<void>;
+  loginWithIssuer(issuer: Issuer, client: Client): Promise<void>;
 
   /**
    * Deauthenticates the user from their OIDC issuer
