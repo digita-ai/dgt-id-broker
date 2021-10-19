@@ -329,8 +329,8 @@
               "@type": "SolidAudienceHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
-              "@type": "WebIDResponseHandler",
+              "@id": "urn:dgt-id-proxy:default:WebIdResponseHandler",
+              "@type": "WebIdResponseHandler",
               "webIdPattern": "http://localhost:3002/:sub/profile/card#me"
             },
             {

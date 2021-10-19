@@ -1,29 +1,26 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
-import slugify from 'slugify';
+import { switchMap } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
+import { WebIdFactory } from '../webid/webid-factory';
 
 /**
- * A {HttpHandler} that adds the webid claim to the payload of the access token field in the response body.
+ * A {HttpHandler} that swaps the webid claim with the minted webid if the id token has no webid or
+ * sets the webid in the access token as the same one provided in the id token.
  */
-export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {WebIDResponseHandler}.
+   * Creates a {WebIdResponseHandler}.
    *
-   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
-   * that will be replaced by the custom claim in the id token.
-   * @param {string} claim - the name of the custom claim that needs to be retrieved from the id token
-   * and added to the webIdPattern above.
+   * @param {WebIdFactory} webIDFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
    */
-  constructor(private webIdPattern: string, private claim: string = 'sub') {
+  constructor(private webIDFactory: WebIdFactory) {
 
     super();
 
-    if (!webIdPattern) { throw new Error('A WebID pattern must be provided'); }
-
-    if (!claim) { throw new Error('A claim id must be provided'); }
+    if (!webIDFactory) { throw new Error('A webIdFactory must be provided'); }
 
   }
 
@@ -31,13 +28,7 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * Handles the response. Checks if the id token contains the custom claim provided to the constructor.
    * If not it returns an error. It checks if the id tokens payload contains a webid.
    * If the id token contains a webid it sets the web id in the access tokens payload to said webid.
-   * If it does not it uses the custom claim from the id token
-   * to create a webid and add it to the access token payload.
-   *
-   * The custom claim is 'slugified' using the following library: https://www.npmjs.com/package/slugify
-   * Special characters are replaced according to this charmap: https://github.com/simov/slugify/blob/master/config/charmap.json
-   * Special characters that are not in the charmap are removed (this includes '?', '#', '^', '{', '}', '[', ']', etc.).
-   * We also remove the character '|', and the character ':'.
+   * If it does it calls the webid factory to create a minted webid and add it to the access and id token payloads.
    *
    * @param {HttpHandlerResponse} response
    */
@@ -66,22 +57,22 @@ export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
     const access_token_payload = response.body.access_token.payload;
     const id_token_payload = response.body.id_token.payload;
 
-    if (!id_token_payload[this.claim]){
-
-      return throwError(new Error('The custom claim provided was not found in the id token payload'));
-
-    }
-
     if (id_token_payload.webid) {
 
       access_token_payload.webid = id_token_payload.webid;
 
     } else {
 
-      const custom_claim = id_token_payload[this.claim].replace(/[|:]/g, '');
-      const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
-      access_token_payload.webid = minted_webid;
-      id_token_payload.webid = minted_webid;
+      return this.webIDFactory.handle(id_token_payload).pipe(
+        switchMap((minted_webid) => {
+
+          access_token_payload.webid = minted_webid;
+          id_token_payload.webid = minted_webid;
+
+          return of(response);
+
+        }),
+      );
 
     }
 
