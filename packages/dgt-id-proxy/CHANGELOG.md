@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.7.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.2...v0.7.3) (2021-10-19)
+
+
+### **Features**
+
+* single claim webid factory ([#237](https://github.com/digita-ai/dgt-id-broker/issues/237)) ([649e7b4](https://github.com/digita-ai/dgt-id-broker/commit/649e7b4858a905c79a29c439104caa6fa729a667))
+
+
+
 ### [0.7.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.1...v0.7.2) (2021-10-15)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-proxy

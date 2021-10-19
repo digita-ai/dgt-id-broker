@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.7.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.2...v0.7.3) (2021-10-19)
+
+
+### **Bug Fixes**
+
+* webcrypto types import ([d49b208](https://github.com/digita-ai/dgt-id-broker/commit/d49b2087d0f1f790349b951f5c80df20df3931d3))
+
+
+
 ### [0.7.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.1...v0.7.2) (2021-10-15)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-kit
