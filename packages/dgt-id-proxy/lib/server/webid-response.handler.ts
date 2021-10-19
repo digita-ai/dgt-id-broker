@@ -3,20 +3,20 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
-import { WebIDFactory } from '../webid/webid-factory';
+import { WebIdFactory } from '../webid/webid-factory';
 
 /**
  * A {HttpHandler} that swaps the webid claim with the minted webid if the id token has no webid or
  * sets the webid in the access token as the same one provided in the id token.
  */
-export class WebIDResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {WebIDResponseHandler}.
+   * Creates a {WebIdResponseHandler}.
    *
-   * @param {WebIDFactory} webIDFactory - a WebIDFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param {WebIdFactory} webIDFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
    */
-  constructor(private webIDFactory: WebIDFactory) {
+  constructor(private webIDFactory: WebIdFactory) {
 
     super();
 

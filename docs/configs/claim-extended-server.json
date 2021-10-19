@@ -197,8 +197,8 @@
               "@type": "SolidAudienceHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
-              "@type": "WebIDResponseHandler",
+              "@id": "urn:dgt-id-proxy:default:WebIdResponseHandler",
+              "@type": "WebIdResponseHandler",
               "webIdPattern": "http://solid.community.com/:uuid/profile/card#me"
             },
             {

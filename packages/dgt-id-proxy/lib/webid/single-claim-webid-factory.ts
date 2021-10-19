@@ -1,15 +1,15 @@
 import { Observable, of, throwError } from 'rxjs';
 import slugify from 'slugify';
-import { WebIDFactory } from './webid-factory';
+import { WebIdFactory } from './webid-factory';
 
 /**
- * A {SingleClaimWebIDFactory} class that implements the WebIdFactory interface and creates a minted webid
+ * A {SingleClaimWebIdFactory} class that implements the WebIdFactory interface and creates a minted webid
  * using the webid pattern en custom claim provided
  */
-export class SingleClaimWebIDFactory implements WebIDFactory {
+export class SingleClaimWebIdFactory implements WebIdFactory {
 
   /**
-   * Creates a {SingleClaimWebIDFactory}.
+   * Creates a {SingleClaimWebIdFactory}.
    *
    * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the custom claim in the id token.

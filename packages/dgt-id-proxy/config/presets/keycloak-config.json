@@ -100,9 +100,9 @@
         }
       },
       {
-        "@id": "urn:dgt-id-proxy:default:SingleClaimWebIDFactory",
-        "@type": "SingleClaimWebIDFactory",
-        "SingleClaimWebIDFactory:_webIdPattern": "http://localhost:3002/:customclaim/profile/card#me"
+        "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory",
+        "@type": "SingleClaimWebIdFactory",
+        "SingleClaimWebIdFactory:_webIdPattern": "http://localhost:3002/:customclaim/profile/card#me"
       },
       {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore",
@@ -333,10 +333,10 @@
               "@type": "SolidAudienceResponseHandler"
             },
             {
-              "@id": "urn:dgt-id-proxy:default:WebIDResponseHandler",
-              "@type": "WebIDResponseHandler",
+              "@id": "urn:dgt-id-proxy:default:WebIdResponseHandler",
+              "@type": "WebIdResponseHandler",
               "webIDFactory": {
-                "@id": "urn:dgt-id-proxy:default:SingleClaimWebIDFactory"
+                "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory"
               }
             },
             {

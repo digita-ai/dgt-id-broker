@@ -1,7 +1,7 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import {  of } from 'rxjs';
-import { WebIDFactory } from '../public-api';
-import { WebIDResponseHandler } from './webid-response.handler';
+import { WebIdFactory } from '../public-api';
+import { WebIdResponseHandler } from './webid-response.handler';
 
 describe('WebIdResponseHandler', () => {
 
@@ -9,12 +9,12 @@ describe('WebIdResponseHandler', () => {
   const webIdWithCustomClaim = 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me';
   const webid = 'http://example.com/examplename/profile/card#me';
 
-  const singleClaimWebIdFactory: WebIDFactory = {
+  const singleClaimWebIdFactory: WebIdFactory = {
     handle: jest.fn().mockReturnValue(of(webIdWithCustomClaim)),
     canHandle: jest.fn().mockRejectedValue(of(true)),
   };
 
-  const webIdResponseHandler = new WebIDResponseHandler(singleClaimWebIdFactory);
+  const webIdResponseHandler = new WebIdResponseHandler(singleClaimWebIdFactory);
 
   beforeEach(() => {
 
@@ -50,8 +50,8 @@ describe('WebIdResponseHandler', () => {
 
   it('should error when no webIDPattern is provided', () => {
 
-    expect(() => new WebIDResponseHandler(null)).toThrow('A webIdFactory must be provided');
-    expect(() => new WebIDResponseHandler(undefined)).toThrow('A webIdFactory must be provided');
+    expect(() => new WebIdResponseHandler(null)).toThrow('A webIdFactory must be provided');
+    expect(() => new WebIdResponseHandler(undefined)).toThrow('A webIdFactory must be provided');
 
   });
 
