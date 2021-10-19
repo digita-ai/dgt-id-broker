@@ -1,12 +1,13 @@
 import { Observable, of, throwError } from 'rxjs';
 import slugify from 'slugify';
+import { ParsedJSON } from '../util/parsed-json';
 import { WebIdFactory } from './webid-factory';
 
 /**
  * A {SingleClaimWebIdFactory} class that implements the WebIdFactory interface and creates a minted webid
  * using the webid pattern en custom claim provided
  */
-export class SingleClaimWebIdFactory implements WebIdFactory {
+export class SingleClaimWebIdFactory extends WebIdFactory {
 
   /**
    * Creates a {SingleClaimWebIdFactory}.
@@ -18,6 +19,8 @@ export class SingleClaimWebIdFactory implements WebIdFactory {
    */
   constructor(public webIdPattern: string, public claim: string = 'sub') {
 
+    super();
+
     if (!webIdPattern) { throw new Error('A WebID pattern must be provided'); }
 
   }
@@ -26,7 +29,7 @@ export class SingleClaimWebIdFactory implements WebIdFactory {
    * Mints a webid based on the provided payload using the custom claim.
    */
 
-  handle(payload: { [x: string]: string | number }): Observable<string> {
+  handle(payload: ParsedJSON): Observable<string> {
 
     if (!payload){
 
@@ -51,9 +54,9 @@ export class SingleClaimWebIdFactory implements WebIdFactory {
   /**
    * Returns true if the payload is defined. Otherwise it returns false.
    *
-   * @param {{ [x: string]: string | number })} payload
+   * @param {ParsedJSON} payload
    */
-  canHandle(payload: { [x: string]: string }): Observable<boolean> {
+  canHandle(payload: ParsedJSON): Observable<boolean> {
 
     return payload ? of(true) : of(false);
 

@@ -1,7 +1,4 @@
-import { Observable } from 'rxjs';
+import { Handler } from '@digita-ai/handlersjs-core';
+import { ParsedJSON } from '../util/parsed-json';
 
-export interface WebIdFactory {
-  handle(input: { [x: string]: string | number }): Observable<string>;
-  canHandle(input: { [x: string]: string | number }): Observable<boolean>;
-}
-
+export abstract class WebIdFactory extends Handler<ParsedJSON, string> {}
