@@ -12,6 +12,7 @@ describe('WebIdResponseHandler', () => {
   const singleClaimWebIdFactory: WebIdFactory = {
     handle: jest.fn().mockReturnValue(of(webIdWithCustomClaim)),
     canHandle: jest.fn().mockRejectedValue(of(true)),
+    safeHandle: jest.fn().mockReturnValue(of(webIdWithCustomClaim)),
   };
 
   const webIdResponseHandler = new WebIdResponseHandler(singleClaimWebIdFactory);
