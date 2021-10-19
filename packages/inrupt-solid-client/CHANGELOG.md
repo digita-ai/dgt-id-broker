@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.3...v0.8.0) (2021-10-19)
+
+**Note:** Version bump only for package @digita-ai/inrupt-solid-client
+
+
+
+
+
 ### [0.7.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.2...v0.7.3) (2021-10-19)
 
 **Note:** Version bump only for package @digita-ai/inrupt-solid-client
