@@ -179,7 +179,7 @@ export class SolidSDKService implements SolidService {
   /**
    * Redirects the user to their OIDC provider
    */
-  async login(webId: string, client: Client): Promise<void> {
+  async login(webId: string): Promise<void> {
 
     if (!webId) {
 

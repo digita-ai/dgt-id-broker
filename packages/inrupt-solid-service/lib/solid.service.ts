@@ -50,12 +50,12 @@ export interface SolidService {
   /**
    * Redirects the user to their OIDC provider
    */
-  login(webId: string, client: Client): Promise<void>;
+  login(webId: string): Promise<void>;
 
   /**
    * Redirects the user to their OIDC provider
    */
-  loginWithIssuer(issuer: Issuer, client: Client): Promise<void>;
+  loginWithIssuer(issuer: Issuer): Promise<void>;
 
   /**
    * Deauthenticates the user from their OIDC issuer
