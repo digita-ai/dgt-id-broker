@@ -3,7 +3,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
-import { WebIdFactory } from '../webid/webid-factory';
+import { WebIdFactory } from './webid-factory';
 
 /**
  * A {HttpHandler} that swaps the webid claim with the minted webid if the id token has no webid or
@@ -14,13 +14,13 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   /**
    * Creates a {WebIdResponseHandler}.
    *
-   * @param {WebIdFactory} webIDFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param {WebIdFactory} webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
    */
-  constructor(private webIDFactory: WebIdFactory) {
+  constructor(private webIdFactory: WebIdFactory) {
 
     super();
 
-    if (!webIDFactory) { throw new Error('A webIdFactory must be provided'); }
+    if (!webIdFactory) { throw new Error('A webIdFactory must be provided'); }
 
   }
 
@@ -63,7 +63,7 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     } else {
 
-      return this.webIDFactory.handle(id_token_payload).pipe(
+      return this.webIdFactory.handle(id_token_payload).pipe(
         switchMap((minted_webid) => {
 
           access_token_payload.webid = minted_webid;
