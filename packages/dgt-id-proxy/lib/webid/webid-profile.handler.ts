@@ -4,7 +4,7 @@ import { switchMap } from 'rxjs/operators';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Writer, DataFactory } from 'n3';
 
-const { literal, defaultGraph, quad } = DataFactory;
+const { literal } = DataFactory;
 export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   constructor(private predicates: { tokenKey: string; predicate: string }[]) {
@@ -44,9 +44,9 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
-  getWebIdProfile = async (webid: string): Promise<Response>  => {
+  getWebIdProfile = async (webId: string): Promise<Response>  => {
 
-    const data = await fetch(webid, {
+    const data = await fetch(webId, {
       method: 'HEAD',
       headers: {
         Accept: 'text/turtle',
@@ -57,9 +57,9 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   };
 
-  createWebIdProfile = async (webid: string, body: string): Promise<void>  => {
+  createWebIdProfile = async (webId: string, body: string): Promise<void>  => {
 
-    await fetch(webid, {
+    await fetch(webId, {
       method: 'PUT',
       headers: {
         Accept: 'text/turtle',
@@ -69,7 +69,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   };
 
-  generateProfileBody = (predicates: { tokenKey: string; predicate: string }[], webid: string): string => {
+  generateProfileBody = (predicates: { tokenKey: string; predicate: string }[], webId: string): string => {
 
     const writer = new Writer({ prefixes: { foaf: 'http://xmlns.com/foaf/0.1/', solid: 'http://www.w3.org/ns/solid/terms#' } });
     let body = '';
@@ -77,12 +77,9 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     predicates.forEach((predicate) => {
 
       writer.addQuad(
-        quad(
-          DataFactory.namedNode(webid),
-          DataFactory.namedNode(predicate.tokenKey),
-          literal(predicate.predicate),
-          defaultGraph()
-        )
+        DataFactory.namedNode(webId),
+        DataFactory.namedNode(predicate.tokenKey),
+        literal(predicate.predicate),
       );
 
     });

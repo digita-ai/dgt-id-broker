@@ -4,15 +4,6 @@ import { WebIdProfileHandler } from './webid-profile.handler';
 
 describe('WebIdProfileHandler', () => {
 
-  const webIdContent = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-  @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-  
-  <http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me> foaf:PersonalProfileDocument "";
-      foaf:maker "http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me";
-      foaf:primaryTopic "http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me";
-      foaf:given_name "Tony";
-      foaf:family_name "Paillard".`;
-
   const response = {
     body: {
       access_token: {
@@ -47,6 +38,8 @@ describe('WebIdProfileHandler', () => {
 
   const webIdProfileHandler = new WebIdProfileHandler(predicates);
 
+  const body = webIdProfileHandler.generateProfileBody(predicates, response.body.id_token.payload.webId);
+
   beforeAll(() => fetchMock.enableMocks());
 
   it('should be correctly instantiated', () => {
@@ -69,27 +62,31 @@ describe('WebIdProfileHandler', () => {
 
     });
 
-    it('should generate a body when profile document does not exist', async () => {
+    it('should straight return the response if profile document exist', async () => {
 
-      fetchMock.once(webIdContent, { headers: { 'content-type':'text/turtle' }, status: 404 });
+      fetchMock.once(body, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      await expect(webIdProfileHandler.handle(response).toPromise()).resolves.toEqual(response);
 
-      webIdProfileHandler.generateProfileBody = jest.fn().mockReturnValue(webIdContent);
+    });
 
+    it('should do a PUT request to the webid to check if the profile is known', async () => {
+
+      fetchMock.once('', { headers: { 'content-type':'text/turtle' }, status: 404 });
       await webIdProfileHandler.handle(response).toPromise();
 
-      expect(webIdProfileHandler.generateProfileBody).toHaveBeenCalledTimes(1);
-
-      expect(webIdProfileHandler.generateProfileBody)
-        .toHaveBeenCalledWith(predicates, response.body.id_token.payload.webId);
-
-      expect(webIdProfileHandler
-        .generateProfileBody(predicates, response.body.id_token.payload.webId)).toEqual(webIdContent);
+      expect(fetchMock).toHaveBeenLastCalledWith(response.body.id_token.payload.webId, {
+        method: 'PUT',
+        headers: {
+          Accept: 'text/turtle',
+        },
+        body,
+      });
 
     });
 
     it('should create a profile when document does not exist', async () => {
 
-      fetchMock.once(webIdContent, { headers: { 'content-type':'text/turtle' }, status: 404 });
+      fetchMock.once('', { headers: { 'content-type':'text/turtle' }, status: 404 });
 
       webIdProfileHandler.createWebIdProfile = jest.fn();
 
@@ -98,7 +95,22 @@ describe('WebIdProfileHandler', () => {
       expect(webIdProfileHandler.createWebIdProfile).toHaveBeenCalledTimes(1);
 
       expect(webIdProfileHandler.createWebIdProfile)
-        .toHaveBeenCalledWith(response.body.id_token.payload.webId, webIdContent);
+        .toHaveBeenCalledWith(response.body.id_token.payload.webId, body);
+
+    });
+
+    it('should generate a body when profile document does not exist', async () => {
+
+      fetchMock.once('', { headers: { 'content-type':'text/turtle' }, status: 404 });
+
+      webIdProfileHandler.generateProfileBody = jest.fn().mockReturnValueOnce(body);
+
+      await webIdProfileHandler.handle(response).toPromise();
+
+      expect(webIdProfileHandler.generateProfileBody).toHaveBeenCalledTimes(1);
+
+      expect(webIdProfileHandler.generateProfileBody)
+        .toHaveBeenCalledWith(predicates, response.body.id_token.payload.webId);
 
     });
 
