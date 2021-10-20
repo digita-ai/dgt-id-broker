@@ -74,12 +74,12 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     const writer = new Writer({ prefixes: { foaf: 'http://xmlns.com/foaf/0.1/', solid: 'http://www.w3.org/ns/solid/terms#' } });
     let body = '';
 
-    predicates.forEach((predicate) => {
+    predicates.forEach((keyPredicatePair) => {
 
       writer.addQuad(
         DataFactory.namedNode(webId),
-        DataFactory.namedNode(predicate.tokenKey),
-        literal(predicate.predicate),
+        DataFactory.namedNode(keyPredicatePair.tokenKey),
+        literal(keyPredicatePair.predicate),
       );
 
     });
