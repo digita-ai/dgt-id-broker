@@ -23,6 +23,5 @@ export * from './storage/key-value-store';
 export * from './util/code-challenge-method';
 export * from './util/error-response-factory';
 export * from './util/parsed-json';
-export * from './util/private-to-public-jwk';
 export * from './webid/single-claim-webid-factory';
 export * from './webid/webid-factory';
