@@ -11,3 +11,4 @@ export * from './models/purpose.model';
 export * from './models/session.model';
 export * from './models/source.model';
 export * from './models/triple.model';
+export * from './models/client.model';

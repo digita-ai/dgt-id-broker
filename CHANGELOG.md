@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.3...v0.8.0) (2021-10-19)
+
+
+### **Features**
+
+* add client credentials to login flow ([#249](https://github.com/digita-ai/dgt-id-broker/issues/249)) ([a48acb7](https://github.com/digita-ai/dgt-id-broker/commit/a48acb76df49c61c2a02ad7c19de40290e1554f9))
+
+
+
 ### [0.7.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.2...v0.7.3) (2021-10-19)
 
 
