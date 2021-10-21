@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.8.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.0...v0.8.1) (2021-10-21)
+
+
+### **Features**
+
+* key transform and json type utils ([#252](https://github.com/digita-ai/dgt-id-broker/issues/252)) ([96e9282](https://github.com/digita-ai/dgt-id-broker/commit/96e92821c5571ed39cb66ee51585a175ddc50fc2))
+
+
+
 ## [0.8.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.7.3...v0.8.0) (2021-10-19)
 
 
