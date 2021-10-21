@@ -335,7 +335,7 @@
             {
               "@id": "urn:dgt-id-proxy:default:WebIdResponseHandler",
               "@type": "WebIdResponseHandler",
-              "webIDFactory": {
+              "webIdFactory": {
                 "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory"
               }
             },
