@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.8.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.1...v0.8.2) (2021-10-22)
+
+
+### **Features**
+
+* export jwk verification ([#254](https://github.com/digita-ai/dgt-id-broker/issues/254)) ([019f38b](https://github.com/digita-ai/dgt-id-broker/commit/019f38bbd0ed9b8274e642dea627700eb8e7beb0))
+
+
+
 ### [0.8.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.0...v0.8.1) (2021-10-21)
 
 
