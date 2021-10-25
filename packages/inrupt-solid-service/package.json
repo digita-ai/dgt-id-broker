@@ -76,9 +76,9 @@
     "coverageThreshold": {
       "global": {
         "branches": 10.71,
-        "functions": 21.74,
-        "lines": 19.57,
-        "statements": 19.59
+        "functions": 25,
+        "lines": 20.43,
+        "statements": 20.41
       }
     },
     "moduleNameMapper": {
