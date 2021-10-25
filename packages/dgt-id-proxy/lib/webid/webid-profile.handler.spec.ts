@@ -1,6 +1,28 @@
-
 import fetchMock from 'jest-fetch-mock';
 import { WebIdProfileHandler } from './webid-profile.handler';
+
+jest.mock('fs/promises', () => {
+
+  const testJwks = {
+    'keys': [
+      {
+        'crv': 'P-256',
+        'x': 'ZXD5luOOClkYI-WieNfw7WGISxIPjH_PWrtvDZRZsf0',
+        'y': 'vshKz414TtqkkM7gNXKqawrszn44OTSR_j-JxP-BlWo',
+        'd': '07JS0yPt-fDABw_28JdENtlF0PTNMchYmfSXz7pRhVw',
+        'kty': 'EC',
+        'kid': 'Eqa03FG9Z7AUQx5iRvpwwnkjAdy-PwmUYKLQFIgSY5E',
+        'alg': 'ES256',
+        'use': 'sig',
+      },
+    ],
+  };
+
+  return {
+    readFile: jest.fn().mockResolvedValue(Buffer.from(JSON.stringify(testJwks))),
+  };
+
+});
 
 describe('WebIdProfileHandler', () => {
 
@@ -9,17 +31,17 @@ describe('WebIdProfileHandler', () => {
       access_token: {
         header: {},
         payload: {
-          webId: 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me',
+          webId: 'http://example.com/examplename/profile/card#me',
           'sub': '123456789',
         },
       },
       id_token: {
         header: {},
         payload: {
-          webId: 'http://solid.community.com/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me',
+          webId: 'http://example.com/examplename/profile/card#me',
           'sub': '123456789',
           'username': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
-          'given_name': 'Tony',
+          'first_name': 'Tony',
           'family_name': 'Paillard',
         },
       },
@@ -29,28 +51,38 @@ describe('WebIdProfileHandler', () => {
   };
 
   const predicates = [
-    { tokenKey: 'http://xmlns.com/foaf/0.1/PersonalProfileDocument', predicate: '' },
-    { tokenKey: 'http://xmlns.com/foaf/0.1/maker', predicate: response.body.id_token.payload.webId },
-    { tokenKey: 'http://xmlns.com/foaf/0.1/primaryTopic', predicate: response.body.id_token.payload.webId },
-    { tokenKey: 'http://xmlns.com/foaf/0.1/given_name', predicate: response.body.id_token.payload.given_name },
-    { tokenKey: 'http://xmlns.com/foaf/0.1/family_name', predicate: response.body.id_token.payload.family_name },
+    { tokenKey: 'first_name', predicate: 'http://xmlns.com/foaf/0.1/givenName' },
+    { tokenKey: 'family_name', predicate: 'http://xmlns.com/foaf/0.1/familyName' },
   ];
 
-  const webIdProfileHandler = new WebIdProfileHandler(predicates);
-
-  const body = webIdProfileHandler.generateProfileBody(predicates, response.body.id_token.payload.webId);
+  const webIdProfileHandler = new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json');
 
   beforeAll(() => fetchMock.enableMocks());
 
   it('should be correctly instantiated', () => {
 
-    expect(new WebIdProfileHandler(predicates)).toBeTruthy();
+    expect(new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json')).toBeTruthy();
 
   });
 
   it('should error when no predicates are provided', () => {
 
-    expect(() => new WebIdProfileHandler(undefined)).toThrow('Predicate list is required');
+    expect(() => new WebIdProfileHandler(undefined, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json')).toThrow('Predicate list is required');
+    expect(() => new WebIdProfileHandler(null, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json')).toThrow('Predicate list is required');
+
+  });
+
+  it('should error when no proxy webid was provided', () => {
+
+    expect(() => new WebIdProfileHandler(predicates, undefined, 'assets/jwks.json')).toThrow('WebId is required');
+    expect(() => new WebIdProfileHandler(predicates, null, 'assets/jwks.json')).toThrow('WebId is required');
+
+  });
+
+  it('should error when no path to jwks was provided', () => {
+
+    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', undefined)).toThrow('Path to JWKS is required');
+    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', null)).toThrow('Path to JWKS is required');
 
   });
 
@@ -62,55 +94,95 @@ describe('WebIdProfileHandler', () => {
 
     });
 
+    it('should create a profile and acl document when none exists', async () => {
+
+      fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ]);
+
+      const generateProfileDocument = jest.spyOn(WebIdProfileHandler.prototype as any, 'generateProfileDocument');
+
+      await webIdProfileHandler.handle(response).toPromise();
+
+      expect(generateProfileDocument).toHaveBeenCalledTimes(1);
+
+      expect(generateProfileDocument)
+        .toHaveBeenCalledWith(response.body.id_token);
+
+      expect(fetchMock.mock.calls[0]).toEqual([
+        'http://example.com/examplename/profile/card#me',
+        { method: 'HEAD', headers: { Accept: 'text/turtle' } },
+      ]);
+
+      expect(fetchMock.mock.calls[1]).toEqual([
+        'http://example.com/examplename/profile/card#me',
+        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{108}.ey[a-zA-Z0-9._-]{297}$')) } }),
+      ]);
+
+      expect(fetchMock.mock.calls[2]).toEqual([
+        'http://example.com/examplename/profile/card.acl',
+        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{108}.ey[a-zA-Z0-9._-]{297}$')) } }),
+      ]);
+
+    });
+
     it('should straight return the response if profile document exist', async () => {
 
-      fetchMock.once(body, { headers: { 'content-type':'text/turtle' }, status: 200 });
+      fetchMock.once('Found', { headers: { 'content-type':'text/turtle' }, status: 200 });
       await expect(webIdProfileHandler.handle(response).toPromise()).resolves.toEqual(response);
 
     });
 
-    it('should do a PUT request to the webid to check if the profile is known', async () => {
+    it('should do a HEAD request to the webId from the response to check if a document exists', async () => {
 
-      fetchMock.once('', { headers: { 'content-type':'text/turtle' }, status: 404 });
       await webIdProfileHandler.handle(response).toPromise();
 
-      expect(fetchMock).toHaveBeenLastCalledWith(response.body.id_token.payload.webId, {
-        method: 'PUT',
+      expect(fetchMock).toHaveBeenCalledWith(response.body.id_token.payload.webId, {
+        method: 'HEAD',
         headers: {
           Accept: 'text/turtle',
         },
-        body,
       });
 
     });
 
-    it('should create a profile when document does not exist', async () => {
+    it('should call generateProfileDocument when none exists', async () => {
 
-      fetchMock.once('', { headers: { 'content-type':'text/turtle' }, status: 404 });
+      fetchMock.once('Not found', { headers: { 'content-type':'text/turtle' }, status: 404 });
 
-      webIdProfileHandler.createWebIdProfile = jest.fn();
+      const generateProfileDocument = jest.spyOn(WebIdProfileHandler.prototype as any, 'generateProfileDocument');
 
       await webIdProfileHandler.handle(response).toPromise();
 
-      expect(webIdProfileHandler.createWebIdProfile).toHaveBeenCalledTimes(1);
-
-      expect(webIdProfileHandler.createWebIdProfile)
-        .toHaveBeenCalledWith(response.body.id_token.payload.webId, body);
+      expect(generateProfileDocument)
+        .toHaveBeenCalledWith(response.body.id_token);
 
     });
 
-    it('should generate a body when profile document does not exist', async () => {
+    it('should call generateAclDocument when none exists', async () => {
 
-      fetchMock.once('', { headers: { 'content-type':'text/turtle' }, status: 404 });
+      fetchMock.once('Not found', { headers: { 'content-type':'text/turtle' }, status: 404 });
 
-      webIdProfileHandler.generateProfileBody = jest.fn().mockReturnValueOnce(body);
+      const generateAclDocument = jest.spyOn(WebIdProfileHandler.prototype as any, 'generateAclDocument');
 
       await webIdProfileHandler.handle(response).toPromise();
 
-      expect(webIdProfileHandler.generateProfileBody).toHaveBeenCalledTimes(1);
+      expect(generateAclDocument)
+        .toHaveBeenCalledWith(response.body.id_token);
 
-      expect(webIdProfileHandler.generateProfileBody)
-        .toHaveBeenCalledWith(predicates, response.body.id_token.payload.webId);
+    });
+
+    it('should error when failed to create profile document', async () => {
+
+      fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ], [ 'Bad request: failed to create profile document', { headers: { 'content-type':'text/turtle' }, status: 400 } ]);
+
+      await expect(() => webIdProfileHandler.handle(response).toPromise()).rejects.toThrow('Failed to create a profile document');
+
+    });
+
+    it('should error when failed to create profile document', async () => {
+
+      fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ], [ '{}', { headers: { 'content-type':'text/turtle' }, status: 200 } ], [ 'Bad request: failed to create acl document', { headers: { 'content-type':'text/turtle' }, status: 400 } ]);
+
+      await expect(() => webIdProfileHandler.handle(response).toPromise()).rejects.toThrow('Failed to create Acl document');
 
     });
 
@@ -134,3 +206,4 @@ describe('WebIdProfileHandler', () => {
   });
 
 });
+

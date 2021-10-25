@@ -23,14 +23,18 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     if (!predicates) { throw new Error('Predicate list is required'); }
 
+    if (!webId) { throw new Error('WebId is required'); }
+
+    if (!pathToJwks) { throw new Error('Path to JWKS is required'); }
+
   }
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
     if (!response) { return throwError(new Error('A response must be provided')); }
 
-    const headers = { Accept: 'text/turtle' } ;
-    const webId = response.body.id_token.payload.webid;
+    const id_token = response.body.id_token;
+    const webId = response.body.id_token.payload.webId;
 
     const jwt_payload: JWTPayload = {
       iss: this.webId,
@@ -42,7 +46,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     };
 
-    return from(fetch(webId, { method: 'HEAD', headers })).pipe(
+    return from(fetch(webId, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
       switchMap((resp) => {
 
         if (resp.status !== 200) {
@@ -50,18 +54,17 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
           return this.signJwtPayload(jwt_payload, 'at+jwt').pipe(
             switchMap((token) => {
 
-              // create a webid profile document with a generated body based upon the predicate map
-              const profileResp = from(fetch(webId, { method: 'PUT', headers: { ...headers, authorization:  'Bearer ' + token }, body: this.generateProfileDocument(response.body.id_token) }));
+              const profileResp = from(fetch(webId, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token }, body: this.generateProfileDocument(id_token) }));
               const url = new URL(webId);
               const aclURI = url.origin + url.pathname + '.acl';
-              const aclResp = from(fetch(aclURI, { method: 'PUT', headers: { ...headers, authorization:  'Bearer ' + token }, body: this.generateAclDocument(response.body.id_token) }));
+              const aclResp = from(fetch(aclURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token }, body: this.generateAclDocument(response.body.id_token) }));
 
               return zip(profileResp, aclResp).pipe(
                 switchMap(([ profile, acl ]) => {
 
-                  if (profile.status !== 200 && profile.status !== 201) return throwError(new Error('Failed to generate a profile document'));
+                  if (profile.status !== 200 && profile.status !== 201) return throwError(new Error('Failed to create a profile document'));
 
-                  if (acl.status !== 200 && acl.status !== 201) return throwError(new Error('Failed to generate Acl document'));
+                  if (acl.status !== 200 && acl.status !== 201) return throwError(new Error('Failed to create Acl document'));
 
                   return of(response);
 
@@ -86,7 +89,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
-  private generateAclDocument(id_token: { body: { payload: { webId: string } } }): string {
+  private generateAclDocument(id_token: any): string {
 
     return `# ACL resource for the WebID profile document
     @prefix acl: <http://www.w3.org/ns/auth/acl#>.
@@ -105,17 +108,17 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     # profile directory.
     <#owner>
         a acl:Authorization;
-        acl:agent <${id_token.body.payload.webId}>;
+        acl:agent <${id_token.payload.webId}>;
         acl:accessTo <./card>;
         acl:mode acl:Read, acl:Write, acl:Control.`;
 
   }
 
   private generateProfileDocument(
-    id_token: { body: { payload: { [x: string]: string | number; webId: any } } }
+    id_token: any
   ): string {
 
-    const webId = id_token.body.payload.webId;
+    const webId = id_token.payload.webId;
 
     const writer = new Writer({ prefixes: { foaf: 'http://xmlns.com/foaf/0.1/', solid: 'http://www.w3.org/ns/solid/terms#' } });
     let body = '';
@@ -125,7 +128,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
       writer.addQuad(
         DataFactory.namedNode(webId),
         DataFactory.namedNode(keyPredicatePair.predicate),
-        literal(id_token.body.payload[keyPredicatePair.tokenKey]),
+        literal(id_token.payload[keyPredicatePair.tokenKey]),
       );
 
     });
