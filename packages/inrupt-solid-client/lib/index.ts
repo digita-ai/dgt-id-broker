@@ -4,6 +4,10 @@ export {
   handleIncomingRedirect,
   login,
   logout,
+  onLogin,
+  onLogout,
+  onSessionRestore,
+  Session,
 } from '@inrupt/solid-client-authn-browser';
 export {
   access,

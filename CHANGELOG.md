@@ -3,6 +3,32 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.8.5](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.4...v0.8.5) (2021-10-25)
+
+**Note:** Version bump only for package root
+
+
+
+
+
+### [0.8.4](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.3...v0.8.4) (2021-10-25)
+
+
+### **Bug Fixes**
+
+* getSession now returns full session ([#256](https://github.com/digita-ai/dgt-id-broker/issues/256)) ([7cd2c0b](https://github.com/digita-ai/dgt-id-broker/commit/7cd2c0bb3afc2f7c5d7e0d9a3251e4caf2bd1b45))
+
+
+
+### [0.8.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.2...v0.8.3) (2021-10-25)
+
+
+### **Bug Fixes**
+
+* add solid-client auth callback exports ([#255](https://github.com/digita-ai/dgt-id-broker/issues/255)) ([1810c8d](https://github.com/digita-ai/dgt-id-broker/commit/1810c8da3f54c18bb1535b62f9458dac7b0f5de9))
+
+
+
 ### [0.8.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.1...v0.8.2) (2021-10-22)
 
 

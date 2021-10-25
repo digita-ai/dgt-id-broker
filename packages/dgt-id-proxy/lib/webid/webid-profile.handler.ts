@@ -114,9 +114,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
-  private generateProfileDocument(
-    id_token: any
-  ): string {
+  private generateProfileDocument(id_token: any): string {
 
     const webId = id_token.payload.webId;
 

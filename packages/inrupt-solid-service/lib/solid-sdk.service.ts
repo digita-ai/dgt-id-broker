@@ -1,4 +1,4 @@
-import { getUrlAll, SolidDataset, addUrl, setThing, saveSolidDatasetAt, handleIncomingRedirect, login, logout, getStringNoLocale, getSolidDataset, Thing, getThing } from '@digita-ai/inrupt-solid-client';
+import { getUrlAll, SolidDataset, addUrl, setThing, saveSolidDatasetAt, handleIncomingRedirect, login, logout, getStringNoLocale, getSolidDataset, Thing, getThing, Session as SolidSession, getDefaultSession } from '@digita-ai/inrupt-solid-client';
 import { Session } from './models/session.model';
 import { Profile } from './models/profile.model';
 import { Issuer } from './models/issuer.model';
@@ -172,7 +172,7 @@ export class SolidSDKService implements SolidService {
     const session = await handleIncomingRedirect({ restorePreviousSession: true });
 
     return session && session.isLoggedIn && session.webId
-      ? { webId: session.webId } : Promise.reject();
+      ? { webId: session.webId, ...session } : Promise.reject();
 
   }
 
@@ -260,6 +260,12 @@ export class SolidSDKService implements SolidService {
     const profile = await this.getProfileThing(webId);
 
     return getUrlAll(profile, 'http://www.w3.org/ns/pim/space#storage');
+
+  }
+
+  getDefaultSession(): SolidSession {
+
+    return getDefaultSession();
 
   }
 
