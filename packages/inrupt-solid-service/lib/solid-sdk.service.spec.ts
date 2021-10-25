@@ -1,4 +1,4 @@
-import { addUrl, createSolidDataset, createThing, saveSolidDatasetAt } from '@digita-ai/inrupt-solid-client';
+import { addUrl, createSolidDataset, createThing, saveSolidDatasetAt, getDefaultSession } from '@digita-ai/inrupt-solid-client';
 import * as sdk from '@digita-ai/inrupt-solid-client';
 import { Issuer } from './models/issuer.model';
 import { SolidSDKService } from './solid-sdk.service';
@@ -69,6 +69,18 @@ describe('SolidSDKService', () => {
       const result = await service.getStorages(mockWebId);
       expect(result.length).toEqual(1);
       expect(result).toContain(mockStorage);
+
+    });
+
+  });
+
+  describe('getDefaultSession', () => {
+
+    it('should call getDefaultSession from SDK', () => {
+
+      (getDefaultSession as any) = jest.fn(async () => ({}));
+      service.getDefaultSession();
+      expect(sdk.getDefaultSession).toHaveBeenCalledTimes(1);
 
     });
 

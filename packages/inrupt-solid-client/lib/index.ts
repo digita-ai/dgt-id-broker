@@ -7,6 +7,7 @@ export {
   onLogin,
   onLogout,
   onSessionRestore,
+  Session,
 } from '@inrupt/solid-client-authn-browser';
 export {
   access,
