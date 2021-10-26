@@ -14,7 +14,7 @@ describe('SolidSDKService', () => {
 
   beforeEach(async () => {
 
-    service = new SolidSDKService({ clientName: 'test' });
+    service = new SolidSDKService('test');
 
   });
 
@@ -26,7 +26,7 @@ describe('SolidSDKService', () => {
 
   it('should error when clientSecret is set but clientId is not', () => {
 
-    expect(() => new SolidSDKService({ clientName: 'test', clientSecret: 'mockSecret' })).toThrow('clientId must be set if clientSecret is set');
+    expect(() => new SolidSDKService('test', { 'https://issuer/':{ clientName: 'test', clientSecret: 'mockSecret' } })).toThrow('clientId must be set if clientSecret is set');
 
   });
 
