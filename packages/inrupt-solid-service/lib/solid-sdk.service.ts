@@ -199,7 +199,9 @@ export class SolidSDKService implements SolidService {
 
     }
 
-    const client = this.clients ? this.clients[issuer.uri] : { clientName: this.defaultClientName };
+    const client = this.clients && this.clients[issuer.uri]
+      ? this.clients[issuer.uri]
+      : { clientName: this.defaultClientName };
 
     await login({
       oidcIssuer: issuer.uri,
@@ -222,7 +224,9 @@ export class SolidSDKService implements SolidService {
 
     }
 
-    const client = this.clients ? this.clients[issuer.uri] : { clientName: this.defaultClientName };
+    const client = this.clients && this.clients[issuer.uri]
+      ? this.clients[issuer.uri]
+      : { clientName: this.defaultClientName };
 
     await login({
       oidcIssuer: issuer.uri,
