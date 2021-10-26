@@ -94,6 +94,29 @@ describe('WebIdProfileHandler', () => {
 
     });
 
+    it('should error when no response body was provided', async () => {
+
+      await expect(webIdProfileHandler.handle({ ...response, body: undefined }).toPromise()).rejects.toThrow('A response body must be provided');
+
+    });
+
+    it('should error when no response id token was provided', async () => {
+
+      await expect(webIdProfileHandler.handle({ ...response, body: { ...response.body, id_token: undefined } }).toPromise()).rejects.toThrow('An id token must be provided');
+
+    });
+
+    it('should error when no response body was provided', async () => {
+
+      await expect(webIdProfileHandler.handle(
+        { ...response, body:
+          { ...response.body, id_token:
+            { ...response.body.id_token, payload:
+              { ...response.body.id_token.payload, webId: undefined } } } }
+      ).toPromise()).rejects.toThrow('A webId must be provided');
+
+    });
+
     it('should create a profile and acl document when none exists', async () => {
 
       fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ]);
@@ -166,7 +189,7 @@ describe('WebIdProfileHandler', () => {
       await webIdProfileHandler.handle(response).toPromise();
 
       expect(generateAclDocument)
-        .toHaveBeenCalledWith(response.body.id_token);
+        .toHaveBeenCalledWith(response.body.id_token.payload.webId);
 
     });
 

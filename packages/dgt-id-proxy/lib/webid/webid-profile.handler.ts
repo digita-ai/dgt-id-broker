@@ -11,8 +11,20 @@ import SignJWT from 'jose/jwt/sign';
 import { v4 as uuid }  from 'uuid';
 
 const { literal } = DataFactory;
+
+/**
+ * A {Handler} that handles a {HttpHandlerResponse} by checking if the webId given in the id_token
+ * has a WebId profile document and if not creates a new profile & .acl document for the webId.
+ */
 export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  /**
+   * Creates a {WebIdProfileHandler}.
+   *
+   * @param {{ tokenKey: string; predicate: string }[]} predicates - the predicates that need to be set in the profile document
+   * @param {string} webId - the webId of the proxy server
+   * @param {string} pathToJwks - the path to a json file containing JWKs to sign the tokens.
+   */
   constructor(
     private predicates: { tokenKey: string; predicate: string }[],
     private webId: string,
@@ -21,7 +33,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     super();
 
-    if (!predicates) { throw new Error('Predicate list is required'); }
+    if (!predicates || predicates.length === 0) { throw new Error('Predicate list is required'); }
 
     if (!webId) { throw new Error('WebId is required'); }
 
@@ -29,9 +41,21 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
+  /**
+   * Handles the response. Checks if an id_token and webId is present.
+   * Checks if a profile document already exists for the webId and if not creates a new one + acl document
+   *
+   * @param {HttpHandlerResponse} response
+   */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
     if (!response) { return throwError(new Error('A response must be provided')); }
+
+    if (!response.body) { return throwError(new Error('A response body must be provided')); }
+
+    if (!response.body.id_token) { return throwError(new Error('An id token must be provided')); }
+
+    if (!response.body.id_token.payload.webId) { return throwError(new Error('A webId must be provided')); }
 
     const id_token = response.body.id_token;
     const webId = response.body.id_token.payload.webId;
@@ -57,7 +81,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
               const profileResp = from(fetch(webId, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token }, body: this.generateProfileDocument(id_token) }));
               const url = new URL(webId);
               const aclURI = url.origin + url.pathname + '.acl';
-              const aclResp = from(fetch(aclURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token }, body: this.generateAclDocument(response.body.id_token) }));
+              const aclResp = from(fetch(aclURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token }, body: this.generateAclDocument(response.body.id_token.payload.webId) }));
 
               return zip(profileResp, aclResp).pipe(
                 switchMap(([ profile, acl ]) => {
@@ -83,13 +107,23 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
+  /**
+   * Specifies that if the response is defined this handler can handle the response.
+   *
+   * @param {HttpHandlerResponse} response
+   */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
     return response ? of(true) : of(false);
 
   }
 
-  private generateAclDocument(id_token: any): string {
+  /**
+   * Generates an acl document based on the webId provided.
+   *
+   * @param {string} webId - the webId provided in the id_token
+   */
+  private generateAclDocument(webId: string): string {
 
     return `# ACL resource for the WebID profile document
     @prefix acl: <http://www.w3.org/ns/auth/acl#>.
@@ -108,13 +142,19 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     # profile directory.
     <#owner>
         a acl:Authorization;
-        acl:agent <${id_token.payload.webId}>;
+        acl:agent <${webId}>;
         acl:accessTo <./card>;
         acl:mode acl:Read, acl:Write, acl:Control.`;
 
   }
 
-  private generateProfileDocument(id_token: any): string {
+  /**
+   * Generates a profile document based on the predicates provided in the constructor and the id_token.
+   *
+   * @param {{ header: any; payload: any }} id_token - the id_token provided in the response.
+   *
+   */
+  private generateProfileDocument(id_token:  { header: any; payload: any }): string {
 
     const webId = id_token.payload.webId;
 
