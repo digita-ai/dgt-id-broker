@@ -67,6 +67,12 @@ describe('SolidSDKService', () => {
       description: 'mock issuer',
     };
 
+    const mockIssuer2: Issuer = {
+      uri: 'https://issuer-2/',
+      icon: 'https://issuer-2/icon.png',
+      description: 'mock issuer 2',
+    };
+
     const mockClient = {
       [mockIssuer.uri]: {
         clientName: 'test',
@@ -121,6 +127,24 @@ describe('SolidSDKService', () => {
 
     });
 
+    it('should call login with only clientname if no match was found in clients', async () => {
+
+      service = new SolidSDKService('test', mockClient);
+      (login as any) = jest.fn();
+      // login with different issuer
+      service.getIssuers = jest.fn(async () => [ mockIssuer2 ]);
+
+      await service.login('https://web.id/');
+
+      expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
+        oidcIssuer: mockIssuer2.uri,
+        clientName: mockClient[mockIssuer.uri].clientName,
+        clientId: undefined,
+        clientSecret: undefined,
+      }));
+
+    });
+
   });
 
   describe('loginWithIssuer', () => {
@@ -129,6 +153,12 @@ describe('SolidSDKService', () => {
       uri: 'https://issuer/',
       icon: 'https://issuer/icon.png',
       description: 'mock issuer',
+    };
+
+    const mockIssuer2: Issuer = {
+      uri: 'https://issuer-2/',
+      icon: 'https://issuer-2/icon.png',
+      description: 'mock issuer 2',
     };
 
     const mockClient = {
@@ -170,6 +200,23 @@ describe('SolidSDKService', () => {
         clientName: mockClient[mockIssuer.uri].clientName,
         clientId: mockClient[mockIssuer.uri].clientId,
         clientSecret: mockClient[mockIssuer.uri].clientSecret,
+      }));
+
+    });
+
+    it('should call login with only clientname if no match was found in clients', async () => {
+
+      service = new SolidSDKService('test', mockClient);
+      (login as any) = jest.fn();
+
+      // login with different issuer
+      await service.loginWithIssuer(mockIssuer2);
+
+      expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
+        oidcIssuer: mockIssuer2.uri,
+        clientName: mockClient[mockIssuer.uri].clientName,
+        clientId: undefined,
+        clientSecret: undefined,
       }));
 
     });
