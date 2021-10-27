@@ -1,5 +1,5 @@
 import fetchMock from 'jest-fetch-mock';
-import { WebIdProfileHandler } from './webid-profile.handler';
+import { PredicatePair, WebIdProfileHandler } from './webid-profile.handler';
 
 jest.mock('fs/promises', () => {
 
@@ -24,6 +24,8 @@ jest.mock('fs/promises', () => {
 
 });
 
+const proxyUrl = 'http://localhost:3003';
+
 describe('WebIdProfileHandler', () => {
 
   const response = {
@@ -38,7 +40,7 @@ describe('WebIdProfileHandler', () => {
       id_token: {
         header: {},
         payload: {
-          webId: 'http://example.com/examplename/profile/card#me',
+          webid: 'http://example.com/examplename/profile/card#me',
           'sub': '123456789',
           'username': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
           'first_name': 'Tony',
@@ -51,38 +53,38 @@ describe('WebIdProfileHandler', () => {
   };
 
   const predicates = [
-    { tokenKey: 'first_name', predicate: 'http://xmlns.com/foaf/0.1/givenName' },
-    { tokenKey: 'family_name', predicate: 'http://xmlns.com/foaf/0.1/familyName' },
+    new PredicatePair('fist_name', 'http://xmlns.com/foaf/0.1/givenName'),
+    new PredicatePair('family_name', 'http://xmlns.com/foaf/0.1/familyName'),
   ];
 
-  const webIdProfileHandler = new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json');
+  const webIdProfileHandler = new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json', proxyUrl);
 
   beforeAll(() => fetchMock.enableMocks());
 
   it('should be correctly instantiated', () => {
 
-    expect(new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json')).toBeTruthy();
+    expect(new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json', proxyUrl)).toBeTruthy();
 
   });
 
   it('should error when no predicates are provided', () => {
 
-    expect(() => new WebIdProfileHandler(undefined, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json')).toThrow('Predicate list is required');
-    expect(() => new WebIdProfileHandler(null, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json')).toThrow('Predicate list is required');
+    expect(() => new WebIdProfileHandler(undefined, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json', proxyUrl)).toThrow('Predicate list is required');
+    expect(() => new WebIdProfileHandler(null, 'http://digitaProxy.com/profile/card#me', 'assets/jwks.json', proxyUrl)).toThrow('Predicate list is required');
 
   });
 
   it('should error when no proxy webid was provided', () => {
 
-    expect(() => new WebIdProfileHandler(predicates, undefined, 'assets/jwks.json')).toThrow('WebId is required');
-    expect(() => new WebIdProfileHandler(predicates, null, 'assets/jwks.json')).toThrow('WebId is required');
+    expect(() => new WebIdProfileHandler(predicates, undefined, 'assets/jwks.json', proxyUrl)).toThrow('WebId is required');
+    expect(() => new WebIdProfileHandler(predicates, null, 'assets/jwks.json', proxyUrl)).toThrow('WebId is required');
 
   });
 
   it('should error when no path to jwks was provided', () => {
 
-    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', undefined)).toThrow('Path to JWKS is required');
-    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', null)).toThrow('Path to JWKS is required');
+    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', undefined, proxyUrl)).toThrow('Path to JWKS is required');
+    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', null, proxyUrl)).toThrow('Path to JWKS is required');
 
   });
 
@@ -112,7 +114,7 @@ describe('WebIdProfileHandler', () => {
         { ...response, body:
           { ...response.body, id_token:
             { ...response.body.id_token, payload:
-              { ...response.body.id_token.payload, webId: undefined } } } }
+              { ...response.body.id_token.payload, webid: undefined } } } }
       ).toPromise()).rejects.toThrow('A webId must be provided');
 
     });
@@ -136,13 +138,13 @@ describe('WebIdProfileHandler', () => {
       ]);
 
       expect(fetchMock.mock.calls[1]).toEqual([
-        'http://example.com/examplename/profile/card#me',
-        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{108}.ey[a-zA-Z0-9._-]{297}$')) } }),
+        'http://digitaproxy.com/profile/examplename/profile/card',
+        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', 'Content-Type': 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{0,}.ey[a-zA-Z0-9-._]{0,}$')) } }),
       ]);
 
       expect(fetchMock.mock.calls[2]).toEqual([
-        'http://example.com/examplename/profile/card.acl',
-        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{108}.ey[a-zA-Z0-9._-]{297}$')) } }),
+        'http://digitaproxy.com/profile/examplename/profile/card.acl',
+        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', 'Content-Type': 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{0,}.ey[a-zA-Z0-9-._]{0,}$')) } }),
       ]);
 
     });
@@ -158,7 +160,7 @@ describe('WebIdProfileHandler', () => {
 
       await webIdProfileHandler.handle(response).toPromise();
 
-      expect(fetchMock).toHaveBeenCalledWith(response.body.id_token.payload.webId, {
+      expect(fetchMock).toHaveBeenCalledWith(response.body.id_token.payload.webid, {
         method: 'HEAD',
         headers: {
           Accept: 'text/turtle',
@@ -189,7 +191,7 @@ describe('WebIdProfileHandler', () => {
       await webIdProfileHandler.handle(response).toPromise();
 
       expect(generateAclDocument)
-        .toHaveBeenCalledWith(response.body.id_token.payload.webId);
+        .toHaveBeenCalledWith(response.body.id_token.payload.webid);
 
     });
 

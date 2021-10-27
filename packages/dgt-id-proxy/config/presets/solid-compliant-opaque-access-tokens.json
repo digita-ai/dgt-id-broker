@@ -427,6 +427,27 @@
                 }
               },
               {
+                "@id": "urn:dgt-id-proxy:default:WebIdProfileHandler",
+                "@type": "WebIdProfileHandler",
+                "WebIdProfileHandler:_predicates": [
+                  { 
+                    "@type": "PredicatePair",
+                    "tokenKey": "first_name",
+                    "predicate": "http://xmlns.com/foaf/0.1/givenName"
+                   },
+                   { 
+                    "@type": "PredicatePair",
+                    "tokenKey": "family_name",
+                    "predicate": "http://xmlns.com/foaf/0.1/familyName"
+                   }
+                ],
+                "proxyWebId": "http://localhost:3002/clientapp/card#me",
+                "pathToJwks": {
+                  "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
+                },
+                "proxyUrl": "http://localhost:3003"
+              },
+              {
                 "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
               }
             ]
