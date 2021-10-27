@@ -1,3 +1,4 @@
+
 import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { Handler } from '@digita-ai/handlersjs-core';
@@ -35,7 +36,8 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     private predicates: PredicatePair[],
     private proxyWebId: string,
     private pathToJwks: string,
-    private proxyUrl: string
+    private proxyUrl: string,
+    private webIdPattern: string
   ) {
 
     super();
@@ -67,6 +69,17 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     const id_token = response.body.id_token;
     const webId = response.body.id_token.payload.webid;
 
+    // id_token.payload.first_name = 'Alain';
+    // id_token.payload.family_name = 'Vandam';
+
+    const regExp = new RegExp(`^http:\/\/(localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):[0-9]{4}\/${this.webIdPattern.split('/')[3]}.{0,}$`);
+
+    if (!regExp.test(webId)) {
+
+      return throwError(new Error('The provided webId in the id_token must be similar to the webIdPattern'));
+
+    }
+
     const jwt_payload: JWTPayload = {
       iss: this.proxyUrl,
       sub: id_token.payload.sub,
@@ -88,10 +101,10 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
               const proxyUrl = new URL(this.proxyWebId);
               const userUrl = new URL(webId);
-              // example: http://localhost:3002/clientapp/tonypaillard/profile/card
-              const proxyURI = proxyUrl.origin + '/' + proxyUrl.pathname.split('/')[1] + userUrl.pathname;
+              // example: http://localhost:3002/clientapp/tonypaillard/profile/card#me
+              const proxyURI = proxyUrl.origin + userUrl.pathname;
               // example: http://localhost:3002/clientapp/tonypaillard/profile/card.acl
-              const aclURI = proxyUrl.origin + '/' +  proxyUrl.pathname.split('/')[1] + userUrl.pathname + '.acl';
+              const aclURI = proxyUrl.origin + userUrl.pathname + '.acl';
               const profileResp = from(fetch(proxyURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token, 'Content-Type': 'text/turtle' }, body: this.generateProfileDocument(id_token) }));
               const aclResp = from(fetch(aclURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token, 'Content-Type': 'text/turtle' }, body: this.generateAclDocument(id_token.payload.webid) }));
 
@@ -182,6 +195,12 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
       );
 
     });
+
+    writer.addQuad(
+      DataFactory.namedNode(webId),
+      DataFactory.namedNode('solid:oidcIssuer'),
+      DataFactory.namedNode(this.proxyUrl)
+    );
 
     writer.end((err, result) => body = result);
 

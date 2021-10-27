@@ -86,7 +86,7 @@
     "preset": "@digita-ai/jest-config",
     "displayName": "proxy",
     "testEnvironment": "node",
-    "testTimeout": 15000,
+    "testTimeout": 20000,
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
@@ -100,7 +100,7 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 98.71,
+        "branches": 98.72,
         "functions": 99.55,
         "lines": 100,
         "statements": 99.9

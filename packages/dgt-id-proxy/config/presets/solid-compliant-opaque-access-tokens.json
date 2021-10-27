@@ -107,7 +107,7 @@
       {
         "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory",
         "@type": "SingleClaimWebIdFactory",
-        "SingleClaimWebIdFactory:_webIdPattern": "http://localhost:3002/:customclaim/profile/card#me"
+        "SingleClaimWebIdFactory:_webIdPattern": "http://localhost:3002/clientapp/:customclaim/profile/card#me"
       },
       {
         "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore",
@@ -445,7 +445,8 @@
                 "pathToJwks": {
                   "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
                 },
-                "proxyUrl": "http://localhost:3003"
+                "proxyUrl": "http://localhost:3003",
+                "webIdPattern": "http://localhost:3002/clientapp/:customclaim/profile/card#me"
               },
               {
                 "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"

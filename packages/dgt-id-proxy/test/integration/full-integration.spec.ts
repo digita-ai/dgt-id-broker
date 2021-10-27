@@ -460,7 +460,7 @@ describe('full integration', () => {
 
         it('should contain a correct minted webid as webid claim', () => {
 
-          expect(decodedPayloadAccessToken.webid).toEqual(`http://localhost:3002/${payload1.sub}/profile/card#me`);
+          expect(decodedPayloadAccessToken.webid).toEqual(`http://localhost:3002/clientapp/${payload1.sub}/profile/card#me`);
 
         });
 
@@ -526,7 +526,7 @@ describe('full integration', () => {
 
         it('should contain a correct minted webid claim', () => {
 
-          expect(decodedPayloadIdToken.webid).toEqual(`http://localhost:3002/${payload1.sub}/profile/card#me`);
+          expect(decodedPayloadIdToken.webid).toEqual(`http://localhost:3002/clientapp/${payload1.sub}/profile/card#me`);
 
         });
 
