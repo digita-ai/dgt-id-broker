@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.8.7](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.6...v0.8.7) (2021-10-26)
+
+
+### **Bug Fixes**
+
+* fixed login with default client ([#260](https://github.com/digita-ai/dgt-id-broker/issues/260)) ([4aea35b](https://github.com/digita-ai/dgt-id-broker/commit/4aea35bcc900cba9b8758973b181f4d66961cac3))
+
+
+
+### [0.8.6](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.5...v0.8.6) (2021-10-26)
+
+
+### **Bug Fixes**
+
+* make `SolidService.client` optional ([#259](https://github.com/digita-ai/dgt-id-broker/issues/259)) ([1d0b106](https://github.com/digita-ai/dgt-id-broker/commit/1d0b106562e0d313495227e2d93de1836ef056c8))
+
+
+
 ### [0.8.5](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.4...v0.8.5) (2021-10-25)
 
 **Note:** Version bump only for package root
