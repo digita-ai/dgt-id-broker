@@ -11,6 +11,8 @@ import { Client } from './models/client.model';
  */
 export class SolidSDKService implements SolidService {
 
+  public restorePreviousSession = true;
+
   /**
    * Instantiates a solid sdk service.
    */
@@ -173,7 +175,7 @@ export class SolidSDKService implements SolidService {
    */
   async getSession(): Promise<Session> {
 
-    const session = await handleIncomingRedirect({ restorePreviousSession: true });
+    const session = await handleIncomingRedirect({ restorePreviousSession: this.restorePreviousSession });
 
     return session && session.isLoggedIn && session.webId
       ? { webId: session.webId, ...session } : Promise.reject();
