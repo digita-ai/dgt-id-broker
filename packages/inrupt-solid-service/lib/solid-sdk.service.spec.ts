@@ -1,4 +1,4 @@
-import { addUrl, createSolidDataset, createThing, saveSolidDatasetAt, getDefaultSession, login } from '@digita-ai/inrupt-solid-client';
+import { addUrl, createSolidDataset, createThing, saveSolidDatasetAt, getDefaultSession, login, handleIncomingRedirect } from '@digita-ai/inrupt-solid-client';
 import * as sdk from '@digita-ai/inrupt-solid-client';
 import { Issuer } from './models/issuer.model';
 import { SolidSDKService } from './solid-sdk.service';
@@ -245,6 +245,21 @@ describe('SolidSDKService', () => {
       (getDefaultSession as any) = jest.fn(async () => ({}));
       service.getDefaultSession();
       expect(sdk.getDefaultSession).toHaveBeenCalledTimes(1);
+
+    });
+
+  });
+
+  describe('getSession', () => {
+
+    it('should call getSession with public restorePreviousSession parameter', async () => {
+
+      (handleIncomingRedirect as any) = jest.fn(async () => ({ isLoggedIn: true, webId: 'mock' }));
+      await service.getSession();
+      expect(sdk.handleIncomingRedirect).toHaveBeenCalledWith({ restorePreviousSession: true });
+      service.restorePreviousSession = false;
+      await service.getSession();
+      expect(sdk.handleIncomingRedirect).toHaveBeenCalledWith({ restorePreviousSession: false });
 
     });
 
