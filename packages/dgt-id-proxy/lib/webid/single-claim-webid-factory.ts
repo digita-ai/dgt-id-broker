@@ -45,7 +45,7 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
 
     const custom_claim = payload[this.claim].toString().replace(/[|:]/g, '');
 
-    const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):+[a-zA-Z0-9][^/.]+'), slugify(custom_claim));
+    const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]\.[0-9]\.[0-9]\.[0-9]|[a-zA-Z0-9]):+[a-zA-Z0-9][^\/.]+'), slugify(custom_claim));
 
     return of(minted_webid);
 
