@@ -69,10 +69,14 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     const id_token = response.body.id_token;
     const webId = response.body.id_token.payload.webid;
 
-    // id_token.payload.first_name = 'Alain';
+    // id_token.payload[].first_name = 'Alain';
     // id_token.payload.family_name = 'Vandam';
 
-    const regExp = new RegExp(`^http:\/\/(localhost|[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}):[0-9]{4}\/${this.webIdPattern.split('/')[3]}.{0,}$`);
+    // split the pattern to remove the ':'-prefixed claim
+    const splitPattern = this.webIdPattern.split(/:[a-zA-Z]+/g);
+
+    // create a new regex that matches anything that is put inplace of where the ':'-prefixed claim was
+    const regExp = new RegExp(splitPattern.join('?.*'));
 
     if (!regExp.test(webId)) {
 
