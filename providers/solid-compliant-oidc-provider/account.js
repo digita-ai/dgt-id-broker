@@ -16,12 +16,6 @@ db.defaults({
       email_verified: true,
       webid: 'http://localhost:3002/tonypaillard/profile/card#me'
     },
-    {
-    id: 'alainvandam',
-    email: 'alain.vandam@digita.ai',
-    email_verified: true,
-    webid: 'http://localhost:3002/alainvandam/profile/card#me'
-    },
   ],
 }).write();
 
