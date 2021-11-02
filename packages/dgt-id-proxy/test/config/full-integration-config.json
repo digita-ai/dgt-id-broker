@@ -429,24 +429,15 @@
             {
               "@id": "urn:dgt-id-proxy:default:WebIdProfileHandler",
               "@type": "WebIdProfileHandler",
-              "WebIdProfileHandler:_predicates": [
-                { 
-                  "@type": "PredicatePair",
-                  "tokenKey": "first_name",
-                  "predicate": "http://xmlns.com/foaf/0.1/givenName"
-                 },
-                 { 
-                  "@type": "PredicatePair",
-                  "tokenKey": "family_name",
-                  "predicate": "http://xmlns.com/foaf/0.1/familyName"
-                 }
-              ],
-              "proxyWebId": "http://localhost:3002/clientapp/card#me",
+              "webId": "http://localhost:3002/clientapp/card#me",
+              "idp": "http://localhost:3003",
               "pathToJwks": {
                 "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
               },
-              "proxyUrl": "http://localhost:3003",
-              "webIdPattern": "http://localhost:3002/clientapp/:customclaim/profile/card#me"
+              "predicates": [
+                [ "http://xmlns.com/foaf/0.1/givenName", [ "first_name" ] ],
+                [ "http://xmlns.com/foaf/0.1/familyName", [ "family_name" ] ]
+              ]
             },
             {
               "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"

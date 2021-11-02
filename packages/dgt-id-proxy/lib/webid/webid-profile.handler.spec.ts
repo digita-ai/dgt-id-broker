@@ -1,5 +1,5 @@
 import fetchMock from 'jest-fetch-mock';
-import { PredicatePair, WebIdProfileHandler } from './webid-profile.handler';
+import { WebIdProfileHandler } from './webid-profile.handler';
 
 jest.mock('fs/promises', () => {
 
@@ -24,8 +24,7 @@ jest.mock('fs/promises', () => {
 
 });
 
-const proxyUrl = 'http://localhost:3003';
-const webIdPattern = 'http://localhost:3002/clientapp/:customclaim/profile/card#me';
+const idp = 'http://localhost:3003';
 
 describe('WebIdProfileHandler', () => {
 
@@ -44,8 +43,10 @@ describe('WebIdProfileHandler', () => {
           webid: 'http://localhost:3002/clientapp/alainvandam/profile/card#me',
           'sub': '123456789',
           'username': '23121d3c-84df-44ac-b458-3d63a9a05497/|:$^?#{}[]',
-          'first_name': 'Alain',
-          'family_name': 'Vandam',
+          info: {
+            'first_name': 'Alain',
+            'family_name': 'Vandam',
+          },
         },
       },
     },
@@ -53,39 +54,39 @@ describe('WebIdProfileHandler', () => {
     status: 200,
   };
 
-  const predicates = [
-    new PredicatePair('fist_name', 'http://xmlns.com/foaf/0.1/givenName'),
-    new PredicatePair('family_name', 'http://xmlns.com/foaf/0.1/familyName'),
+  const predicates: [string, string[]][] = [
+    [ 'http://xmlns.com/foaf/0.1/givenName', [ 'info', 'fist_name' ] ],
+    [ 'http://xmlns.com/foaf/0.1/familyName', [ 'info', 'family_name' ] ],
   ];
 
-  const webIdProfileHandler = new WebIdProfileHandler(predicates, 'http://localhost:3002/clientapp/card#me', 'assets/jwks.json', proxyUrl, webIdPattern);
+  const webIdProfileHandler = new WebIdProfileHandler('http://localhost:3002/clientapp/card#me', idp, 'assets/jwks.json', predicates);
 
   beforeAll(() => fetchMock.enableMocks());
 
   it('should be correctly instantiated', () => {
 
-    expect(new WebIdProfileHandler(predicates, 'http://localhost:3002/clientapp/card#me', 'assets/jwks.json', proxyUrl, webIdPattern)).toBeTruthy();
+    expect(new WebIdProfileHandler('http://localhost:3002/clientapp/card#me', idp, 'assets/jwks.json', predicates)).toBeTruthy();
 
   });
 
-  it('should error when no predicates are provided', () => {
+  it('should error when no webid was provided', () => {
 
-    expect(() => new WebIdProfileHandler(undefined, 'http://localhost:3002/clientapp/card#me', 'assets/jwks.json', proxyUrl, webIdPattern)).toThrow('Predicate list is required');
-    expect(() => new WebIdProfileHandler(null, 'http://localhost:3002/clientapp/card#me', 'assets/jwks.json', proxyUrl, webIdPattern)).toThrow('Predicate list is required');
+    expect(() => new WebIdProfileHandler(undefined, idp, 'assets/jwks.json', predicates)).toThrow('WebId is required');
+    expect(() => new WebIdProfileHandler(null, idp, 'assets/jwks.json', predicates)).toThrow('WebId is required');
 
   });
 
-  it('should error when no proxy webid was provided', () => {
+  it('should error when no idp was provided', () => {
 
-    expect(() => new WebIdProfileHandler(predicates, undefined, 'assets/jwks.json', proxyUrl, webIdPattern)).toThrow('WebId is required');
-    expect(() => new WebIdProfileHandler(predicates, null, 'assets/jwks.json', proxyUrl, webIdPattern)).toThrow('WebId is required');
+    expect(() => new WebIdProfileHandler('http://digitaProxy.com/profile/card#me', undefined, 'assets/jwks.json', predicates)).toThrow('An IDP URL is required');
+    expect(() => new WebIdProfileHandler('http://digitaProxy.com/profile/card#me', null, 'assets/jwks.json', predicates)).toThrow('An IDP URL is required');
 
   });
 
   it('should error when no path to jwks was provided', () => {
 
-    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', undefined, proxyUrl, webIdPattern)).toThrow('Path to JWKS is required');
-    expect(() => new WebIdProfileHandler(predicates, 'http://digitaProxy.com/profile/card#me', null, proxyUrl, webIdPattern)).toThrow('Path to JWKS is required');
+    expect(() => new WebIdProfileHandler('http://digitaProxy.com/profile/card#me', idp, undefined, predicates)).toThrow('A path to JWKS is required');
+    expect(() => new WebIdProfileHandler('http://digitaProxy.com/profile/card#me', idp, null, predicates)).toThrow('A path to JWKS is required');
 
   });
 
@@ -120,17 +121,6 @@ describe('WebIdProfileHandler', () => {
 
     });
 
-    it('should error when no response body was provided', async () => {
-
-      await expect(webIdProfileHandler.handle(
-        { ...response, body:
-          { ...response.body, id_token:
-            { ...response.body.id_token, payload:
-              { ...response.body.id_token.payload, webid: 'http://nonmatchingwebid.com/profile' } } } }
-      ).toPromise()).rejects.toThrow('The provided webId in the id_token must be similar to the webIdPattern');
-
-    });
-
     it('should create a profile and acl document when none exists', async () => {
 
       fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ]);
@@ -142,7 +132,7 @@ describe('WebIdProfileHandler', () => {
       expect(generateProfileDocument).toHaveBeenCalledTimes(1);
 
       expect(generateProfileDocument)
-        .toHaveBeenCalledWith(response.body.id_token);
+        .toHaveBeenCalledWith(response.body.id_token.payload);
 
       expect(fetchMock.mock.calls[0]).toEqual([
         'http://localhost:3002/clientapp/alainvandam/profile/card#me',
@@ -151,12 +141,12 @@ describe('WebIdProfileHandler', () => {
 
       expect(fetchMock.mock.calls[1]).toEqual([
         'http://localhost:3002/clientapp/alainvandam/profile/card',
-        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', 'Content-Type': 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{0,}.ey[a-zA-Z0-9-._]{0,}$')) } }),
+        expect.objectContaining({ method: 'PUT', headers: { 'Content-Type': 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{0,}.ey[a-zA-Z0-9-._]{0,}$')) } }),
       ]);
 
       expect(fetchMock.mock.calls[2]).toEqual([
         'http://localhost:3002/clientapp/alainvandam/profile/card.acl',
-        expect.objectContaining({ method: 'PUT', headers: { Accept: 'text/turtle', 'Content-Type': 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{0,}.ey[a-zA-Z0-9-._]{0,}$')) } }),
+        expect.objectContaining({ method: 'PUT', headers: { 'Content-Type': 'text/turtle', Authorization: expect.stringMatching(new RegExp('^Bearer ey[a-zA-Z0-9]{0,}.ey[a-zA-Z0-9-._]{0,}$')) } }),
       ]);
 
     });
@@ -190,7 +180,7 @@ describe('WebIdProfileHandler', () => {
       await webIdProfileHandler.handle(response).toPromise();
 
       expect(generateProfileDocument)
-        .toHaveBeenCalledWith(response.body.id_token);
+        .toHaveBeenCalledWith(response.body.id_token.payload);
 
     });
 

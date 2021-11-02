@@ -3,7 +3,7 @@ import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { Observable, of, throwError, from, zip } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { map, mapTo, switchMap, switchMapTo } from 'rxjs/operators';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Writer, DataFactory } from 'n3';
 import { JWK, JWTPayload } from 'jose/types';
@@ -12,12 +12,6 @@ import SignJWT from 'jose/jwt/sign';
 import { v4 as uuid }  from 'uuid';
 
 const { literal } = DataFactory;
-
-export class PredicatePair {
-
-  constructor(public tokenKey: string, public predicate: string) {}
-
-}
 
 /**
  * A {Handler} that handles a {HttpHandlerResponse} by checking if the webId given in the id_token
@@ -28,25 +22,23 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
   /**
    * Creates a {WebIdProfileHandler}.
    *
-   * @param PredicatePair[]} predicates - the predicates that need to be set in the profile document
-   * @param {string} proxyWebId - the webId of the proxy server
-   * @param {string} pathToJwks - the path to a json file containing JWKs to sign the tokens.
+   * @param {string} webId - the webId of this handler; should have authorization to write the profiles
+   * @param {string} idp - the URL of an IDP with which both the WebIDs and this handler can authenticate
+   * @param {string} pathToJwks - the path to a JSON file containing the private JWKs used by the IDP to sign tokens
+   * @param {Record<string, string[]>} predicates - the predicates that need to be set in the profile document
    */
   constructor(
-    private predicates: PredicatePair[],
-    private proxyWebId: string,
+    private webId: string,
+    private idp: string,
     private pathToJwks: string,
-    private proxyUrl: string,
-    private webIdPattern: string
+    private predicates?: [string, string[]][]
   ) {
 
     super();
 
-    if (!predicates || predicates.length === 0) { throw new Error('Predicate list is required'); }
-
-    if (!proxyWebId) { throw new Error('WebId is required'); }
-
-    if (!pathToJwks) { throw new Error('Path to JWKS is required'); }
+    if (!webId) throw new Error('A WebId is required');
+    if (!idp) throw new Error('An IDP URL is required');
+    if (!pathToJwks) throw new Error('A path to JWKS is required');
 
   }
 
@@ -58,92 +50,48 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) { return throwError(new Error('A response must be provided')); }
+    if (!response) return throwError(new Error('A response must be provided'));
+    if (!response.body) return throwError(new Error('A response body must be provided'));
+    if (!response.body.id_token) return throwError(new Error('An id token must be provided'));
+    if (!response.body.id_token.payload.webid) return throwError(new Error('A webId must be provided'));
 
-    if (!response.body) { return throwError(new Error('A response body must be provided')); }
+    const id_token_payload = response.body.id_token.payload;
 
-    if (!response.body.id_token) { return throwError(new Error('An id token must be provided')); }
-
-    if (!response.body.id_token.payload.webid) { return throwError(new Error('A webId must be provided')); }
-
-    const id_token = response.body.id_token;
-    const webId = response.body.id_token.payload.webid;
-
-    // id_token.payload[].first_name = 'Alain';
-    // id_token.payload.family_name = 'Vandam';
-
-    // split the pattern to remove the ':'-prefixed claim
-    const splitPattern = this.webIdPattern.split(/:[a-zA-Z]+/g);
-
-    // create a new regex that matches anything that is put inplace of where the ':'-prefixed claim was
-    const regExp = new RegExp(splitPattern.join('?.*'));
-
-    if (!regExp.test(webId)) {
-
-      return throwError(new Error('The provided webId in the id_token must be similar to the webIdPattern'));
-
-    }
-
-    const jwt_payload: JWTPayload = {
-      iss: this.proxyUrl,
-      sub: id_token.payload.sub,
-      aud: 'solid',
-      jti: uuid(),
-      exp: Math.round((new Date()).getTime() / 1000) + 7200,
-      iat: Math.round((new Date()).getTime() / 1000),
-      webid: this.proxyWebId,
-
-    };
-
-    return from(fetch(webId, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
-      switchMap((resp) => {
-
-        if (resp.status !== 200) {
-
-          return this.signJwtPayload(jwt_payload, 'at+jwt').pipe(
-            switchMap((token) => {
-
-              const proxyUrl = new URL(this.proxyWebId);
-              const userUrl = new URL(webId);
-              // example: http://localhost:3002/clientapp/tonypaillard/profile/card#me
-              const proxyURI = proxyUrl.origin + userUrl.pathname;
-              // example: http://localhost:3002/clientapp/tonypaillard/profile/card.acl
-              const aclURI = proxyUrl.origin + userUrl.pathname + '.acl';
-              const profileResp = from(fetch(proxyURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token, 'Content-Type': 'text/turtle' }, body: this.generateProfileDocument(id_token) }));
-              const aclResp = from(fetch(aclURI, { method: 'PUT', headers: { Accept: 'text/turtle',  Authorization:  'Bearer ' + token, 'Content-Type': 'text/turtle' }, body: this.generateAclDocument(id_token.payload.webid) }));
-
-              return zip(profileResp, aclResp).pipe(
-                switchMap(([ profile, acl ]) => {
-
-                  if (profile.status !== 200 && profile.status !== 201 && profile.status !== 205) return throwError(new Error('Failed to create a profile document'));
-
-                  if (acl.status !== 200 && acl.status !== 201 && profile.status !== 205) return throwError(new Error('Failed to create Acl document'));
-
-                  return of(response);
-
-                })
-              );
-
-            }),
-          );
-
-        }
-
-        return of(response);
-
-      })
+    return from(fetch(id_token_payload.webid, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
+      switchMap((resp) => resp.status === 200 ? of(void 0) : this.createProfile(id_token_payload)),
+      mapTo(response)
     );
 
   }
 
-  /**
-   * Specifies that if the response is defined this handler can handle the response.
-   *
-   * @param {HttpHandlerResponse} response
-   */
-  canHandle(response: HttpHandlerResponse): Observable<boolean> {
+  private createProfile(id_token_payload: any): Observable<void> {
 
-    return response ? of(true) : of(false);
+    const jwt_payload: JWTPayload = {
+      iss: this.idp,
+      sub: id_token_payload.sub,
+      aud: 'solid',
+      jti: uuid(),
+      exp: Math.round((new Date()).getTime() / 1000) + 7200,
+      iat: Math.round((new Date()).getTime() / 1000),
+      webid: this.webId,
+    };
+
+    const webid = new URL(id_token_payload.webid);
+    const target = webid.origin + webid.pathname;
+    const successCodes = [ 200, 201, 205 ];
+
+    return this.signJwtPayload(jwt_payload, 'at+jwt').pipe(
+      map((access_token) => ({ Authorization:  'Bearer ' + access_token, 'Content-Type': 'text/turtle' })),
+      switchMap((headers) => zip(
+        from(fetch(target, { method: 'PUT', headers, body: this.generateProfileDocument(id_token_payload) })),
+        from(fetch(`${target}.acl`, { method: 'PUT', headers, body: this.generateAclDocument(id_token_payload.webid) }))
+      )),
+      switchMap(([ profile, acl ]) => !successCodes.includes(profile.status)
+        ? throwError(new Error('Failed to create a profile document'))
+        : !successCodes.includes(acl.status)
+          ? throwError(new Error('Failed to create Acl document'))
+          : of(void 0)),
+    );
 
   }
 
@@ -177,34 +125,42 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
+  private getClaim(partial_payload: any, segments: string[]): string {
+
+    if (typeof partial_payload !== 'object') throw new Error('Unexpected payload structure');
+    if (!segments.length) throw new Error('Segments cannot be empty');
+
+    return segments.length === 1
+      ? partial_payload[segments[0]]
+      : this.getClaim(partial_payload[segments[0]], segments.slice(1));
+
+  }
+
   /**
    * Generates a profile document based on the predicates provided in the constructor and the id_token.
    *
    * @param {{ header: any; payload: any }} id_token - the id_token provided in the response.
    *
    */
-  private generateProfileDocument(id_token:  { header: any; payload: any }): string {
+  private generateProfileDocument(id_token_payload: any): string {
 
-    const webId = id_token.payload.webid;
+    const webId = id_token_payload.webid;
 
     const writer = new Writer({ prefixes: { foaf: 'http://xmlns.com/foaf/0.1/', solid: 'http://www.w3.org/ns/solid/terms#' } });
-    let body = '';
 
-    this.predicates.forEach((keyPredicatePair) => {
-
-      writer.addQuad(
-        DataFactory.namedNode(webId),
-        DataFactory.namedNode(keyPredicatePair.tokenKey),
-        literal(id_token.payload[keyPredicatePair.tokenKey]),
-      );
-
-    });
+    this.predicates?.forEach(([ predicate, segments ]) => writer.addQuad(
+      DataFactory.namedNode(webId),
+      DataFactory.namedNode(predicate),
+      literal(this.getClaim(id_token_payload, segments)),
+    ));
 
     writer.addQuad(
       DataFactory.namedNode(webId),
       DataFactory.namedNode('solid:oidcIssuer'),
-      DataFactory.namedNode(this.proxyUrl)
+      DataFactory.namedNode(this.idp)
     );
+
+    let body = '';
 
     writer.end((err, result) => body = result);
 
@@ -227,6 +183,17 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
         .sign(key),
     )),
   );
+
+  /**
+   * Specifies that if the response is defined this handler can handle the response.
+   *
+   * @param {HttpHandlerResponse} response
+   */
+  canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    return response ? of(true) : of(false);
+
+  }
 
 }
 
