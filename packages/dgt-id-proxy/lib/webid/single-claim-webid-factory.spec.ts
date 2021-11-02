@@ -26,11 +26,21 @@ describe('SingleClaimWebIdFactory', () => {
 
   describe('handle', () => {
 
-    it('should set the claim in the webid as username if claim provided was username', async () => {
+    it.each`
+      pattern | expected
+      ${'http://localhost:3002/:sub/profile/card#me'} | ${'http://localhost:3002/123456789/profile/card#me'}
+      ${'http://192.168.0.1:3002/:sub/profile/card#me'} | ${'http://192.168.0.1:3002/123456789/profile/card#me'}
+      ${'http://192.168.0.1/:sub/profile/card#me'} | ${'http://192.168.0.1/123456789/profile/card#me'}
+      ${'http://www.example.com/:sub/profile/card#me'} | ${'http://www.example.com/123456789/profile/card#me'}
+      ${'http://:sub.example.com/profile/card#me'} | ${'http://123456789.example.com/profile/card#me'}
 
-      const minted_webid = await singleClaimWebIdFactory.handle(id_token_payload).toPromise();
+    `('should set webid to $expected if pattern is $pattern', async ({ pattern, expected }) => {
 
-      expect(minted_webid).toEqual('http://localhost:3002/23121d3c-84df-44ac-b458-3d63a9a05497dollar/profile/card#me');
+      const factory = new SingleClaimWebIdFactory(pattern);
+
+      const minted_webid = await factory.handle(id_token_payload).toPromise();
+
+      expect(minted_webid).toEqual(expected);
 
     });
 

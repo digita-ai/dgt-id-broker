@@ -92,6 +92,32 @@
       },
       "notBefore" : 0,
       "groups" : [ ]
+    },
+    {
+      "id" : "944e0f16-b053-48df-b7d3-2371b680b2f4",
+      "createdTimestamp" : 1621596323038,
+      "username" : "alain.vandam",
+      "enabled" : true,
+      "totp" : false,
+      "emailVerified" : false,
+      "firstName" : "Alain",
+      "lastName" : "Vandam",
+      "email" : "alain.vandam@digita.ai",
+      "credentials" : [ {
+        "id" : "alainvandam",
+        "type" : "password",
+        "createdDate" : 1621596335578,
+        "secretData" : "{\"value\":\"YAwS0Q5c0ZjQqlCIB45UkXV8f9rzfsFgy4v7Kthr8dE862QrJttXBdUq7RR2cE/Rhwuk5rBbWVLXo61hSU8veA==\",\"salt\":\"Wx9gbQi1Ifu7n3Q37wqaRg==\",\"additionalParameters\":{}}",
+        "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+      } ],
+      "disableableCredentialTypes" : [ ],
+      "requiredActions" : [ ],
+      "realmRoles" : [ "uma_authorization", "offline_access" ],
+      "clientRoles" : {
+        "account" : [ "view-profile", "manage-account" ]
+      },
+      "notBefore" : 0,
+      "groups" : [ ]
     } ],
     "roles" : {
      "realm" : [ {

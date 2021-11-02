@@ -1,4 +1,4 @@
-import { getUrlAll, SolidDataset, addUrl, setThing, saveSolidDatasetAt, handleIncomingRedirect, login, logout, getStringNoLocale, getSolidDataset, Thing, getThing } from '@digita-ai/inrupt-solid-client';
+import { getUrlAll, SolidDataset, addUrl, setThing, saveSolidDatasetAt, handleIncomingRedirect, login, logout, getStringNoLocale, getSolidDataset, Thing, getThing, Session as SolidSession, getDefaultSession } from '@digita-ai/inrupt-solid-client';
 import { Session } from './models/session.model';
 import { Profile } from './models/profile.model';
 import { Issuer } from './models/issuer.model';
@@ -11,12 +11,18 @@ import { Client } from './models/client.model';
  */
 export class SolidSDKService implements SolidService {
 
+  public restorePreviousSession = true;
+
   /**
    * Instantiates a solid sdk service.
    */
-  constructor (private client: Client) {
+  constructor (private defaultClientName: string, private clients?: { [key: string]: Client }) {
 
-    if (client.clientSecret && !client.clientId) throw new Error('clientId must be set if clientSecret is set');
+    for (const client in clients) {
+
+      if (clients[client].clientSecret && !clients[client].clientId) throw new Error('clientId must be set if clientSecret is set');
+
+    }
 
   }
 
@@ -169,10 +175,10 @@ export class SolidSDKService implements SolidService {
    */
   async getSession(): Promise<Session> {
 
-    const session = await handleIncomingRedirect({ restorePreviousSession: true });
+    const session = await handleIncomingRedirect({ restorePreviousSession: this.restorePreviousSession });
 
     return session && session.isLoggedIn && session.webId
-      ? { webId: session.webId } : Promise.reject();
+      ? { webId: session.webId, ...session } : Promise.reject();
 
   }
 
@@ -195,12 +201,16 @@ export class SolidSDKService implements SolidService {
 
     }
 
+    const client = this.clients && this.clients[issuer.uri]
+      ? this.clients[issuer.uri]
+      : { clientName: this.defaultClientName };
+
     await login({
       oidcIssuer: issuer.uri,
       redirectUrl: window.location.href,
-      clientName: this.client.clientName,
-      clientId: this.client.clientId,
-      clientSecret: this.client.clientSecret,
+      clientName: client.clientName,
+      clientId: client.clientId,
+      clientSecret: client.clientSecret,
     });
 
   }
@@ -216,12 +226,16 @@ export class SolidSDKService implements SolidService {
 
     }
 
+    const client = this.clients && this.clients[issuer.uri]
+      ? this.clients[issuer.uri]
+      : { clientName: this.defaultClientName };
+
     await login({
       oidcIssuer: issuer.uri,
       redirectUrl: window.location.href,
-      clientName: this.client.clientName,
-      clientId: this.client.clientId,
-      clientSecret: this.client.clientSecret,
+      clientName: client.clientName,
+      clientId: client.clientId,
+      clientSecret: client.clientSecret,
     });
 
   }
@@ -260,6 +274,12 @@ export class SolidSDKService implements SolidService {
     const profile = await this.getProfileThing(webId);
 
     return getUrlAll(profile, 'http://www.w3.org/ns/pim/space#storage');
+
+  }
+
+  getDefaultSession(): SolidSession {
+
+    return getDefaultSession();
 
   }
 

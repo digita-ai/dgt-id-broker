@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.8.2",
+  "version": "0.8.7",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
@@ -86,7 +86,7 @@
     "preset": "@digita-ai/jest-config",
     "displayName": "proxy",
     "testEnvironment": "node",
-    "testTimeout": 15000,
+    "testTimeout": 50000,
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
@@ -100,8 +100,8 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 98.81,
-        "functions": 99.53,
+        "branches": 98.72,
+        "functions": 99.55,
         "lines": 100,
         "statements": 99.9
       }

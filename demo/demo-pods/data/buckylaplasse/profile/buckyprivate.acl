@@ -11,6 +11,7 @@
 <#authorization1>
     a acl:Authorization;
     acl:agent <http://localhost:3002/tonypaillard/profile/card#me>;
+    acl:agent <http://localhost:3002/clientapp/alainvandam/profile/card#me>;
     acl:agent <http://localhost:3002/auth0609be5ed22684f0067d64174/profile/card#me>;
     acl:agent <http://localhost:3002/944e0f16-b053-48df-b7d3-2371b680b2f3/profile/card#me>;
     acl:accessTo <./buckyprivate>;
