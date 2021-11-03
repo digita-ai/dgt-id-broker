@@ -15,6 +15,11 @@ db.defaults({
       email: 'tony.paillard@digita.ai',
       email_verified: true,
     },
+    {
+      id: 'alainvandam',
+      email: 'alain.vandam@digita.ai',
+      email_verified: true,
+    },
   ],
 }).write();
 

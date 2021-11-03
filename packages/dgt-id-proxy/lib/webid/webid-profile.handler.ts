@@ -3,15 +3,13 @@ import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { Observable, of, throwError, from, zip } from 'rxjs';
-import { map, mapTo, switchMap, switchMapTo } from 'rxjs/operators';
+import { map, mapTo, switchMap, tap } from 'rxjs/operators';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Writer, DataFactory } from 'n3';
 import { JWK, JWTPayload } from 'jose/types';
 import parseJwk from 'jose/jwk/parse';
 import SignJWT from 'jose/jwt/sign';
 import { v4 as uuid }  from 'uuid';
-
-const { literal } = DataFactory;
 
 /**
  * A {Handler} that handles a {HttpHandlerResponse} by checking if the webId given in the id_token
@@ -39,6 +37,12 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     if (!webId) throw new Error('A WebId is required');
     if (!idp) throw new Error('An IDP URL is required');
     if (!pathToJwks) throw new Error('A path to JWKS is required');
+    if (predicates && (
+      !Array.isArray(predicates) || !predicates.every(([ pred, segments ]) =>
+        typeof pred === 'string'
+        && Array.isArray(segments)
+        && segments.every((segment) => typeof segment === 'string'))
+    )) throw new Error('Predicates must be an array');
 
   }
 
@@ -148,11 +152,15 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     const writer = new Writer({ prefixes: { foaf: 'http://xmlns.com/foaf/0.1/', solid: 'http://www.w3.org/ns/solid/terms#' } });
 
-    this.predicates?.forEach(([ predicate, segments ]) => writer.addQuad(
-      DataFactory.namedNode(webId),
-      DataFactory.namedNode(predicate),
-      literal(this.getClaim(id_token_payload, segments)),
-    ));
+    this.predicates?.forEach(([ predicate, segments ]) => {
+
+      writer.addQuad(
+        DataFactory.namedNode(webId),
+        DataFactory.namedNode(predicate),
+        DataFactory.literal(this.getClaim(id_token_payload, segments)),
+      );
+
+    });
 
     writer.addQuad(
       DataFactory.namedNode(webId),
