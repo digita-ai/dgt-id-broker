@@ -370,15 +370,27 @@
           {
             "@id": "urn:dgt-id-proxy:default:WebIdResponseHandler",
             "@type": "WebIdResponseHandler",
-            "webIDFactory": {
+            "webIdFactory": {
               "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory"
             }
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:WebIdProfileHandler",
+            "@type": "WebIdProfileHandler",
+            "webId": "http://localhost:3002/clientapp/card#me",
+            "idp": "http://localhost:3003",
+            "pathToJwks": {
+              "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
+            },
+            "predicates": [
+              [ "urn:example:sub", [ "sub" ] ]
+            ]
           },
           {
             "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
           }
         ]
-    },
+      },
       "path": "/oauth/token"
     },
     {

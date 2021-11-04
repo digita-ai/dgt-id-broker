@@ -1,4 +1,4 @@
-# Root ACL resource for the agent account
+# ACL resource for the agent account
 @prefix acl: <http://www.w3.org/ns/auth/acl#>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
 
