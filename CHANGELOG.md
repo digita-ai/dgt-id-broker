@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.7...v0.9.0) (2021-11-04)
+
+
+### **Bug Fixes**
+
+* make restore previous session optional ([#273](https://github.com/digita-ai/dgt-id-broker/issues/273)) ([1dd0c0e](https://github.com/digita-ai/dgt-id-broker/commit/1dd0c0e1a9d9e5efe2feec26f8ac048c9a1344a9))
+
+
+### **Documentation**
+
+* add build step to README ([e919792](https://github.com/digita-ai/dgt-id-broker/commit/e91979297db2e68bc8bf63b4de41494617a15247))
+* add link to proxy README in repo root ([f3b9243](https://github.com/digita-ai/dgt-id-broker/commit/f3b924329502a4895af1ee248c9353867f3d5724))
+* add node version to README ([414b851](https://github.com/digita-ai/dgt-id-broker/commit/414b8516517e5cee123aebb27e47039625a25ecf))
+
+
+### **Features**
+
+* webid-profile-handler ([#250](https://github.com/digita-ai/dgt-id-broker/issues/250)) ([a054e6b](https://github.com/digita-ai/dgt-id-broker/commit/a054e6b3a552a7f6591e1df377fc109f85b190e3))
+
+
+
 ### [0.8.7](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.6...v0.8.7) (2021-10-26)
 
 
