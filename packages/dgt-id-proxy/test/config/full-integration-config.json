@@ -434,6 +434,7 @@
               "pathToJwks": {
                 "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
               },
+              "webIdPattern": "http://localhost:3002/:sub/profile/card#me",
               "predicates": [
                 [ "http://xmlns.com/foaf/0.1/givenName", [ "first_name" ] ],
                 [ "http://xmlns.com/foaf/0.1/familyName", [ "family_name" ] ]
