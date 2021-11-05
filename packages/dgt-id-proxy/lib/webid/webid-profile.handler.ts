@@ -71,14 +71,11 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     const regExp = new RegExp(splitPattern.join('?.*'));
 
     if (!regExp.test(id_token_payload.webid)) return of(response);
-    else {
 
-      return from(fetch(id_token_payload.webid, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
-        switchMap((resp) => resp.status === 200 ? of(void 0) : this.createProfile(id_token_payload)),
-        mapTo(response)
-      );
-
-    }
+    return from(fetch(id_token_payload.webid, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
+      switchMap((resp) => resp.status === 200 ? of(void 0) : this.createProfile(id_token_payload)),
+      mapTo(response)
+    );
 
   }
 
