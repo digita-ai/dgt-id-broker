@@ -13,4 +13,4 @@
     acl:agent <http://localhost:3002/clientapp/card#me>;
     acl:default <./>;
     acl:mode
-        acl:Read, acl:Control.
+        acl:Read, acl:Write, acl:Control.

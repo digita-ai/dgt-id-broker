@@ -23,12 +23,15 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    * @param {string} webId - the webId of this handler; should have authorization to write the profiles
    * @param {string} idp - the URL of an IDP with which both the WebIDs and this handler can authenticate
    * @param {string} pathToJwks - the path to a JSON file containing the private JWKs used by the IDP to sign tokens
+   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
+   * that will be replaced by the custom claim in the id token. The claim should match ':[a-zA-Z]+'
    * @param {Record<string, string[]>} predicates - the predicates that need to be set in the profile document
    */
   constructor(
     private webId: string,
     private idp: string,
     private pathToJwks: string,
+    private webIdPattern: string,
     private predicates?: [string, string[]][]
   ) {
 
@@ -61,6 +64,14 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     const id_token_payload = response.body.id_token.payload;
 
+    // split the pattern to remove the ':'-prefixed claim
+    const splitPattern = this.webIdPattern.split(/:[a-zA-Z]+/g);
+
+    // create a new regex that matches anything that is put inplace of where the ':'-prefixed claim was
+    const regExp = new RegExp(splitPattern.join('?.*'));
+
+    if (!regExp.test(id_token_payload.webid)) return of(response);
+
     return from(fetch(id_token_payload.webid, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
       switchMap((resp) => resp.status === 200 ? of(void 0) : this.createProfile(id_token_payload)),
       mapTo(response)
@@ -87,14 +98,16 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     return this.signJwtPayload(jwt_payload, 'at+jwt').pipe(
       map((access_token) => ({ Authorization:  'Bearer ' + access_token, 'Content-Type': 'text/turtle' })),
       switchMap((headers) => zip(
-        from(fetch(target, { method: 'PUT', headers, body: this.generateProfileDocument(id_token_payload) })),
-        from(fetch(`${target}.acl`, { method: 'PUT', headers, body: this.generateAclDocument(id_token_payload.webid) }))
+        of(headers),
+        from(fetch(target, { method: 'PUT', headers, body: this.generateProfileDocument(id_token_payload) }))
       )),
-      switchMap(([ profile, acl ]) => !successCodes.includes(profile.status)
+      switchMap(([ headers, profile ]) => !successCodes.includes(profile.status)
         ? throwError(new Error('Failed to create a profile document'))
-        : !successCodes.includes(acl.status)
-          ? throwError(new Error('Failed to create Acl document'))
-          : of(void 0)),
+        : of(headers)),
+      switchMap((headers) => from(fetch(`${target}.acl`, { method: 'PUT', headers, body: this.generateAclDocument(id_token_payload.webid) }))),
+      switchMap((acl) => !successCodes.includes(acl.status)
+        ? throwError(new Error('Failed to create ACL document'))
+        : of(void 0)),
     );
 
   }
@@ -106,6 +119,9 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    */
   private generateAclDocument(webId: string): string {
 
+    const url = new URL(webId);
+    const target = url.origin + url.pathname;
+
     return `# ACL resource for the WebID profile document
     @prefix acl: <http://www.w3.org/ns/auth/acl#>.
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -116,7 +132,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     <#public>
         a acl:Authorization;
         acl:agentClass foaf:Agent;
-        acl:accessTo <./card>;
+        acl:accessTo <${target}>;
         acl:mode acl:Read.
 
     # The owner has full access to the entire
@@ -124,7 +140,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     <#owner>
         a acl:Authorization;
         acl:agent <${webId}>;
-        acl:accessTo <./card>;
+        acl:accessTo <${target}>;
         acl:mode acl:Read, acl:Write, acl:Control.`;
 
   }

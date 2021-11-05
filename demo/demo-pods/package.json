@@ -5,7 +5,7 @@
   "author": "",
   "license": "",
   "scripts": {
-    "start": "shx rm -rf rundata && shx cp -r data rundata && community-solid-server -p 3002 --rootFilePath ./rundata -c config/config-file.json",
+    "start": "shx rm -rf rundata && shx cp -r data rundata && community-solid-server -p 3002 -c config/config-file.json -f rundata",
     "demo:auth0": "npm run start",
     "demo:panva": "npm run start",
     "demo:keycloak": "npm run start",
@@ -13,7 +13,7 @@
     "demo:id-kit:auth0": "npm run start"
   },
   "dependencies": {
-    "@solid/community-server": "1.1.0",
+    "@solid/community-server": "2.0.0",
     "shx": "^0.3.3"
   },
   "private": true
