@@ -6,7 +6,7 @@
   "license": "",
   "scripts": {
     "start": "docker-compose up",
-    "demo:keycloak": "npm run start"
+    "demo:keycloak": "sh docker-build.sh && npm run start"
   },
   "private": true
 }
