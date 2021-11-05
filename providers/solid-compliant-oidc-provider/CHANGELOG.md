@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.9.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.9.0...v0.9.1) (2021-11-05)
+
+
+### **Bug Fixes**
+
+* webid profile handler ([#277](https://github.com/digita-ai/dgt-id-broker/issues/277)) ([30a2843](https://github.com/digita-ai/dgt-id-broker/commit/30a284358e3fea2b122f5e79a033214f05240d2e))
+
+
+
 ## [0.9.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.7...v0.9.0) (2021-11-04)
 
 
