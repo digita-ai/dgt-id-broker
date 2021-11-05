@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.9.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.9.0...v0.9.1) (2021-11-05)
+
+**Note:** Version bump only for package @digita-ai/inrupt-solid-service
+
+
+
+
+
+## [0.9.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.7...v0.9.0) (2021-11-04)
+
+
+### **Bug Fixes**
+
+* make restore previous session optional ([#273](https://github.com/digita-ai/dgt-id-broker/issues/273)) ([1dd0c0e](https://github.com/digita-ai/dgt-id-broker/commit/1dd0c0e1a9d9e5efe2feec26f8ac048c9a1344a9))
+
+
+
 ### [0.8.7](https://github.com/digita-ai/dgt-id-broker/compare/v0.8.6...v0.8.7) (2021-10-26)
 
 
