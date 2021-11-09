@@ -84,9 +84,7 @@ image::add-client.png[Keycloak Add Client]
 . You will be directed to the client settings page. There are some important settings that you need to check here.
 . Make sure *_Implicit Flow Enabled_* is set to *_OFF_* in order for your client to remain *SOLID* compliant.
 . Under *_Web Origins_* you can set the allowed *CORS* origins
-. Click the *_Scope_* tab and make sure *_Full Scope Allowed_* is set to *_OFF_*.
-
-
+. Click the *_Scope_* tab and make sure *_Full Scope Allowed_* is set to *_OFF_* and add *_admin_* & *_user_* to Realm's available roles.
 
 == Logging in to the account console
 
