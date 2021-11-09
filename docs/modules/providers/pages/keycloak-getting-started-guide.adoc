@@ -18,6 +18,7 @@ image::keycloak-digita-login.png[Keycloak Realm Login]
 == Creating a realm
 
 There are two kind of realms: 
+
 * *Master realm* -  This realm was created for you when you first started Keycloak. It contains the admin account you created at the first login. You use this realm only to create other realms.
 * *Custom realms* - These realms are created by the admin in the master realm. They can be used by the administrator to create users and applications.
 
