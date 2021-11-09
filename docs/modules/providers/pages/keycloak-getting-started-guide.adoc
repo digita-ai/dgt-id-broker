@@ -10,31 +10,35 @@
 .. *_npm run bootstrap_* to install all the dependencies.
 .. *_npm run build:all_* to build the all packages in this workspace.
 .. *_npm run demo:keycloak_* to start the Keycloak demo server.
+
+[NOTE]
+====
+In this demo script we run the Keycloak server through a Docker container. The container is based upon the provided Docker Compose file. In this compose file we already provided an admin user for you. Note that if you would not have an admin user yet you are also able to create your own admin user through the Keycloak admin console.
+====
+
 . Open your browser and go to http://localhost:8080. If you are redirect the Keycloak welcome page you successfully launched the Keycloak server.
 
 == Creating a realm
 
-There are two kind of realms: 
-
-* *Master realm* -  This realm was created for you when you first started Keycloak. It contains the admin account you created at the first login. You use this realm only to create other realms.
-* *Custom realms* - These realms are created by the admin in the master realm. They can be used by the administrator to create users and applications.
-
 . Visit http://localhost:8080/auth/admin/ and log in to Keycloak's admin console using the admin's credentials (for this demo the user and password are simply _admin_).
 
++
 [#img-keycloak-admin-login]
 image::keycloak-admin-login.png[Keycloak Admin Login]
++
 
-[start=2]
 . In the Master menu on the top left, click *_Add realm_*.
 . Enter a name for the realm, e.g. "demo".
 
++
 [#img-keycloak-add-realm]
 image::add-demo-realm.png[Keycloak Add Realm]
++
 
-[start=4]
-. You can also import a JSON file here containing the realm configuration.
+. Just like we have provided in the Docker Compose file you can also import a JSON file here containing the realm configuration, this can contain settings like clients, users and roles. However if you choose not to upload this file you are able to set all these configurations after the following steps.
 . Set the enabled flag to *True*.
 . Click *_Create_* to create the Realm.
+
 
 Next you'll be able to set your realm settings, make sure you have selected the realm you just created.
 
@@ -52,9 +56,10 @@ image::add-user.png[Keycloak Add User]
 . Click *_Save_* and the management console will show you the new user.
 . Click the *_Credentials_* tab to set a temporary user password and confirm it by pressing *_Set Password_*.
 
++
 [#img-keycloak-user-credentials]
 image::user-credentials.png[Keycloak User Credentials]
-
++
 
 [NOTE]
 ====
@@ -69,7 +74,7 @@ update your profile information or change your login credentials.
 
 . Log out of the admin console by clicking *_Sign Out_*.
 . Go to http://localhost:8080/auth/realms/demo/account and log in to the Demo realm with the user credentials you've just created.
-. When set the temporary password flag to *_ON_* earlier,you will be required to change the password upon logging in.
+. If you set the temporary password flag to *_ON_* earlier, you will be required to change the password upon logging in.
 . The account console will show you the user's profile information. You can now edit the account.
 . Make sure you enter the required information and click *_Save_*.
 
