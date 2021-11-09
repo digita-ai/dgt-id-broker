@@ -1,0 +1,77 @@
+= Getting started with Keycloak
+:toc:
+:toclevels: 1
+:imagesdir: ../images
+
+== Launching the Keycloak server
+
+. If you haven't already, clone the link:https://github.com/digita-ai/dgt-id-broker.git[*dgt-id-broker*] repository and open it in Visual Studio Code.
+. Open your terminal in the root folder of the project and enter the following commands: 
+.. *_npm run bootstrap_* to install all the dependencies.
+.. *_npm run build:all_* to build the all packages in this workspace.
+.. *_npm run demo:keycloak_* to start the Keycloak demo server.
+. Open your browser and go to http://localhost:3001. If you are redirect the following login you successfully launched the Keycloak server:
+
+[#img-keycloak-login]
+image::keycloak-digita-login.png[Keycloak Realm Login]
+
+== Creating a realm
+
+There are two kind of realms: 
+* *Master realm* -  This realm was created for you when you first started Keycloak. It contains the admin account you created at the first login. You use this realm only to create other realms.
+* *Custom realms* - These realms are created by the admin in the master realm. They can be used by the administrator to create users and applications.
+
+. Visit http://localhost:8080/auth/admin/ and log in to Keycloak's admin console using the admin's credentials (for this demo the user and password are simply _admin_).
+
+[#img-keycloak-admin-login]
+image::keycloak-admin-login.png[Keycloak Admin Login]
+
+[start=2]
+. In the Master menu on the top left, click *_Add realm_*.
+. Enter a name for the realm, e.g. "demo".
+
+[#img-keycloak-add-realm]
+image::add-demo-realm.png[Keycloak Add Realm]
+
+[start=4]
+. You can also import a JSON file here containing the realm configuration.
+. Set the enabled flag to *True*.
+. Click *_Create_* to create the Realm.
+
+Next you'll be able to set your realm settings, make sure you have selected the realm you just created.
+
+== Creating a user
+
+. In the menu to the left, click *_Users_* and then *_Add user_*.
+. Enter a username, e.g. "johndoe". The rest of the fields are not required but recommended.
+
+[#img-keycloak-add-user]
+image::add-user.png[Keycloak Add User]
+
+[start=3]
+. Click *_Create_* to create the user.
+. Make sure you switch *_Email verified_* to *_ON_*.
+. Click *_Save_* and the management console will show you the new user.
+. Click the *_Credentials_* tab to set a temporary user password and confirm it by pressing *_Set Password_*.
+
+[#img-keycloak-user-credentials]
+image::user-credentials.png[Keycloak User Credentials]
+
+
+[NOTE]
+====
+This password is temporary and the user will be required to change it on the first login.
+If you wish to create a permanent password set the *_Temporary_* flag to *_OFF_*.
+====
+
+== Logging in to the account console
+
+The user you've just created now has access to the account console. This console can be used to manage the user's account,
+update your profile information or change your login credentials.
+
+. Log out of the admin console by clicking *_Sign Out_*.
+. Go to http://localhost:8080/auth/realms/demo/account and log in to the Demo realm with the user credentials you've just created.
+. When set the temporary password flag to *_ON_* earlier,you will be required to change the password upon logging in.
+. The account console will show you the user's profile information. You can now edit the account.
+. Make sure you enter the required information and click *_Save_*.
+
