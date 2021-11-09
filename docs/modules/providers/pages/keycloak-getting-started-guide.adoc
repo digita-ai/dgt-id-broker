@@ -10,10 +10,7 @@
 .. *_npm run bootstrap_* to install all the dependencies.
 .. *_npm run build:all_* to build the all packages in this workspace.
 .. *_npm run demo:keycloak_* to start the Keycloak demo server.
-. Open your browser and go to http://localhost:3001. If you are redirect the following login you successfully launched the Keycloak server:
-
-[#img-keycloak-login]
-image::keycloak-digita-login.png[Keycloak Realm Login]
+. Open your browser and go to http://localhost:8080. If you are redirect the Keycloak welcome page you successfully launched the Keycloak server.
 
 == Creating a realm
 
