@@ -1,7 +1,7 @@
 = Classic OIDC vs Solid OIDC
 :toc:
 :toclevels: 1
-:imagesdir: ../img
+:imagesdir: ../images
 
 
 This document provides a close comparison of classic OpenID Connect (OIDC) and Solid OIDC. We will demonstrate the differences between the classic OIDC flow and the Solid OIDC flow, as the latter requires some crucial additions to the former.
