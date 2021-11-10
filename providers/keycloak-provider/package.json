@@ -5,8 +5,10 @@
   "author": "",
   "license": "",
   "scripts": {
-    "start": "docker-compose up",
-    "demo:keycloak": "sh docker-build.sh && npm run start"
+    "start": "if docker info --format '{{.Architecture}}' | grep -q aarch64; then npm run demo:keycloak:m1; else npm run demo:keycloak:other; fi",
+    "demo:keycloak": "npm run start",
+    "demo:keycloak:m1": "docker start keycloak-demo || docker run -p 8080:8080 --name keycloak-demo -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin -e KEYCLOAK_IMPORT=./imports/realm.json -v $(pwd)/imports/realm.json:/imports/realm.json wizzn/keycloak:14",
+    "demo:keycloak:other": "docker start keycloak-demo || docker run -p 8080:8080 --name keycloak-demo -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin -e KEYCLOAK_IMPORT=./imports/realm.json -v $(pwd)/imports/realm.json:/imports/realm.json quay.io/keycloak/keycloak:latest"
   },
   "private": true
 }
