@@ -41,7 +41,7 @@ image::keycloak-admin-login.png[Keycloak Admin Login]
 +
 
 
-== Creating a realm
+== Configering a realm
 
 If you haven't already, you can create a realm in Keycloak as described below.
 
@@ -59,10 +59,36 @@ image::add-demo-realm.png[Keycloak Add Realm]
 
 Next you'll be able to set your realm settings, make sure you have selected the realm you just created.
 
+== Creating a client
+
+In order to let the proxy access the upstream provider's data we need to add it as a static client.
+
+. In the left menu of the admin console, click *_Clients_*.
+. You will see a list of all clients. On the far right click *_Create_* to create a new client. Note that you again have the option to upload a JSON file containing the client configuration instead.
+. Fill in the *_Client ID_* , e.g. "id-proxy". This specifies the ID that will be used in URI's and tokens.
+. In *_Client Protocol_* select *_openid-connect_* since *SOLID* is based on the *OIDC Protocol*.
+. In *_Access Type_* select *_confidential_* so that clients require a secret to initiate the login protocol.
+. Specify a root URL that will be appended to relative URL's, e.g. *_http://localhost:8080/id-proxy_*.
+. Click *_Save_* to create the client.
+
++
+[#img-keycloak-add-client]
+image::add-client.png[Keycloak Add Client]
++
+
+. You will be directed to the client settings page. There are some important settings in the *_Settings_* tab that you need to check here.
+. Make sure *_Implicit Flow Enabled_* is set to *_OFF_* in order for your client to remain *SOLID* compliant. It is not allowed to use the implicit flow due to the inherent risks of returning access tokens in an HTTP redirect without any confirmation that it has been received by the client.
+. Under *_Web Origins_* you *MUST* set the proxy host URL in the allowed *CORS* origins, e.g. *_http://localhost:80808_* in order to prevent *CORS* errors. 
+. Make sure to add the required *_Valid Redirect URIs* path, e.g. *_/realm/<REALM_NAME>/account/*_*, since this is crucial for the proxy to work. A redirect uri is required in *OIDC* because this will tell provider where the response needs to be sent after logging in. 
+
+. Switch to the *_Credentials_* tab and set the *_Client Authenticator_* to Client ID and Secret.
+
 == Creating a user
 
+If you'd like to add users to the realm you can do so as described below.
+
 . In the menu to the left, click *_Users_* and then *_Add user_*.
-. Enter a username, e.g. "johndoe". The rest of the fields are not required but recommended.
+. Enter a username, e.g. *"johndoe"*. The rest of the fields are not required but recommended.
 
 [#img-keycloak-add-user]
 image::add-user.png[Keycloak Add User]
@@ -83,34 +109,3 @@ image::user-credentials.png[Keycloak User Credentials]
 This password is temporary and the user will be required to change it on the first login.
 If you wish to create a permanent password set the *_Temporary_* flag to *_OFF_*.
 ====
-
-== Creating a client
-
-. In the left menu of the admin console, click *_Clients_*.
-. You will see a list of all clients. On the far right click *_Create_* to create a new client. Note that you again have to option to upload a JSON file containing the client configuration instead.
-. Fill in the *_Client ID_* , e.g. "demo-client". This specifies the ID that will be used in URI's and tokens.
-. In *_Client Protocol_* select *_openid-connect_*.
-. You can also specify a root URL that will be appended to relative URL's.
-. Click *_Save_* to create the client.
-
-+
-[#img-keycloak-add-client]
-image::add-client.png[Keycloak Add Client]
-+
-
-. You will be directed to the client settings page. There are some important settings that you need to check here.
-. Make sure *_Implicit Flow Enabled_* is set to *_OFF_* in order for your client to remain *SOLID* compliant.
-. Under *_Web Origins_* you can set the allowed *CORS* origins
-. Click the *_Scope_* tab and make sure *_Full Scope Allowed_* is set to *_OFF_* and add *_admin_* & *_user_* to Realm's available roles.
-
-== Logging in to the account console
-
-The user you've just created now has access to the account console. This console can be used to manage the user's account,
-update your profile information or change your login credentials.
-
-. Log out of the admin console by clicking *_Sign Out_*.
-. Go to http://localhost:8080/auth/realms/demo/account and log in to the Demo realm with the user credentials you've just created.
-. If you set the temporary password flag to *_ON_* earlier, you will be required to change the password upon logging in.
-. The account console will show you the user's profile information. You can now edit the account.
-. Make sure you enter the required information and click *_Save_*.
-
