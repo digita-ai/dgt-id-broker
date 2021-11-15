@@ -3,8 +3,11 @@
   "compilerOptions": {
     "baseUrl": "lib",
     "outDir": "dist",
-    "strict": false,
-    "sourceMap": true
+    //
+    "inlineSourceMap": false,
+    "inlineSources": true,
+    "sourceMap": true,
+    "strict": false
   },
   "include": [ "lib" ],
   "exclude": [
