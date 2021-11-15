@@ -7,6 +7,15 @@ import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+/**
+ * Checks a URI and returns an object containing:
+ * - the URI
+ * - the host
+ * - the port
+ * - the scheme
+ *
+ * @param { string } uri - The uri to check.
+ */
 export const checkUri = (uri: string) => {
 
   const httpUri = uri.match(/^https?:\/\//g) ? uri : 'http://' + uri ;
@@ -33,6 +42,11 @@ export const checkUri = (uri: string) => {
 
 };
 
+/**
+ * Reads a file using a filepath and parses the result if possible to return the content as a string.
+ *
+ * @param { string } filepath - The filepath to the file to read.
+ */
 export const checkFile = (filePath: string): void => {
 
   try {
@@ -79,6 +93,11 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
 };
 
+/**
+ * Parses the command line arguments and returns the result.
+ *
+ * @param { string[] } args - The command line arguments.
+ */
 export const createVariables = (args: string[]): Record<string, any> => {
 
   const { argv: params } = yargs(hideBin(args))

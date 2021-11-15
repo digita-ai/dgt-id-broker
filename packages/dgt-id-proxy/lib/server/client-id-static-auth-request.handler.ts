@@ -6,7 +6,7 @@ import { KeyValueStore } from '../storage/key-value-store';
 import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
- * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the registration data data and retrieves oidcRegistration. If the info is
+ * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the registration data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
@@ -20,7 +20,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * Creates a { ClientIdStaticAuthRequestHandler }.
    *
    * @param { string } clientId - the client_id of the static client configured on the upstream server.
-   * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
    * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
    * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
    */
