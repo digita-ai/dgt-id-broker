@@ -5,7 +5,9 @@
     "outDir": "dist",
     // Recommended by Lit Element
     "module": "es2015",
-    "target": "es2017"
+    "target": "es2017",
+    //
+    "types": []
   },
   "include": [ "lib" ],
   "exclude": [
