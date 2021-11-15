@@ -3,10 +3,17 @@
 :toclevels: 1
 :imagesdir: ../images
 
-== Launching the Keycloak server
+== Configuring & starting the proxy
 
+. If you haven't already, clone the link:https://github.com/digita-ai/dgt-id-broker.git[*dgt-id-broker*] repository.
+. Open your terminal in the root folder of the project and enter the following commands: 
+.. *_npm run bootstrap_* to install all the dependencies.
+.. *_npm run build:all_* to build the all packages in this workspace.
+.. *_npm run start_* to start the proxy.
 
-In this demo we will run the Keycloak server through a Docker container.
+== Launching a Keycloak server
+
+If you haven't got an instance of Keycloak already you can start one through a Docker container as mentioned below.
 Prerequisites: Docker is already installed on your system. If not you can download it link:https://www.docker.com/products/docker-desktop[here].
 
 First we will pull our Docker image and run the container. 
@@ -15,18 +22,18 @@ First we will pull our Docker image and run the container.
 
 +
 --
-*_docker run -p 8080:8080 --name keycloak-demo -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:latest_*
+*_docker run -p <PORT>:<PORT> --name <CONTAINER-NAME> -e KEYCLOAK_USER=<USER> -e KEYCLOAK_PASSWORD=<PASSWORD> <IMAGE_NAME>_*
 --
 +
 
 Lets's break this down a little bit: 
 
-.. Docker will run on port *8080*, specified by the *-p* argument.
-.. We will name our Docker container *keycloak-demo* with the *--name* argument.
-.. We will set the *KEYCLOAK_USER* and *KEYCLOAK_PASSWORD* environment variables to create an admin account from the command line. Note that you can also remove these optional arguments and create an admin account on the Keycloak welcome page instead, you can find more info on that link:https://wjw465150.gitbooks.io/keycloak-documentation/content/getting_started/topics/first-boot/initial-user.html[here].
-.. We will pull the latest version of the Keycloak Docker image from the quay.io repository using *quay.io/keycloak/keycloak:latest*.
+.. Docker will run on the internal and external port specified by the *-p* argument, e.g. *8080:8080*.
+.. We will name our Docker container with the *--name* argument, e.g. *keycloak-demo*.
+.. We will set the *KEYCLOAK_USER* and *KEYCLOAK_PASSWORD* environment variables to create an admin account from the command line using the *-e* flag. Note that you can also remove these optional arguments and create an admin account on the Keycloak welcome page instead, you can find more info on that link:https://wjw465150.gitbooks.io/keycloak-documentation/content/getting_started/topics/first-boot/initial-user.html[here].
+.. We will pull a Keycloak Docker image, e.g. *quay.io/keycloak/keycloak:latest*.
 
-. Open your browser and go to http://localhost:8080. If you are redirected to the Keycloak welcome page you've successfully launched the Keycloak server. Click *_Adminstration Console_* to login as the admin user we have just created through the Docker command.
+. Open your browser and go to your hostname followed by the port you specified, e.g. *http://localhost:8080*. If you are redirected to the Keycloak welcome page you've successfully launched the Keycloak server. Click *_Adminstration Console_* to login as the admin user we have just created through the Docker command.
 
 +
 [#img-keycloak-admin-login]
@@ -36,6 +43,8 @@ image::keycloak-admin-login.png[Keycloak Admin Login]
 
 == Creating a realm
 
+If you haven't already, you can create a realm in Keycloak as described below.
+
 . When in the Keycloak admin console in the Master menu on the top left, click *_Add realm_*.
 . Enter a name for the realm, e.g. "demo".
 
@@ -44,10 +53,9 @@ image::keycloak-admin-login.png[Keycloak Admin Login]
 image::add-demo-realm.png[Keycloak Add Realm]
 +
 
-. Just like we have provided in the Docker Compose file you can also import a JSON file here containing the realm configuration, this can contain settings like clients, users and roles. However if you choose not to upload this file you are able to set all these configurations after the following steps.
+. You can import a JSON file here containing the realm configuration, this can contain settings like clients, users and roles. However if you choose not to upload this file you are able to set all these configurations after the following steps.
 . Set the enabled flag to *True*.
 . Click *_Create_* to create the Realm.
-
 
 Next you'll be able to set your realm settings, make sure you have selected the realm you just created.
 
