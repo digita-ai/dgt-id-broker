@@ -85,6 +85,9 @@
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@digita-ai/inrupt-solid-client)/)"
+    ],
     "coveragePathIgnorePatterns": [
       "<rootDir>/dist/",
       "<rootDir>/coverage/",
