@@ -1,6 +1,9 @@
 import { MemoryStore } from '@digita-ai/handlersjs-core';
 import { JWK } from 'jose/types';
 
+/**
+ * An interface that represents a MemoryStore that can be used to tokens, keys and client information.
+ */
 interface storeInterface  {
   privateKey: JWK;
   publicKey: JWK;

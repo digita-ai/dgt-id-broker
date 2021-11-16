@@ -3,6 +3,18 @@ import { defaultGetAuthorizationCode, defaultHandleAuthRequestUrl } from '../sol
 import { getFirstIssuerFromWebId } from './web-id';
 import { authRequest, tokenRequest, tokenRequestReturnObject } from './oidc';
 
+/**
+ * Logs the client in using an issuer.
+ * Checks if all necessary parameters are present and performs an authentication request.
+ *
+ * @param { string } issuer - The clients Solid OIDC issuer.
+ * @param { string } clientId - The clients client id.
+ * @param { string } scope - The scope of the request.
+ * @param { string } redirectUri - The uri to redirect the response to.
+ * @param { string } codeChallenge - The code challenge to use.
+ * @param { string } state? - The state of the request.
+ * @param { Promise<void> } handleAuthRequestUrl - The authentication request url.
+ */
 export const loginWithIssuer = async (
   issuer: string,
   clientId: string,
@@ -23,6 +35,19 @@ export const loginWithIssuer = async (
 
 };
 
+/**
+ * Logs the client in using a web id.
+ * Checks if all necessary parameters are present and retrieves the first issuer from the web id.
+ * Performs a login with Issuer request using the retrieved issuer from the web id.
+ *
+ * @param { string } issuer - The clients Solid OIDC issuer.
+ * @param { string } clientId - The clients client id.
+ * @param { string } scope - The scope of the request.
+ * @param { string } redirectUri - The uri to redirect the response to.
+ * @param { string } codeChallenge - The code challenge to use.
+ * @param { string } state? - The state of the request.
+ * @param { Promise<void> } handleAuthRequestUrl - The authentication request url.
+ */
 export const loginWithWebId = async (
   webId: string,
   clientId: string,
@@ -49,6 +74,20 @@ export const loginWithWebId = async (
 
 };
 
+/**
+ * Handles the incoming redirect.
+ * Checks all necessary parameters are present and gets an authorization code.
+ * Performs a token request using the authorization code and the given parameters.
+ *
+ * @param { string } issuer - The clients Solid OIDC issuer.
+ * @param { string } clientId - The clients client id.
+ * @param { string } redirectUri - The uri to redirect the response to.
+ * @param { string } codeVerifier - The code verifier to use.
+ * @param { JWK } publicKey - The public JWK to use.
+ * @param { JWK } privateKey - The private JWK to use.
+ * @param { Promise<string|null> } getAuthorizationCode - The authorization code.
+ * @param { string } clientSecret? - The clients secret.
+ */
 export const handleIncomingRedirect = async (
   issuer: string,
   clientId: string,
