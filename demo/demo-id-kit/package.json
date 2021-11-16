@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@digita-ai/dgt-id-kit": "^0.6.1",
-    "@digita-ai/handlersjs-core": "0.4.7",
+    "@digita-ai/handlersjs-core": "0.3.4",
     "buffer": "^6.0.3",
     "dotenv": "^8.2.0",
     "esbuild": "^0.9.6",

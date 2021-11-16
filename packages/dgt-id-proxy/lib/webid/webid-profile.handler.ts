@@ -195,8 +195,8 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
   private getSigningKit = () => from(readFile(
     path.isAbsolute(this.pathToJwks) ? this.pathToJwks : path.join(process.cwd(), this.pathToJwks)
   )).pipe(
-    switchMap((keyFile: Buffer) => of<JWK>(JSON.parse(keyFile.toString()).keys[0])),
-    switchMap((jwk: JWK) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
+    switchMap<Buffer, JWK>((keyFile) => of(JSON.parse(keyFile.toString()).keys[0])),
+    switchMap((jwk) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
   );
 
   private signJwtPayload = (jwtPayload: JWTPayload, typ: string) => zip(of(jwtPayload), this.getSigningKit()).pipe(
