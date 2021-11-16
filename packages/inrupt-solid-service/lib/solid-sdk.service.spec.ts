@@ -46,8 +46,8 @@ describe('SolidSDKService', () => {
         uri: 'https://test.uri/',
       } ];
 
-      const addUrlSpy = jest.spyOn(sdk, 'addUrl');
-      const setThingSpy = jest.spyOn(sdk, 'setThing');
+      const addUrlSpy = spyOn(sdk, 'addUrl');
+      const setThingSpy = spyOn(sdk, 'setThing');
 
       const result = await service.addIssuers(mockWebId, newIssuers);
       expect(result).toEqual(newIssuers);
@@ -88,10 +88,10 @@ describe('SolidSDKService', () => {
 
     });
 
-    xit('should error when issuer could not be found', async () => {   // TODO: fix this test
+    it('should error when issuer could not be found', () => {
 
       service.getIssuers = jest.fn(async () => undefined);
-      await expect(service.login('https://web.id/')).rejects.toThrow('Issuer should be set.: ');
+      expect(service.login('https://web.id/')).rejects.toThrow('Issuer should be set.: ');
 
     });
 

@@ -4,10 +4,6 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "module": "commonjs",
-    //
-    "inlineSourceMap": false,
-    "inlineSources": true,
-    "sourceMap": true,
     "strict": false
   },
   "include": [
