@@ -56,8 +56,8 @@
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "^0.4.0",
-    "@digita-ai/handlersjs-http": "^0.4.0",
+    "@digita-ai/handlersjs-core": "0.4.6",
+    "@digita-ai/handlersjs-http": "0.4.6",
     "@types/uuid": "^8.3.0",
     "@types/yargs": "^16.0.1",
     "componentsjs": "^4.5.0",
@@ -86,7 +86,7 @@
     "preset": "@digita-ai/jest-config",
     "displayName": "proxy",
     "testEnvironment": "node",
-    "testTimeout": 50000,
+    "testTimeout": 100000,
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
@@ -101,7 +101,7 @@
     "coverageThreshold": {
       "global": {
         "branches": 98.3,
-        "functions": 99.55,
+        "functions": 99.56,
         "lines": 99.89,
         "statements": 99.62
       }
