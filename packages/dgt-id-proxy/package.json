@@ -4,6 +4,12 @@
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./dist/public-api.js"
+    }
+  },
   "bin": {
     "dgt-id-proxy": "./bin/server.js"
   },
@@ -65,7 +71,7 @@
     "lint-staged": "^10.5.4",
     "nock": "^13.1.1",
     "node-fetch": "^2.6.1",
-    "rxjs": "^6.6.7",
+    "rxjs": "^7.4.0",
     "slugify": "^1.5.3",
     "uuid": "^8.3.2",
     "yargs": "^17.0.1"

@@ -40,6 +40,6 @@
   "dependencies": {
     "@inrupt/solid-client": "1.6.1",
     "@inrupt/solid-client-authn-browser": "1.8.0",
-    "rxjs": "^6.6.7"
+    "rxjs": "^7.4.0"
   }
 }

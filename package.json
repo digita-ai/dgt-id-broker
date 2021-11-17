@@ -68,8 +68,5 @@
     "projects": [
       "./packages/*/package.json"
     ]
-  },
-  "dependencies": {
-    "jose": "^3.11.6"
   }
 }
