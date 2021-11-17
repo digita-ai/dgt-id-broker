@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.9.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.9.2...v0.9.3) (2021-11-16)
+
+**Note:** Version bump only for package root
+
+
+
+
+
+### [0.9.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.9.1...v0.9.2) (2021-11-15)
+
+
+### **Bug Fixes**
+
+* make-keycloak-docker-image-M1-compatible ([#279](https://github.com/digita-ai/dgt-id-broker/issues/279)) ([0ee347a](https://github.com/digita-ai/dgt-id-broker/commit/0ee347a4e11beae0cdaa297bbef8f2899101391b))
+
+
+
 ### [0.9.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.9.0...v0.9.1) (2021-11-05)
 
 
