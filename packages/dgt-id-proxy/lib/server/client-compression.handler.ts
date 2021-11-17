@@ -64,27 +64,31 @@ export class ClientCompressionHandler extends HttpHandler {
     encodingPossibilities: string,
   ): HttpHandlerResponse {
 
-    // Compress according to the first in the list as they are ordered by preference.
-    switch (encodingPossibilities) {
+    if (response.body) {
 
-      case 'br':
-        response.body = brotliCompressSync(response.body);
-        response.headers['content-encoding'] = 'br';
-        break;
-      case 'gzip':
-        response.body = gzipSync(response.body);
-        response.headers['content-encoding'] = 'gzip';
-        break;
-      case 'deflate':
-        response.body = deflateSync(response.body);
-        response.headers['content-encoding'] = 'deflate';
-        break;
+      // Compress according to the first in the list as they are ordered by preference.
+      switch (encodingPossibilities) {
+
+        case 'br':
+          response.body = brotliCompressSync(response.body);
+          response.headers['content-encoding'] = 'br';
+          break;
+        case 'gzip':
+          response.body = gzipSync(response.body);
+          response.headers['content-encoding'] = 'gzip';
+          break;
+        case 'deflate':
+          response.body = deflateSync(response.body);
+          response.headers['content-encoding'] = 'deflate';
+          break;
         // If nothing matches, just do nothing. Sending the response without encoding is always accepted.
-      default:
-        delete response.headers['content-encoding'];
-        break;
+        default:
+          delete response.headers['content-encoding'];
+          break;
 
-    }
+      }
+
+    } else delete response.headers['content-encoding'];
 
     return response;
 
