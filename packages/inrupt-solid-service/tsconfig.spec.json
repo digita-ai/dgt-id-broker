@@ -18,7 +18,8 @@
     "strict": false
   },
   "files": [ 
-    "test/test-data.ts"
+    "test/test-data.ts",
+    "test/setup.ts"
   ],
   "include": [ "lib" ],
   "exclude": [
