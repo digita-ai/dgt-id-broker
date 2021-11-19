@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@digita-ai/inrupt-solid-client": "0.10.1",
-    "crypto-js": "^4.1.1",
+    "crypto": "^1.0.1",
     "jest-environment-jsdom": "^27.2.0",
     "jose": "3.14.3",
     "n3": "^1.11.0",
@@ -81,6 +81,9 @@
         "statements": 36.89
       }
     },
+    "setupFiles": [
+      "<rootDir>/test/setup.ts"
+    ],
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
