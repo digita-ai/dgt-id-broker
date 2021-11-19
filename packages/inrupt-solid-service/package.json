@@ -27,9 +27,7 @@
   },
   "dependencies": {
     "@digita-ai/inrupt-solid-client": "0.10.1",
-    "@peculiar/webcrypto": "^1.2.2",
     "crypto": "^1.0.1",
-    "crypto-js": "^4.1.1",
     "jest-environment-jsdom": "^27.2.0",
     "jose": "3.14.3",
     "n3": "^1.11.0",
