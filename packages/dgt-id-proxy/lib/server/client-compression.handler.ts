@@ -31,11 +31,11 @@ export class ClientCompressionHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(new Error('Context cannot be null or undefined')); }
+    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.headers) { return throwError(new Error('No headers were included in the request')); }
+    if (!context.request.headers) { return throwError(() => new Error('No headers were included in the request')); }
 
     const clientAcceptEncoding = context.request.headers['accept-encoding'];
 

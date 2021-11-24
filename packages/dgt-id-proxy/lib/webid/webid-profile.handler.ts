@@ -57,10 +57,10 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) return throwError(new Error('A response must be provided'));
-    if (!response.body) return throwError(new Error('A response body must be provided'));
-    if (!response.body.id_token) return throwError(new Error('An id token must be provided'));
-    if (!response.body.id_token.payload.webid) return throwError(new Error('A webId must be provided'));
+    if (!response) return throwError(() => new Error('A response must be provided'));
+    if (!response.body) return throwError(() => new Error('A response body must be provided'));
+    if (!response.body.id_token) return throwError(() => new Error('An id token must be provided'));
+    if (!response.body.id_token.payload.webid) return throwError(() => new Error('A webId must be provided'));
 
     const id_token_payload = response.body.id_token.payload;
 
@@ -102,11 +102,11 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
         from(fetch(target, { method: 'PUT', headers, body: this.generateProfileDocument(id_token_payload) }))
       )),
       switchMap(([ headers, profile ]) => !successCodes.includes(profile.status)
-        ? throwError(new Error('Failed to create a profile document'))
+        ? throwError(() => new Error('Failed to create a profile document'))
         : of(headers)),
       switchMap((headers) => from(fetch(`${target}.acl`, { method: 'PUT', headers, body: this.generateAclDocument(id_token_payload.webid) }))),
       switchMap((acl) => !successCodes.includes(acl.status)
-        ? throwError(new Error('Failed to create ACL document'))
+        ? throwError(() => new Error('Failed to create ACL document'))
         : of(void 0)),
     );
 

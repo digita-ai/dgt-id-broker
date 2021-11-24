@@ -45,7 +45,7 @@ describe('DpopTokenRequestHandler', () => {
 
   const secondsSinceEpoch = () => Math.floor(Date.now() / 1000);
 
-  const successfullProxiedServerResponse = () => of({
+  const successfulProxiedServerResponse = () => of({
     body: {
       access_token: {
         header: {
@@ -263,7 +263,7 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should tolerate an iat when a DPoP proof is issued upto 10 seconds in the future', async () => {
 
-      nestedHandler.handle = jest.fn().mockReturnValue(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValue(successfulProxiedServerResponse());
 
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
@@ -476,7 +476,7 @@ describe('DpopTokenRequestHandler', () => {
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       // send the jti once
       await handler.handle(context).toPromise();
 
@@ -511,7 +511,7 @@ describe('DpopTokenRequestHandler', () => {
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       // send the jti once
       await handler.handle(context).toPromise();
 
@@ -539,7 +539,7 @@ describe('DpopTokenRequestHandler', () => {
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       // send the jti once
       await handler.handle(context).toPromise();
 
@@ -565,7 +565,7 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should return a valid DPoP bound access token response when the upstream server returns a valid response', async () => {
 
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       const resp = await handler.handle(context).toPromise();
       expect(resp.headers).toEqual({});
       expect(resp.status).toEqual(200);
@@ -582,7 +582,7 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should throw on any errors that are caught in the catchError', async () => {
 
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(throwError(new Error('mockError')));
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(throwError(() => new Error('mockError')));
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('mockError');
 
     });
@@ -590,10 +590,10 @@ describe('DpopTokenRequestHandler', () => {
     it('should throw a falback error if catchError catches an empty error', async () => {
 
       Object.defineProperty(jwk, 'calculateThumbprint', {
-        value: jest.fn().mockReturnValueOnce(throwError({})),
+        value: jest.fn().mockReturnValueOnce(throwError(() => new Error())),
       });
 
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
 
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('DPoP verification failed due to an unknown error');
 
@@ -602,7 +602,7 @@ describe('DpopTokenRequestHandler', () => {
     it('should call calculateThumbprint with an empty object when no JWK was found in the header', async () => {
 
       Object.defineProperty(jwk, 'calculateThumbprint', {
-        value: jest.fn().mockReturnValueOnce(throwError({})),
+        value: jest.fn().mockReturnValueOnce(throwError(() => new Error())),
       });
 
       Object.defineProperty(jwt, 'jwtVerify', {
@@ -620,7 +620,7 @@ describe('DpopTokenRequestHandler', () => {
         )),
       });
 
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
 
       await expect(handler.handle({ ...context, request: { headers: { 'dpop': dpopJwtWithoutJWK }, method: 'POST', url: new URL('http://digita.ai/') } }).toPromise()).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'no JWK was found in the header' }),

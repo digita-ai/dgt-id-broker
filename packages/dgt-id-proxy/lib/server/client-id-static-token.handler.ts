@@ -63,30 +63,30 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(new Error('A context must be provided')); }
+    if (!context) { return throwError(() => new Error('A context must be provided')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.body) { return throwError(new Error('No body was included in the request')); }
+    if (!context.request.body) { return throwError(() => new Error('No body was included in the request')); }
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
 
-    if (!client_id) { return throwError(new Error('No client_id was provided')); }
+    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
 
     const grant_type = params.get('grant_type');
 
-    if (!grant_type) { return throwError(new Error('No grant_type was provided')); }
+    if (!grant_type) { return throwError(() => new Error('No grant_type was provided')); }
 
-    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
+    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(() => new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
 
     const redirect_uri = params.get('redirect_uri');
 
-    if (grant_type === 'authorization_code' && !redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
+    if (grant_type === 'authorization_code' && !redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
 
     const refresh_token = params.get('refresh_token');
 
-    if (grant_type === 'refresh_token' && !refresh_token) { return throwError(new Error('No refresh_token was provided')); }
+    if (grant_type === 'refresh_token' && !refresh_token) { return throwError(() => new Error('No refresh_token was provided')); }
 
     try {
 
@@ -114,9 +114,9 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
       switchMap((response) => {
 
-        if (!response.body.access_token) { return throwError(new Error('response body did not contain an access_token')); }
+        if (!response.body.access_token) { return throwError(() => new Error('response body did not contain an access_token')); }
 
-        if (!response.body.access_token.payload) { return throwError(new Error('Access token in response body did not contain a decoded payload')); }
+        if (!response.body.access_token.payload) { return throwError(() => new Error('Access token in response body did not contain a decoded payload')); }
 
         response.body.access_token.payload.client_id = client_id;
 
@@ -149,7 +149,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       .pipe(
         switchMap((registrationData) => (registrationData.grant_types?.includes(grantType))
           ? of(registrationData)
-          : (throwError(new Error('The grant type in the request is not included in the client registration data')))),
+          : (throwError(() => new Error('The grant type in the request is not included in the client registration data')))),
       );
 
   }

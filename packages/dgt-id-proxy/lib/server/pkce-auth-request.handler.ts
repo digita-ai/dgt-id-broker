@@ -36,17 +36,17 @@ export class PkceAuthRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(new Error('Context cannot be null or undefined')); }
+    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
+    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
 
     const challenge = context.request.url.searchParams.get('code_challenge');
     const method = context.request.url.searchParams.get('code_challenge_method');
     const state = context.request.url.searchParams.get('state');
 
-    if (!state) { return throwError(new Error('Request must contain a state. Add state handlers to the proxy.')); }
+    if (!state) { return throwError(() => new Error('Request must contain a state. Add state handlers to the proxy.')); }
 
     if (!challenge) { return of(createErrorResponse('A code challenge must be provided.', 'invalid_request')); }
 
