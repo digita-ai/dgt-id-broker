@@ -223,7 +223,7 @@ describe('DpopTokenRequestHandler', () => {
           jwk: publicJwk,
         })
         .setJti(uuid())
-        .setIssuedAt(secondsSinceEpoch() - 61)
+        .setIssuedAt(secondsSinceEpoch() - 71)
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
@@ -248,7 +248,7 @@ describe('DpopTokenRequestHandler', () => {
           jwk: publicJwk,
         })
         .setJti(uuid())
-        .setIssuedAt(secondsSinceEpoch() + 10)
+        .setIssuedAt(secondsSinceEpoch() + 15)
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
@@ -258,6 +258,46 @@ describe('DpopTokenRequestHandler', () => {
         headers: { },
         status: 400,
       });
+
+    });
+
+    it('should tolerate an iat when a DPoP proof is issued upto 10 seconds in the future', async () => {
+
+      nestedHandler.handle = jest.fn().mockReturnValue(successfullProxiedServerResponse());
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(uuid())
+        .setIssuedAt(secondsSinceEpoch() + 9)
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+
+      const dpopJwt1 = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(uuid())
+        .setIssuedAt(secondsSinceEpoch() + 10)
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
     });
 
