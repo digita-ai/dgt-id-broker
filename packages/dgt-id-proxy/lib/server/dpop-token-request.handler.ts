@@ -3,7 +3,7 @@ import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError, tap } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
-import { jwtVerify } from 'jose/jwt/verify';
+import { jwtVerify, JWTVerifyOptions } from 'jose/jwt/verify';
 import { JWK, JWTVerifyResult } from 'jose/types';
 import { InMemoryStore } from '../storage/in-memory-store';
 
@@ -75,8 +75,9 @@ export class DpopTokenRequestHandler extends HttpHandler {
       },
     };
 
-    const verifyOptions = {
-      maxTokenAge: `60 seconds`,
+    const verifyOptions: JWTVerifyOptions = {
+      maxTokenAge: '60 seconds',
+      clockTolerance: 10,
       typ: 'dpop+jwt',
       algorithms: [
         'RS256',
@@ -98,7 +99,14 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates dpop response
       switchMap(([ thumbprint, response ]) => this.createDpopResponse(response, thumbprint)),
       // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
-      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+      catchError((error) => {
+
+        // eslint-disable-next-line no-console
+        console.log('DPoP handler error: ', error);
+
+        return error.body && error.headers && error.status ? of(error) : throwError(error);
+
+      }),
     );
 
   }
