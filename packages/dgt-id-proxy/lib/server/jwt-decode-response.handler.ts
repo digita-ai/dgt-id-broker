@@ -42,7 +42,7 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) { return throwError(new Error('response cannot be null or undefined')); }
+    if (!response) { return throwError(() => new Error('response cannot be null or undefined')); }
 
     if (checkError(response)) {
 
@@ -61,13 +61,13 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       if (!parsedBody[field]) {
 
-        return throwError(new Error(`the response body did not include the field "${field}"`));
+        return throwError(() => new Error(`the response body did not include the field "${field}"`));
 
       }
 
       if (typeof parsedBody[field] !== 'string' || parsedBody[field].split('.').length < 3) {
 
-        return throwError(new Error(`the response body did not include a valid JWT for the field "${field}"`));
+        return throwError(() => new Error(`the response body did not include a valid JWT for the field "${field}"`));
 
       }
 
