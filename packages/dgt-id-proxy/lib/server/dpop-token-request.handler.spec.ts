@@ -137,6 +137,19 @@ describe('DpopTokenRequestHandler', () => {
 
   });
 
+  it('should error when clockTolerance is negative', () => {
+
+    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', -1)).toThrow('clockTolerance cannot be negative.');
+
+  });
+
+  it('should error when maxDpopProofTokenAge is not greater than 0', () => {
+
+    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 10, 0)).toThrow('maxDpopProofTokenAge must be greater than 0.');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 10, -1)).toThrow('maxDpopProofTokenAge must be greater than 0.');
+
+  });
+
   describe('handle', () => {
 
     it('should error when no context was provided', async () => {
@@ -211,7 +224,7 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
-    it('should error when a DPoP proof was issued more than 60 seconds ago', async () => {
+    it('should error when a DPoP proof was issued more than 60 seconds ago by default', async () => {
 
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
@@ -223,7 +236,7 @@ describe('DpopTokenRequestHandler', () => {
           jwk: publicJwk,
         })
         .setJti(uuid())
-        .setIssuedAt(secondsSinceEpoch() - 61)
+        .setIssuedAt(secondsSinceEpoch() - 71)
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
@@ -248,7 +261,7 @@ describe('DpopTokenRequestHandler', () => {
           jwk: publicJwk,
         })
         .setJti(uuid())
-        .setIssuedAt(secondsSinceEpoch() + 10)
+        .setIssuedAt(secondsSinceEpoch() + 15)
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
@@ -258,6 +271,88 @@ describe('DpopTokenRequestHandler', () => {
         headers: { },
         status: 400,
       });
+
+    });
+
+    it('should tolerate an iat when a DPoP proof is issued upto 10 seconds in the future by default', async () => {
+
+      nestedHandler.handle = jest.fn().mockReturnValue(successfullProxiedServerResponse());
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(uuid())
+        .setIssuedAt(secondsSinceEpoch() + 9)
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+
+      const dpopJwt1 = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(uuid())
+        .setIssuedAt(secondsSinceEpoch() + 10)
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+
+    });
+
+    it('should tolerate an iat depending on the constuctor parameters', async () => {
+
+      nestedHandler.handle = jest.fn().mockReturnValue(successfullProxiedServerResponse());
+
+      const testHandler = new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 30, 90);
+
+      const dpopJwt = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(uuid())
+        .setIssuedAt(secondsSinceEpoch() + 30)
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
+
+      await expect(testHandler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+
+      const dpopJwt1 = await new SignJWT({
+        'htm': 'POST',
+        'htu': 'http://localhost:3003/token',
+      })
+        .setProtectedHeader({
+          alg: 'ES256',
+          typ: 'dpop+jwt',
+          jwk: publicJwk,
+        })
+        .setJti(uuid())
+        .setIssuedAt(secondsSinceEpoch() - 120)
+        .sign(privateKey);
+
+      context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
+
+      await expect(testHandler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
     });
 

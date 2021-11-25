@@ -50,7 +50,7 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   }
 
-  return from(fetch(upstreamUrl + '/.well-known/openid-configuration')).pipe(
+  return from(fetch(new URL('/.well-known/openid-configuration', upstreamUrl).href)).pipe(
     switchMap((response) => response.status === 200 ? from(response.json()) : throwError(new Error('There was a problem fetching upstream config'))),
     switchMap((data) => from(fetch(data.jwks_uri))),
     switchMap((response) => response.status === 200 ? from(response.json()) : throwError(new Error('There was a problem fetching upstream jwks'))),
