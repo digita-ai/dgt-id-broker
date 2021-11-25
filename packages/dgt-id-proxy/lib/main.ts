@@ -89,7 +89,11 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
   await manager.configRegistry.register(configPath);
 
   const server: NodeHttpServer = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
-  server.start();
+
+  await server.start();
+
+  // eslint-disable-next-line no-console -- top-level log
+  console.log(`Proxy server started.`);
 
 };
 

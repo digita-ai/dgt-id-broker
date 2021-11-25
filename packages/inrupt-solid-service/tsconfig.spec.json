@@ -3,11 +3,23 @@
   "compilerOptions": {
     "baseUrl": "lib",
     "outDir": "dist",
-    "strict": false,
-    "sourceMap": true
+    //
+    "types": [
+      "crypto-js",
+      "jest",
+      "n3",
+      "node",
+      "node-fetch",
+      "uuid"
+    ],
+    "inlineSourceMap": false,
+    "inlineSources": true,
+    "sourceMap": true,
+    "strict": false
   },
   "files": [ 
-    "test/test-data.ts"
+    "test/test-data.ts",
+    "test/setup.ts"
   ],
   "include": [ "lib" ],
   "exclude": [
