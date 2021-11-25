@@ -19,11 +19,17 @@ export class DpopTokenRequestHandler extends HttpHandler {
    * @param {HttpHandler} handler - the handler through which to pass incoming requests.
    * @param {InMemoryStore<string, string[]>} keyValueStore - the KeyValueStore in which to save jti's.
    * @param {string} proxyTokenUrl - the url of the proxy server's token endpoint.
+   * @param {number} clockTolerance - tolerance in seconds that a token will still be considered valid if it is
+   * either too old or too new. Should prevent tokens from being rejected due to clock skews between servers and clients.
+   * 10 seconds by default.
+   * @param {number} maxDpopProofTokenAge - maximum age in seconds at which a DPoP proof token will be considered valid. Default of 1 minute.
    */
   constructor(
     private handler: HttpHandler,
     private keyValueStore: InMemoryStore<string, string[]>,
     private proxyTokenUrl: string,
+    private clockTolerance: number = 10,
+    private maxDpopProofTokenAge: number = 60
   ) {
 
     super();
@@ -33,6 +39,10 @@ export class DpopTokenRequestHandler extends HttpHandler {
     if (!keyValueStore) { throw new Error('A keyValueStore must be provided'); }
 
     if (!proxyTokenUrl) { throw new Error('A proxyTokenUrl must be provided'); }
+
+    if (clockTolerance < 0) { throw new Error('clockTolerance cannot be negative.'); }
+
+    if (maxDpopProofTokenAge <= 0) { throw new Error('maxDpopProofTokenAge must be greater than 0.'); }
 
   }
 
@@ -76,8 +86,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
     };
 
     const verifyOptions: JWTVerifyOptions = {
-      maxTokenAge: '60 seconds',
-      clockTolerance: 10,
+      maxTokenAge: this.maxDpopProofTokenAge,
+      clockTolerance: this.clockTolerance,
       typ: 'dpop+jwt',
       algorithms: [
         'RS256',
