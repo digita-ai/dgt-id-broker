@@ -316,7 +316,7 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should tolerate an iat depending on the constuctor parameters', async () => {
 
-      nestedHandler.handle = jest.fn().mockReturnValue(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValue(successfulProxiedServerResponse());
 
       const testHandler = new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 30, 90);
 
