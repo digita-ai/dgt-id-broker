@@ -15,13 +15,13 @@ export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, H
    */
   handle (response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) { return throwError(new Error('response cannot be null or undefined')); }
+    if (!response) { return throwError(() => new Error('response cannot be null or undefined')); }
 
     if (response.status !== 200) { return of(response); }
 
     if (!response.body.access_token || !response.body.access_token.payload){
 
-      return throwError(new Error('Response body must contain an access token with a payload in JSON format'));
+      return throwError(() => new Error('Response body must contain an access token with a payload in JSON format'));
 
     }
 

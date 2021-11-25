@@ -16,7 +16,7 @@ describe('DpopPassThroughRequestHandler', () => {
   let publicJwk: JWK;
   let validDpopJwt: string;
 
-  const successfullProxiedServerResponse = () => of({
+  const successfulProxiedServerResponse = () => of({
     body: {
       access_token: {
         header: {
@@ -236,7 +236,7 @@ describe('DpopPassThroughRequestHandler', () => {
 
     it('should return a valid DPoP bound access token response with a jkt claim matching the thumbprint of the clients jwk', async () => {
 
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       const resp = await handler.handle(context).toPromise();
       expect(resp.headers).toEqual({});
       expect(resp.status).toEqual(200);
@@ -255,8 +255,8 @@ describe('DpopPassThroughRequestHandler', () => {
 
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const jose = require('jose/jwk/thumbprint');
-      jose.calculateThumbprint = jest.fn().mockReturnValueOnce(throwError(new Error('mockError')));
-      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfullProxiedServerResponse());
+      jose.calculateThumbprint = jest.fn().mockReturnValueOnce(throwError(() => new Error('mockError')));
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
 
       await expect(() => handler.handle(context).toPromise()).rejects.toThrow('mockError');
 

@@ -209,7 +209,9 @@
       "keyValueStore": {
         "@type": "InMemoryStore"
       },
-      "proxyTokenUrl": "http://localhost:3003/oauth/token"
+      "proxyTokenUrl": "http://localhost:3003/oauth/token",
+      "clockTolerance": 15,
+      "maxDpopProofTokenAge": 90
     },
     {
       "@id": "urn:dgt-id-proxy:default:PassThroughHandler",

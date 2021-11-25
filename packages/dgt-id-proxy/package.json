@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.10.3",
+  "version": "0.11.0",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
@@ -108,9 +108,9 @@
     "coverageThreshold": {
       "global": {
         "branches": 97.72,
-        "functions": 99.56,
-        "lines": 99.88,
-        "statements": 99.62
+        "functions": 99.71,
+        "lines": 99.89,
+        "statements": 99.66
       }
     }
   }
