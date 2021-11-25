@@ -1,5 +1,5 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import {  of } from 'rxjs';
+import { of, lastValueFrom } from 'rxjs';
 import { WebIdFactory } from '../public-api';
 import { WebIdResponseHandler } from './webid-response.handler';
 
@@ -62,7 +62,7 @@ describe('WebIdResponseHandler', () => {
 
       response.body.id_token.payload.webid = undefined;
 
-      await webIdResponseHandler.handle(response).toPromise();
+      await lastValueFrom(webIdResponseHandler.handle(response));
 
       expect(singleClaimWebIdFactory.handle).toHaveBeenCalledTimes(1);
       expect(singleClaimWebIdFactory.handle).toHaveBeenCalledWith(response.body.id_token.payload);
@@ -71,43 +71,43 @@ describe('WebIdResponseHandler', () => {
 
     it('should error when no response was provided', async () => {
 
-      await expect(() => webIdResponseHandler.handle(null).toPromise()).rejects.toThrow('A response must be provided');
-      await expect(() => webIdResponseHandler.handle(undefined).toPromise()).rejects.toThrow('A response must be provided');
+      await expect(() => lastValueFrom(webIdResponseHandler.handle(null))).rejects.toThrow('A response must be provided');
+      await expect(() => lastValueFrom(webIdResponseHandler.handle(undefined))).rejects.toThrow('A response must be provided');
 
     });
 
     it('should error when response has no body', async () => {
 
       delete response.body;
-      await expect(() => webIdResponseHandler.handle(response).toPromise()).rejects.toThrow('The response did not contain a body');
+      await expect(() => lastValueFrom(webIdResponseHandler.handle(response))).rejects.toThrow('The response did not contain a body');
 
     });
 
     it('should pass the upstream error in an error response when needed and set status to 400', async () => {
 
-      await expect(webIdResponseHandler.handle({ ...response, body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 })
-        .toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
+      await expect(lastValueFrom(webIdResponseHandler.handle({ ...response, body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 })))
+        .resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
 
     });
 
     it('should error when response.body has no access_token', async () => {
 
       delete response.body.access_token;
-      await expect(() => webIdResponseHandler.handle(response).toPromise()).rejects.toThrow('The response body did not contain an access_token');
+      await expect(() => lastValueFrom(webIdResponseHandler.handle(response))).rejects.toThrow('The response body did not contain an access_token');
 
     });
 
     it('should error when response.body.access_token has no payload', async () => {
 
       delete response.body.access_token.payload;
-      await expect(() => webIdResponseHandler.handle(response).toPromise()).rejects.toThrow('The access_token did not contain a payload');
+      await expect(() => lastValueFrom(webIdResponseHandler.handle(response))).rejects.toThrow('The access_token did not contain a payload');
 
     });
 
     it('should error when response.body has no id_token', async () => {
 
       delete response.body.id_token;
-      await expect(() => webIdResponseHandler.handle(response).toPromise()).rejects.toThrow('The response body did not contain an id_token');
+      await expect(() => lastValueFrom(webIdResponseHandler.handle(response))).rejects.toThrow('The response body did not contain an id_token');
 
     });
 
@@ -115,7 +115,7 @@ describe('WebIdResponseHandler', () => {
 
       delete response.body.access_token.payload.webid;
       delete response.body.id_token.payload.webid;
-      const responseGotten = await webIdResponseHandler.handle(response).toPromise();
+      const responseGotten = await lastValueFrom(webIdResponseHandler.handle(response));
       expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithCustomClaim);
       expect(responseGotten.body.id_token.payload.webid).toEqual(webIdWithCustomClaim);
 
@@ -124,14 +124,14 @@ describe('WebIdResponseHandler', () => {
     it('should set webid claim from access_token to the same as the webid claim from id_token if one is present', async () => {
 
       delete response.body.access_token.payload.webid;
-      const responseGotten = await webIdResponseHandler.handle(response).toPromise();
+      const responseGotten = await lastValueFrom(webIdResponseHandler.handle(response));
       expect(responseGotten.body.access_token.payload.webid).toEqual(webid);
 
     });
 
     it('should return the response if the webID claim is present', async () => {
 
-      await expect(webIdResponseHandler.handle(response).toPromise()).resolves.toEqual(response);
+      await expect(lastValueFrom(webIdResponseHandler.handle(response))).resolves.toEqual(response);
 
     });
 
@@ -141,14 +141,14 @@ describe('WebIdResponseHandler', () => {
 
     it('should return true if response was provided', async () => {
 
-      await expect(webIdResponseHandler.canHandle(response).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(webIdResponseHandler.canHandle(response))).resolves.toEqual(true);
 
     });
 
     it('should return false if no response was provided', async () => {
 
-      await expect(webIdResponseHandler.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(webIdResponseHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(webIdResponseHandler.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(webIdResponseHandler.canHandle(undefined))).resolves.toEqual(false);
 
     });
 

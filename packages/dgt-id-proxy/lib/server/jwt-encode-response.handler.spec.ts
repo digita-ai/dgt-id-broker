@@ -1,5 +1,6 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
+import { lastValueFrom } from 'rxjs';
 import { JwtEncodeResponseHandler, JwtField } from './jwt-encode-response.handler';
 
 jest.mock('fs/promises', () => {
@@ -101,8 +102,8 @@ describe('JwtEncodeResponseHandler', () => {
 
     it('should error when no response was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('response cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('response cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('response cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('response cannot be null or undefined');
 
     });
 
@@ -110,7 +111,7 @@ describe('JwtEncodeResponseHandler', () => {
 
       response.status = 400;
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(response);
+      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(response);
 
     });
 
@@ -118,7 +119,7 @@ describe('JwtEncodeResponseHandler', () => {
 
       response.body = { 'id_token': 'mockToken' };
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include the field "access_token"');
+      await expect(() => lastValueFrom(handler.handle(response))).rejects.toThrow('the response body did not include the field "access_token"');
 
     });
 
@@ -126,7 +127,7 @@ describe('JwtEncodeResponseHandler', () => {
 
       response.body = { 'access_token': 'noPayloadOrHeader' };
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include a header and payload property for the field "access_token"');
+      await expect(() => lastValueFrom(handler.handle(response))).rejects.toThrow('the response body did not include a header and payload property for the field "access_token"');
 
     });
 
@@ -143,7 +144,7 @@ describe('JwtEncodeResponseHandler', () => {
         token_type: 'Bearer',
       };
 
-      const encodedTokenResponse = await handler.handle(response).toPromise();
+      const encodedTokenResponse = await lastValueFrom(handler.handle(response));
       const parsedBody = JSON.parse(encodedTokenResponse.body);
       expect(parsedBody.id_token).toEqual('mockIdToken');
       expect(parsedBody.expires_in).toEqual(7200);
@@ -179,14 +180,14 @@ describe('JwtEncodeResponseHandler', () => {
 
     it('should return false if no response was provided', async () => {
 
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
     it('should return true if a response was provided', async () => {
 
-      await expect(handler.canHandle(response).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(response))).resolves.toEqual(true);
 
     });
 

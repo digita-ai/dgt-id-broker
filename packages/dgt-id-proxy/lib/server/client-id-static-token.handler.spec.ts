@@ -1,5 +1,5 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { of } from 'rxjs';
+import { lastValueFrom, of } from 'rxjs';
 import fetchMock from 'jest-fetch-mock';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { ClientIdStaticTokenHandler } from './client-id-static-token.handler';
@@ -101,57 +101,57 @@ describe('ClientIdStaticTokenHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('A context must be provided');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: null }))).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: undefined }))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no request body is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: { ...context.request, body: null } }).toPromise()).rejects.toThrow('No body was included in the request');
-      await expect(() => handler.handle({ ...context, request: { ...context.request, body: undefined } }).toPromise()).rejects.toThrow('No body was included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, body: null } }))).rejects.toThrow('No body was included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, body: undefined } }))).rejects.toThrow('No body was included in the request');
 
     });
 
     it('should error when no client_id was provided', async () => {
 
       const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody } };
-      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('No client_id was provided');
 
     });
 
     it('should error when no grant_type was provided', async () => {
 
       const noGrantTypeContext = { ... context, request: { ...context.request, body:  noGrantTypeRequestBody } };
-      await expect(() => handler.handle(noGrantTypeContext).toPromise()).rejects.toThrow('No grant_type was provided');
+      await expect(() => lastValueFrom(handler.handle(noGrantTypeContext))).rejects.toThrow('No grant_type was provided');
 
     });
 
     it('should error when grant_type is not refresh_token or authorization_code was provided', async () => {
 
       const testContext = { ... context, request: { ...context.request, body: requestBodyWithIncorrectGrantType } };
-      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('grant_type must be either "authorization_code" or "refresh_token"');
+      await expect(() => lastValueFrom(handler.handle(testContext))).rejects.toThrow('grant_type must be either "authorization_code" or "refresh_token"');
 
     });
 
     it('should error when no redirect_uri was provided and grant type is authorization_code', async () => {
 
       const noRedirectUriContext = { ... context, request: { ...context.request, body:  noRedirectUriRequestBody } };
-      await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => lastValueFrom(handler.handle(noRedirectUriContext))).rejects.toThrow('No redirect_uri was provided');
 
     });
 
     it('should error when no refresh_token was provided and grant type is refresh_token', async () => {
 
       const noRefreshTokenContext = { ... context, request: { ...context.request, body:  noRefreshTokenRequestBody } };
-      await expect(() => handler.handle(noRefreshTokenContext).toPromise()).rejects.toThrow('No refresh_token was provided');
+      await expect(() => lastValueFrom(handler.handle(noRefreshTokenContext))).rejects.toThrow('No refresh_token was provided');
 
     });
 
@@ -162,7 +162,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       const body = `grant_type=authorization_code&code=${code}&client_id=static_client&redirect_uri=${encodeURIComponent(redirect_uri)}&code_verifier=${code_verifier}`;
       context = { ...context, request: { ...context.request, body } };
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(resp);
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(resp);
 
     });
 
@@ -314,8 +314,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(handler.handle(context)
-        .toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         ...response, body: { access_token: { payload: { client_id } } },
       });
 
@@ -331,7 +330,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('response body did not contain an access_token');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('response body did not contain an access_token');
 
     });
 
@@ -345,7 +344,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 
@@ -355,38 +354,34 @@ describe('ClientIdStaticTokenHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
-      await expect(handler.canHandle(undefined).toPromise())
+      await expect(lastValueFrom(handler.canHandle(undefined)))
         .resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: null })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: null }))).resolves.toEqual(false);
 
-      await expect(handler.canHandle({ ...context, request: undefined })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
 
     });
 
     it('should return false if no request body was provided', async () => {
 
-      await expect(handler
-        .canHandle({ ...context, request: { ...context.request, body: null } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, body: null } }))).resolves.toEqual(false);
 
-      await expect(handler
-        .canHandle({ ...context, request: { ...context.request, body: undefined } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, body: undefined } }))).resolves.toEqual(false);
 
     });
 
