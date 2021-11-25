@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.10.3...v0.11.0) (2021-11-24)
+
+
+### **Features**
+
+* clocktolerance, maxtokenage in constructor ([#302](https://github.com/digita-ai/dgt-id-broker/issues/302)) ([80946da](https://github.com/digita-ai/dgt-id-broker/commit/80946da244180f203f8cc2dec89c1e7736d28092))
+
+
+
 ### [0.10.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.10.2...v0.10.3) (2021-11-24)
 
 
