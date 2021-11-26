@@ -44,11 +44,11 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(new Error('Context cannot be null or undefined')); }
+    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.headers) { return throwError(new Error('No headers were included in the request')); }
+    if (!context.request.headers) { return throwError(() => new Error('No headers were included in the request')); }
 
     if (!context.request.headers.dpop) {
 
@@ -66,7 +66,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
     return from(jwtVerify(context.request.headers.dpop, EmbeddedJWK, verifyOptions)).pipe(
       switchMap((jwt) => this.updateDpopProof(jwt)),
-      catchError((error) => throwError(this.dpopError(error.message))),
+      catchError((error) => throwError(() => this.dpopError(error.message))),
       switchMap((updatedDpopProof) =>
         this.getUpstreamResponse({
           ...context,
@@ -79,7 +79,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
           },
         })),
       switchMap((response) => this.updateDpopResponse(response, context.request.headers.dpop)),
-      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(() => error)),
     );
 
   }
@@ -90,7 +90,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
     if (payload.htu !== this.proxyTokenUrl) {
 
-      return throwError(new Error('htu does not match'));
+      return throwError(() => new Error('htu does not match'));
 
     }
 
@@ -115,7 +115,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   });
 
   private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
-    switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
+    switchMap((response) => response.status === 200 ? of(response) : throwError(() => response)),
   );
 
   private updateDpopResponse(response: HttpHandlerResponse, originalDpopProof: string) {

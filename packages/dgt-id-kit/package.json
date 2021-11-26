@@ -79,7 +79,7 @@
         "branches": 98.8,
         "functions": 100,
         "lines": 99.44,
-        "statements": 99.6
+        "statements": 99.61
       }
     },
     "testPathIgnorePatterns": [

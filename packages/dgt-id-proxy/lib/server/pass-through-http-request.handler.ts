@@ -84,31 +84,31 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     if (!context) {
 
-      return throwError(new Error('Context cannot be null or undefined'));
+      return throwError(() => new Error('Context cannot be null or undefined'));
 
     }
 
     if (!context.request) {
 
-      return throwError(new Error('No request was included in the context'));
+      return throwError(() => new Error('No request was included in the context'));
 
     }
 
     if (!context.request.method) {
 
-      return throwError(new Error('No method was included in the request'));
+      return throwError(() => new Error('No method was included in the request'));
 
     }
 
     if (!context.request.headers) {
 
-      return throwError(new Error('No headers were included in the request'));
+      return throwError(() => new Error('No headers were included in the request'));
 
     }
 
     if (!context.request.url) {
 
-      return throwError(new Error('No url was included in the request'));
+      return throwError(() => new Error('No url was included in the request'));
 
     }
 
@@ -122,7 +122,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
         if (this.errorHandling && response.status >= 400) {
 
-          return throwError({ headers: response.headers, status: response.status });
+          return throwError(() => ({ headers: response.headers, status: response.status }));
 
         }
 

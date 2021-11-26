@@ -63,7 +63,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
-    if (!response) { return throwError(new Error('response cannot be null or undefined')); }
+    if (!response) { return throwError(() => new Error('response cannot be null or undefined')); }
 
     if (response.status !== 200) { return of(response); }
 
@@ -71,13 +71,13 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       if (!response.body[field]) {
 
-        return throwError(new Error(`the response body did not include the field "${field}"`));
+        return throwError(() => new Error(`the response body did not include the field "${field}"`));
 
       }
 
       if (!response.body[field].payload || !response.body[field].header) {
 
-        return throwError(new Error(`the response body did not include a header and payload property for the field "${field}"`));
+        return throwError(() => new Error(`the response body did not include a header and payload property for the field "${field}"`));
 
       }
 
