@@ -33,13 +33,13 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
 
     if (!payload){
 
-      return throwError(new Error('No payload was provided'));
+      return throwError(() => new Error('No payload was provided'));
 
     }
 
     if (!payload[this.claim]){
 
-      return throwError(new Error('The custom claim provided was not found in the id token payload'));
+      return throwError(() => new Error('The custom claim provided was not found in the id token payload'));
 
     }
 

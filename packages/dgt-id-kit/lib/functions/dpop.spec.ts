@@ -40,6 +40,17 @@ describe('createDPoPProof()', () => {
 
   });
 
+  it('should remove the hash of the htu when present', async () => {
+
+    const result = createDpopProof('htm', 'https://example.com/test/profile/card#me', publicKey, privateKey);
+    await expect(result).resolves.toBeDefined();
+
+    const payload = JSON.parse(atob((await result).split('.')[1]));
+
+    expect(payload.htu).toBe('https://example.com/test/profile/card');
+
+  });
+
   it('should throw when something goes wrong signing the JWT', async () => {
 
     jest.spyOn(parseModule, 'parseJwk').mockRejectedValueOnce(undefined);

@@ -8,13 +8,13 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   if (!token){
 
-    return throwError(new Error('token must be defined'));
+    return throwError(() => new Error('token must be defined'));
 
   }
 
   if (!upstreamUrl) {
 
-    return throwError(new Error('upstreamUrl must be defined'));
+    return throwError(() => new Error('upstreamUrl must be defined'));
 
   }
 
@@ -24,7 +24,7 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   } catch (error) {
 
-    return throwError(new Error('upstreamUrl is not a valid URL'));
+    return throwError(() => new Error('upstreamUrl is not a valid URL'));
 
   }
 
@@ -32,7 +32,7 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   if (splitToken.length < 3) {
 
-    return throwError(new Error('token is not a valid JWT'));
+    return throwError(() => new Error('token is not a valid JWT'));
 
   }
 
@@ -40,26 +40,26 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   if (!decodedHeader.kid) {
 
-    return throwError(new Error('Given token does not contain a key-id to verify'));
+    return throwError(() => new Error('Given token does not contain a key-id to verify'));
 
   }
 
   if (!decodedHeader.alg || decodedHeader.alg === 'none') {
 
-    return throwError(new Error('Token did not contain an alg, and is therefore invalid'));
+    return throwError(() => new Error('Token did not contain an alg, and is therefore invalid'));
 
   }
 
   return from(fetch(new URL('/.well-known/openid-configuration', upstreamUrl).href)).pipe(
-    switchMap((response) => response.status === 200 ? from(response.json()) : throwError(new Error('There was a problem fetching upstream config'))),
+    switchMap((response) => response.status === 200 ? from(response.json()) : throwError(() => new Error('There was a problem fetching upstream config'))),
     switchMap((data) => from(fetch(data.jwks_uri))),
-    switchMap((response) => response.status === 200 ? from(response.json()) : throwError(new Error('There was a problem fetching upstream jwks'))),
+    switchMap((response) => response.status === 200 ? from(response.json()) : throwError(() => new Error('There was a problem fetching upstream jwks'))),
     map((jwks) => jwks.keys.find((key: JWK) => key.kid === decodedHeader.kid)),
     switchMap((jwk) => {
 
       if (!jwk) {
 
-        return throwError(new Error('No JWK with that ID was found'));
+        return throwError(() => new Error('No JWK with that ID was found'));
 
       }
 
