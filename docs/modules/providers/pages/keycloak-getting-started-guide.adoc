@@ -96,9 +96,7 @@ image::add-client.png[Keycloak Add Client]
 
 . Make sure *Implicit Flow Enabled* is set to `OFF`` in order for your client to remain Solid-compliant. 
 
-. Under *Web Origins* you must set the proxy's host URL, in the *Allowed CORS Origins* in order to prevent CORS errors. Take care to end it with a `/`. 
-
-. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*.
+. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match.
 
 . Switch to the *Credentials* tab and set the *Client Authenticator* to `Client ID and Secret`.
 
