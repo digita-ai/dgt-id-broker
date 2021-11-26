@@ -5,6 +5,14 @@
     "outDir": "./dist",
     "module": "commonjs",
     //
+    "types": [
+      "jest",
+      "n3",
+      "node",
+      "node-fetch",
+      "yargs",
+      "uuid"
+    ],
     "inlineSourceMap": false,
     "inlineSources": true,
     "sourceMap": true,

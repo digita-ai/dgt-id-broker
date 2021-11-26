@@ -3,7 +3,7 @@ import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError, tap } from 'rxjs/operators';
 import { EmbeddedJWK } from 'jose/jwk/embedded';
 import { calculateThumbprint } from 'jose/jwk/thumbprint';
-import { jwtVerify } from 'jose/jwt/verify';
+import { jwtVerify, JWTVerifyOptions } from 'jose/jwt/verify';
 import { JWK, JWTVerifyResult } from 'jose/types';
 import { InMemoryStore } from '../storage/in-memory-store';
 
@@ -19,11 +19,17 @@ export class DpopTokenRequestHandler extends HttpHandler {
    * @param {HttpHandler} handler - the handler through which to pass incoming requests.
    * @param {InMemoryStore<string, string[]>} keyValueStore - the KeyValueStore in which to save jti's.
    * @param {string} proxyTokenUrl - the url of the proxy server's token endpoint.
+   * @param {number} clockTolerance - tolerance in seconds that a token will still be considered valid if it is
+   * either too old or too new. Should prevent tokens from being rejected due to clock skews between servers and clients.
+   * 10 seconds by default.
+   * @param {number} maxDpopProofTokenAge - maximum age in seconds at which a DPoP proof token will be considered valid. Default of 1 minute.
    */
   constructor(
     private handler: HttpHandler,
     private keyValueStore: InMemoryStore<string, string[]>,
     private proxyTokenUrl: string,
+    private clockTolerance: number = 10,
+    private maxDpopProofTokenAge: number = 60
   ) {
 
     super();
@@ -33,6 +39,10 @@ export class DpopTokenRequestHandler extends HttpHandler {
     if (!keyValueStore) { throw new Error('A keyValueStore must be provided'); }
 
     if (!proxyTokenUrl) { throw new Error('A proxyTokenUrl must be provided'); }
+
+    if (clockTolerance < 0) { throw new Error('clockTolerance cannot be negative.'); }
+
+    if (maxDpopProofTokenAge <= 0) { throw new Error('maxDpopProofTokenAge must be greater than 0.'); }
 
   }
 
@@ -75,8 +85,9 @@ export class DpopTokenRequestHandler extends HttpHandler {
       },
     };
 
-    const verifyOptions = {
-      maxTokenAge: `60 seconds`,
+    const verifyOptions: JWTVerifyOptions = {
+      maxTokenAge: this.maxDpopProofTokenAge,
+      clockTolerance: this.clockTolerance,
       typ: 'dpop+jwt',
       algorithms: [
         'RS256',
@@ -98,7 +109,14 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates dpop response
       switchMap(([ thumbprint, response ]) => this.createDpopResponse(response, thumbprint)),
       // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
-      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+      catchError((error) => {
+
+        // eslint-disable-next-line no-console
+        console.log('DPoP handler error: ', error);
+
+        return error.body && error.headers && error.status ? of(error) : throwError(error);
+
+      }),
     );
 
   }

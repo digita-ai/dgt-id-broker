@@ -113,6 +113,14 @@ describe('ClientCompressionHandler', () => {
 
     });
 
+    it('should delete the content-encoding header if it exists and the response has no body', async () => {
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({ status: 200, headers: { 'content-encoding': 'gzip' } }));
+
+      await expect(handler.handle(context).toPromise()).resolves.toEqual({ status: 200, headers: {} });
+
+    });
+
   });
 
   describe('canHandle', () => {

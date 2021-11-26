@@ -88,9 +88,9 @@ describe('SolidSDKService', () => {
 
     });
 
-    xit('should error when issuer could not be found', async () => {   // TODO: fix this test
+    it('should error when issuer could not be found', async () => {
 
-      service.getIssuers = jest.fn(async () => undefined);
+      service.getIssuer = jest.fn(async () => undefined);
       await expect(service.login('https://web.id/')).rejects.toThrow('Issuer should be set.: ');
 
     });
