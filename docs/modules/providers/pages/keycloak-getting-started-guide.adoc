@@ -3,37 +3,43 @@
 :toclevels: 1
 :imagesdir: ../images
 
+
 == Configuring & starting the proxy
 
 . If you haven't already, clone the link:https://github.com/digita-ai/dgt-id-broker.git[*dgt-id-broker*] repository.
 . Open your terminal in the root folder of the project and enter the following commands: 
-.. *_npm run bootstrap_* to install all the dependencies.
-.. *_npm run build:all_* to build the all packages in this workspace.
-.. *_npm run start_* to start the proxy.
+.. `npm run bootstrap` to install all the dependencies.
+.. `npm run build:all` to build the all packages in this workspace.
+.. `npm run start --scope @digita-ai/dgt-id-proxy` to start the proxy.
+
 
 == Launching a Keycloak server
 
 If you haven't got an instance of Keycloak already you can start one through a Docker container as mentioned below.
-Prerequisites: Docker is already installed on your system. If not you can download it link:https://www.docker.com/products/docker-desktop[here].
+(Prerequisite: Docker has to be installed on your system. If not you can download it link:https://www.docker.com/products/docker-desktop[here].)
 
 First we will pull our Docker image and run the container. 
 
 . Open your terminal and run the following command: 
 
 +
---
-*_docker run -p <PORT>:<PORT> --name <CONTAINER-NAME> -e KEYCLOAK_USER=<USER> -e KEYCLOAK_PASSWORD=<PASSWORD> <IMAGE_NAME>_*
---
+[source,bash]
+----
+docker run -p <EPORT>:<IPORT> --name <NAME> -e KEYCLOAK_USER=<USER> -e KEYCLOAK_PASSWORD=<PWD> <IMAGE>
+----
 +
 
 Lets's break this down a little bit: 
 
-.. Docker will run on the internal and external port specified by the *-p* argument, e.g. *8080:8080*.
-.. We will name our Docker container with the *--name* argument, e.g. *keycloak-demo*.
-.. We will set the *KEYCLOAK_USER* and *KEYCLOAK_PASSWORD* environment variables to create an admin account from the command line using the *-e* flag. Note that you can also remove these optional arguments and create an admin account on the Keycloak welcome page instead, you can find more info on that link:https://wjw465150.gitbooks.io/keycloak-documentation/content/getting_started/topics/first-boot/initial-user.html[here].
-.. We will pull a Keycloak Docker image, e.g. *quay.io/keycloak/keycloak:latest*.
+- The `IMAGE` for Keycloak is `quay.io/keycloak/keycloak:latest`, except for Apple devices on the M1 architecture, which work with `wizzn/keycloak:14`.
 
-. Open your browser and go to your hostname followed by the port you specified, e.g. *http://localhost:8080*. If you are redirected to the Keycloak welcome page you've successfully launched the Keycloak server. Click *_Adminstration Console_* to login as the admin user we have just created through the Docker command.
+- The `IPORT` of the default Keycloak images is `8080`. Map this to the desired port on you host with `EPORT`, e.g. `8080:8080`.
+
+- `USER` and `PWD` set the username and password for the initial admin account. (Alternatively, you can create an admin account on the Keycloak welcome page.)
+
+- If desired, you can give the container a `NAME`.
+
+. Open your browser and go to your hostname followed by the port you specified, e.g. `http://localhost:8080`. You  should be redirected to the Keycloak welcome page. Click *Adminstration Console* to log in as the admin user you have created through the Docker command.
 
 +
 [#img-keycloak-admin-login]
@@ -41,71 +47,78 @@ image::keycloak-admin-login.png[Keycloak Admin Login]
 +
 
 
-== Configering a realm
+== Configuring a realm
 
-If you haven't already, you can create a realm in Keycloak as described below.
+If you haven't already, you can create a realm in Keycloak as described below. (By default, there is already a Master realm, but it is advised to create another one for each purpose.)
 
-. When in the Keycloak admin console in the Master menu on the top left, click *_Add realm_*.
-. Enter a name for the realm, e.g. "demo".
+. When in the Keycloak admin console, click on the dropdown menu on the top left, labeled with the name of the current real (`Master` on a fresh image), and chose *Add realm*.
+
+. Enter a name for the realm.
+
+. If desired, you can import a JSON file here containing a preexisting realm configuration. 
+
+. Set the enabled flag to `True`.
+
+. Click *Create* to create the Realm.
 
 +
 [#img-keycloak-add-realm]
 image::add-demo-realm.png[Keycloak Add Realm]
 +
 
-. You can import a JSON file here containing the realm configuration, this can contain settings like clients, users and roles. However if you choose not to upload this file you are able to set all these configurations after the following steps.
-. Set the enabled flag to *True*.
-. Click *_Create_* to create the Realm.
+Next you'll be able to set your realm settings. Make sure you have selected the realm you just created.
 
-Next you'll be able to set your realm settings, make sure you have selected the realm you just created.
 
 == Creating a client
 
 In order to let the proxy access the upstream provider's data we need to add it as a static client.
 
-. In the left menu of the admin console, click *_Clients_*.
-. You will see a list of all clients. On the far right click *_Create_* to create a new client. Note that you again have the option to upload a JSON file containing the client configuration instead.
-. Fill in the *_Client ID_* , e.g. "id-proxy". This specifies the ID that will be used in URI's and tokens.
-. In *_Client Protocol_* select *_openid-connect_* since *SOLID* is based on the *OIDC Protocol*.
-. In *_Access Type_* select *_confidential_* so that clients require a secret to initiate the login protocol.
-. Specify a root URL that will be appended to relative URL's, e.g. *_http://localhost:8080/id-proxy_*.
-. Click *_Save_* to create the client.
+. In the left menu of the admin console, click *Clients*. You will see a list of all clients. 
+
+. On the far right click *Create* to create a new client. Note that you again have the option to upload a JSON file containing the client configuration instead.
+
+. Fill in a *Client ID*, which will be used in URIs and tokens.
+
+. For *Client Protocol* select `openid-connect`, since Solid is based on the OpenID Connect standard.
+
+. For *Access Type* select `confidential` so that clients require a secret to initiate the login protocol.
+
+. Specify a *Root URL* that will be used as a prefix for relative URLs.
+
+. Click *Save* to create the client.
 
 +
 [#img-keycloak-add-client]
 image::add-client.png[Keycloak Add Client]
 +
 
-. You will be directed to the client settings page. There are some important settings in the *_Settings_* tab that you need to check here.
-. Make sure *_Implicit Flow Enabled_* is set to *_OFF_* in order for your client to remain *SOLID* compliant. It is not allowed to use the implicit flow due to the inherent risks of returning access tokens in an HTTP redirect without any confirmation that it has been received by the client.
-. Under *_Web Origins_* you *MUST* set the proxy host URL in the allowed *CORS* origins, e.g. *_http://localhost:80808_* in order to prevent *CORS* errors. 
-. Make sure to add the required *_Valid Redirect URIs* path, e.g. *_/realm/<REALM_NAME>/account/*_*, since this is crucial for the proxy to work. A redirect uri is required in *OIDC* because this will tell provider where the response needs to be sent after logging in. 
+. You will be directed to the client settings page. There are some important settings in the *Settings* tab that you need to check here.
 
-. Switch to the *_Credentials_* tab and set the *_Client Authenticator_* to Client ID and Secret.
+. Make sure *Implicit Flow Enabled* is set to `OFF`` in order for your client to remain Solid-compliant. 
+
+. Under *Web Origins* you must set the proxy's host URL, in the *Allowed CORS Origins* in order to prevent CORS errors. Take care to end it with a `/`. 
+
+. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*.
+
+. Switch to the *Credentials* tab and set the *Client Authenticator* to `Client ID and Secret`.
+
 
 == Creating a user
 
-If you'd like to add users to the realm you can do so as described below.
+If you'd like to add preset users to the realm you can do so as described below.
 
-. In the menu to the left, click *_Users_* and then *_Add user_*.
-. Enter a username, e.g. *"johndoe"*. The rest of the fields are not required but recommended.
+. In the menu to the left, click *Users* and then *Add user*.
+
+. Enter a username. The rest of the fields are not required but recommended.
+
+. Make sure you switch *Email verified* to *ON*.
+
+. Click *Save*. The interface will immediately show you the new user's settings.
+
+. Click the *Credentials* tab to set a temporary user password and confirm it by pressing *Set Password*. The user will be required to change it on the first login, unless you set the *Temporary* flag to `OFF`.
 
 [#img-keycloak-add-user]
 image::add-user.png[Keycloak Add User]
 
-[start=3]
-. Click *_Create_* to create the user.
-. Make sure you switch *_Email verified_* to *_ON_*.
-. Click *_Save_* and the management console will show you the new user.
-. Click the *_Credentials_* tab to set a temporary user password and confirm it by pressing *_Set Password_*.
-
-+
 [#img-keycloak-user-credentials]
 image::user-credentials.png[Keycloak User Credentials]
-+
-
-[NOTE]
-====
-This password is temporary and the user will be required to change it on the first login.
-If you wish to create a permanent password set the *_Temporary_* flag to *_OFF_*.
-====
