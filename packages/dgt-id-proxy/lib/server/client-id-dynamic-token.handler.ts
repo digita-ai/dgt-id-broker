@@ -45,28 +45,28 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(new Error('A context must be provided')); }
+    if (!context) { return throwError(() => new Error('A context must be provided')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.body) { return throwError(new Error('No body was included in the request')); }
+    if (!context.request.body) { return throwError(() => new Error('No body was included in the request')); }
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
 
-    if (!client_id) { return throwError(new Error('No client_id was provided')); }
+    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
 
     const grant_type = params.get('grant_type');
 
-    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
+    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(() => new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
 
     const refresh_token = params.get('refresh_token') ?? '';
 
-    if (grant_type === 'refresh_token' && refresh_token === '') return throwError(new Error('No refresh_token was provided'));
+    if (grant_type === 'refresh_token' && refresh_token === '') return throwError(() => new Error('No refresh_token was provided'));
 
     const redirect_uri = params.get('redirect_uri') ?? '';
 
-    if (grant_type === 'authorization_code' && redirect_uri === '') { return throwError(new Error('No redirect_uri was provided')); }
+    if (grant_type === 'authorization_code' && redirect_uri === '') { return throwError(() => new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -82,7 +82,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
       switchMap((registerInfo) => registerInfo
         ? of(registerInfo)
-        : throwError(new Error('No data was found in the store'))),
+        : throwError(() => new Error('No data was found in the store'))),
       map((registerInfo) => {
 
         params.set('client_id', registerInfo.client_id);
@@ -102,9 +102,9 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
         } else {
 
-          if (!response.body.access_token) { return throwError(new Error('response body did not contain an access_token')); }
+          if (!response.body.access_token) { return throwError(() => new Error('response body did not contain an access_token')); }
 
-          if (!response.body.access_token.payload) { return throwError(new Error('Access token in response body did not contain a decoded payload')); }
+          if (!response.body.access_token.payload) { return throwError(() => new Error('Access token in response body did not contain a decoded payload')); }
 
           response.body.access_token.payload.client_id = client_id;
 

@@ -61,19 +61,19 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
-    if (!context) { return throwError(new Error('A context must be provided')); }
+    if (!context) { return throwError(() => new Error('A context must be provided')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
+    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
     const state = context.request.url.searchParams.get('state');
 
-    if (!client_id) { return throwError(new Error('No client_id was provided')); }
+    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
 
-    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
+    if (!redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
 
     try {
 
@@ -81,11 +81,11 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     } catch(error) {
 
-      return throwError(new Error('redirect_uri must be a valid URL'));
+      return throwError(() => new Error('redirect_uri must be a valid URL'));
 
     }
 
-    if (!state) { return throwError(new Error('Request must contain a state. Add state handlers to the proxy.')); }
+    if (!state) { return throwError(() => new Error('Request must contain a state. Add state handlers to the proxy.')); }
 
     this.keyValueStore.set(state, new URL(redirect_uri));
 

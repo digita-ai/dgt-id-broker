@@ -42,7 +42,7 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
 
     if (!response) {
 
-      return throwError(new Error('Context cannot be null or undefined'));
+      return throwError(() => new Error('Context cannot be null or undefined'));
 
     }
 
@@ -95,7 +95,7 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
     return from(this.store.get(state)).pipe(
       switchMap((challengeAndMethod) => challengeAndMethod
         ? of(challengeAndMethod)
-        : throwError(new Error('No data was found in the store'))),
+        : throwError(() => new Error('No data was found in the store'))),
       tap((challengeAndMethod) => {
 
         this.store.delete(state);

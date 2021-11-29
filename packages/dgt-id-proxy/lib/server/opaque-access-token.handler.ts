@@ -37,37 +37,37 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
 
     if (!context) {
 
-      return throwError(new Error('Context cannot be null or undefined'));
+      return throwError(() => new Error('Context cannot be null or undefined'));
 
     }
 
     if (!context.request) {
 
-      return throwError(new Error('No request was included in the context'));
+      return throwError(() => new Error('No request was included in the context'));
 
     }
 
     if (!context.request.method) {
 
-      return throwError(new Error('No method was included in the request'));
+      return throwError(() => new Error('No method was included in the request'));
 
     }
 
     if (!context.request.headers) {
 
-      return throwError(new Error('No headers were included in the request'));
+      return throwError(() => new Error('No headers were included in the request'));
 
     }
 
     if (!context.request.url) {
 
-      return throwError(new Error('No url was included in the request'));
+      return throwError(() => new Error('No url was included in the request'));
 
     }
 
     if (!context.request.body) {
 
-      return throwError(new Error('No body was included in the request'));
+      return throwError(() => new Error('No body was included in the request'));
 
     }
 
@@ -75,27 +75,27 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
 
     if (!client_id) {
 
-      return throwError(new Error('Request body must contain a client_id claim'));
+      return throwError(() => new Error('Request body must contain a client_id claim'));
 
     }
 
     return this.getUpstreamResponse(context).pipe(
       switchMap((response) => zip(of(response), this.createJwtAccessToken(response.body, client_id))),
       map(([ response, token ]) => this.createAccessTokenResponse(response, token)),
-      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(error)),
+      catchError((error) => error.body && error.headers && error.status ? of(error) : throwError(() => error)),
     );
 
   }
 
   private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
-    switchMap((response) => response.status === 200 ? of(response) : throwError(response)),
+    switchMap((response) => response.status === 200 ? of(response) : throwError(() => response)),
   );
 
   private createJwtAccessToken(responseBody: any, client_id: string): Observable<{ header: any; payload: any }> {
 
     if (!responseBody.id_token) {
 
-      return throwError(new Error('response body must be JSON and must contain an id_token'));
+      return throwError(() => new Error('response body must be JSON and must contain an id_token'));
 
     }
 

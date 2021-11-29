@@ -45,7 +45,7 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     if (!response) {
 
-      return throwError(new Error('Response cannot be null or undefined'));
+      return throwError(() => new Error('Response cannot be null or undefined'));
 
     }
 
@@ -59,7 +59,7 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
           if (clientSentState === undefined) {
 
-            return throwError(new Error('Unknown state'));
+            return throwError(() => new Error('Unknown state'));
 
           }
 

@@ -44,11 +44,11 @@ export class PkceTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(new Error('Context cannot be null or undefined')); }
+    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.body) { return throwError(new Error('No body was included in the request')); }
+    if (!context.request.body) { return throwError(() => new Error('No body was included in the request')); }
 
     const request = context.request;
 
@@ -85,11 +85,11 @@ export class PkceTokenHandler extends HttpHandler {
       .pipe(
         switchMap((codeChallengeAndMethod) => codeChallengeAndMethod
           ? zip(of(codeChallengeAndMethod), this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method))
-          : throwError(new InternalServerError('No stored challenge and method found.'))),
+          : throwError(() => new InternalServerError('No stored challenge and method found.'))),
         switchMap(([ codeChallengeAndMethod, challenge ]) => challenge === codeChallengeAndMethod.challenge
           ? this.httpHandler.handle(context)
           : of(createErrorResponse('Code challenges do not match.', 'invalid_grant'))),
-        catchError((error) => error?.status && error?.headers ? of(error) : throwError(error)),
+        catchError((error) => error?.status && error?.headers ? of(error) : throwError(() => error)),
       );
 
   }
@@ -128,7 +128,7 @@ export class PkceTokenHandler extends HttpHandler {
 
     if (method !== 'S256' && method !== 'plain') {
 
-      return throwError(createErrorResponse('Transform algorithm not supported.', 'invalid_request'));
+      return throwError(() => createErrorResponse('Transform algorithm not supported.', 'invalid_request'));
 
     }
 

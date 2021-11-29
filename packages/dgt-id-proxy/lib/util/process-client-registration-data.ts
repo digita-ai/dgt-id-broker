@@ -48,7 +48,7 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (clientData.client_id !== searchParams.get('client_id')) {
 
-    return throwError(new ForbiddenHttpError('The client id in the request does not match the one in the client registration data'));
+    return throwError(() => new ForbiddenHttpError('The client id in the request does not match the one in the client registration data'));
 
   }
 
@@ -56,7 +56,7 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (redirect_uri && !clientData.redirect_uris?.includes(redirect_uri)) {
 
-    return throwError(new ForbiddenHttpError('The redirect_uri in the request is not included in the client registration data'));
+    return throwError(() => new ForbiddenHttpError('The redirect_uri in the request is not included in the client registration data'));
 
   }
 
@@ -64,7 +64,7 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (response_type && !clientData.response_types?.includes(response_type))  {
 
-    return throwError(new ForbiddenHttpError('Response types do not match'));
+    return throwError(() => new ForbiddenHttpError('Response types do not match'));
 
   }
 

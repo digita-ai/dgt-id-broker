@@ -59,18 +59,18 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
-    if (!context) { return throwError(new Error('A context must be provided')); }
+    if (!context) { return throwError(() => new Error('A context must be provided')); }
 
-    if (!context.request) { return throwError(new Error('No request was included in the context')); }
+    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.url) { return throwError(new Error('No url was included in the request')); }
+    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
 
-    if (!client_id) { return throwError(new Error('No client_id was provided')); }
+    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
 
-    if (!redirect_uri) { return throwError(new Error('No redirect_uri was provided')); }
+    if (!redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
 
     try {
 
