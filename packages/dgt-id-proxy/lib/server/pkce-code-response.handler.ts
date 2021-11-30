@@ -6,15 +6,15 @@ import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { KeyValueStore } from '../storage/key-value-store';
 
 /**
- * A {HttpHandler} that handles pkce requests to the authorization endpoint that receives the authorization code
+ * A { HttpHandler } that handles pkce requests to the authorization endpoint that receives the authorization code
  * in a response from the upstream server.
  */
 export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {PkceCodeRequestHandler}
+   * Creates a { PkceCodeRequestHandler }.
    *
-   * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method, code challenge, and wether or not the user sent state.
+   * @param {KeyValueStore<Code, ChallengeAndMethod>} store - Stores the challenge method, code challenge, and wether or not the user sent state.
    */
   constructor(
     private store: KeyValueStore<Code, ChallengeAndMethod>,
@@ -34,9 +34,9 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
    * Handles the response by checking if it contains a code and state parameter.
    * If it does, the state is used to find the code challenge and method in the store
    * that were used to request the authorization code. The authorization code then replaces the state as the key in the
-   * {KeyValueStore}, so it can later be found when a request is made for a token.
+   * { KeyValueStore }, so it can later be found when a request is made for a token.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
@@ -69,10 +69,10 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
   }
 
   /**
-   * Returns true if the response is valid.
-   * Returns false if the response is undefined or null.
+   * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns { boolean } - Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

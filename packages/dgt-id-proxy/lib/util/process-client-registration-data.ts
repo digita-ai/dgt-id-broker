@@ -13,7 +13,8 @@ export type RegistrationStore = KeyValueStore<string, CombinedRegistrationData>;
  * checks if the content-type is ld+jsjon
  * and errors if the '@context' field is not present
  *
- * @param { string } client id
+ * @param { string } clientid - The URI to the webid of the client.
+ * @returns { Promise<CombinedRegistrationData> } - JSON representation of the client registration data.
  */
 export const getClientRegistrationData = async (clientid: string): Promise<CombinedRegistrationData> =>{
 
@@ -36,7 +37,7 @@ export const getClientRegistrationData = async (clientid: string): Promise<Combi
 
 /**
  * Compares the data from the ClientRegistrationData with the data given in the requests URLSearchParams.
- * It returns a 403 error when crucial parameters do not match
+ * It returns a 403 error when crucial parameters do not match.
  *
  * @param { OidcClientMetadata } clientData
  * @param { URLSearchParams } searchParams

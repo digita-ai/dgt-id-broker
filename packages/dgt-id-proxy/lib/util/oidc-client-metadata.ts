@@ -1,5 +1,5 @@
 /**
- * An interface that presents all data that is possible in a registration request
+ * Represents all data that is possible in a registration request
  */
 export interface OidcClientMetadata {
   response_types?: string[];

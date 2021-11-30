@@ -6,14 +6,14 @@ import { map, switchMap } from 'rxjs/operators';
 import { JWK } from 'jose/jwk/parse';
 
 /**
- * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
+ * A { HttpHandler } reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
  */
 export class JwkRequestHandler extends HttpHandler {
 
   /**
-   * Creates a {JwkRequestHandler} that returns a json response of the JWK keys from the file in the given path.
+   * Creates a { JwkRequestHandler } that returns a json response of the JWK keys from the file in the given path.
    *
-   * @param {string} jwkPath - the relative path to the file containing JWK keys.
+   * @param { string } jwkPath - The relative path to the file containing JWK keys.
    */
   constructor(private jwkPath: string) {
 
@@ -68,7 +68,8 @@ export class JwkRequestHandler extends HttpHandler {
   /**
    * Specifies that this handler can handle any context.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
+   * @returns { boolean } - Boolean stating any context can be handled.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean>{
 

@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import * as path from 'path';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
-import { of, throwError, zip, from, Observable, ObservableInput } from 'rxjs';
+import { of, throwError, zip, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { JWK, JWTPayload } from 'jose/types';
 import { SignJWT } from 'jose/jwt/sign';
@@ -11,15 +11,15 @@ import { parseJwk } from 'jose/jwk/parse';
 import { v4 as uuid }  from 'uuid';
 
 /**
- * A {JwtField} class, used to enforce the existance of a field and type in the jwtFields parameter of {JwtEncodeResponseHandler}
+ * A { JwtField } class, used to enforce the existence of a field and type in the jwtFields parameter of { JwtEncodeResponseHandler }
  */
 export class JwtField {
 
   /**
-   * Creates a {JwtField}
+   * Creates a { JwtField }.
    *
-   * @param {string} field - the field that contains a jwt
-   * @param {string} type - the type that should be set in the encoded JWT header 'typ' claim.
+   * @param { string } field - The field that contains a jwt.
+   * @param { string } type - The type that should be set in the encoded JWT header 'typ' claim.
    */
   constructor(public field: string, public type: string) {}
 
@@ -33,11 +33,11 @@ export class JwtField {
 export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {JwtEncodeResponseHandler}.
+   * Creates a { JwtEncodeResponseHandler }.
    *
-   * @param {JwtField[]} jwtFields - the fields of the response body containing tokens to encode, and what type should be set in the token's header.
-   * @param {string} pathToJwks - the relative path to a json file containing JWKs to sign the tokens.
-   * @param {string} proxyUrl - the url of the proxy which should be set in the issuer claim of tokens.
+   * @param { JwtField[] } jwtFields - The fields of the response body containing tokens to encode, and what type should be set in the token's header.
+   * @param { string } pathToJwks - The relative path to a json file containing JWKs to sign the tokens.
+   * @param { string } proxyUrl - The url of the proxy which should be set in the issuer claim of tokens.
    */
   constructor(
     private jwtFields: JwtField[],
@@ -56,10 +56,10 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
   }
 
   /**
-   * Handles the response. If the response body contains the specified fields, and the fields contain a JSON header and payload object
+   * If the response body contains the specified fields, and the fields contain a JSON header and payload object
    * the payload is used to create a new signed JWT token and placed in the response body.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response containing the response
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
@@ -121,7 +121,8 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
   /**
    * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns { boolean } - Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

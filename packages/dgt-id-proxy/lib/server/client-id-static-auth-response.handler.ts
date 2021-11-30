@@ -27,7 +27,7 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
    * Handles the response. Clears the body of the response and checks it contains a state, if so retrieves the redirect uri from the keyValueStore
    * using that state. It then transfer each query parameter from the response location to the redirect uri and redirects.
    *
-   * @param { HttpHandlerResponse } response
+   * @param { HttpHandlerResponse } response - The incoming response to handle.
    */
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
@@ -67,7 +67,8 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
   /**
    * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The incoming response to handle.
+   * @returns { boolean } - Boolean stating if the context can be handled or not.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

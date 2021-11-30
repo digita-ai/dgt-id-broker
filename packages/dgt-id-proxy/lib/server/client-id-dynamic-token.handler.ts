@@ -6,7 +6,7 @@ import { RegistrationStore } from '../util/process-client-registration-data';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 
 /**
- * A {HttpHandler} that
+ * A { HttpHandler } that
  * - gets the registered data from the store and if not errors
  * - replaces the client id in the body with the registered random client id in the store
  * - recalculates the content length because the body has changed
@@ -17,8 +17,8 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
   /**
    * Creates a { ClientIdDynamicTokenHandler }.
    *
-   * @param { KeyValueStore } store - the store used to retrieve a clients register data.
-   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   * @param { KeyValueStore } store - The store used to retrieve a clients register data.
+   * @param { HttpHandler } httpHandler - The handler through which to pass requests.
    */
   constructor(
     private store: RegistrationStore,
@@ -41,7 +41,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    * handles the request and catches the response, if the response is successful and
    * contains a access token the it's client id in the payload is switched again the to original given client id
    *
-   * @param {HttpHandlerContext} context
+   * @param {HttpHandlerContext} context - The context of the incoming request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -141,10 +141,10 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
   }
 
   /**
-   * Returns true if the context is valid.
-   * Returns false if the context, it's request, or request body are not included.
+   * Confirms that the handler can handle the given context if it contains a request and request body.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context - The context of the incoming request.
+   * @returns { boolean } - Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

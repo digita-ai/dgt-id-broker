@@ -39,7 +39,7 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
    * If the state is not found in the location header, or the state is not found in the
    * keyValueStore an error is thrown
    *
-   * @param {HttpHandlerResponse} response
+   * @param {HttpHandlerResponse} response - The auth response to check.
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
@@ -88,7 +88,8 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
   /**
    * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param {HttpHandlerResponse} response - The auth response to handle.
+   * @returns { boolean } - Boolean stating if the context can be handled or not.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
