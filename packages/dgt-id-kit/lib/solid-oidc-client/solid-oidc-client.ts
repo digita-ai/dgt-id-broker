@@ -68,7 +68,6 @@ export class SolidOidcClient {
   }
 
   /**
-   * Logs the client in using an issuer.
    * Checks if all necessary parameters are present and retrieves the client id and code verifier from the store.
    * Uses the code verifier to generate the code challenge and logs in using an issuer with the code challenge and the given parameters.
    *
@@ -104,7 +103,6 @@ export class SolidOidcClient {
 
   }
   /**
-   * Logs the client in using a web id.
    * Checks if all necessary parameters are present and retrieves the client id and code verifier from the store.
    * Uses the code verifier to generate the code challenge and logs in using a web id with the code challenge and the given parameters.
    *
@@ -141,7 +139,6 @@ export class SolidOidcClient {
   }
 
   /**
-   * Logs the client out.
    * Deletes all tokens from the store.
    */
   async logout(): Promise<void> {
@@ -153,7 +150,6 @@ export class SolidOidcClient {
   }
 
   /**
-   * Handles the incoming redirect.
    * Gets the client id, private key, public key and code verifier from the store.
    * Sets the client secret and the access-, id- and refresh token.
    *
