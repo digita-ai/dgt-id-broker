@@ -1,6 +1,6 @@
-import { Session } from './models/session.model';
-import { Profile } from './models/profile.model';
-import { Issuer } from './models/issuer.model';
+import { Issuer } from '../models/issuer.model';
+import { Session } from '../models/session.model';
+import { Profile } from '../models/profile.model';
 
 /**
  * Service for interacting with Solid pods
