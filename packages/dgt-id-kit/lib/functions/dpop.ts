@@ -14,8 +14,8 @@ export interface generateKeysReturnObject {
 /**
  * Generate a private- and public key
  *
- * @param algorithm the desired algorithm to be used to generate the key pair
- * @returns an object containing the public and private key
+ * @param { KeyGenerationAlgorithm } algorithm - The desired algorithm to be used to generate the key pair.
+ * @returns { Promise<generateKeysReturnObject> } - An object containing the public and private key.
  */
 export const generateKeys = async (
   algorithm: KeyGenerationAlgorithm = 'ES256',
@@ -42,12 +42,12 @@ export const generateKeys = async (
 };
 
 /**
- * Creates a DPoP proof signed by the private key
+ * Creates a DPoP proof signed by the private key.
  *
- * @param htm The HTTP method for the request to which the JWT is attached
- * @param htu The HTTP URI used for the request, without query and fragment parts
- * @param publicKey the public key
- * @param privateKey the private key
+ * @param { string } htm -  The HTTP method for the request to which the JWT is attached.
+ * @param { string } htu - The HTTP URI used for the request, without query and fragment parts.
+ * @param { JWK } publicKey - The public key.
+ * @param { JWK } privateKey - The private key.
  * @returns DPoP proof string
  */
 export const createDpopProof = async (

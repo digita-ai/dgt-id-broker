@@ -68,7 +68,7 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
    * Specifies that if the response is defined this handler can handle the response.
    *
    * @param { HttpHandlerResponse } response - The incoming response to handle.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

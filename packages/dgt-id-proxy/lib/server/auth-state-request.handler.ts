@@ -85,7 +85,7 @@ export class AuthStateRequestHandler extends Handler<HttpHandlerContext, HttpHan
    * Specifies if the context can be handle by checking if the request is present and contains headers and a URL object.
    *
    * @param {HttpHandlerContext} context - The context containing the request.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

@@ -88,8 +88,8 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
   /**
    * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response - The auth response to handle.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @param { HttpHandlerResponse } response - The auth response to handle.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

@@ -7,7 +7,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
  * @param { string } msg - The error message to use in the error response.
  * @param { string } error - The type of error to use in the error response.
  * @param { { [key: string]: string } | undefined } headers?
- * @returns { HttpHandlerResponse } - The error response object based upon the given parameters with a 400 status code.
+ * @returns The error response object based upon the given parameters with a 400 status code.
  */
 export const createErrorResponse = (
   msg: string,

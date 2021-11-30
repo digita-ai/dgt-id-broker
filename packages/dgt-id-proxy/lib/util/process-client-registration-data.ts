@@ -14,7 +14,7 @@ export type RegistrationStore = KeyValueStore<string, CombinedRegistrationData>;
  * and errors if the '@context' field is not present
  *
  * @param { string } clientid - The URI to the webid of the client.
- * @returns { Promise<CombinedRegistrationData> } - JSON representation of the client registration data.
+ * @returns JSON representation of the client registration data.
  */
 export const getClientRegistrationData = async (clientid: string): Promise<CombinedRegistrationData> =>{
 
@@ -39,8 +39,9 @@ export const getClientRegistrationData = async (clientid: string): Promise<Combi
  * Compares the data from the ClientRegistrationData with the data given in the requests URLSearchParams.
  * It returns a 403 error when crucial parameters do not match.
  *
- * @param { OidcClientMetadata } clientData
- * @param { URLSearchParams } searchParams
+ * @param { OidcClientMetadata } clientData - Registration data retrieved from the webid of the client.
+ * @param { URLSearchParams } searchParams - The URL parameters provided with the request.
+ * @returns JSON representation of the client registration response & client oidc metadata.
  */
 export const compareClientRegistrationDataWithRequest = (
   clientData: CombinedRegistrationData,
@@ -74,12 +75,13 @@ export const compareClientRegistrationDataWithRequest = (
 };
 
 /**
- * A  retrieveAndValidateClientRegistrationData function that:
- * - calls getClientRegistrationData
- * - calls compareClientRegistrationDataWithRequest to compare the data and errors if not correct
+ * Retrieves the client registration data and compares it with the data provided in the request.
  *
- * @param clientId
- * @param contextRequestUrlSearchParams
+ *
+ * @param { string } clientid - The URI to the webid of the client.
+ * @param { URLSearchParams } contextRequestUrlSearchParams - The URL parameters provided with the request.
+ * @returns JSON representation of the client registration response & client oidc metadata.
+ * If parameters do not match the compareClientRegistrationDataWithRequest method will return an error.
  */
 export const retrieveAndValidateClientRegistrationData = (
   clientId: string,

@@ -40,7 +40,7 @@ export class PkceTokenHandler extends HttpHandler {
    * code challenge in the store. If they match, the code verifier is removed from the request to
    * create a PKCE-less request and the request is passed on to the handler.
    *
-   * @param {HttpHandlerContext} context - The context containing the request.
+   * @param { HttpHandlerContext } context - The context containing the request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -97,8 +97,8 @@ export class PkceTokenHandler extends HttpHandler {
   /**
    * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
-   * @param {HttpHandlerContext} context - A {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}.
-   * @returns { boolean } - Boolean stating if the handler can handle the response.
+   * @param { HttpHandlerContext } context - A {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

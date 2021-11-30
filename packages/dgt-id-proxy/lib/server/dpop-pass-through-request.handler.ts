@@ -88,7 +88,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * Replaces the HTU claim in the DPoP proof to match the upstream token endpoint.
    *
    * @param { JWTVerifyResult } { payload, protectedHeader: header } - The JWT to be updated.
-   * @returns Observable<string> - a signed JWT with the expected HTU claim of the upstream.
+   * @returns a signed JWT with the expected HTU claim of the upstream.
    */
   private updateDpopProof(
     { payload, protectedHeader: header }: JWTVerifyResult
@@ -114,7 +114,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   /** Creates an error response specifically for DPoP related errors
    *
    * @param { string } error_description - The error description to include in the response body.
-   * @returns { HttpHandlerResponse } - The error response.
+   * @returns The error response.
    */
   private dpopError = (error_description: string): HttpHandlerResponse => ({
     body: JSON.stringify({
@@ -140,7 +140,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    *
    * @param { HttpHandlerResponse } response - The original response to be modified before return.
    * @param { string } originalDpopProof - The original DPoP proof containing the proxy's thumbprint of the .
-   * @returns { Observable<HttpHandlerResponse> } - Containing the updated DPoP proof with a new thumbprint.
+   * @returns Containing the updated DPoP proof with a new thumbprint.
    */
   private updateDpopResponse(
     response: HttpHandlerResponse,
@@ -164,7 +164,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * Confirms if the handler can handle the request by checking if the request headers are present.
    *
    * @param {HttpHandlerContext} context - The context of the incoming request.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

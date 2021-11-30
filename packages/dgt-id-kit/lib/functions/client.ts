@@ -4,7 +4,6 @@ import { getFirstIssuerFromWebId } from './web-id';
 import { authRequest, tokenRequest, tokenRequestReturnObject } from './oidc';
 
 /**
- * Logs the client in using an issuer.
  * Checks if all necessary parameters are present and performs an authentication request.
  *
  * @param { string } issuer - The clients Solid OIDC issuer.
@@ -12,7 +11,7 @@ import { authRequest, tokenRequest, tokenRequestReturnObject } from './oidc';
  * @param { string } scope - The scope of the request.
  * @param { string } redirectUri - The uri to redirect the response to.
  * @param { string } codeChallenge - The code challenge to use.
- * @param { string } state? - The state of the request.
+ * @param { string } state (optional) - The state of the request.
  * @param { Promise<void> } handleAuthRequestUrl - The authentication request url.
  */
 export const loginWithIssuer = async (
@@ -36,7 +35,6 @@ export const loginWithIssuer = async (
 };
 
 /**
- * Logs the client in using a web id.
  * Checks if all necessary parameters are present and retrieves the first issuer from the web id.
  * Performs a login with Issuer request using the retrieved issuer from the web id.
  *
@@ -75,7 +73,6 @@ export const loginWithWebId = async (
 };
 
 /**
- * Handles the incoming redirect.
  * Checks all necessary parameters are present and gets an authorization code.
  * Performs a token request using the authorization code and the given parameters.
  *
@@ -87,6 +84,7 @@ export const loginWithWebId = async (
  * @param { JWK } privateKey - The private JWK to use.
  * @param { Promise<string|null> } getAuthorizationCode - The authorization code.
  * @param { string } clientSecret? - The clients secret.
+ * @returns The token request return object containing an access, id and optional refresh token.
  */
 export const handleIncomingRedirect = async (
   issuer: string,

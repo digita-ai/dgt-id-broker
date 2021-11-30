@@ -4,17 +4,17 @@ import { ParsedJSON } from '../util/parsed-json';
 import { WebIdFactory } from './webid-factory';
 
 /**
- * A {SingleClaimWebIdFactory} class that implements the WebIdFactory interface and creates a minted webid
- * using the webid pattern en custom claim provided
+ * A { SingleClaimWebIdFactory } class that implements the WebIdFactory interface and creates a minted webid
+ * using the webid pattern en custom claim provided.
  */
 export class SingleClaimWebIdFactory extends WebIdFactory {
 
   /**
-   * Creates a {SingleClaimWebIdFactory}.
+   * Creates a { SingleClaimWebIdFactory }.
    *
-   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
+   * @param { string } webIdPattern - The pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the custom claim in the id token.
-   * @param {string} claim - the name of the custom claim that needs to be retrieved from the id token
+   * @param { string } claim - The name of the custom claim that needs to be retrieved from the id token
    * and added to the webIdPattern above.
    */
   constructor(public webIdPattern: string, public claim: string = 'sub') {
@@ -27,6 +27,9 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
 
   /**
    * Mints a webid based on the provided payload using the custom claim.
+   *
+   * @param { ParsedJSON } payload - The payload containing the custom claim.
+   * @returns { Observable<string> } - The minted custom webid.
    */
 
   handle(payload: ParsedJSON): Observable<string> {
@@ -52,9 +55,10 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
   }
 
   /**
-   * Returns true if the payload is defined. Otherwise it returns false.
+   * Confirms if the handler can handle the payload by checking for it's presence.
    *
-   * @param {ParsedJSON} payload
+   * @param {ParsedJSON} payload - The payload to handle.
+   * @returns Boolean indicating if the handler can handle the payload.
    */
   canHandle(payload: ParsedJSON): Observable<boolean> {
 

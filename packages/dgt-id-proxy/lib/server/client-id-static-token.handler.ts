@@ -132,7 +132,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    * Returns false if the context, it's request, or request body are not included.
    *
    * @param { HttpHandlerContext } context - The context of the incoming request.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

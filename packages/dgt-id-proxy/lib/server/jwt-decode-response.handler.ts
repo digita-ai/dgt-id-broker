@@ -102,7 +102,7 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    * Specifies that if the response is defined this handler can handle the response.
    *
    * @param { HttpHandlerResponse } response - The response to handle.
-   * @returns { boolean } - Boolean stating if the handler can handle the response.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

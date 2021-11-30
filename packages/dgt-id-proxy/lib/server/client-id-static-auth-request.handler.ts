@@ -112,8 +112,8 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or request url are not included.
    *
-   * @param {HttpHandlerContext} context - The context of the incoming request.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @param { HttpHandlerContext } context - The context of the incoming request.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

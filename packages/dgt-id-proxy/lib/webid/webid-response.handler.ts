@@ -6,15 +6,15 @@ import { checkError, createErrorResponse } from '../public-api';
 import { WebIdFactory } from './webid-factory';
 
 /**
- * A {HttpHandler} that swaps the webid claim with the minted webid if the id token has no webid or
+ * A { HttpHandler } that swaps the webid claim with the minted webid if the id token has no webid or
  * sets the webid in the access token as the same one provided in the id token.
  */
 export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
   /**
-   * Creates a {WebIdResponseHandler}.
+   * Creates a { WebIdResponseHandler }.
    *
-   * @param {WebIdFactory} webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param { WebIdFactory } webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters.
    */
   constructor(private webIdFactory: WebIdFactory) {
 
@@ -81,9 +81,10 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   }
 
   /**
-   * Returns true if the response is defined. Otherwise it returns false.
+   * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

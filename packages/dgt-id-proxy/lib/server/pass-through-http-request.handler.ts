@@ -137,7 +137,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
    * @param {HttpHandlerContext} context - A {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}.
-   * @returns { boolean } - Boolean stating if the handler can handle the response.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
@@ -159,7 +159,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @param { string } method - The HTTP method.
    * @param { IncomingHttpHeaders } headers - The HTTP request headers.
    * @param { any } body (optional) - The body to add to the request if required.
-   * @returns { Observable<HttpHandlerResponse> } - The response to the request that was made.
+   * @returns The response to the request that was made.
    */
   private fetchRequest(
     url: URL,
@@ -203,7 +203,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    *
    * @param { any } requestOpts - The HTTP request options to add to the request.
    * @param { any } body - The body to be added to the request.
-   * @returns { Promise<HttpHandlerResponse> } - The response from the upstream server.
+   * @returns The response from the upstream server.
    */
   private resolveResponse = (requestOpts: any, body: any) => new Promise<HttpHandlerResponse>((resolve, reject) => {
 
@@ -315,7 +315,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    *
    * @param { Buffer } data - The data to be decompressed.
    * @param { string } compressionType - The compression type of the compressed data.
-   * @returns { Buffer } - The buffer containing the decompressed data.
+   * @returns The buffer containing the decompressed data.
    */
   private decompress = (data: Buffer, compressionType: string): Buffer => {
 
@@ -335,11 +335,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     }
 
   };
-  /**
-   *
-   * @param headers
-   * @returns
-   */
+
   private cleanHeaders = (headers: IncomingHttpHeaders) => Object.keys(headers).reduce<IncomingHttpHeaders>(
     (acc, key) => {
 

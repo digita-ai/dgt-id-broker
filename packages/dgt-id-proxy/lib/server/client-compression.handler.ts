@@ -54,7 +54,7 @@ export class ClientCompressionHandler extends HttpHandler {
    * Retrieves the type of encoding from the client's "accept-encoding" header.
    *
    * @param { string } clientAcceptEncodingHeader - The header containing the client's "accept-encoding" preference.
-   * @returns { string } - A string containing the type of encoding used.
+   * @returns A string containing the type of encoding used.
    */
   private retrieveEncoding(clientAcceptEncodingHeader: string): string {
 
@@ -111,8 +111,8 @@ export class ClientCompressionHandler extends HttpHandler {
   /**
    * Confirms that if the context, context request, and request headers are defined this handler can handle the response.
    *
-   * @param {HttpHandlerContext} context - The context containing the request to handle.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @param { HttpHandlerContext } context - The context containing the request to handle.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

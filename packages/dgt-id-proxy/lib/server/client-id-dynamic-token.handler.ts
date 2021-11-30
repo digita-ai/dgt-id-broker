@@ -144,7 +144,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    * Confirms that the handler can handle the given context if it contains a request and request body.
    *
    * @param { HttpHandlerContext } context - The context of the incoming request.
-   * @returns { boolean } - Boolean stating if the context can be handled or not.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

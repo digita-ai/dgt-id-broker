@@ -15,8 +15,9 @@ import { hideBin } from 'yargs/helpers';
  * - the scheme
  *
  * @param { string } uri - The uri to check.
+ * @returns The URI, host, port and scheme of the provided URI.
  */
-export const checkUri = (uri: string) => {
+export const checkUri = (uri: string): { uri: string; host: string; port: string; scheme: string } => {
 
   const httpUri = uri.match(/^https?:\/\//g) ? uri : 'http://' + uri ;
 
@@ -101,6 +102,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
  * Parses the command line arguments and returns the result.
  *
  * @param { string[] } args - The command line arguments.
+ * @returns { Record<string, any> } - The parsed command line arguments.
  */
 export const createVariables = (args: string[]): Record<string, any> => {
 

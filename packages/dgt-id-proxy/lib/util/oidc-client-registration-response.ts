@@ -1,5 +1,5 @@
 /**
- * Represents all data that is unique to a registration request response.
+ * Represents all data that is unique to a registration request's response.
  */
 export interface OidcClientRegistrationResponse {
   client_id: string;

@@ -72,7 +72,7 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
    * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
    * @param { HttpHandlerResponse } response - The response to handle.
-   * @returns { boolean } - Boolean stating if the handler can handle the response.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
@@ -82,6 +82,16 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
 
   }
 
+  /**
+   * Sets location header to the URL provided and clears the response body.
+   * Checks the store using the provided state and if found, replaces the state with the code as key.
+   *
+   * @param { HttpHandlerResponse } response - The response to edit.
+   * @param { string } state - The state of the request.
+   * @param { string } code - The authorization code.
+   * @param { URL } url - The URL to set as location header.
+   * @returns The response containing a new location header and empty body.
+   */
   private handleCodeResponse(
     response: HttpHandlerResponse,
     state: string,

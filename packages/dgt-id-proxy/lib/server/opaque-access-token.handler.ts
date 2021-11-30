@@ -90,7 +90,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * Gets the response from the upstream server and errors if it is not a success status code.
    *
    * @param { HttpHandlerContext } context - The context containing the request.
-   * @returns { Observable<HttpHandlerResponse> } - The upstream response to the request made.
+   * @returns The upstream response to the request made.
    */
   private getUpstreamResponse = (context: HttpHandlerContext): Observable<HttpHandlerResponse> =>
     this.handler.handle(context).pipe(
@@ -102,7 +102,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    *
    * @param { any } responseBody - The response body containing the id token.
    * @param { string } client_id - The client id to be included in the token.
-   * @returns { Observable<{ header: any; payload: any } } - The JWT access token containing all necessary claims and the client id.
+   * @returns The JWT access token containing all necessary claims and the client id.
    */
   private createJwtAccessToken(responseBody: any, client_id: string): Observable<{ header: any; payload: any }> {
 
@@ -134,7 +134,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    *
    * @param { HttpHandlerResponse } response - The original response containing the body and headers that will be passed together with the JWT access token.
    * @param { { header: any; payload: any } } accessToken - The access token that will be included in the response body.
-   * @returns
+   * @returns A response object containing the newly provided accessToken and the original response headers and body.
    */
   private createAccessTokenResponse(
     response: HttpHandlerResponse,
@@ -155,7 +155,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
    * @param { HttpHandlerResponse } response - The response to handle.
-   * @returns { boolean } - Boolean stating if the handler can handle the response.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
