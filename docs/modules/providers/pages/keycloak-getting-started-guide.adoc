@@ -10,7 +10,15 @@
 . Open your terminal in the root folder of the project and enter the following commands: 
 .. `npm run bootstrap` to install all the dependencies.
 .. `npm run build:all` to build the all packages in this workspace.
-.. `npm run start --scope @digita-ai/dgt-id-proxy` to start the proxy.
+.. `npm run start --scope @digita-ai/dgt-id-proxy` to start the proxy. This command will start all required packages in parallel.
+
+
+If you would like to start the proxy with different environment variables, such as a different URI or port you will have to start it manually. 
+
+. Open your terminal in the *dgt-id-proxy* folder and run the following command: 
+. `npm run start -- -u <SCHEME:URI:PORT>` (e.g. http://localhost:3004). With the `-u` flag you can overwrite the default proxy URI which is set to http://localhost:3003. 
+Note that you will have to start the other required packages manually as well. 
+. Open a terminal in the *demo/demo-client* and *demo/demo-pods* folder and run the following command: `npm run demo:keycloak` to start the demo client and demo pods.
 
 
 == Launching a Keycloak server
@@ -96,7 +104,7 @@ image::add-client.png[Keycloak Add Client]
 
 . Make sure *Implicit Flow Enabled* is set to `OFF`` in order for your client to remain Solid-compliant. 
 
-. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match.
+. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly.
 
 . Switch to the *Credentials* tab and set the *Client Authenticator* to `Client ID and Secret`.
 
@@ -108,8 +116,6 @@ If you'd like to add preset users to the realm you can do so as described below.
 . In the menu to the left, click *Users* and then *Add user*.
 
 . Enter a username. The rest of the fields are not required but recommended.
-
-. Make sure you switch *Email verified* to *ON*.
 
 . Click *Save*. The interface will immediately show you the new user's settings.
 
