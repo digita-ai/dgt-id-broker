@@ -1,37 +1,29 @@
-import { JWK } from 'jose/types';
+import { assert, isString } from '@digita-ai/dgt-utils-core';
+import { isJwk } from '../util/asserts';
 import { handleIncomingRedirect, loginWithIssuer, loginWithWebId } from '../functions/client';
 import { generateKeys } from '../functions/dpop';
 import { accessResource, refreshTokenRequest } from '../functions/oidc';
 import { generateCodeChallenge, generateCodeVerifier } from '../functions/pkce';
-import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 import { HttpMethod } from '../models/http-method.model';
-export interface storeInterface {
-  publicKey: JWK;
-  privateKey: JWK;
-  codeVerifier: string;
 
-  accessToken: string;
-  refreshToken: string;
-  idToken: string;
+/* istanbul ignore next */
+export const defaultGetAuthorizationCode =
+async (): Promise<string> => new URLSearchParams(window.location.search).get('code') ?? '';
 
-  issuer: string;
-  clientId: string;
-  clientSecret: string;
+/* istanbul ignore next */
+export const defaultHandleAuthRequestUrl =
+async (requestUrl: string): Promise<void> => { window.location.href = requestUrl; };
+
+interface SecureStore {
+  get: (key: string) => Promise<unknown|null>;
+  set: (key: string, value: unknown) => Promise<this>;
+  delete: (key: string) => Promise<boolean>;
 }
-/* istanbul ignore next */
-export const defaultGetAuthorizationCode = async (): Promise<string> => new URLSearchParams(window.location.search).get('code') ?? '';
-
-/* istanbul ignore next */
-export const defaultHandleAuthRequestUrl = async (requestUrl: string): Promise<void> => {
-
-  window.location.href = requestUrl;
-
-};
 
 export class SolidOidcClient {
 
   constructor(
-    private store: TypedKeyValueStore<storeInterface>,
+    private store: SecureStore,
     private initialized = true,
     private clientId?: string,
   ) {
@@ -69,10 +61,12 @@ export class SolidOidcClient {
     if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
     const clientId = await this.store.get('clientId');
-    if (!clientId) throw new Error('No client_id available in the store');
+
+    assert(isString(clientId), 'No client_id available in the store');
 
     const codeVerifier = await this.store.get('codeVerifier');
-    if (!codeVerifier) throw new Error('No code verifier available in the store');
+
+    assert(isString(codeVerifier), 'No code verifier available in the store');
 
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
@@ -95,10 +89,12 @@ export class SolidOidcClient {
     if (!redirectUri) throw new Error('Parameter "redirectUri" should be set');
 
     const clientId = await this.store.get('clientId');
-    if (!clientId) throw new Error('No client_id available in the store');
+
+    assert(isString(clientId), 'No client_id available in the store');
 
     const codeVerifier = await this.store.get('codeVerifier');
-    if (!codeVerifier) throw new Error('No code verifier available in the store');
+
+    assert(isString(codeVerifier), 'No code verifier available in the store');
 
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
@@ -124,7 +120,8 @@ export class SolidOidcClient {
     if (!this.initialized) await this.initialize();
 
     const clientId = await this.store.get('clientId');
-    if (!clientId) throw new Error('No client_id available in the store');
+
+    assert(isString(clientId), 'No client_id available in the store');
 
     if (!issuer) throw new Error('Parameter "issuer" should be set');
     await this.store.set('issuer', issuer);
@@ -134,11 +131,12 @@ export class SolidOidcClient {
     if (clientSecret) await this.store.set('clientSecret', clientSecret);
 
     const privateKey = await this.store.get('privateKey');
-    if (!privateKey) throw new Error('No private key available in the store');
     const publicKey = await this.store.get('publicKey');
-    if (!publicKey) throw new Error('No public key available in the store');
     const codeVerifier = await this.store.get('codeVerifier');
-    if (!codeVerifier) throw new Error('No code verifier available in the store');
+
+    assert(isJwk(privateKey), 'No private key available in the store');
+    assert(isJwk(publicKey), 'No public key available in the store');
+    assert(isString(codeVerifier), 'No code verifier available in the store');
 
     try {
 
@@ -180,13 +178,16 @@ export class SolidOidcClient {
     if (!method) throw new Error('Parameter "method" should be set');
 
     const privateKey = await this.store.get('privateKey');
-    if (!privateKey) throw new Error('No private key available in the store');
     const publicKey = await this.store.get('publicKey');
-    if (!publicKey) throw new Error('No public key available in the store');
-    let accessToken = await this.store.get('accessToken');
-    if (!accessToken) throw new Error('No accessToken available, did you login correctly?');
+    const accessToken = await this.store.get('accessToken');
 
-    try{
+    assert(isJwk(privateKey), 'No private key available in the store');
+    assert(isJwk(publicKey), 'No public key available in the store');
+    assert(isString(accessToken), 'No accessToken available, did you login correctly?');
+
+    let refreshedAccessToken: string = accessToken;
+
+    try {
 
       const tokenBody = JSON.parse(atob(accessToken.split('.')[1]));
       const exp = tokenBody.exp;
@@ -196,16 +197,18 @@ export class SolidOidcClient {
         // Refreshing tokens
 
         const refreshToken = await this.store.get('refreshToken');
-        if (!refreshToken) throw new Error('No refreshToken available, did you login with "offline_access" in the scope?');
         const issuer = await this.store.get('issuer');
-        if (!issuer) throw new Error('No issuer available, did you login correctly?');
         const clientId = await this.store.get('clientId');
-        if (!clientId) throw new Error('No client_id available in the store');
         const clientSecret = await this.store.get('clientSecret');
+
+        assert(isString(refreshToken), 'No refreshToken available, did you login with "offline_access" in the scope?');
+        assert(isString(issuer), 'No issuer available, did you login correctly?');
+        assert(isString(clientId), 'No client_id available in the store');
+        assert(isString(clientSecret), 'No client_secret available in the store');
 
         const result = await refreshTokenRequest(issuer, clientId, refreshToken, publicKey, privateKey, clientSecret);
 
-        accessToken = result.accessToken;
+        refreshedAccessToken = result.accessToken;
 
         await this.store.set('accessToken', result.accessToken);
         await this.store.set('refreshToken', result.refreshToken);
@@ -213,7 +216,7 @@ export class SolidOidcClient {
 
       }
 
-      return await accessResource(resource, method, accessToken, publicKey, privateKey, body, contentType);
+      return await accessResource(resource, method, refreshedAccessToken, publicKey, privateKey, body, contentType);
 
     } catch (error: unknown) {
 
