@@ -57,7 +57,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
     httpHandler = {
       canHandle: jest.fn(),
-      handle: jest.fn().mockReturnValue(of()),
+      handle: jest.fn().mockReturnValue(of({})),
       safeHandle: jest.fn(),
     };
 
@@ -170,7 +170,13 @@ describe('ClientIdStaticTokenHandler', () => {
 
       const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
 
-      await handler.handle(testContext).toPromise();
+      const response = {
+        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await lastValueFrom(handler.handle(testContext));
 
       const bodyAsSearchParams = new URLSearchParams(testContext.request.body);
       bodyAsSearchParams.set('client_id', client_id_constructor);
@@ -199,8 +205,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(handler.handle(testContext)
-        .toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(testContext))).resolves.toEqual({
         ...response, body: { access_token: { payload: { client_id: public_id } } },
       });
 
@@ -216,7 +221,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('response body did not contain an access_token');
+      await expect(() => lastValueFrom(handler.handle(testContext))).rejects.toThrow('response body did not contain an access_token');
 
     });
 
@@ -230,7 +235,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
-      await expect(() => handler.handle(testContext).toPromise()).rejects.toThrow('Access token in response body did not contain a decoded payload');
+      await expect(() => lastValueFrom(handler.handle(testContext))).rejects.toThrow('Access token in response body did not contain a decoded payload');
 
     });
 
@@ -238,7 +243,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'text/html' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
+      await expect(lastValueFrom(handler.handle(context))).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
 
     });
 
@@ -246,7 +251,7 @@ describe('ClientIdStaticTokenHandler', () => {
 
       fetchMock.once(JSON.stringify({ ...clientRegistrationData, '@context': undefined }), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow(`client registration data should use the normative JSON-LD @context`);
+      await expect(lastValueFrom(handler.handle(context))).rejects.toThrow(`client registration data should use the normative JSON-LD @context`);
 
     });
 
@@ -254,7 +259,9 @@ describe('ClientIdStaticTokenHandler', () => {
 
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle({ ...context, request: { ...context.request, body: requestBodyWithOtherGrantType } }).toPromise()).rejects.toThrow('The grant type in the request is not included in the client registration data');
+      await expect(lastValueFrom(handler.handle({
+        ...context, request: { ...context.request, body: requestBodyWithOtherGrantType },
+      }))).rejects.toThrow('The grant type in the request is not included in the client registration data');
 
     });
 
@@ -262,7 +269,13 @@ describe('ClientIdStaticTokenHandler', () => {
 
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await handler.handle(context).toPromise();
+      const response = {
+        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await lastValueFrom(handler.handle(context));
 
       expect(httpHandler.handle).toHaveBeenCalledTimes(1);
 
@@ -279,7 +292,13 @@ describe('ClientIdStaticTokenHandler', () => {
 
       context = { ...context, request: { ...context.request, body: requestBodyWithRefreshToken } };
 
-      await handler.handle(context).toPromise();
+      const response = {
+        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await lastValueFrom(handler.handle(context));
 
       expect(httpHandler.handle).toHaveBeenCalledTimes(1);
 
@@ -294,7 +313,14 @@ describe('ClientIdStaticTokenHandler', () => {
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
       const newContext = { request: { headers, body: requestBodyWithStaticClient, method: 'POST', url } } as HttpHandlerContext;
       const length = recalculateContentLength(newContext.request);
-      await handler.handle(context).toPromise();
+
+      const response = {
+        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      await lastValueFrom(handler.handle(context));
 
       const bodyAsSearchParams = new URLSearchParams(newContext.request.body);
 

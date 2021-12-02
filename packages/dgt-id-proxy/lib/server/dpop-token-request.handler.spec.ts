@@ -335,7 +335,9 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(testHandler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      await expect(
+        lastValueFrom(testHandler.handle(context))
+      ).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
       const dpopJwt1 = await new SignJWT({
         'htm': 'POST',
@@ -352,7 +354,9 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
 
-      await expect(testHandler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      await expect(
+        lastValueFrom(testHandler.handle(context))
+      ).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
     });
 
