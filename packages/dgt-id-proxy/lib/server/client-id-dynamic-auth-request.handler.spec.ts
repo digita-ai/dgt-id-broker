@@ -1,5 +1,6 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
+import { lastValueFrom } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
@@ -166,24 +167,24 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('A context must be provided');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: null }))).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: undefined }))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
       context.request.url = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
       context.request.url = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -193,10 +194,10 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       const noClientIdContext = { ... context, request: { ...context.request, url: noClientIdURL } };
 
       noClientIdContext.request.url.searchParams.set('client_id', '');
-      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('No client_id was provided');
 
       noClientIdContext.request.url.searchParams.delete('client_id');
-      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('No client_id was provided');
 
     });
 
@@ -206,10 +207,10 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       const noRedirectUriContext = { ... context, request: { ...context.request, url: noRedirectUriURL } };
 
       noRedirectUriContext.request.url.searchParams.set('redirect_uri', '');
-      await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => lastValueFrom(handler.handle(noRedirectUriContext))).rejects.toThrow('No redirect_uri was provided');
 
       noRedirectUriContext.request.url.searchParams.delete('redirect_uri');
-      await expect(() => handler.handle(noRedirectUriContext).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => lastValueFrom(handler.handle(noRedirectUriContext))).rejects.toThrow('No redirect_uri was provided');
 
     });
 
@@ -217,7 +218,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       url.searchParams.set('client_id', 'static_client');
       context = { ...context, request: { ...context.request, url } };
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(context);
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(context);
 
     });
 
@@ -226,7 +227,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       fetchMock.once(clientRegistrationData, { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
+      await expect(lastValueFrom(handler.handle(badIdContext))).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
 
     });
 
@@ -235,7 +236,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       fetchMock.once(clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       const badResponseTypeContext = { ...context, request: { ...context.request, url: otherResponseTypeURL } };
-      await expect(handler.handle(badResponseTypeContext).toPromise()).rejects.toThrow(`Response types do not match`);
+      await expect(lastValueFrom(handler.handle(badResponseTypeContext))).rejects.toThrow(`Response types do not match`);
 
     });
 
@@ -251,9 +252,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       public_store.set = jest.fn();
 
-      await handler2
-        .handle({ ...context, request: { ...context.request, url: publicClientURL } })
-        .toPromise();
+      await lastValueFrom(handler2.handle({ ...context, request: { ...context.request, url: publicClientURL } }));
 
       expect(public_store.set).toHaveBeenCalledWith(redirect_uri, mockPublicRegisterResponse);
 
@@ -277,9 +276,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       public_store.get = jest.fn().mockReturnValueOnce(registeredInfo);
 
-      await handler2
-        .handle({ ...newContext, request: { ...newContext.request, url: publicClientURL } })
-        .toPromise();
+      await lastValueFrom(handler2.handle({ ...newContext, request: { ...newContext.request, url: publicClientURL } }));
 
       expect(handler2.registerClient).toHaveBeenCalledTimes(0);
 
@@ -293,7 +290,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       handler.registerClient = jest.fn();
 
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
 
       expect(handler.registerClient).toHaveBeenCalledTimes(0);
 
@@ -303,7 +300,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       fetchMock.once(clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle({ ...context, request: { ...context.request, url: differentClientIdURL } }).toPromise()).rejects.toThrow('The client id in the request does not match the one in the client registration data');
+      await expect(lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: differentClientIdURL } }))).rejects.toThrow('The client id in the request does not match the one in the client registration data');
 
     });
 
@@ -311,7 +308,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       fetchMock.once(clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }).toPromise()).rejects.toThrow('The redirect_uri in the request is not included in the client registration data');
+      await expect(lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }))).rejects.toThrow('The redirect_uri in the request is not included in the client registration data');
 
     });
 
@@ -319,14 +316,14 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
       fetchMock.once(JSON.stringify({ ...JSON.parse(clientRegistrationData), '@context': undefined }), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow('client registration data should use the normative JSON-LD @context');
+      await expect(lastValueFrom(handler.handle(context))).rejects.toThrow('client registration data should use the normative JSON-LD @context');
 
     });
 
     it('should save the registered client data in the store', async () => {
 
       fetchMock.mockResponses([ clientRegistrationData, { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockRegisterResponse), { status: 200 } ]);
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       await store.get(client_id).then((data) => expect(data).toBeDefined());
 
     });
@@ -336,9 +333,8 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       fetchMock.mockResponses([ JSON.stringify({ ...JSON.parse(clientRegistrationData), 'redirect_uris': [ different_redirect_uri ] }), { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
       store.set(client_id, mockRegisterResponse);
 
-      await handler
-        .handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } })
-        .toPromise();
+      await lastValueFrom(handler
+        .handle({ ...context, request: { ...context.request, url: differentRedirectUriURL } }));
 
       await store.get(client_id).then((data) => {
 
@@ -353,9 +349,8 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
       fetchMock.mockResponses([ clientRegistrationDataNewClientName, { headers: { 'content-type':'application/ld+json' }, status: 201 } ], [ JSON.stringify(mockAlternativeRegisterResponse), { status: 200 } ]);
       store.set(client_id, mockRegisterResponse);
 
-      await handler
-        .handle(context)
-        .toPromise();
+      await lastValueFrom(handler
+        .handle(context));
 
       await store.get(client_id).then((data) => {
 
@@ -371,24 +366,22 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: null })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: null }))).resolves.toEqual(false);
 
-      await expect(handler.canHandle({ ...context, request: undefined })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
 
     });
 
