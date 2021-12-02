@@ -1,4 +1,5 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { lastValueFrom } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { AuthStateRequestHandler } from './auth-state-request.handler';
 
@@ -35,35 +36,35 @@ describe('AuthStateRequestHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('Context cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('Context cannot be null or undefined');
 
     });
 
     it('should error when no context request is provided', async () => {
 
       context.request = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No request was included in the context');
       context.request = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request headers are provided', async () => {
 
       context.request.headers = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No headers were included in the request');
       context.request.headers = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No headers were included in the request');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
       context.request.url = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
       context.request.url = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -72,14 +73,14 @@ describe('AuthStateRequestHandler', () => {
       context.request.url = new URL('http://digita.ai/?state=1234');
       await expect(store.get('1234')).resolves.toBeUndefined();
 
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       await expect(store.get('1234')).resolves.toEqual(true);
 
     });
 
     it('should add a generated state to the store with value false when the user does not send state and add state to the url', async () => {
 
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       const entries = await store.entries();
       const generatedState = await entries.next();
 
@@ -95,41 +96,41 @@ describe('AuthStateRequestHandler', () => {
 
     it('should return false if no context was provided', async () => {
 
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
     it('should return false if context was provided', async () => {
 
       context.request = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
       context.request = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request headers are provided', async () => {
 
       context.request.headers = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
       context.request.headers = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request url is provided', async () => {
 
       context.request.url = null;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
       context.request.url = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
 
     });
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 

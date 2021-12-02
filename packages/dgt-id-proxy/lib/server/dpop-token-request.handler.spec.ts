@@ -1,4 +1,4 @@
-import { of, throwError } from 'rxjs';
+import { of, throwError, lastValueFrom } from 'rxjs';
 import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
 import { generateKeyPair } from 'jose/util/generate_key_pair';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
@@ -154,36 +154,36 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('Context cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('Context cannot be null or undefined');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => handler.handle({ ... context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => handler.handle({ ... context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ... context, request: null }))).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ... context, request: undefined }))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request method is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: { ...context.request, method: null } }).toPromise()).rejects.toThrow('No method was included in the request');
-      await expect(() => handler.handle({ ...context, request: { ...context.request, method: undefined } }).toPromise()).rejects.toThrow('No method was included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, method: null } }))).rejects.toThrow('No method was included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, method: undefined } }))).rejects.toThrow('No method was included in the request');
 
     });
 
     it('should error when no context request headers are provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: { ...context.request, headers: null } }).toPromise()).rejects.toThrow('No headers were included in the request');
-      await expect(() => handler.handle({ ...context, request: { ...context.request, headers: undefined } }).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: null } }))).rejects.toThrow('No headers were included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: undefined } }))).rejects.toThrow('No headers were included in the request');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: { ...context.request, url: null } }).toPromise()).rejects.toThrow('No url was included in the request');
-      await expect(() => handler.handle({ ...context, request: { ...context.request, url: undefined } }).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: null } }))).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: undefined } }))).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -191,7 +191,7 @@ describe('DpopTokenRequestHandler', () => {
 
       delete context.request.headers.dpop;
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
         headers: { },
         status: 400,
@@ -216,7 +216,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description:'unexpected "typ" JWT header value' }),
         headers: { },
         status: 400,
@@ -241,7 +241,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description:'"iat" claim timestamp check failed (too far in the past)' }),
         headers: { },
         status: 400,
@@ -266,7 +266,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description: '"iat" claim timestamp check failed (it should be in the past)' }),
         headers: { },
         status: 400,
@@ -293,7 +293,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
       const dpopJwt1 = await new SignJWT({
         'htm': 'POST',
@@ -310,7 +310,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
     });
 
@@ -335,7 +335,9 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(testHandler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      await expect(
+        lastValueFrom(testHandler.handle(context))
+      ).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
       const dpopJwt1 = await new SignJWT({
         'htm': 'POST',
@@ -352,7 +354,9 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
 
-      await expect(testHandler.handle(context).toPromise()).resolves.toEqual(expect.objectContaining({ status: 200 }));
+      await expect(
+        lastValueFrom(testHandler.handle(context))
+      ).resolves.toEqual(expect.objectContaining({ status: 200 }));
 
     });
 
@@ -376,7 +380,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error:'invalid_dpop_proof', error_description: '"alg" (Algorithm) Header Parameter not allowed' }),
         headers: { },
         status: 400,
@@ -400,7 +404,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtMissingHtm };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htm does not match the request method' }),
         headers: { },
         status: 400,
@@ -421,7 +425,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWrongHtm };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htm does not match the request method' }),
         headers: { },
         status: 400,
@@ -445,7 +449,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtMissingHtu };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htu does not match' }),
         headers: { },
         status: 400,
@@ -466,7 +470,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWrongHtu };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'htu does not match' }),
         headers: { },
         status: 400,
@@ -481,7 +485,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': header + '.' + payload + '.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c' };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: '"jwk" (JSON Web Key) Header Parameter must be a JSON object' }),
         headers: { },
         status: 400,
@@ -505,7 +509,7 @@ describe('DpopTokenRequestHandler', () => {
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtMissingJti };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'must have a jti string property' }),
         headers: { },
         status: 400,
@@ -533,12 +537,12 @@ describe('DpopTokenRequestHandler', () => {
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       // send the jti once
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
 
       // send the jti again
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwtWithSetJti };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'jti must be unique' }),
         headers: { },
         status: 400,
@@ -568,7 +572,7 @@ describe('DpopTokenRequestHandler', () => {
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       // send the jti once
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
 
       await expect(keyValueStore.get('jtis')).resolves.toEqual([ jti ]);
 
@@ -596,7 +600,7 @@ describe('DpopTokenRequestHandler', () => {
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
       // send the jti once
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
 
       await expect(keyValueStore.get('jtis')).resolves.toEqual([ 'mockJti', jti ]);
 
@@ -610,7 +614,7 @@ describe('DpopTokenRequestHandler', () => {
         status: 400,
       }));
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_request', error_description: 'grant request invalid' }),
         headers: {},
         status: 400,
@@ -621,7 +625,7 @@ describe('DpopTokenRequestHandler', () => {
     it('should return a valid DPoP bound access token response when the upstream server returns a valid response', async () => {
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
-      const resp = await handler.handle(context).toPromise();
+      const resp = await lastValueFrom(handler.handle(context));
       expect(resp.headers).toEqual({});
       expect(resp.status).toEqual(200);
 
@@ -638,7 +642,7 @@ describe('DpopTokenRequestHandler', () => {
     it('should throw on any errors that are caught in the catchError', async () => {
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(throwError(() => new Error('mockError')));
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('mockError');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('mockError');
 
     });
 
@@ -650,7 +654,7 @@ describe('DpopTokenRequestHandler', () => {
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('DPoP verification failed due to an unknown error');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('DPoP verification failed due to an unknown error');
 
     });
 
@@ -677,7 +681,7 @@ describe('DpopTokenRequestHandler', () => {
 
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
 
-      await expect(handler.handle({ ...context, request: { headers: { 'dpop': dpopJwtWithoutJWK }, method: 'POST', url: new URL('http://digita.ai/') } }).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle({ ...context, request: { headers: { 'dpop': dpopJwtWithoutJWK }, method: 'POST', url: new URL('http://digita.ai/') } }))).resolves.toEqual({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'no JWK was found in the header' }),
         headers: {},
         status: 400,
@@ -691,51 +695,51 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should return false if no context was provided', async () => {
 
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
     it('should return false if context was provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: null }).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle({ ...context, request: undefined }).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: null }))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request method is provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: { ...context.request, method: null } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, method: null } }))).resolves.toEqual(false);
 
-      await expect(handler.canHandle({ ...context, request: { ...context.request, method: undefined } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, method: undefined } }))).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request headers are provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: { ...context.request, headers: null } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, headers: null } }))).resolves.toEqual(false);
 
-      await expect(handler.canHandle({ ...context, request: { ...context.request, headers: undefined } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, headers: undefined } }))).resolves.toEqual(false);
 
     });
 
     it('should return false when no context request url is provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: { ...context.request, url: null } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, url: null } }))).resolves.toEqual(false);
 
-      await expect(handler.canHandle({ ...context, request: { ...context.request, url: undefined } })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler
+        .canHandle({ ...context, request: { ...context.request, url: undefined } }))).resolves.toEqual(false);
 
     });
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 

@@ -1,4 +1,5 @@
 import fetchMock from 'jest-fetch-mock';
+import { lastValueFrom } from 'rxjs';
 import { WebIdProfileHandler } from './webid-profile.handler';
 
 jest.mock('fs/promises', () => {
@@ -96,30 +97,30 @@ describe('WebIdProfileHandler', () => {
 
     it('should error when no response was provided', async () => {
 
-      await expect(webIdProfileHandler.handle(undefined).toPromise()).rejects.toThrow('A response must be provided');
+      await expect(lastValueFrom(webIdProfileHandler.handle(undefined))).rejects.toThrow('A response must be provided');
 
     });
 
     it('should error when no response body was provided', async () => {
 
-      await expect(webIdProfileHandler.handle({ ...response, body: undefined }).toPromise()).rejects.toThrow('A response body must be provided');
+      await expect(lastValueFrom(webIdProfileHandler.handle({ ...response, body: undefined }))).rejects.toThrow('A response body must be provided');
 
     });
 
     it('should error when no response id token was provided', async () => {
 
-      await expect(webIdProfileHandler.handle({ ...response, body: { ...response.body, id_token: undefined } }).toPromise()).rejects.toThrow('An id token must be provided');
+      await expect(lastValueFrom(webIdProfileHandler.handle({ ...response, body: { ...response.body, id_token: undefined } }))).rejects.toThrow('An id token must be provided');
 
     });
 
     it('should error when no response body was provided', async () => {
 
-      await expect(webIdProfileHandler.handle(
+      await expect(lastValueFrom(webIdProfileHandler.handle(
         { ...response, body:
           { ...response.body, id_token:
             { ...response.body.id_token, payload:
               { ...response.body.id_token.payload, webid: undefined } } } }
-      ).toPromise()).rejects.toThrow('A webId must be provided');
+      ))).rejects.toThrow('A webId must be provided');
 
     });
 
@@ -129,7 +130,7 @@ describe('WebIdProfileHandler', () => {
 
       const generateProfileDocument = jest.spyOn(WebIdProfileHandler.prototype as any, 'generateProfileDocument');
 
-      await webIdProfileHandler.handle(response).toPromise();
+      await lastValueFrom(webIdProfileHandler.handle(response));
 
       expect(generateProfileDocument).toHaveBeenCalledTimes(1);
 
@@ -156,13 +157,13 @@ describe('WebIdProfileHandler', () => {
     it('should straight return the response if profile document exist', async () => {
 
       fetchMock.once('Found', { headers: { 'content-type':'text/turtle' }, status: 200 });
-      await expect(webIdProfileHandler.handle(response).toPromise()).resolves.toEqual(response);
+      await expect(lastValueFrom(webIdProfileHandler.handle(response))).resolves.toEqual(response);
 
     });
 
     it('should do a HEAD request to the webId from the response to check if a document exists', async () => {
 
-      await webIdProfileHandler.handle(response).toPromise();
+      await lastValueFrom(webIdProfileHandler.handle(response));
 
       expect(fetchMock).toHaveBeenCalledWith(response.body.id_token.payload.webid, {
         method: 'HEAD',
@@ -179,7 +180,7 @@ describe('WebIdProfileHandler', () => {
 
       const generateProfileDocument = jest.spyOn(WebIdProfileHandler.prototype as any, 'generateProfileDocument');
 
-      await webIdProfileHandler.handle(response).toPromise();
+      await lastValueFrom(webIdProfileHandler.handle(response));
 
       expect(generateProfileDocument)
         .toHaveBeenCalledWith(response.body.id_token.payload);
@@ -192,7 +193,7 @@ describe('WebIdProfileHandler', () => {
 
       const generateAclDocument = jest.spyOn(WebIdProfileHandler.prototype as any, 'generateAclDocument');
 
-      await webIdProfileHandler.handle(response).toPromise();
+      await lastValueFrom(webIdProfileHandler.handle(response));
 
       expect(generateAclDocument)
         .toHaveBeenCalledWith(response.body.id_token.payload.webid);
@@ -203,7 +204,7 @@ describe('WebIdProfileHandler', () => {
 
       fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ], [ 'Bad request: failed to create profile document', { headers: { 'content-type':'text/turtle' }, status: 400 } ]);
 
-      await expect(() => webIdProfileHandler.handle(response).toPromise()).rejects.toThrow('Failed to create a profile document');
+      await expect(() => lastValueFrom(webIdProfileHandler.handle(response))).rejects.toThrow('Failed to create a profile document');
 
     });
 
@@ -211,7 +212,7 @@ describe('WebIdProfileHandler', () => {
 
       fetchMock.mockResponses([ 'Not found', { headers: { 'content-type':'text/turtle' }, status: 404 } ], [ '{}', { headers: { 'content-type':'text/turtle' }, status: 200 } ], [ 'Bad request: failed to create acl document', { headers: { 'content-type':'text/turtle' }, status: 400 } ]);
 
-      await expect(() => webIdProfileHandler.handle(response).toPromise()).rejects.toThrow('Failed to create ACL document');
+      await expect(() => lastValueFrom(webIdProfileHandler.handle(response))).rejects.toThrow('Failed to create ACL document');
 
     });
 
@@ -219,7 +220,7 @@ describe('WebIdProfileHandler', () => {
 
       const resp = { ... response, body: { ...response.body, id_token: { ...response.body.id_token, payload: { ...response.body.id_token.payload, webid: 'https://pods.digita.ai/test/profile/card#me' } } } };
 
-      await expect(webIdProfileHandler.handle(resp).toPromise()).resolves.toEqual(resp);
+      await expect(lastValueFrom(webIdProfileHandler.handle(resp))).resolves.toEqual(resp);
 
     });
 
@@ -229,14 +230,14 @@ describe('WebIdProfileHandler', () => {
 
     it('should return true when a response was provided', async () => {
 
-      await expect(webIdProfileHandler.canHandle(response).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(webIdProfileHandler.canHandle(response))).resolves.toEqual(true);
 
     });
 
     it('should return true when a response was provided', async () => {
 
-      await expect(webIdProfileHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
-      await expect(webIdProfileHandler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(webIdProfileHandler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(webIdProfileHandler.canHandle(null))).resolves.toEqual(false);
 
     });
 

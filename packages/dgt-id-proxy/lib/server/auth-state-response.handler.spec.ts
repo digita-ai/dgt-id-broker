@@ -1,5 +1,5 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { of } from 'rxjs';
+import { of, lastValueFrom } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { AuthStateResponseHandler } from './auth-state-response.handler';
 
@@ -44,21 +44,21 @@ describe('AuthStateResponseHandler', () => {
 
     it('should error when no response was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('Response cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('Response cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('Response cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('Response cannot be null or undefined');
 
     });
 
     it('should error when no state is present on the location header when it is a valid URL', async () => {
 
       response.headers.location = 'http://redirect-uri.com/redirect';
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('Unknown state');
+      await expect(() => lastValueFrom(handler.handle(response))).rejects.toThrow('Unknown state');
 
     });
 
     it('should error when state on the location header is not found in the store', async () => {
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('Unknown state');
+      await expect(() => lastValueFrom(handler.handle(response))).rejects.toThrow('Unknown state');
 
     });
 
@@ -66,7 +66,7 @@ describe('AuthStateResponseHandler', () => {
 
       store.set('1234', true);
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(response);
+      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(response);
       await expect(store.get('1234')).resolves.toBeUndefined();
 
     });
@@ -75,7 +75,7 @@ describe('AuthStateResponseHandler', () => {
 
       store.set('1234', false);
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual({ ...response, headers: { location: 'http://redirect-uri.com/redirect' } });
+      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual({ ...response, headers: { location: 'http://redirect-uri.com/redirect' } });
       await expect(store.get('1234')).resolves.toBeUndefined();
 
     });
@@ -83,7 +83,7 @@ describe('AuthStateResponseHandler', () => {
     it('should return the response if the location header is not a valid URL', async () => {
 
       response.headers.location = '/relative/location/header';
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(response);
+      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(response);
 
     });
 
@@ -93,14 +93,14 @@ describe('AuthStateResponseHandler', () => {
 
     it('should return false if no response was provided', async () => {
 
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
     it('should return true if correct response was provided', async () => {
 
-      await expect(handler.canHandle(response).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(response))).resolves.toEqual(true);
 
     });
 
