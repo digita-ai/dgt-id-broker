@@ -44,25 +44,25 @@ export class AuthStateRequestHandler extends Handler<HttpHandlerContext, HttpHan
 
     if (!context) {
 
-      return throwError(new Error('Context cannot be null or undefined'));
+      return throwError(() => new Error('Context cannot be null or undefined'));
 
     }
 
     if (!context.request) {
 
-      return throwError(new Error('No request was included in the context'));
+      return throwError(() => new Error('No request was included in the context'));
 
     }
 
     if (!context.request.headers) {
 
-      return throwError(new Error('No headers were included in the request'));
+      return throwError(() => new Error('No headers were included in the request'));
 
     }
 
     if (!context.request.url) {
 
-      return throwError(new Error('No url was included in the request'));
+      return throwError(() => new Error('No url was included in the request'));
 
     }
 

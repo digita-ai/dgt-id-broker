@@ -64,7 +64,9 @@ export const createDpopProof = async (
 
   try {
 
-    return await new SignJWT({ htm, htu })
+    const noHashHtu = htu.split('#')[0];
+
+    return await new SignJWT({ htm, htu: noHashHtu })
       .setProtectedHeader({
         alg: publicKey.alg,
         typ: 'dpop+jwt',
