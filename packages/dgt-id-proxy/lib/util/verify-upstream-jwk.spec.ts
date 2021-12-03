@@ -1,4 +1,5 @@
 import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { lastValueFrom } from 'rxjs';
 import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
 import { SignJWT } from 'jose/jwt/sign';
 import fetchMock from 'jest-fetch-mock';
@@ -43,43 +44,43 @@ describe('verifyUpstreamJwk', () => {
 
   it('should error when token or upstreamUrl are null or undefined', async () => {
 
-    await expect(() => verifyUpstreamJwk(null, url).toPromise()).rejects.toThrow('token must be defined');
-    await expect(() => verifyUpstreamJwk(undefined, url).toPromise()).rejects.toThrow('token must be defined');
-    await expect(() => verifyUpstreamJwk(validToken, null).toPromise()).rejects.toThrow('upstreamUrl must be defined');
-    await expect(() => verifyUpstreamJwk(validToken, undefined).toPromise()).rejects.toThrow('upstreamUrl must be defined');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(null, url))).rejects.toThrow('token must be defined');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(undefined, url))).rejects.toThrow('token must be defined');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(validToken, null))).rejects.toThrow('upstreamUrl must be defined');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(validToken, undefined))).rejects.toThrow('upstreamUrl must be defined');
 
   });
 
   it('should error when upstreamUrl is not a valid url', async () => {
 
-    await expect(() => verifyUpstreamJwk(validToken, 'notAValidUrl').toPromise()).rejects.toThrow('upstreamUrl is not a valid URL');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(validToken, 'notAValidUrl'))).rejects.toThrow('upstreamUrl is not a valid URL');
 
   });
 
   it('should error when token is not a valid JWT', async () => {
 
-    await expect(() => verifyUpstreamJwk('notAValidJwtToken', url).toPromise()).rejects.toThrow('token is not a valid JWT');
+    await expect(() => lastValueFrom(verifyUpstreamJwk('notAValidJwtToken', url))).rejects.toThrow('token is not a valid JWT');
 
   });
 
   it('should error when token does not contain a key id', async () => {
 
     const tokenWithoutKid = await mockJwt(undefined, privateKey);
-    await expect(() => verifyUpstreamJwk(tokenWithoutKid, url).toPromise()).rejects.toThrow('Given token does not contain a key-id to verify');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(tokenWithoutKid, url))).rejects.toThrow('Given token does not contain a key-id to verify');
 
   });
 
   it('should error when the upstream server returns a response with a status code other than 200 to the config request', async () => {
 
     fetchMock.once('mockBody', { status: 404 });
-    await expect(() => verifyUpstreamJwk(validToken, url).toPromise()).rejects.toThrow('There was a problem fetching upstream config');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(validToken, url))).rejects.toThrow('There was a problem fetching upstream config');
 
   });
 
   it('should error when the upstream server returns a response with a status code other than 200 to the jwk request', async () => {
 
     fetchMock.mockResponses(configResponse, [ 'mockBody', { status: 404 } ]);
-    await expect(() => verifyUpstreamJwk(validToken, url).toPromise()).rejects.toThrow('There was a problem fetching upstream jwks');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(validToken, url))).rejects.toThrow('There was a problem fetching upstream jwks');
 
   });
 
@@ -92,7 +93,7 @@ describe('verifyUpstreamJwk', () => {
       [ JSON.stringify({ keys: [ publicJwk ] }), { status: 200 } ],
     );
 
-    await expect(() => verifyUpstreamJwk(validToken, url).toPromise()).rejects.toThrow('No JWK with that ID was found');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(validToken, url))).rejects.toThrow('No JWK with that ID was found');
 
   });
 
@@ -106,7 +107,7 @@ describe('verifyUpstreamJwk', () => {
       jwkResponse,
     );
 
-    await expect(() => verifyUpstreamJwk(tokenNoAlg, url).toPromise()).rejects.toThrow('Token did not contain an alg, and is therefore invalid');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(tokenNoAlg, url))).rejects.toThrow('Token did not contain an alg, and is therefore invalid');
 
     // this has to be repeated or the fetch will not be mocked again
     fetchMock.mockResponses(
@@ -117,7 +118,7 @@ describe('verifyUpstreamJwk', () => {
     // create an unsigned token with alg set to 'none' in the header
     const tokenAlgNone = encode(JSON.stringify({ kid: 'mockKeyId', alg: 'none' })) + '.' + encode(JSON.stringify({ 'mockKey': 'mockValue' })) + '.' + 'footer';
 
-    await expect(() => verifyUpstreamJwk(tokenAlgNone, url).toPromise()).rejects.toThrow('Token did not contain an alg, and is therefore invalid');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(tokenAlgNone, url))).rejects.toThrow('Token did not contain an alg, and is therefore invalid');
 
   });
 
@@ -131,7 +132,7 @@ describe('verifyUpstreamJwk', () => {
       jwkResponse,
     );
 
-    await expect(() => verifyUpstreamJwk(incorrectlySignedToken, url).toPromise()).rejects.toThrow('signature verification failed');
+    await expect(() => lastValueFrom(verifyUpstreamJwk(incorrectlySignedToken, url))).rejects.toThrow('signature verification failed');
 
   });
 
@@ -142,7 +143,7 @@ describe('verifyUpstreamJwk', () => {
       jwkResponse,
     );
 
-    await expect(verifyUpstreamJwk(validToken, url).toPromise()).resolves.toEqual({
+    await expect(lastValueFrom(verifyUpstreamJwk(validToken, url))).resolves.toEqual({
       protectedHeader: {
         alg: 'ES256',
         kid: 'mockKeyId',

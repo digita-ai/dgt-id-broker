@@ -7,6 +7,7 @@ import { v4 as uuid } from 'uuid';
 import { SignJWT } from 'jose/jwt/sign';
 import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import { decode } from 'jose/util/base64url';
+import { lastValueFrom } from 'rxjs';
 import { variables, mainModulePath, configPath } from '../setup-tests';
 
 describe('full integration', () => {
@@ -115,7 +116,7 @@ describe('full integration', () => {
 
     server = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
 
-    await server.start().toPromise();
+    await lastValueFrom(server.start());
 
   });
 
@@ -139,7 +140,7 @@ describe('full integration', () => {
 
   afterAll(async () => {
 
-    await server.stop().toPromise();
+    await lastValueFrom(server.stop());
 
   });
 
