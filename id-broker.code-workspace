@@ -17,6 +17,10 @@
       "path": "packages/dgt-id-proxy"
     },
     {
+      "name": "dgt-webid-minter",
+      "path": "packages/dgt-webid-minter"
+    },
+    {
       "name": "inrupt-solid-client",
       "path": "packages/inrupt-solid-client"
     },
