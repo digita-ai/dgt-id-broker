@@ -30,7 +30,7 @@
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:ci": "jest --runInBand",
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json",
     "lint": "eslint .",
