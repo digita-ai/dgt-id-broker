@@ -4,6 +4,8 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "module": "commonjs",
+    "strict": true,
+    "sourceMap": true,
   },
   "include": [ 
       "lib", 
