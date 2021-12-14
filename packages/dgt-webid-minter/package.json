@@ -76,7 +76,7 @@
     "displayName": "minter",
     "rootDir": "lib",
     "testEnvironment": "node",
-    "testTimeout": 1000,
+    "testTimeout": 100000,
     "coveragePathIgnorePatterns": [
       "<rootDir>/dist/",
       "<rootDir>/node_modules/",
