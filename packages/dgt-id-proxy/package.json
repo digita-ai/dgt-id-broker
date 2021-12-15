@@ -27,7 +27,7 @@
   },
   "scripts": {
     "start": "node ./bin/server.js",
-    "build": "rimraf ./dist && npm run build:ts && npm run build:components",
+    "build": "shx rm -rf dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator --typeScopedContexts -s lib -c dist/components -i .componentsignore",
     "test": "jest",
@@ -57,7 +57,7 @@
     "jest-fetch-mock": "^3.0.3",
     "jest-mock-extended": "^1.0.13",
     "lint-staged": "^12.0.2",
-    "rimraf": "^3.0.2",
+    "shx": "^0.3.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   },
