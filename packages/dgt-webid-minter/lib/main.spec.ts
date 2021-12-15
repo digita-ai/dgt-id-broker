@@ -86,7 +86,6 @@ describe('Main.ts', () => {
 
     });
 
-
     it('should return the variables with the given minterUri', () => {
 
       expect(createVariables([ 'npm run start', '--', '-c', configPath, '-u', 'http://digita-ai.minter.com' ]))
