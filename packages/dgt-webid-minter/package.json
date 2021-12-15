@@ -30,7 +30,7 @@
     "build": "rimraf ./dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
-    "test": "jest --passWithNoTests",
+    "test": "jest",
     "test:ci": "jest --runInBand",
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json",
     "lint": "eslint .",
@@ -74,7 +74,6 @@
   "jest": {
     "preset": "@digita-ai/jest-config",
     "displayName": "minter",
-    "rootDir": "lib",
     "testEnvironment": "node",
     "testTimeout": 100000,
     "coveragePathIgnorePatterns": [
@@ -87,10 +86,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 0,
-        "functions": 0,
-        "lines": 0,
-        "statements": 0
+        "branches": 75,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
       }
     }
   }
