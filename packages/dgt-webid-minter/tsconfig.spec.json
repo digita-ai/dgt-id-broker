@@ -5,14 +5,10 @@
     "outDir": "./dist",
     "module": "commonjs",
     //
-    "types": [
-      "jest",
-      "n3"
-    ],
     "inlineSourceMap": false,
     "inlineSources": true,
     "sourceMap": true,
-    "strict": false
+    "strict": false,
   },
   "include": [
     "**/*.spec.ts"

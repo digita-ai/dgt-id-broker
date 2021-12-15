@@ -6,10 +6,12 @@ import { checkUri, createVariables, launch } from './main';
 describe('Main.ts', () => {
 
   const mainModulePath = path.join(__dirname, '../');
-  const configPath = path.join(mainModulePath, 'config/minter-server-config.json');
+  const configPath = path.join(mainModulePath, 'config/config-default.json');
+
+  const relativeConfigPath = '../config/config-default.json';
 
   const variables = {
-    'urn:dgt-webid-minter:variables:customConfigPath': '../config/minter-server-config.json',
+    'urn:dgt-webid-minter:variables:customConfigPath': relativeConfigPath,
     'urn:dgt-webid-minter:variables:mainModulePath': mainModulePath,
     'urn:dgt-webid-minter:variables:minterUri': 'http://localhost:3004',
     'urn:dgt-webid-minter:variables:minterHost': 'localhost',
@@ -77,7 +79,7 @@ describe('Main.ts', () => {
 
       expect(createVariables([ 'npm run start', '--', '-c', configPath ]))
         .toEqual({
-          'urn:dgt-webid-minter:variables:customConfigPath': '../config/minter-server-config.json',
+          'urn:dgt-webid-minter:variables:customConfigPath': configPath,
           'urn:dgt-webid-minter:variables:mainModulePath': mainModulePath,
           'urn:dgt-webid-minter:variables:minterUri': 'http://localhost:3004',
           'urn:dgt-webid-minter:variables:minterHost': 'localhost',
@@ -130,7 +132,7 @@ describe('Main.ts', () => {
 
     it('should call register with __dirname & default if no configPath was provided', async () => {
 
-      const defaultConfigPath = path.join(__dirname, '../config/minter-server-config.json');
+      const defaultConfigPath = path.join(__dirname, relativeConfigPath);
 
       await launch({ ...variables, ['urn:dgt-webid-minter:variables:customConfigPath'] : undefined });
 
