@@ -171,7 +171,10 @@ describe('ClientIdStaticTokenHandler', () => {
       const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
 
       const response = {
-        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
       };
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
@@ -200,13 +203,20 @@ describe('ClientIdStaticTokenHandler', () => {
       const testContext = { ...context, request: { ...context.request, body: publicClientRequestBody } };
 
       const response = {
-        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
       };
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
       await expect(lastValueFrom(handler.handle(testContext))).resolves.toEqual({
-        ...response, body: { access_token: { payload: { client_id: public_id } } },
+        ...response,
+        body: {
+          access_token: { payload: { client_id: public_id } },
+          id_token: { payload: { aud: public_id } },
+        },
       });
 
     });
@@ -270,7 +280,10 @@ describe('ClientIdStaticTokenHandler', () => {
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       const response = {
-        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
       };
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
@@ -293,7 +306,10 @@ describe('ClientIdStaticTokenHandler', () => {
       context = { ...context, request: { ...context.request, body: requestBodyWithRefreshToken } };
 
       const response = {
-        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
       };
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
@@ -315,7 +331,10 @@ describe('ClientIdStaticTokenHandler', () => {
       const length = recalculateContentLength(newContext.request);
 
       const response = {
-        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
       };
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
@@ -335,13 +354,19 @@ describe('ClientIdStaticTokenHandler', () => {
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       const response = {
-        body: { access_token: { payload: { client_id: client_id_constructor } } }, status: 200, headers: {},
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
       };
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
       await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({
-        ...response, body: { access_token: { payload: { client_id } } },
+        ...response, body: {
+          access_token: { payload: { client_id } },
+          id_token: { payload: { aud: client_id } },
+        },
       });
 
     });
