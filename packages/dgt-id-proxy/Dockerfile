@@ -11,7 +11,9 @@ ARG NPM_TOKEN
 COPY package.json /usr/src/app/
 COPY package-lock.json /usr/src/app/
 COPY .npmrc /usr/src/app/
-RUN npm install
+RUN echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc && \
+    npm install && \
+    rm -f .npmrc
 
 # Bundle app source
 COPY . /usr/src/app
