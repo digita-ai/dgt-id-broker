@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.11.0...v0.12.0) (2021-12-17)
+
+
+### **Documentation**
+
+* fix incorrect script name ([a4d7ebf](https://github.com/digita-ai/dgt-id-broker/commit/a4d7ebff3009110eace8c2d0f764f5213d7c3551))
+
+
+### **Features**
+
+* webid minter setup ([#311](https://github.com/digita-ai/dgt-id-broker/issues/311)) ([9b4a26c](https://github.com/digita-ai/dgt-id-broker/commit/9b4a26ca230d8a9d1ed243e33daf93fee77dac3a))
+
+
+### **Bug Fixes**
+
+* audience claim should be client_id ([#313](https://github.com/digita-ai/dgt-id-broker/issues/313)) ([f915501](https://github.com/digita-ai/dgt-id-broker/commit/f91550151d400884abf13d16a3d027453acb2215))
+* remove hash from htu ([#300](https://github.com/digita-ai/dgt-id-broker/issues/300)) ([2d36f97](https://github.com/digita-ai/dgt-id-broker/commit/2d36f97daf7056343c1fbcb1489c0ed5cb9bfb7c))
+
+
+
 ## [0.11.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.10.3...v0.11.0) (2021-11-24)
 
 
