@@ -12,6 +12,7 @@ COPY package.json /usr/src/app/
 COPY package-lock.json /usr/src/app/
 COPY .npmrc /usr/src/app/
 RUN npm set //npm.pkg.github.com/:_authToken $NPM_TOKEN
+RUN npm install
 
 # Bundle app source
 COPY . /usr/src/app
