@@ -1,0 +1,92 @@
+{
+  "name": "@digita-ai/dgt-webid-minter",
+  "version": "0.12.4",
+  "description": "A WebID minter server",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "dgt-webid-minter": "./bin/server.js"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "dist",
+    "config",
+    ".componentsignore"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digita-ai/dgt-id-broker.git"
+  },
+  "scripts": {
+    "start": "node ./bin/server.js",
+    "build": "shx rm -rf dist && npm run build:ts && npm run build:components",
+    "build:ts": "tsc",
+    "build:components": "componentsjs-generator -s lib -c dist/components -i .componentsignore",
+    "test": "jest",
+    "test:ci": "jest --runInBand",
+    "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
+  },
+  "devDependencies": {
+    "@digita-ai/typescript-config": "^0.3.3",
+    "@types/jest": "^27.0.2",
+    "componentsjs-generator": "^2.6.1",
+    "eslint": "^7.26.0",
+    "jest": "^27.3.1",
+    "jest-coverage-thresholds-bumper": "^1.0.1",
+    "lint-staged": "^12.0.2",
+    "shx": "^0.3.3",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "@digita-ai/handlersjs-core": "^0.5.0",
+    "@digita-ai/handlersjs-http": "^0.5.0",
+    "componentsjs": "^4.5.0",
+    "rxjs": "^7.4.0"
+  },
+  "lsd:module": "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-webid-minter",
+  "lsd:components": "dist/components/components.jsonld",
+  "lsd:contexts": {
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-webid-minter/^0.0.0/components/context.jsonld": "dist/components/context.jsonld"
+  },
+  "lsd:importPaths": {
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-webid-minter/^0.0.0/components/": "dist/components/",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-webid-minter/^0.0.0/config/": "config/",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-webid-minter/^0.0.0/dist/": "dist/"
+  },
+  "eslintIgnore": [
+    "**/bin/server.js"
+  ],
+  "jest": {
+    "preset": "@digita-ai/jest-config",
+    "displayName": "dgt-webid-minter",
+    "testEnvironment": "node",
+    "testTimeout": 100000,
+    "coveragePathIgnorePatterns": [
+      "<rootDir>/dist/",
+      "<rootDir>/node_modules/",
+      "<rootDir>/.*\\.conf(ig)?.ts",
+      "<rootDir>/lib/scripts",
+      "<rootDir>/lib/index.ts",
+      "<rootDir>/bin/server.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70.83,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
+  }
+}
