@@ -8,9 +8,11 @@
 
 . If you haven't already, clone the link:https://github.com/digita-ai/dgt-id-broker.git[*dgt-id-broker*] repository.
 . Open your terminal in the root folder of the project and enter the following commands: 
-.. `npm run bootstrap` to install all the dependencies.
+.. `npm run bootstrap` to install all the dependencies. 
 .. `npm run build:all` to build the all packages in this workspace.
-.. `npm run start --scope @digita-ai/dgt-id-proxy` to start the proxy. This command will start all required packages in parallel.
+
+.. `npm run start --scope @digita-ai/dgt-id-proxy` to start the proxy. This server runs with LTS versions of Node.js from v12 onward. 
+This command will start all required packages in parallel. 
 
 
 If you would like to start the proxy with different environment variables, such as a different URI or port you will have to start it manually. 
@@ -28,7 +30,7 @@ If you haven't got an instance of Keycloak already you can start one through a D
 
 First we will pull our Docker image and run the container. 
 
-. Open your terminal and run the following command: 
+. Open your terminal and copy the following command replacing all the environment variables with your own:
 
 +
 [source,bash]
@@ -36,6 +38,8 @@ First we will pull our Docker image and run the container.
 docker run -p <EPORT>:<IPORT> --name <NAME> -e KEYCLOAK_USER=<USER> -e KEYCLOAK_PASSWORD=<PWD> <IMAGE>
 ----
 +
+
+e.g. : `docker run -p 8080:8080 --name keycloak -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:latest`
 
 Lets's break this down a little bit: 
 
@@ -59,13 +63,13 @@ image::keycloak-admin-login.png[Keycloak Admin Login]
 
 If you haven't already, you can create a realm in Keycloak as described below. (By default, there is already a Master realm, but it is advised to create another one for each purpose.)
 
-. When in the Keycloak admin console, click on the dropdown menu on the top left, labeled with the name of the current real (`Master` on a fresh image), and chose *Add realm*.
+. When in the Keycloak admin console, click on the dropdown menu on the top left, labeled with the name of the current realm (`Master` on a fresh image), and choose *Add realm*.
 
 . Enter a name for the realm.
 
 . If desired, you can import a JSON file here containing a preexisting realm configuration. 
 
-. Set the enabled flag to `True`.
+. Set the enabled flag to `On`.
 
 . Click *Create* to create the Realm.
 
@@ -85,13 +89,13 @@ In order to let the proxy access the upstream provider's data we need to add it 
 
 . On the far right click *Create* to create a new client. Note that you again have the option to upload a JSON file containing the client configuration instead.
 
-. Fill in a *Client ID*, which will be used in URIs and tokens.
+. Fill in a *Client ID* (e.g. `http://username.pods.digita.ai/profile/card#me`), which will be used in URIs and tokens.
 
 . For *Client Protocol* select `openid-connect`, since Solid is based on the OpenID Connect standard.
 
 . For *Access Type* select `confidential` so that clients require a secret to initiate the login protocol.
 
-. Specify a *Root URL* that will be used as a prefix for relative URLs.
+. Specify a *Root URL* (e.g. `http://localhost:8080/myrealm`) that will be used as a prefix for relative URLs.
 
 . Click *Save* to create the client.
 
@@ -104,7 +108,7 @@ image::add-client.png[Keycloak Add Client]
 
 . Make sure *Implicit Flow Enabled* is set to `OFF`` in order for your client to remain Solid-compliant. 
 
-. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly.
+. Add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly.
 
 . Switch to the *Credentials* tab and set the *Client Authenticator* to `Client ID and Secret`.
 
