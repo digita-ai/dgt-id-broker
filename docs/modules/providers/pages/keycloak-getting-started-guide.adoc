@@ -69,7 +69,7 @@ In order to let the proxy access the upstream provider's data we need to add it 
 
 . On the far right click *Create* to create a new client. Note that you again have the option to upload a JSON file containing the client configuration instead.
 
-. Fill in a *Client ID* (e.g. `http://username.pods.digita.ai/profile/card#me`), which will be used in URIs and tokens.
+. Fill in a *Client ID* (e.g. `proxy`), which will be used in URIs and tokens.
 
 . For *Client Protocol* select `openid-connect`, since Solid is based on the OpenID Connect standard.
 
