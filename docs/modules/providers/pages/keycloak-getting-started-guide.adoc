@@ -90,7 +90,7 @@ image::add-client.png[Keycloak Add Client]
 
 . Add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly.
 
-. Switch to the *Credentials* tab and set the *Client Authenticator* to `Client ID and Secret`.
+. Save your client and switch to the *Credentials* tab that has just been added and set the *Client Authenticator* to `Client ID and Secret`.
 
 
 == Creating a user
