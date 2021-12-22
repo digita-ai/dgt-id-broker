@@ -33,7 +33,7 @@ To start the proxy open a terminal in the folder, and execute the command `npm r
 - The proxy's URL will be `http://localhost:3003`
 - The proxy will assume that the URL of the upstream server is `http://localhost:3000`
 - The proxy will be run with the config [solid-compliant-opaque-access-tokens.json](./config/presets/solid-compliant-opaque-access-tokens.json)
-- The proxy will try to find jwks under `assets/jwks.json`. You can generate JWKs by running `npm run` 
+- The proxy will try to find jwks under `assets/jwks.json`. You can generate JWKs by running `npm run generate:keys` 
 - The proxy will try to find `.well-known/openid-configuration` under `assets/openid-configuration.json`
 - The proxy will use this directory as it's main module path.
 
