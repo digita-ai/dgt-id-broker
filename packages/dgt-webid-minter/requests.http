@@ -1,0 +1,131 @@
+
+# # # # # # # # # # # # #
+# USE.ID SOLID BEDROCK  #
+# # # # # # # # # # # # #
+
+
+# # # # # # # # #
+# SOLID SERVER
+#
+
+Will follow the Solid Protocol [1] (and therefore also the Linked Data Platform specification [2]).
+
+[1] https://solidproject.org/TR/protocol
+[2] https://www.w3.org/TR/ldp
+
+Additionally, pods can be registered using the following API.
+
+# TODO: Insert API calls from CSS registry endpoint.
+
+###
+# @name example_request_solid
+#
+# Retrieves a Turtle representation of the requested resource.
+#
+GET https://pods.digita.ai/some/path/or/pod/with/some/resource HTTP/1.1
+Authorization: Bearer <consumer-token>
+Accept: text/turtle
+
+
+# # # # # # # # # # #
+# IDENTITY PROVIDER
+#
+
+Will follow the Solid-OIDC specification [1] (and therefore the OpenID Connect specification [2]).
+
+[1] https://solid.github.io/solid-oidc
+[2] https://openid.net/specs/openid-connect-core-1_0.html
+
+Additionally, accounts can be registered using the following API.
+
+# TODO: Insert API calls from Auth0 registry endpoint.
+
+###
+# @name example_request_idp
+#
+# Asks identity provider for authentication code (newlines for clarity).
+#
+GET https://auth.use.id/authorize
+    ?response_type=code
+    &scope=openid%20profile%20solid%20webid
+    &client_id=https://some.client.org/identity.jsonld
+    &state=af0ifjsldkj
+    &redirect_uri=https%3A%2F%2Fsome.client.org%callback
+    HTTP/1.1
+
+
+# # # # # # # # #
+# WEBID SERVICE
+#
+
+###
+# @name create_webid
+#
+# Registers a new WebID, if it does not already exist, and creates a new WebID profile for it.
+# If present, it already adds an initial issuer, issuer verification token, and trusted app to the WebID.
+#
+# Responds with 201 Created, a Location header to the new WebID, and the contents of the WebID profile as a body.
+# Responds with 209 Conflict if the WebID already exists.
+#
+POST https://use.id/ HTTP/1.1
+Authorization: Bearer <api-token>
+Content-Type: application/json
+Slug: tom
+
+{
+    "email": "tom@digita.ai",
+    "issuer": "https://digita-ai.auth0.com",
+    "issuer_verification": "<issuer-token>",
+    "trusted_app": "https://inox.app"
+}
+
+###
+# @name create_or_update_webid
+#
+# Registers a new WebID, if it does not already exist, and creates a new WebID profile for it.
+# If present, it already adds an initial issuer, issuer verification token, and trusted app to the WebID.
+#
+# Responds with 201 Created and the contents of the WebID profile as a body.
+# Response with 209 Conflict if the WebID already exists.
+#
+PUT https://use.id/tom HTTP/1.1
+Authorization: Bearer <api-token>
+Content-Type: application/json
+
+{
+    "email": "tom@digita.ai",
+    "issuer": "https://digita-ai.auth0.com",
+    "issuer_verification": "<issuer-token>",
+    "trusted_app": "https://inox.app"
+}
+
+###
+# @name read_webid
+#
+# Retreives the WebID profile for a given WebID.
+#
+# Responds with 200 OK and the contents of the WebID profile as a body.
+# Responds with 404 Not Found if the WebID does not exist. 
+#
+GET https://use.id/tom HTTP/1.1
+
+###
+# @name delete_webid
+DELETE https://use.id/tom HTTP/1.1
+Authorization: Bearer <api-token>
+
+# TODO: write out
+
+###
+# @name update_webid
+PUT https://use.id/tom HTTP/1.1
+Authorization: Bearer <api-token>
+
+# TODO: write out
+
+###
+# @name patch_webid
+PATCH https://use.id/tom HTTP/1.1
+Authorization: Bearer <api-token>
+
+# TODO: write out
