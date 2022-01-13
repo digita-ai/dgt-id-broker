@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises';
 import fetchMock from 'jest-fetch-mock';
 import { lastValueFrom } from 'rxjs';
 import { WebIdProfileHandler } from './webid-profile.handler';

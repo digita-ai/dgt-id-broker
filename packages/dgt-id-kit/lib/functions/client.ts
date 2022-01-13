@@ -1,4 +1,4 @@
-import { JWK } from 'jose/types';
+import { JWK } from 'jose';
 import { defaultGetAuthorizationCode, defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';
 import { getFirstIssuerFromWebId } from './web-id';
 import { authRequest, tokenRequest, tokenRequestReturnObject } from './oidc';

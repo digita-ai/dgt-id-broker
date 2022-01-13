@@ -1,10 +1,7 @@
 import { of, throwError, lastValueFrom } from 'rxjs';
 import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
-import { SignJWT } from 'jose/jwt/sign';
+import { generateKeyPair, exportJWK, JWK, KeyLike, SignJWT, calculateJwkThumbprint } from 'jose';
 import { v4 as uuid } from 'uuid';
-import { calculateThumbprint } from 'jose/jwk/thumbprint';
 import { DpopPassThroughRequestHandler } from './dpop-pass-through-request.handler';
 
 describe('DpopPassThroughRequestHandler', () => {
@@ -50,7 +47,7 @@ describe('DpopPassThroughRequestHandler', () => {
 
     const keyPair = await generateKeyPair('ES256');
     privateKey = keyPair.privateKey;
-    publicJwk = await fromKeyLike(keyPair.publicKey);
+    publicJwk = await exportJWK(keyPair.publicKey);
 
   });
 
@@ -246,7 +243,7 @@ describe('DpopPassThroughRequestHandler', () => {
       expect(resp.body.expires_in).toBeDefined();
 
       expect(resp.body.access_token.payload.cnf).toBeDefined();
-      const thumbprint = await calculateThumbprint(publicJwk);
+      const thumbprint = await calculateJwkThumbprint(publicJwk);
       expect(resp.body.access_token.payload.cnf.jkt).toEqual(thumbprint);
 
     });
@@ -255,7 +252,7 @@ describe('DpopPassThroughRequestHandler', () => {
 
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const jose = require('jose/jwk/thumbprint');
-      jose.calculateThumbprint = jest.fn().mockReturnValueOnce(throwError(() => new Error('mockError')));
+      jose.calculateJwkThumbprint = jest.fn().mockReturnValueOnce(throwError(() => new Error('mockError')));
       nestedHandler.handle = jest.fn().mockReturnValueOnce(successfulProxiedServerResponse());
 
       await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('mockError');
