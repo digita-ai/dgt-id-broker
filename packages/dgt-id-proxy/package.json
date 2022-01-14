@@ -93,7 +93,6 @@
     "preset": "@digita-ai/jest-config",
     "displayName": "proxy",
     "testEnvironment": "node",
-    "testTimeout": 100000,
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
