@@ -5,12 +5,11 @@ global.TextDecoder = TextDecoder;
 
 import { JWK } from 'jose';
 import { HttpMethod } from '../models/http-method.model';
-import { TypedKeyValueStore } from '../models/typed-key-value-store.model';
 import { clientId, handleAuthRequestUrl, redirectUri, resource, method, issuer, scope, state, webId, dummyValidAccessToken, refreshToken, idToken, clientSecret, dummyExpiredAccessToken, getAuthorizationCode } from '../../test/test-data';
 import * as oidcModule from '../functions/oidc';
 import * as clientModule from '../functions/client';
-import { generateCodeChallenge } from '../functions/pkce';
-import { SolidOidcClient, storeInterface } from './solid-oidc-client';
+import { generateCodeChallenge, generateCodeVerifier } from '../functions/pkce';
+import { SolidOidcClient } from './solid-oidc-client';
 
 beforeEach(() => {
 
@@ -18,19 +17,12 @@ beforeEach(() => {
 
 });
 
-class testStore implements TypedKeyValueStore<storeInterface> {
+class TestStore {
 
   data = new Map();
 
   async get(key) { return this.data.get(key); }
-  async has(key) { return this.data.has(key); }
-  async delete(key) {
-
-    this.data.delete(key);
-
-    return true;
-
-  }
+  async delete(key) { return this.data.delete(key); }
   async set(key, value) {
 
     this.data.set(key, value);
@@ -38,51 +30,41 @@ class testStore implements TypedKeyValueStore<storeInterface> {
     return this;
 
   }
-  async* entries(): AsyncIterableIterator<[keyof storeInterface, string | JWK]> {
-
-    for (const [ key, value ] of this.data.entries()) {
-
-      yield [ key, value ];
-
-    }
-
-  }
 
 }
 
 describe('SolidOidcClient', () => {
 
-  let store: TypedKeyValueStore<storeInterface>;
+  let store: TestStore;
   let instance: SolidOidcClient;
 
   beforeEach(() => {
 
-    store = new testStore();
-    instance = new SolidOidcClient(store, false, clientId);
+    store = new TestStore();
+    instance = new SolidOidcClient(store, true, clientId);
 
   });
 
-  describe('constructor()', () => {
+  it('should be be constructed correctly', async () => {
 
-    it('should set the given store to this.store and client id', async () => {
+    expect(new SolidOidcClient(store)).toBeDefined();
+    expect(new SolidOidcClient(store, true)).toBeDefined();
+    expect(new SolidOidcClient(store, true, clientId)).toBeDefined();
+    expect(new SolidOidcClient(store, false, clientId)).toBeDefined();
 
-      expect((instance as any).store).toEqual(store);
-      expect((instance as any).initialized).toEqual(false);
-      expect((instance as any).clientId).toEqual(clientId);
+  });
 
-    });
+  it('should throw when initialized is false and no client id was given', async () => {
 
-    it('should throw when initialized is false and no client id was given', async () => {
-
-      expect(
-        () => new SolidOidcClient(store, false, undefined)
-      ).toThrow('Parameter initialized can not be false when no clientId was provided');
-
-    });
+    expect(
+      () => new SolidOidcClient(store, false, undefined)
+    ).toThrow('Parameter initialized can not be false when no clientId was provided');
 
   });
 
   describe('initialize()', () => {
+
+    beforeEach(() => { instance = new SolidOidcClient(store, false, clientId); });
 
     it('should create a public key, private key and a codeVerifier and set it to the store', async () => {
 
@@ -113,6 +95,13 @@ describe('SolidOidcClient', () => {
   });
 
   describe('loginWithIssuer()', () => {
+
+    beforeEach(async () => {
+
+      await store.set('clientId', clientId);
+      await store.set('codeVerifier', generateCodeVerifier(128));
+
+    });
 
     it('should call authRequest() with the right parameters', async () => {
 
@@ -184,7 +173,13 @@ describe('SolidOidcClient', () => {
 
   describe('loginWithWebId()', () => {
 
-    beforeEach(() => jest.spyOn(clientModule, 'loginWithWebId').mockResolvedValue(undefined));
+    beforeEach(async () => {
+
+      jest.spyOn(clientModule, 'loginWithWebId').mockResolvedValue(undefined);
+      await store.set('clientId', clientId);
+      await store.set('codeVerifier', generateCodeVerifier(128));
+
+    });
 
     it('should call loginWithWebId() with the correct parameters', async () => {
 
@@ -226,7 +221,6 @@ describe('SolidOidcClient', () => {
       instance = new SolidOidcClient(store);
       const spy = jest.spyOn((instance as any), 'initialize');
       const result = instance.loginWithWebId(webId, scope, redirectUri, state, handleAuthRequestUrl);
-      await expect(result).rejects.toThrow(); // Not what we are testing
       expect(spy).toHaveBeenCalledTimes(0);
 
     });
@@ -274,8 +268,16 @@ describe('SolidOidcClient', () => {
 
   describe('handleIncomingRedirect()', () => {
 
-    beforeEach(() => jest.spyOn(clientModule, 'handleIncomingRedirect')
-      .mockResolvedValue({ accessToken: dummyValidAccessToken, idToken }));
+    beforeEach(async () => {
+
+      jest.spyOn(clientModule, 'handleIncomingRedirect').mockResolvedValue({ accessToken: dummyValidAccessToken, idToken });
+
+      await store.set('clientId', clientId);
+      await store.set('privateKey', { some : 'private key' });
+      await store.set('publicKey', { some : 'public key' });
+      await store.set('codeVerifier', 'someCodeVerifier');
+
+    });
 
     it('should call handleIncomingRedirect() with the correct parameters', async () => {
 
@@ -329,9 +331,7 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no clientId was found in the store', async () => {
 
-      store.get = jest.fn().mockImplementation(
-        (key) => key === 'clientId' ? undefined : 'randomValue',
-      );
+      await store.delete('clientId');
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
       await expect(result).rejects.toThrow('No client_id available in the store');
@@ -340,9 +340,7 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no privateKey was found in the store', async () => {
 
-      store.get = jest.fn().mockImplementation(
-        (key) => key === 'privateKey' ? undefined : 'randomValue',
-      );
+      await store.delete('privateKey');
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
       await expect(result).rejects.toThrow('No private key available in the store');
@@ -351,9 +349,7 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no publicKey was found in the store', async () => {
 
-      store.get = jest.fn().mockImplementation(
-        (key) => key === 'publicKey' ? undefined : 'randomValue',
-      );
+      await store.delete('publicKey');
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
       await expect(result).rejects.toThrow('No public key available in the store');
@@ -362,9 +358,7 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no codeVerifier was found in the store', async () => {
 
-      store.get = jest.fn().mockImplementation(
-        (key) => key === 'codeVerifier' ? undefined : 'randomValue',
-      );
+      await store.delete('codeVerifier');
 
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
       await expect(result).rejects.toThrow('No code verifier available in the store');
@@ -392,7 +386,6 @@ describe('SolidOidcClient', () => {
       instance = new SolidOidcClient(store);
       const spy = jest.spyOn((instance as any), 'initialize');
       const result = instance.handleIncomingRedirect(issuer, redirectUri, getAuthorizationCode);
-      await expect(result).rejects.toThrow(); // Not what we are testing
       expect(spy).toHaveBeenCalledTimes(0);
 
     });
@@ -417,8 +410,16 @@ describe('SolidOidcClient', () => {
 
   describe('accessResource()', () => {
 
-    beforeEach(() => store.set('accessToken', dummyValidAccessToken));
-    beforeEach(() => jest.spyOn(oidcModule, 'accessResource').mockResolvedValue(undefined));
+    beforeEach(async () => {
+
+      jest.spyOn(oidcModule, 'accessResource').mockResolvedValue(undefined);
+      jest.spyOn(clientModule, 'handleIncomingRedirect').mockResolvedValue({ accessToken: dummyValidAccessToken, idToken });
+
+      await store.set('privateKey', { some : 'private key' });
+      await store.set('publicKey', { some : 'public key' });
+      await store.set('accessToken', dummyValidAccessToken);
+
+    });
 
     it('should call accessResource with the correct parameters', async () => {
 
@@ -442,9 +443,7 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no publicKey was found in the store', async () => {
 
-      store.get = jest.fn().mockImplementation(
-        (key) => key === 'publicKey' ? undefined : 'randomValue',
-      );
+      await store.delete('publicKey');
 
       const result = instance.accessResource(resource, method);
       await expect(result).rejects.toThrow('No public key available in the store');
@@ -453,9 +452,7 @@ describe('SolidOidcClient', () => {
 
     it('should throw when no privateKey was found in the store', async () => {
 
-      store.get = jest.fn().mockImplementation(
-        (key) => key === 'privateKey' ? undefined : 'randomValue',
-      );
+      await store.delete('privateKey');
 
       const result = instance.accessResource(resource, method);
       await expect(result).rejects.toThrow('No private key available in the store');
@@ -465,6 +462,7 @@ describe('SolidOidcClient', () => {
     it('should throw when no accessToken was found in the store', async () => {
 
       await store.delete('accessToken');
+
       const result = instance.accessResource(resource, method);
       await expect(result).rejects.toThrow('No accessToken available, did you login correctly?');
 
@@ -475,7 +473,6 @@ describe('SolidOidcClient', () => {
       instance = new SolidOidcClient(store);
       const spy = jest.spyOn((instance as any), 'initialize');
       const result = instance.accessResource(resource, method);
-      await expect(result).rejects.toThrow(); // Not what we are testing
       expect(spy).toHaveBeenCalledTimes(0);
 
     });
@@ -500,12 +497,13 @@ describe('SolidOidcClient', () => {
 
       beforeEach(async () => {
 
+        jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken, idToken });
+
         await store.set('accessToken', dummyExpiredAccessToken);
         await store.set('issuer', issuer);
         await store.set('refreshToken', refreshToken);
-        jest.spyOn(oidcModule, 'refreshTokenRequest').mockResolvedValue({ accessToken: dummyValidAccessToken, refreshToken, idToken });
-
-        return;
+        await store.set('clientId', clientId);
+        await store.set('clientSecret', 'some client secret');
 
       });
 
@@ -515,7 +513,7 @@ describe('SolidOidcClient', () => {
         const result = instance.accessResource(resource, method);
         await expect(result).resolves.toBeUndefined();
         expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, await store.get('publicKey'), await store.get('privateKey'), undefined);
+        expect(spy).toHaveBeenCalledWith(issuer, clientId, refreshToken, await store.get('publicKey'), await store.get('privateKey'), 'some client secret');
 
       });
 
@@ -547,9 +545,7 @@ describe('SolidOidcClient', () => {
 
       it('should throw when no clientId was found in the store', async () => {
 
-        store.get = jest.fn().mockImplementation(
-          (key) => key === 'clientId' ? undefined : key === 'accessToken' ? dummyExpiredAccessToken : 'randomValue',
-        );
+        await store.delete('clientId');
 
         const result = instance.accessResource(resource, method);
         await expect(result).rejects.toThrow('No client_id available in the store');
