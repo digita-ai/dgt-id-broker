@@ -327,7 +327,7 @@ describe('DpopTokenRequestHandler', () => {
           jwk: publicJwk,
         })
         .setJti(uuid())
-        .setIssuedAt(secondsSinceEpoch() + 30)
+        .setIssuedAt(secondsSinceEpoch() + 29)
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt };
@@ -346,7 +346,7 @@ describe('DpopTokenRequestHandler', () => {
           jwk: publicJwk,
         })
         .setJti(uuid())
-        .setIssuedAt(secondsSinceEpoch() - 120)
+        .setIssuedAt(secondsSinceEpoch() - 119)
         .sign(privateKey);
 
       context.request.headers = { ...context.request.headers, 'dpop': dpopJwt1 };
