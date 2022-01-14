@@ -17,6 +17,7 @@
   ],
   "scripts": {
     "demo": "vite",
+    "add": "cd ../.. && npx lerna --scope @digita-ai/dgt-id-kit add",
     "build": "shx rm -rf dist && vite build && tsc",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
@@ -26,6 +27,7 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
+    "@digita-ai/dgt-utils-core": "^0.8.5",
     "@digita-ai/inrupt-solid-client": "0.12.4",
     "crypto-js": "^4.1.1",
     "jest-environment-jsdom": "^27.2.0",
@@ -76,14 +78,14 @@
     "testEnvironment": "<rootDir>/jest.env.js",
     "coverageThreshold": {
       "global": {
-        "branches": 98.8,
-        "functions": 100,
-        "lines": 99.44,
-        "statements": 99.61
+        "statements": 86.12,
+        "branches": 83.17,
+        "lines": 83.63,
+        "functions": 85.71
       }
     },
-    "testPathIgnorePatterns": [
-      "lib-old"
+    "transformIgnorePatterns": [
+      "node_modules/(?!(lit-element|lit-html|rx-lit|@appnest/lit-translate|@inrupt/solid-client|@digita-ai/ui-transfer-solid-client|@digita-ai/dgt-utils-core)/)"
     ],
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"

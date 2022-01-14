@@ -9,8 +9,6 @@ export * from './functions/issuer';
 export * from './functions/web-id';
 export * from './functions/dpop';
 export * from './functions/pkce';
-export * from './models/typed-key-value-store.model';
-export * from './models/local-storage-store';
 export * from './solid-oidc-client/solid-oidc-client';
 export * from './util/data';
 export * from './util/private-to-public-jwk';

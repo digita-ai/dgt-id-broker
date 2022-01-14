@@ -7,6 +7,8 @@ import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import { lastValueFrom } from 'rxjs';
 import { variables, mainModulePath, configPath } from '../setup-tests';
 
+jest.setTimeout(50000);
+
 describe('full integration', () => {
 
   let privateKey1: KeyLike;
