@@ -432,7 +432,7 @@
           "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
         }
       },
-      "path": "/jwks"
+      "path": "/.well-known/jwks.json"
     },
     {
       "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint",

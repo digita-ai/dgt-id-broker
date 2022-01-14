@@ -2,10 +2,8 @@
 import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
-
-import * as generateKeyPairModule from 'jose/util/generate_key_pair';
-import * as parseModule from 'jose/jwk/parse';
-import { JWK } from 'jose/types';
+import * as jose from 'jose';
+import { JWK } from 'jose';
 import { createDpopProof, generateKeys } from './dpop';
 
 beforeEach(() => jest.clearAllMocks());
@@ -53,7 +51,7 @@ describe('createDPoPProof()', () => {
 
   it('should throw when something goes wrong signing the JWT', async () => {
 
-    jest.spyOn(parseModule, 'parseJwk').mockRejectedValueOnce(undefined);
+    jest.spyOn(jose, 'importJWK').mockRejectedValueOnce(undefined);
     const result = createDpopProof('htm', 'htu', publicKey, privateKey);
     await expect(result).rejects.toThrow('An error occurred while creating a DPoP proof: ');
 
@@ -77,6 +75,12 @@ describe('createDPoPProof()', () => {
 
   });
 
+  it('should throw when publicKey does not have an alg', async () => {
+
+    await expect(createDpopProof('htm', 'htu', { alg: undefined }, privateKey)).rejects.toThrow('Parameter "publicKey.alg" should be set');
+
+  });
+
 });
 
 describe('generateKeys()', () => {
@@ -93,7 +97,7 @@ describe('generateKeys()', () => {
 
   it('should use ES256 algorithm by default', async () => {
 
-    const spy = jest.spyOn(generateKeyPairModule, 'generateKeyPair');
+    const spy = jest.spyOn(jose, 'generateKeyPair');
 
     const result = generateKeys();
     await expect(result).resolves.toBeDefined();
@@ -108,7 +112,7 @@ describe('generateKeys()', () => {
 
   it('should use the algorithm provided by the user', async () => {
 
-    const spy = jest.spyOn(generateKeyPairModule, 'generateKeyPair');
+    const spy = jest.spyOn(jose, 'generateKeyPair');
 
     const result = generateKeys('ES512');
     await expect(result).resolves.toBeDefined();
@@ -123,7 +127,7 @@ describe('generateKeys()', () => {
 
   it('should throw when something goes wrong', async () => {
 
-    jest.spyOn(generateKeyPairModule, 'generateKeyPair').mockRejectedValueOnce(undefined);
+    jest.spyOn(jose, 'generateKeyPair').mockRejectedValueOnce(undefined);
 
     const result = generateKeys();
     await expect(result).rejects.toThrow('An error occurred while generating keys with algorithm ES256');

@@ -1,5 +1,5 @@
 import { MemoryStore } from '@digita-ai/handlersjs-core';
-import { JWK } from 'jose/types';
+import { JWK } from 'jose';
 
 interface storeInterface  {
   privateKey: JWK;
