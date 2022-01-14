@@ -1,4 +1,4 @@
-import { JWK } from 'jose/types';
+import { JWK } from 'jose';
 
 export const privateToPublicJwk = (jwk: JWK): JWK => ({
   kty: jwk.kty, // key type: defines thecryptographic algorithm family used with the key

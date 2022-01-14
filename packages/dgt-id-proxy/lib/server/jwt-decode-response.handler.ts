@@ -3,7 +3,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, Observable, zip } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { decode } from 'jose/util/base64url';
+import { base64url } from 'jose';
 import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
 import { checkError, createErrorResponse } from '../util/error-response-factory';
 
@@ -81,8 +81,8 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
           map(({ protectedHeader, payload }) => ({ header: protectedHeader, payload })),
         )
         : of({
-          header: JSON.parse(decode(parsedBody[field].split('.')[0]).toString()),
-          payload: JSON.parse(decode(parsedBody[field].split('.')[1]).toString()),
+          header: JSON.parse(base64url.decode(parsedBody[field].split('.')[0]).toString()),
+          payload: JSON.parse(base64url.decode(parsedBody[field].split('.')[1]).toString()),
         }),
     ));
 

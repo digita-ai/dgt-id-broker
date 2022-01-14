@@ -1,4 +1,4 @@
-import { JWK } from 'jose/types';
+import { JWK } from 'jose';
 import { TypeCheck, isBoolean, isObject, isString } from '@digita-ai/dgt-utils-core';
 
 const maybe = <T> (check: TypeCheck<T>) =>

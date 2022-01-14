@@ -31,7 +31,7 @@
     "@digita-ai/inrupt-solid-client": "0.12.4",
     "crypto-js": "^4.1.1",
     "jest-environment-jsdom": "^27.2.0",
-    "jose": "3.14.3",
+    "jose": "^4.3.8",
     "n3": "^1.11.0",
     "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
@@ -78,9 +78,9 @@
     "testEnvironment": "<rootDir>/jest.env.js",
     "coverageThreshold": {
       "global": {
-        "statements": 86.19,
+        "statements": 86.12,
         "branches": 83.17,
-        "lines": 83.78,
+        "lines": 83.63,
         "functions": 85.71
       }
     },

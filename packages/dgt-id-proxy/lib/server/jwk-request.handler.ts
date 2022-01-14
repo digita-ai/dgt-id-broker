@@ -3,7 +3,7 @@ import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
-import { JWK } from 'jose/jwk/parse';
+import { JWK } from 'jose';
 
 /**
  * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.

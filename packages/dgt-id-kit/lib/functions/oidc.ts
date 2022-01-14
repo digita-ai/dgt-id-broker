@@ -1,4 +1,4 @@
-import { JWK } from 'jose/types';
+import { JWK } from 'jose';
 import { validateAndFetch } from '../util/validate-and-fetch';
 import { HttpMethod } from '../models/http-method.model';
 import { defaultHandleAuthRequestUrl } from '../solid-oidc-client/solid-oidc-client';

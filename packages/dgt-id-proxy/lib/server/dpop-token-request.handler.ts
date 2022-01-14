@@ -1,10 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError, tap } from 'rxjs/operators';
-import { EmbeddedJWK } from 'jose/jwk/embedded';
-import { calculateThumbprint } from 'jose/jwk/thumbprint';
-import { jwtVerify, JWTVerifyOptions } from 'jose/jwt/verify';
-import { JWK, JWTVerifyResult } from 'jose/types';
+import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyOptions, JWK, JWTVerifyResult } from 'jose';
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**
@@ -101,7 +98,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // verifies or errors with dpop message
       switchMap((jwt) => this.verifyDpopProof(context.request.method, jwt)),
       // creates thumbprint or errors
-      switchMap((verified) => from(calculateThumbprint(verified.protectedHeader.jwk))),
+      switchMap((verified) => from(calculateJwkThumbprint(verified.protectedHeader.jwk))),
       // builds error body around previous errors
       catchError((error) => error.message ? throwError(() => this.dpopError(error.message)) : throwError(() => new Error('DPoP verification failed due to an unknown error'))),
       // gets successful response or errors with body

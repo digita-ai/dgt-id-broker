@@ -1,9 +1,6 @@
-import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { generateKeyPair, exportJWK, JWK, KeyLike, SignJWT, base64url } from 'jose';
 import { lastValueFrom } from 'rxjs';
-import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
-import { SignJWT } from 'jose/jwt/sign';
 import fetchMock from 'jest-fetch-mock';
-import { encode } from 'jose/util/base64url';
 import { verifyUpstreamJwk } from './verify-upstream-jwk';
 
 describe('verifyUpstreamJwk', () => {
@@ -27,7 +24,7 @@ describe('verifyUpstreamJwk', () => {
     fetchMock.enableMocks();
     const keyPair = await generateKeyPair('ES256');
     privateKey = keyPair.privateKey;
-    publicJwk = await fromKeyLike(keyPair.publicKey);
+    publicJwk = await exportJWK(keyPair.publicKey);
     publicJwk.kid = 'mockKeyId';
     publicJwk.alg = 'ES256';
     validToken = await mockJwt(publicJwk.kid, privateKey);
@@ -100,7 +97,7 @@ describe('verifyUpstreamJwk', () => {
   it('should error when alg is not present or "none" in the id token header', async () => {
 
     // create an unsigned token with no alg in the header
-    const tokenNoAlg = encode(JSON.stringify({ kid: 'mockKeyId' })) + '.' + encode(JSON.stringify({ 'mockKey': 'mockValue' })) + '.' + 'footer';
+    const tokenNoAlg = base64url.encode(JSON.stringify({ kid: 'mockKeyId' })) + '.' + base64url.encode(JSON.stringify({ 'mockKey': 'mockValue' })) + '.' + 'footer';
 
     fetchMock.mockResponses(
       configResponse,
@@ -116,7 +113,7 @@ describe('verifyUpstreamJwk', () => {
     );
 
     // create an unsigned token with alg set to 'none' in the header
-    const tokenAlgNone = encode(JSON.stringify({ kid: 'mockKeyId', alg: 'none' })) + '.' + encode(JSON.stringify({ 'mockKey': 'mockValue' })) + '.' + 'footer';
+    const tokenAlgNone = base64url.encode(JSON.stringify({ kid: 'mockKeyId', alg: 'none' })) + '.' + base64url.encode(JSON.stringify({ 'mockKey': 'mockValue' })) + '.' + 'footer';
 
     await expect(() => lastValueFrom(verifyUpstreamJwk(tokenAlgNone, url))).rejects.toThrow('Token did not contain an alg, and is therefore invalid');
 

@@ -1,10 +1,7 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { lastValueFrom } from 'rxjs';
-import { SignJWT } from 'jose/jwt/sign';
-import { KeyLike, JWK } from 'jose/types';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { SignJWT, KeyLike, JWK, generateKeyPair, exportJWK } from 'jose';
 import fetchMock from 'jest-fetch-mock';
-import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { JwtDecodeResponseHandler } from './jwt-decode-response.handler';
 
 describe('JwtDecodeResponseHandler', () => {
@@ -62,7 +59,7 @@ describe('JwtDecodeResponseHandler', () => {
 
     const keyPair = await generateKeyPair('ES256');
     privateKey = keyPair.privateKey;
-    publicJwk = await fromKeyLike(keyPair.publicKey);
+    publicJwk = await exportJWK(keyPair.publicKey);
     publicJwk.kid = 'mockKeyId';
     publicJwk.alg = 'ES256';
 
