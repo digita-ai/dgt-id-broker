@@ -27,7 +27,7 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/dgt-utils-core": "^0.8.5",
+    "@digita-ai/dgt-utils-core": "^0.11.3",
     "@digita-ai/inrupt-solid-client": "0.13.0",
     "crypto-js": "^4.1.1",
     "jest-environment-jsdom": "^27.2.0",
