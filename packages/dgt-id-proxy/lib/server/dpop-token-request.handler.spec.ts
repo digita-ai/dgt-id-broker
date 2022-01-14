@@ -1,11 +1,8 @@
 import { of, throwError, lastValueFrom } from 'rxjs';
 import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
-import { SignJWT } from 'jose/jwt/sign';
+import { generateKeyPair, exportJWK, JWK, KeyLike, SignJWT } from 'jose';
 import { v4 as uuid } from 'uuid';
-import * as jwk from 'jose/jwk/thumbprint';
-import * as jwt from 'jose/jwt/verify';
+import * as jose from 'jose';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { DpopTokenRequestHandler } from './dpop-token-request.handler';
 
@@ -76,7 +73,7 @@ describe('DpopTokenRequestHandler', () => {
 
     const keyPair = await generateKeyPair('ES256');
     privateKey = keyPair.privateKey;
-    publicJwk = await fromKeyLike(keyPair.publicKey);
+    publicJwk = await exportJWK(keyPair.publicKey);
 
   });
 
@@ -363,7 +360,7 @@ describe('DpopTokenRequestHandler', () => {
     it('should error when a DPoP proof has an unsupported algorithm', async () => {
 
       const rs384KeyPair = await generateKeyPair('RS384');
-      const rs384PublicJwk = await fromKeyLike(rs384KeyPair.publicKey);
+      const rs384PublicJwk = await exportJWK(rs384KeyPair.publicKey);
 
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
@@ -634,7 +631,7 @@ describe('DpopTokenRequestHandler', () => {
       expect(resp.body.expires_in).toBeDefined();
 
       expect(resp.body.access_token.payload.cnf).toBeDefined();
-      const thumbprint = await jwk.calculateThumbprint(publicJwk);
+      const thumbprint = await jose.calculateJwkThumbprint(publicJwk);
       expect(resp.body.access_token.payload.cnf.jkt).toEqual(thumbprint);
 
     });
@@ -648,7 +645,7 @@ describe('DpopTokenRequestHandler', () => {
 
     it('should throw a falback error if catchError catches an empty error', async () => {
 
-      Object.defineProperty(jwk, 'calculateThumbprint', {
+      Object.defineProperty(jose, 'calculateJwkThumbprint', {
         value: jest.fn().mockReturnValueOnce(throwError(() => new Error())),
       });
 
@@ -658,13 +655,13 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
-    it('should call calculateThumbprint with an empty object when no JWK was found in the header', async () => {
+    it('should call calculateJwkThumbprint with an empty object when no JWK was found in the header', async () => {
 
-      Object.defineProperty(jwk, 'calculateThumbprint', {
+      Object.defineProperty(jose, 'calculateJwkThumbprint', {
         value: jest.fn().mockReturnValueOnce(throwError(() => new Error())),
       });
 
-      Object.defineProperty(jwt, 'jwtVerify', {
+      Object.defineProperty(jose, 'jwtVerify', {
         value: jest.fn().mockReturnValueOnce(of(
           { payload: {
             htm: 'POST',

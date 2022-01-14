@@ -1,4 +1,4 @@
-import { JWK } from 'jose/types';
+import { JWK } from 'jose';
 import { privateToPublicJwk } from './private-to-public-jwk';
 
 const privateJWK: JWK = {

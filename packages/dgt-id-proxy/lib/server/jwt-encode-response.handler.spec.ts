@@ -1,5 +1,5 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { decode } from 'jose/util/base64url';
+import { base64url } from 'jose';
 import { lastValueFrom } from 'rxjs';
 import { JwtEncodeResponseHandler, JwtField } from './jwt-encode-response.handler';
 
@@ -154,8 +154,8 @@ describe('JwtEncodeResponseHandler', () => {
       expect(encodedTokenResponse.headers['content-type']).toEqual('application/json');
       expect(encodedTokenResponse.status).toEqual(200);
 
-      const decodedAccessTokenHeader = JSON.parse(decode(parsedBody.access_token.split('.')[0]).toString());
-      const encodedPayload = JSON.parse(decode(parsedBody.access_token.split('.')[1]).toString());
+      const decodedAccessTokenHeader = JSON.parse(base64url.decode(parsedBody.access_token.split('.')[0]).toString());
+      const encodedPayload = JSON.parse(base64url.decode(parsedBody.access_token.split('.')[1]).toString());
 
       expect(decodedAccessTokenHeader).toEqual({
         alg: 'ES256',
