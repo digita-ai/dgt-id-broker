@@ -25,7 +25,7 @@ Lets's break this down a little bit:
 
 - The `IMAGE` for Keycloak is `quay.io/keycloak/keycloak:latest`, except for Apple devices on the M1 architecture, which work with `wizzn/keycloak:14`.
 
-- The `IPORT` of the default Keycloak images is `8080`. Map this to the desired port on you host with `EPORT`, e.g. `8080:8080`.
+- The `IPORT` of the default Keycloak images is `8080`. Map this to the desired port on you host with `EPORT`, e.g. `8080:3000`.
 
 - `USER` and `PWD` set the username and password for the initial admin account. (Alternatively, you can create an admin account on the Keycloak welcome page.)
 
@@ -71,13 +71,22 @@ In order to let the proxy access the upstream provider's data we need to add it 
 
 . Fill in the *Client ID*, we will be using *_"static-client"_* for this guide, which will be used in URIs and tokens.
 
+[#img-keycloak-add-client]
+image::add-client.png[Keycloak Add Client]
+
+. Click *Save* to create your client and start editing it's settings.
+
 . For *Client Protocol* select *_"openid-connect"_*, since Solid is based on the OpenID Connect standard.
 
 . For *Access Type* select *_"confidential"_* so that clients require a secret to initiate the login protocol.
 
 . Specify the *Root URL*  *_"http://localhost:8080/digita"_* that will be used as a prefix for relative URLs.
 
-. Click *Save* to create the client.
+. Make sure *Implicit Flow Enabled* is set to `OFF` in order for your client to remain Solid-compliant. 
+
+. Add the proxy's redirect URI *_"http://localhost:3003/redirect"_* to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly. 
+
+. Save your client and switch to the *Credentials* tab that has just been added and check that *Client Authenticator* is set to `Client ID and Secret`. 
 
 In terms of Solid Compliant features specifically, you have the ability to create "Protocol Mappers", which you can use to add claims to both the ID Token and the Access Token. This can be used to add the webid claim.
 
@@ -85,7 +94,9 @@ To add the webid claim to tokens:
 
 . In your realm, select your client
 
-. Select the *Mappers* option, and select *Create*
+. Select the *Mappers* option, and select *Create*.
+
+. Choose a name for your mapper, e.g. *_"webid"_*.
 
 . For *Mapper Type*, select *User Attribute*.
 
@@ -93,19 +104,7 @@ To add the webid claim to tokens:
 
 . Set *Add to ID token* and *Add to access token* to on.
 
-If the claim *webid* exists on the user that is requesting a token, it will then be added to the ID Token and the Access Token.
-
-[#img-keycloak-add-client]
-image::add-client.png[Keycloak Add Client]
-
-
-. You will be directed to the client settings page. There are some important settings in the *Settings* tab that you need to check here.
-
-. Make sure *Implicit Flow Enabled* is set to `OFF`` in order for your client to remain Solid-compliant. 
-
-. Add the proxy's redirect URI (`http://localhost:3003/redirect`) to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly. 
-
-. Save your client and switch to the *Credentials* tab that has just been added and set the *Client Authenticator* to `Client ID and Secret`. 
+If the claim *webid* exists on the user that is requesting a token, it will then be added to the *ID Token* and the *Access Token*.
 
 
 == Creating a user
@@ -138,16 +137,16 @@ Before starting the proxy, make sure you have a JSON file containing JWKs, and a
 For jwks: 
 
 * Run `npm run generate:keys`. This will generate an RSA key and an ES256 key. By default these JWKs will be put under the directory `assets` with the filename `jwks.json`. 
-If you want them to be generated somewhere else, you can run `npm run generate:keys -- [relative path to file]`. If you want the JWKs to be under a directory to be under a directory called `jwks` with a filename of `myjwks.json` run `npm run generate:keys -- jwks/myjwks.json`.
+If you want them to be generated somewhere else, you can run `npm run generate:keys -- <relative path to file>`. If you want the JWKs to be under a directory to be under a directory called `jwks` with a filename of `myjwks.json` run `npm run generate:keys -- jwks/myjwks.json`.
 
 For openid-configuration:
 
-* Run `npm run generate:oidc -- [upstream server issuer url] [proxy issuer url] [relative path to file (optional)]`. The upstream server issuer url we will be using in this guide is `http://localhost:8080/auth/realms/digita`. You need to have your keycloak running for this to work. By default, it will try to find the provider config under the url of the upstream, and will replace all instances of that URL with the url of the proxy. By default it will place the file under the directory `assets` with the filename `openid-configuration.json`.
+* Run `npm run generate:oidc -- <upstream server issuer url> <proxy issuer url> <relative path to file>(optional)`. The upstream server issuer url we will be using in this guide is `http://localhost:8080/auth/realms/digita`. You need to have your keycloak running for this to work. By default, it will try to find the provider config under the url of the upstream, and will replace all instances of that URL with the url of the proxy. By default it will place the file under the directory `assets` with the filename `openid-configuration.json`.
 
 Example: `npm run generate:oidc -- http://localhost:8080/auth/realms/digita http://localhost:3003 config/proxy-config.json`.
 
 
-Make sure that clientId on the `ClientIdStaticAuthRequestHandler` and `ClientIdStaticTokenHandler` is set to the `static-client` we created earlier. And change the clientSecret on `ClientIdStaticTokenHandler` to the one found under the credentials tab in your client settings of the client you created earlier.
+Make sure that the *clientId* predicate on the `ClientIdStaticAuthRequestHandler` and `ClientIdStaticTokenHandler` is set to the `static-client` we created earlier. And change the *clientSecret* on `ClientIdStaticTokenHandler` to the one found under the credentials tab in your client settings of the client you created earlier.
 
 Now start the proxy using the following command:
 
