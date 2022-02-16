@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.1...v0.14.0) (2022-02-16)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-kit
+
+
+
+
+
 ### [0.13.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.0...v0.13.1) (2022-01-14)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-kit

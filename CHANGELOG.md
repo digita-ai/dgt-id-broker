@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.1...v0.14.0) (2022-02-16)
+
+
+### **Documentation**
+
+* change license ([#323](https://github.com/digita-ai/dgt-id-broker/issues/323)) ([6f3b66c](https://github.com/digita-ai/dgt-id-broker/commit/6f3b66c273525a762ef37781ba75dd89b1d8c6be))
+* fixed incorrect path to features and getting started pages ([548efaf](https://github.com/digita-ai/dgt-id-broker/commit/548efaf2a782f0effe6018c49e61c0d4d7c93920))
+
+
+### **Features**
+
+* use keyvaluestore from handlersjs ([#329](https://github.com/digita-ai/dgt-id-broker/issues/329)) ([f69b4c8](https://github.com/digita-ai/dgt-id-broker/commit/f69b4c870d1e7ddcea42b09685b1e2d8fe95357a))
+
+
+
 ### [0.13.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.0...v0.13.1) (2022-01-14)
 
 **Note:** Version bump only for package root
