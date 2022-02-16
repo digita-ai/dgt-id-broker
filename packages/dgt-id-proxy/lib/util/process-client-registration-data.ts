@@ -1,7 +1,7 @@
 import { Observable, throwError, of, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ForbiddenHttpError } from '@digita-ai/handlersjs-http';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from './oidc-client-metadata';
 import { OidcClientRegistrationResponse } from './oidc-client-registration-response';
 

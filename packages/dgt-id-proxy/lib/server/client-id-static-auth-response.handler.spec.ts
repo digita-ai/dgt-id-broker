@@ -1,7 +1,7 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
 import { lastValueFrom } from 'rxjs';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { KeyValueStore } from '../storage/key-value-store';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { ClientIdStaticAuthResponseHandler } from './client-id-static-auth-response.handler';
 

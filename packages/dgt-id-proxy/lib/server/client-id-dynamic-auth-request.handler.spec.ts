@@ -1,8 +1,8 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
 import { lastValueFrom } from 'rxjs';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { InMemoryStore } from '../storage/in-memory-store';
+import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
 import { RegistrationStore } from '../util/process-client-registration-data';
