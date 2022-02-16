@@ -2,7 +2,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 
 /**
  * A { Handler<HttpHandlerResponse, HttpHandlerResponse> } that handles the response from the upstream
