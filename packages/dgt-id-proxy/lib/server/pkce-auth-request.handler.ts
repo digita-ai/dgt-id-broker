@@ -1,6 +1,6 @@
 import { of, Observable, throwError } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { KeyValueStore } from '../storage/key-value-store';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { createErrorResponse } from '../util/error-response-factory';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 
