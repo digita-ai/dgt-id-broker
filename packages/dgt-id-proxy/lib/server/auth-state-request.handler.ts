@@ -2,7 +2,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of, throwError, Observable } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { KeyValueStore } from '../storage/key-value-store';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that handles requests to the Authorization Endpoint. Makes sure the request
