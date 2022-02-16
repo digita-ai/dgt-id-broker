@@ -2,8 +2,8 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of,  from, Observable, throwError } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { Handler } from '@digita-ai/handlersjs-core';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
+import { KeyValueStore } from '../storage/key-value-store';
 
 /**
  * A {HttpHandler} that handles pkce requests to the authorization endpoint that receives the authorization code
