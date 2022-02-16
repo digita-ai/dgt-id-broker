@@ -1,7 +1,7 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of, lastValueFrom } from 'rxjs';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { InMemoryStore } from '../storage/in-memory-store';
-import { KeyValueStore } from '../storage/key-value-store';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
