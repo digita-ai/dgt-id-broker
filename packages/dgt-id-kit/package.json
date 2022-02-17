@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-kit",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "description": "Collection of client-side utilities for authentication with Solid services",
   "author": "Wouter Termont <wouter.termont@digita.ai>",
   "main": "./dist/index.js",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@digita-ai/dgt-utils-core": "^0.11.3",
-    "@digita-ai/inrupt-solid-client": "0.14.2",
+    "@digita-ai/inrupt-solid-client": "0.14.3",
     "crypto-js": "^4.1.1",
     "jest-environment-jsdom": "^27.2.0",
     "jose": "^4.3.8",

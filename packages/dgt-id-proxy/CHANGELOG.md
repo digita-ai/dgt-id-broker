@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.14.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.2...v0.14.3) (2022-02-17)
+
+
+### **Features**
+
+* always add trailing slash to proxy url ([#332](https://github.com/digita-ai/dgt-id-broker/issues/332)) ([4b59b98](https://github.com/digita-ai/dgt-id-broker/commit/4b59b98ea40c93a2c89c7b9779a6343232f978b0))
+
+
+
 ### [0.14.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.1...v0.14.2) (2022-02-17)
 
 **Note:** Version bump only for package @digita-ai/dgt-id-proxy

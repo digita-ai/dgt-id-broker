@@ -1,6 +1,6 @@
 name: dgt-id-broker
 title: Identity Broker
-version: 0.14.2
+version: 0.14.3
 nav:
   - modules/ROOT/nav.adoc
   - modules/features/nav.adoc
