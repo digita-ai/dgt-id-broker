@@ -23,6 +23,7 @@ export * from './util/code-challenge-method';
 export * from './util/error-response-factory';
 export * from './util/parsed-json';
 export * from './webid/single-claim-webid-factory';
+export * from './webid/url-claim-webid-factory';
 export * from './webid/webid-factory';
 export * from './webid/webid-profile.handler';
 export * from './webid/webid-response.handler';
