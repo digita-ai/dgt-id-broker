@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.14.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.0...v0.14.1) (2022-02-17)
+
+
+### **Features**
+
+* url-claim-webid-factory ([#331](https://github.com/digita-ai/dgt-id-broker/issues/331)) ([6afe8a4](https://github.com/digita-ai/dgt-id-broker/commit/6afe8a4396ddb16233e48b7d2251d442bc874d94))
+
+
+
 ## [0.14.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.1...v0.14.0) (2022-02-16)
 
 
