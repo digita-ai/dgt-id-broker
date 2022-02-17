@@ -480,7 +480,7 @@ describe('full integration', () => {
 
         it('should contain iss claim with a valid URL of the proxy', () => {
 
-          expect(decodedPayloadAccessToken.iss).toEqual(proxyUrl);
+          expect(decodedPayloadAccessToken.iss).toEqual('http://localhost:3003/');
 
         });
 

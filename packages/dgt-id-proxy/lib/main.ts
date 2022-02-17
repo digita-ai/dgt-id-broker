@@ -19,7 +19,7 @@ export const checkUri = (uri: string) => {
     const scheme = url.protocol;
 
     return ({
-      uri: httpUri,
+      uri: url.toString(),
       host,
       port,
       scheme,
@@ -97,8 +97,8 @@ export const createVariables = (args: string[]): Record<string, any> => {
     })
     .help();
 
-  const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003', host: 'localhost', port: '3003' };
-  const { uri: upstreamUri, host: upstreamHost, port: upstreamPort, scheme: upstreamScheme } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000', host: 'localhost', port: '3000', scheme: 'http:' };
+  const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003/', host: 'localhost', port: '3003' };
+  const { uri: upstreamUri, host: upstreamHost, port: upstreamPort, scheme: upstreamScheme } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000/', host: 'localhost', port: '3000', scheme: 'http:' };
 
   const mainModulePath = params.mainModulePath
     ? path.isAbsolute(params.mainModulePath)
