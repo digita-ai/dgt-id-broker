@@ -22,9 +22,9 @@ export class ClientCredentialsPathHandler extends HttpHandler {
 
     if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
 
-    if (!context.request.body) { return throwError(() => new Error('No body was included in the request')); }
+    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
 
-    // const params  = new URLSearchParams(context.request.body);
+    context.request.url.href = context.request.url.href.replace('client', 'token');
 
     return this.httpHandler.handle(context);
 

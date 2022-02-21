@@ -76,6 +76,9 @@
                       "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
                     },
                     {
+                      "@id": "urn:dgt-id-proxy:default:ClientEndpoint"
+                    },
+                    {
                       "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
                     },
                     {
@@ -124,7 +127,7 @@
       "@id": "urn:dgt-id-proxy:default:ClientCredentialsPathHandler",
       "@type": "ClientCredentialsPathHandler",
       "httpHandler": {
-        "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       }
     },
     {
@@ -420,6 +423,7 @@
           {
             "@id": "urn:dgt-id-proxy:default:ClientCredentialsPathHandler"
           },
+          
           {
             "@type": "SolidAudienceResponseHandler"
           },
