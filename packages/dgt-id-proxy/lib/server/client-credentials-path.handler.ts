@@ -6,7 +6,7 @@ export class ClientCredentialsPathHandler extends HttpHandler {
   /**
    * Creates a { ClientCredentialsPathHandler }.
    *
-   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests
    */
   constructor(private httpHandler: HttpHandler) {
 
@@ -34,7 +34,7 @@ export class ClientCredentialsPathHandler extends HttpHandler {
 
     return context
     && context.request
-    && context.request.body
+    && context.request.url
       ? of(true)
       : of(false);
 
