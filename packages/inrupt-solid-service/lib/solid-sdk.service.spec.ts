@@ -1,7 +1,10 @@
 import { addUrl, createSolidDataset, createThing, saveSolidDatasetAt, getDefaultSession, login, handleIncomingRedirect } from '@digita-ai/inrupt-solid-client';
 import * as sdk from '@digita-ai/inrupt-solid-client';
+import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
 import { Issuer } from './models/issuer.model';
 import { SolidSDKService } from './solid-sdk.service';
+
+enableFetchMocks();
 
 describe('SolidSDKService', () => {
 
@@ -233,6 +236,34 @@ describe('SolidSDKService', () => {
       const result = await service.getStorages(mockWebId);
       expect(result.length).toEqual(1);
       expect(result).toContain(mockStorage);
+
+    });
+
+  });
+
+  describe('getAuthorizationAgents', () => {
+
+    it('should error when no authorization agents are present', async () => {
+
+      (service as any).getProfileThing = jest.fn(async () => mockProfile);
+      const result = service.getAuthorizationAgents(mockWebId);
+
+      await expect(result).rejects.toThrow('No authorization agents for WebID: ');
+
+    });
+
+    it('should return the correct agent', async () => {
+
+      const mockAuthorizationAgent = 'https://authz.agent';
+      mockProfile = addUrl(mockProfile, 'http://www.w3.org/ns/solid/interop#hasAuthorizationAgent', mockAuthorizationAgent);
+
+      fetchMock.mockResponseOnce('', { status: 200 });
+      (service as any).getProfileThing = jest.fn(async () => mockProfile);
+      const result = service.getAuthorizationAgents(mockWebId);
+
+      await expect(result).resolves.toHaveLength(1);
+      const awaitedResult = await result;
+      expect(awaitedResult[0]).toEqual(expect.objectContaining({ uri: mockAuthorizationAgent }));
 
     });
 

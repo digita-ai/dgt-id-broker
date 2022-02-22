@@ -2,6 +2,7 @@ import { Session } from './models/session.model';
 import { Profile } from './models/profile.model';
 import { Issuer } from './models/issuer.model';
 import { Source } from './models/source.model';
+import { AuthorizationAgent } from './models/authorization-agent.model';
 
 /**
  * Service for interacting with Solid pods
@@ -31,6 +32,14 @@ export interface SolidService {
    * @param issuers The issuers to add
    */
   addIssuers(webId: string, issuers: Issuer[]): Promise<Issuer[]>;
+
+  /**
+   * Retrieves all values from the authorization agent triples from a profile document
+   * for a given WebID
+   *
+   * @param webId The WebID for which to retrieve the authorization agents
+   */
+  getAuthorizationAgents(webId: string): Promise<AuthorizationAgent[]>;
 
   /**
    * Retrieves the value of the account triples from a profile document
