@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.15.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.1...v0.15.2) (2022-02-24)
+
+
+### **Features**
+
+* client-credentials-handler ([#336](https://github.com/digita-ai/dgt-id-broker/issues/336)) ([5e35e58](https://github.com/digita-ai/dgt-id-broker/commit/5e35e588996eb2f87a145e3c53ad829c2df244f1))
+
+
+
 ### [0.15.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.0...v0.15.1) (2022-02-24)
 
 **Note:** Version bump only for package @digita-ai/solid-oidc-provider
