@@ -76,9 +76,6 @@
                       "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
                     },
                     {
-                      "@id": "urn:dgt-id-proxy:default:ClientEndpoint"
-                    },
-                    {
                       "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
                     },
                     {
@@ -121,13 +118,6 @@
       "redirectUri": "http://localhost:3003/redirect",
       "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
-      }
-    },
-    {
-      "@id": "urn:dgt-id-proxy:default:ClientCredentialsPathHandler",
-      "@type": "ClientCredentialsPathHandler",
-      "httpHandler": {
-        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       }
     },
     {
@@ -405,54 +395,6 @@
         ]
       },
       "path": "/oauth/token"
-    },
-    {
-      "@id": "urn:dgt-id-proxy:default:ClientEndpoint",
-      "@type": "HttpHandlerRoute",
-      "operations": [
-        {
-          "@id": "urn:dgt-id-proxy:default:PostOperation"
-        },
-        {
-          "@id": "urn:dgt-id-proxy:default:OptionsOperation"
-        }
-      ],
-      "handler": {
-        "@type": "PipeThroughHandler",
-        "handlers": [
-          {
-            "@id": "urn:dgt-id-proxy:default:ClientCredentialsPathHandler"
-          },
-          
-          {
-            "@type": "SolidAudienceResponseHandler"
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:WebIdResponseHandler",
-            "@type": "WebIdResponseHandler",
-            "webIdFactory": {
-              "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory"
-            }
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:WebIdProfileHandler",
-            "@type": "WebIdProfileHandler",
-            "webId": "http://localhost:3002/clientapp/card#me",
-            "idp": "http://localhost:3003",
-            "pathToJwks": {
-              "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
-            },
-            "webIdPattern": "http://localhost:3002/:customclaim/profile/card#me",
-            "predicates": [
-              [ "urn:example:sub", [ "sub" ] ]
-            ]
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler"
-          }
-        ]
-      },
-      "path": "/oauth/client"
     },
     {
       "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint",
