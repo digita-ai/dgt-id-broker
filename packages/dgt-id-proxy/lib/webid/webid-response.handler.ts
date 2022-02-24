@@ -30,6 +30,7 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    * Handles the response. Checks if the response contains an access_token with payload.
    * Checks if tokenType is id_token and if so, copies its webid claim to the access_token payload.
    * If no such claim is present a webid is minted.
+   * If tokenType is id_token and does not contain a webid, a webid is minted by calling the webid factory.
    * If the access_token does not contain a webid claim one is minted as well.
    *
    * @param {HttpHandlerResponse} response
