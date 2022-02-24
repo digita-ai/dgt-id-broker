@@ -71,28 +71,34 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
       } else {
 
-        return this.sendToFactory(id_token_payload, response);
+        return this.webIdFactory.handle(id_token_payload).pipe(
+          switchMap((minted_webid) => {
+
+            access_token_payload.webid = minted_webid;
+            id_token_payload.webid = minted_webid;
+
+            return of(response);
+
+          }),
+        );
 
       }
 
     } else {
 
-      return this.sendToFactory(access_token_payload, response);
+      return this.webIdFactory.handle(access_token_payload).pipe(
+        switchMap((minted_webid) => {
+
+          access_token_payload.webid = minted_webid;
+
+          return of(response);
+
+        }),
+      );
 
     }
 
   }
-
-  sendToFactory = (payload: any, response: HttpHandlerResponse): Observable<any> =>
-    this.webIdFactory.handle(payload).pipe(
-      switchMap((minted_webid) => {
-
-        payload.webid = minted_webid;
-
-        return of(response);
-
-      }),
-    );
 
   /**
    * Returns true if the response is defined. Otherwise it returns false.
