@@ -12,8 +12,6 @@ export class ClientCredentialsPathHandler extends HttpHandler {
 
     super();
 
-    if (!httpHandler) { throw new Error('A HttpHandler must be provided'); }
-
   }
 
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
@@ -32,10 +30,7 @@ export class ClientCredentialsPathHandler extends HttpHandler {
 
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
-    return context
-    && context.request
-    && context.request.url
-      ? of(true)
+    return context && context.request && context.request.url ? of(true)
       : of(false);
 
   }

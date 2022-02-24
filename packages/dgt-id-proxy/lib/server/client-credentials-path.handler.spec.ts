@@ -1,13 +1,18 @@
-import { async, lastValueFrom } from 'rxjs';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 import { ClientCredentialsPathHandler } from './client-credentials-path.handler';
 
 describe('ClientCredentialsPathHandler', () => {
 
-  const httpHandler: PassThroughHttpRequestHandler = new PassThroughHttpRequestHandler('http://localhost:8080', 8080, 'http:', 'http://localhost:8080/oauth');
-  const handler: ClientCredentialsPathHandler = new ClientCredentialsPathHandler(httpHandler);
-  const context: HttpHandlerContext = { request: { headers: { 'accept-encoding': 'gzip' }, method: 'POST', url: new URL('http://localhost:8080/oauth/client') } };
+  const httpHandler = new PassThroughHttpRequestHandler('http://localhost:3003', 3003, 'http:', 'http://localhost:3003/oauth');
+  const handler = new ClientCredentialsPathHandler(httpHandler);
+  const context = { request: { headers: { 'accept-encoding': 'gzip' }, method: 'POST', url: new URL('http://localhost:3003/oauth/client') } } as HttpHandlerContext;
 
   it('should be correctly instantiated', () => {
 
@@ -15,33 +20,23 @@ describe('ClientCredentialsPathHandler', () => {
 
   });
 
-  it('should error when no handler is provided', () => {
-
-    expect(() => new ClientCredentialsPathHandler(undefined)).toThrow('A HttpHandler must be provided');
-    expect(() => new ClientCredentialsPathHandler(null)).toThrow('A HttpHandler must be provided');
-
-  });
-
   describe('handle', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('A context must be provided');
-      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('A context must be provided');
+      await expect(lastValueFrom(handler.handle(undefined as any))).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => lastValueFrom(handler.handle({ ...context, request: null }))).rejects.toThrow('No request was included in the context');
-      await expect(() => lastValueFrom(handler.handle({ ...context, request: undefined }))).rejects.toThrow('No request was included in the context');
+      await expect(lastValueFrom(handler.handle({ ... context, request: undefined as any }))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request url was provided', async () => {
 
-      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: null } }))).rejects.toThrow('No url was included in the request');
-      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: undefined } }))).rejects.toThrow('No url was included in the request');
+      await expect(lastValueFrom(handler.handle({ ... context, request: { ... context.request, url: undefined as any } }))).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -52,7 +47,7 @@ describe('ClientCredentialsPathHandler', () => {
       handler.handle(context);
 
       expect(httpHandler.handle).toHaveBeenCalledTimes(1);
-      expect(httpHandler.handle).toHaveBeenCalledWith({ 'request': { 'headers': { 'accept-encoding': 'gzip' }, 'method': 'POST', 'url': new URL('http://localhost:8080/oauth/token') } });
+      expect(httpHandler.handle).toHaveBeenCalledWith({ 'request': { 'headers': { 'accept-encoding': 'gzip' }, 'method': 'POST', 'url': new URL('http://localhost:3003/oauth/token') } });
 
     });
 
@@ -62,31 +57,26 @@ describe('ClientCredentialsPathHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toBe(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
-      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined as any))).resolves.toBe(false);
 
     });
 
     it('should return false when no context request was provided', async () => {
 
-      await expect(lastValueFrom(handler.canHandle({ ...context, request: null }))).resolves.toEqual(false);
-      await expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ... context, request: undefined as any }))).resolves.toBe(false);
 
     });
 
     it('should return false when no context request url was provided', async () => {
 
       await expect(lastValueFrom(handler
-        .canHandle({ ...context, request: { ...context.request, url: null } }))).resolves.toEqual(false);
-
-      await expect(lastValueFrom(handler
-        .canHandle({ ...context, request: { ...context.request, url: undefined } }))).resolves.toEqual(false);
+        .canHandle({ ... context, request: { ... context.request, url: undefined as any } }))).resolves.toBe(false);
 
     });
 
