@@ -18,6 +18,8 @@ export * from './server/pkce-auth-request.handler';
 export * from './server/pkce-code-response.handler';
 export * from './server/pkce-token.handler';
 export * from './server/solid-audience-response.handler';
+export * from './server/auth0-client-redirect.handler';
+export * from './server/auth0-login-state.handler';
 export * from './storage/in-memory-store';
 export * from './storage/key-value-store';
 export * from './util/code-challenge-method';
@@ -28,3 +30,4 @@ export * from './webid/url-claim-webid-factory';
 export * from './webid/webid-factory';
 export * from './webid/webid-profile.handler';
 export * from './webid/webid-response.handler';
+

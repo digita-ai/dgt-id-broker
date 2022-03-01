@@ -56,46 +56,52 @@
         "httpHandler": {
           "@type": "HttpCorsRequestHandler",
           "handler": {
-            "@type": "ClientCompressionHandler",
-            "handler": {
-              "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
-              "@type": "RoutedHttpRequestHandler",
-              "handlerControllerList": [
-                {
-                  "@id": "urn:handlersjs-http:default:HttpHandlerController",
-                  "@type": "HttpHandlerController",
-                  "label": "ControllerList",
-                  "routes": [
-                    {
-                      "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint"
-                    }
-                  ]
-                }
-              ]
+            "@type": "ErrorHandler",
+            "nestedHandler": {
+              "@type": "ClientCompressionHandler",
+              "handler": {
+                "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
+                "@type": "RoutedHttpRequestHandler",
+                "handlerControllerList": [
+                  {
+                    "@id": "urn:handlersjs-http:default:HttpHandlerController",
+                    "@type": "HttpHandlerController",
+                    "label": "ControllerList",
+                    "routes": [
+                      {
+                        "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:ProxyRedirectEndpoint"
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         }
@@ -262,10 +268,26 @@
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
           },
           {
-            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            "@type": "Auth0LoginStateHandler",
+            "clientStateToClientRedirectUriStore": {
+              "@id": "urn:dgt-id-proxy:default:clientStateToClientRedirectUriStore",
+              "@type": "InMemoryStore"
+            },
+            "upstreamStateToClientStateStore": {
+              "@id": "urn:dgt-id-proxy:default:upstreamStateToClientStateStore",
+              "@type": "InMemoryStore"
+            },
+            "handler": {
+              "@type": "PipeThroughHandler",
+              "handlers": [
+                {
+                  "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+                }
+              ]
+            }
           },
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
@@ -276,6 +298,35 @@
         ]
       },
       "path": "/authorize"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:ProxyRedirectEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "handler": {
+        "@type": "PipeThroughHandler",
+        "handlers": [
+          {
+            "@type": "Auth0ClientRedirectHandler",
+            "clientStateToClientRedirectUriStore": {
+              "@id": "urn:dgt-id-proxy:default:clientStateToClientRedirectUriStore",
+              "@type": "InMemoryStore"
+            },
+            "upstreamStateToClientStateStore": {
+              "@id": "urn:dgt-id-proxy:default:upstreamStateToClientStateStore",
+              "@type": "InMemoryStore"
+            }
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+          }
+        ]
+      },
+      "path": "/redirect"
     },
     {
       "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint",
@@ -315,7 +366,7 @@
       "handler": {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
-      "path": "/u/login"
+      "path": "/login"
     },
     {
       "@id": "urn:dgt-id-proxy:default:ConsentEndpoint",
@@ -331,7 +382,7 @@
       "handler": {
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
-      "path": "/u/consent"
+      "path": "/consent"
     },
     {
       "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint",
