@@ -7,8 +7,9 @@ export class ClientCredentialsHandler extends HttpHandler {
    * Creates a { ClientCredentialsHandler }.
    *
    * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   * @param { audience } audience - the auth0 audience to use for authentication
    */
-  constructor(private httpHandler: HttpHandler) {
+  constructor(private httpHandler: HttpHandler, private audience: string) {
 
     super();
 
@@ -23,6 +24,8 @@ export class ClientCredentialsHandler extends HttpHandler {
     if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
 
     context.request.url.href = context.request.url.href.replace('client', 'token');
+
+    context.request.body = { ... context.request.body, audience: this.audience };
 
     return this.httpHandler.handle(context);
 
