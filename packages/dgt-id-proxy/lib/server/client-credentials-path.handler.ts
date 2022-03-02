@@ -4,7 +4,9 @@ import { Observable, of, throwError } from 'rxjs';
 export class ClientCredentialsHandler extends HttpHandler {
 
   /**
-   * Creates a { ClientCredentialsHandler }.
+   * Creates a { ClientCredentialsHandler }. 
+   *
+   * NOTE: This handler is Auth0 specific. It cannot currently be used with other OIDC providers.
    *
    * @param { HttpHandler } httpHandler - the handler through which to pass requests
    * @param { audience } audience - the auth0 audience to use for authentication
