@@ -1,10 +1,10 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 
-export class ClientCredentialsPathHandler extends HttpHandler {
+export class ClientCredentialsHandler extends HttpHandler {
 
   /**
-   * Creates a { ClientCredentialsPathHandler }.
+   * Creates a { ClientCredentialsHandler }.
    *
    * @param { HttpHandler } httpHandler - the handler through which to pass requests
    */
