@@ -154,19 +154,18 @@ Content-Type: application/json
 
 ###
 
-POST https://digita-ai.eu.auth0.com/passwordless/start
+POST http://localhost:3003/passwordless/start
 Content-Type: application/json
 
 {
   "client_id": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
   "client_secret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
   "connection": "email",
-  "email": "abelfrans@gmail.com",
+  "email": "...",
   "send": "link",
   "authParams": {
     "scope": "openid",
-    "audience": "https://digita-ai.eu.auth0.com/api/v2/",
     "response_type": "code",
-    "redirect_uri": "http://localhost:3001/requests.html"
+    "redirect_uri": "http://localhost:3001/requests.html",
   }
 }

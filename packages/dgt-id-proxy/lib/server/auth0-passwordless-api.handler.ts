@@ -1,37 +1,35 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, throwError, Observable, switchMap } from 'rxjs';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { v4 as uuidv4 } from 'uuid';
+import { createErrorResponse } from '../util/error-response-factory';
 
 /**
  * A { HttpHandler } that handles requests made to the authorization endpoint of
  * an Auth0 upstream server using the Auth0 classic login.
  */
-export class Auth0LoginStateHandler extends HttpHandler {
+export class Auth0PasswordlessApiHandler extends HttpHandler {
 
   /**
-   * Creates an { Auth0LoginStateHandler }.
+   * Creates an { Auth0PasswordlessApiHandler }.
    *
    * @param {KeyValueStore<string, string>} clientStateToClientRedirectUriStore - store with the client's state mapped to the client's redirect uri
    * @param {KeyValueStore<string, string>} upstreamStateToClientStateStore - store with the upstream's state mapped to the client's state
    * @param {HttpHandler} handler - handler that will handle the context and return a response
    */
   constructor(
+    private clientSentStateStore: KeyValueStore<string, boolean>,
     private clientStateToClientRedirectUriStore: KeyValueStore<string, string>,
-    private upstreamStateToClientStateStore: KeyValueStore<string, string>,
+    private upstreamUrl: string,
+    private proxyRedirectUri: string,
     private handler: HttpHandler
   ) {
 
     super();
 
-    if(!clientStateToClientRedirectUriStore){
+    if(!upstreamUrl){
 
-      throw new Error('A clientStateToClientRedirectUriStore must be provided');
-
-    }
-
-    if(!upstreamStateToClientStateStore){
-
-      throw new Error('A upstreamStateToClientStateStore must be provided');
+      throw new Error('A upstreamUrl must be provided');
 
     }
 
@@ -65,53 +63,50 @@ export class Auth0LoginStateHandler extends HttpHandler {
 
     }
 
-    if (!context.request.headers) {
+    if (!context.request.body) {
 
-      return throwError(() => new Error('No headers were included in the request'));
-
-    }
-
-    if (!context.request.url) {
-
-      return throwError(() => new Error('No url was included in the request'));
+      return throwError(() => new Error('No body was included in the request'));
 
     }
 
-    const state = context.request.url.searchParams.get('state');
+    const body = context.request.body;
 
-    if (!state) {
+    if (!body.authParams || !body.authParams.redirect_uri) {
 
-      return throwError(() => new Error('No state was included in the request'));
-
-    }
-
-    const redirectUri = context.request.url.searchParams.get('redirect_uri');
-
-    if (!redirectUri) {
-
-      return throwError(() => new Error('No redirect_uri was included in the request'));
+      return of(createErrorResponse('invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
 
     }
 
-    this.clientStateToClientRedirectUriStore.set(state, decodeURIComponent(redirectUri));
+    const state = body.authParams.state;
 
-    return this.handler.handle(context).pipe(
-      switchMap((response: HttpHandlerResponse) => {
+    const generatedState = state ? '' : uuidv4();
 
-        const upstreamState = new URL(response.headers.location, 'https://example.com').searchParams.get('state');
+    if (generatedState) {
 
-        if (!upstreamState) {
+      context.request.url.searchParams.append('state', generatedState);
 
-          return throwError(() => new Error('No upstreamState was included in the response'));
+    }
 
-        }
+    this.clientSentStateStore.set(state ?? generatedState, !!state);
+    this.clientStateToClientRedirectUriStore.set(state ?? generatedState, body.authParams.redirect_uri);
 
-        this.upstreamStateToClientStateStore.set(upstreamState, state);
+    const audience = new URL('/api/v2/', this.upstreamUrl).toString();
 
-        return of(response);
-
-      })
-    );
+    return this.handler.handle({
+      ...context,
+      request: {
+        ...context.request,
+        body: {
+          ...context.request.body,
+          authParams: {
+            ...context.request.body.authParams,
+            audience,
+            redirect_uri: this.proxyRedirectUri,
+            state: state ?? generatedState,
+          },
+        },
+      },
+    });
 
   }
 

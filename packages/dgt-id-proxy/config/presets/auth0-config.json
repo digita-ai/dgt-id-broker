@@ -97,6 +97,9 @@
                       },
                       {
                         "@id": "urn:dgt-id-proxy:default:ProxyRedirectEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:PasswordlessApiEndpoint"
                       }
                     ]
                   }
@@ -497,6 +500,32 @@
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "path": "/oidc/register"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:PasswordlessApiEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:PostOperation"
+        }
+      ],
+      "handler": {
+        "@type": "Auth0PasswordlessApiHandler",
+        "clientSentStateStore": {
+          "@id": "urn:dgt-id-proxy:default:StateStore"
+        },
+        "clientStateToClientRedirectUriStore": {
+          "@id": "urn:dgt-id-proxy:default:clientStateToClientRedirectUriStore"
+        },
+        "upstreamUrl": {
+          "@id": "urn:dgt-id-proxy:variables:upstreamUri"
+        },
+        "proxyRedirectUri": "http://localhost:3003/redirect",
+        "handler": {
+          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        }
+      },
+      "path": "/passwordless/start"
     }
   ]
 }

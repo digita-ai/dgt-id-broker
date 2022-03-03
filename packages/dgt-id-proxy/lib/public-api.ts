@@ -20,6 +20,7 @@ export * from './server/pkce-token.handler';
 export * from './server/solid-audience-response.handler';
 export * from './server/auth0-client-redirect.handler';
 export * from './server/auth0-login-state.handler';
+export * from './server/auth0-passwordless-api.handler';
 export * from './storage/in-memory-store';
 export * from './storage/key-value-store';
 export * from './util/code-challenge-method';
