@@ -1,14 +1,17 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, throwError } from 'rxjs';
 
-export class ClientCredentialsPathHandler extends HttpHandler {
+export class ClientCredentialsHandler extends HttpHandler {
 
   /**
-   * Creates a { ClientCredentialsPathHandler }.
+   * Creates a { ClientCredentialsHandler }.
+   *
+   * NOTE: This handler is Auth0 specific. It cannot currently be used with other OIDC providers.
    *
    * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   * @param { audience } audience - the auth0 audience to use for authentication
    */
-  constructor(private httpHandler: HttpHandler) {
+  constructor(private httpHandler: HttpHandler, private audience: string) {
 
     super();
 
@@ -23,6 +26,8 @@ export class ClientCredentialsPathHandler extends HttpHandler {
     if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
 
     context.request.url.href = context.request.url.href.replace('client', 'token');
+
+    context.request.body = { ... context.request.body, audience: this.audience };
 
     return this.httpHandler.handle(context);
 

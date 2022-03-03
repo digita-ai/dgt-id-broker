@@ -6,12 +6,13 @@
 import { lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
-import { ClientCredentialsPathHandler } from './client-credentials-path.handler';
+import { ClientCredentialsHandler } from './client-credentials-path.handler';
 
-describe('ClientCredentialsPathHandler', () => {
+describe('ClientCredentialsHandler', () => {
 
   const httpHandler = new PassThroughHttpRequestHandler('http://localhost:3003', 3003, 'http:', 'http://localhost:3003/oauth');
-  const handler = new ClientCredentialsPathHandler(httpHandler);
+  const audience = 'https://audience.com';
+  const handler = new ClientCredentialsHandler(httpHandler, audience);
   const context = { request: { headers: { 'accept-encoding': 'gzip' }, method: 'POST', url: new URL('http://localhost:3003/oauth/client') } } as HttpHandlerContext;
 
   it('should be correctly instantiated', () => {
@@ -47,7 +48,7 @@ describe('ClientCredentialsPathHandler', () => {
       handler.handle(context);
 
       expect(httpHandler.handle).toHaveBeenCalledTimes(1);
-      expect(httpHandler.handle).toHaveBeenCalledWith({ 'request': { 'headers': { 'accept-encoding': 'gzip' }, 'method': 'POST', 'url': new URL('http://localhost:3003/oauth/token') } });
+      expect(httpHandler.handle).toHaveBeenCalledWith({ 'request': { 'body': { audience }, 'headers': { 'accept-encoding': 'gzip' }, 'method': 'POST', 'url': new URL('http://localhost:3003/oauth/token') } });
 
     });
 
