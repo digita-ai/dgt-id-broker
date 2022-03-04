@@ -45,7 +45,7 @@ describe('Auth0LoginStateHandler', () => {
 
   });
 
-  it('should error when no clientStateToClientRedirectUriStore or upstreamStateToClientStateStore is provided', () => {
+  it('should error when no clientStateToClientRedirectUriStore, upstreamStateToClientStateStore or handler is provided', () => {
 
     expect(() => new Auth0LoginStateHandler(undefined, upstreamStateToClientStateStore, nestedHandler)).toThrow('A clientStateToClientRedirectUriStore must be provided');
     expect(() => new Auth0LoginStateHandler(null, upstreamStateToClientStateStore, nestedHandler)).toThrow('A clientStateToClientRedirectUriStore must be provided');
