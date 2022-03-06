@@ -32,7 +32,7 @@ async function postDataToGetAccessToken(url, data) {
     const dpopJwtForToken = await new SignJWT({
         // Each DPoP-proof needs to say what type of request it is making and to where to be valid.
         'htm': 'POST',
-        'htu': `http://localhost:3003/${env.VITE_TOKEN_ENDPOINT}`,
+        'htu': `http://localhost:9003/${env.VITE_TOKEN_ENDPOINT}`,
     })
         // set the necessary headers and body of our JWT with the necessary components as prescribed by the spec.
         .setProtectedHeader({

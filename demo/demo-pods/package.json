@@ -6,6 +6,7 @@
   "license": "",
   "scripts": {
     "start": "shx rm -rf rundata && shx cp -r data rundata && community-solid-server -p 3002 -c config/config-file.json -f rundata",
+    "dev": "community-solid-server",
     "demo:auth0": "npm run start",
     "demo:panva": "npm run start",
     "demo:keycloak": "npm run start",

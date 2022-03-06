@@ -21,6 +21,6 @@ RUN npm run build
 RUN chmod +x ./bin/server.js
 
 # Expose ports.
-EXPOSE 3003
+EXPOSE 4003
 ENTRYPOINT [ "./bin/server.js" ]
-CMD [ "-u", "http://0.0.0.0:3003" ]
+CMD [ "-u", "http://0.0.0.0:4003" ]
