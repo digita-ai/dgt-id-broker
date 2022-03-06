@@ -9,7 +9,8 @@
     "dev": "community-solid-server",
     "demo:auth0": "npm run start",
     "demo:panva": "npm run start",
-    "demo:keycloak": "npm run start",
+    "demo:keycloak": "shx rm -rf rundata && shx cp -r ./data/ rundata && community-solid-server -p 3002 -c config/config-file.json -f rundata ",
+    "demo:mitmproxy": "shx rm -rf rundata && shx cp -r ./data9000/ rundata && community-solid-server -p 3002 -c config/config-file.json -f rundata -b http://localhost:9002",
     "demo:id-kit:panva": "npm run start",
     "demo:id-kit:auth0": "npm run start"
   },

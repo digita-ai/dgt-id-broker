@@ -9,7 +9,7 @@
 <http://localhost:9002/944e0f16-b053-48df-b7d3-2371b680b2f3/profile/card#me>
     a foaf:Person;
     foaf:name "Keycloak User";
-    solid:oidcIssuer <http://localhost:9003> ;
+    solid:oidcIssuer <http://localhost:3003> ;
     solid:oidcIssuerRegistrationToken "" .
 
 <#id> solid:oidcRegistration """{"client_id" : "http://localhost:9002/944e0f16-b053-48df-b7d3-2371b680b2f3/profile/card#me","redirect_uris" : ["http://localhost:9001/requests.html"],"client_name" : "My Panva Application", "client_uri" : "https://app.example/","logo_uri" : "https://app.example/logo.png","tos_uri" : "https://app.example/tos.html","scope" : "openid offline_access","grant_types" : ["refresh_token","authorization_code"],"response_types" : ["code"],"default_max_age" : 60000,"require_auth_time" : true}""" .
