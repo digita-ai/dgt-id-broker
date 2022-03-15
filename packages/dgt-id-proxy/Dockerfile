@@ -23,5 +23,5 @@ RUN chmod +x ./bin/server.js
 
 # Expose ports.
 EXPOSE 3003
-ENTRYPOINT [ "./bin/server.js" ]
-CMD [ "-u", "http://0.0.0.0:3003" ]
+ENTRYPOINT [ "./bin/server.js", "-c", "./config/presets/auth0-config.json" ]
+CMD [ "-u", "http://0.0.0.0:3003", "-U", "https://digita-ai.eu.auth0.com/", "-o", "./assets/openid-configuration.json", "-j", "./assets/jwks.json" ]
