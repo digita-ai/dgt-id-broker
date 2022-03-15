@@ -37,6 +37,11 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:upstreamScheme': 'https:',
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': path.join(mainModulePath, 'assets/openid-configuration.json'),
     'urn:dgt-id-proxy:variables:jwksFilePath': path.join(mainModulePath, 'assets/jwks.json'),
+    'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
+    'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
+    'urn:dgt-id-proxy:variables:clientId': 'r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF',
+    'urn:dgt-id-proxy:variables:clientSecret': 'SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto',
+    'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
   } as Record<string, any>;
 
   const handler = {
@@ -130,6 +135,11 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:upstreamScheme': 'http:',
           'urn:dgt-id-proxy:variables:openidConfigurationFilePath': oidcPath,
           'urn:dgt-id-proxy:variables:jwksFilePath': jwkPath,
+          'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
+          'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
+          'urn:dgt-id-proxy:variables:clientId': 'r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF',
+          'urn:dgt-id-proxy:variables:clientSecret': 'SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto',
+          'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
         });
 
     });

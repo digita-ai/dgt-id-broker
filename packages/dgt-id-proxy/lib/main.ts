@@ -89,16 +89,27 @@ export const createVariables = (args: string[]): Record<string, any> => {
     .usage('node ./dist/main.js [args]')
     .options({
       config: { type: 'string', alias: 'c' },
+      urlWebIdFactoryClaim: { type: 'string', alias: 'C' },
       proxyUri: { type: 'string', alias: 'u' },
       upstreamUri: { type: 'string', alias: 'U' },
       mainModulePath: { type: 'string', alias: 'm' },
       openidConfigurationFilePath: { type: 'string', alias: 'o' },
       jwksFilePath: { type: 'string', alias: 'j' },
+      redirectUri: { type: 'string', alias: 'r' },
+      clientId: { type: 'string', alias: 'i' },
+      clientSecret: { type: 'string', alias: 's' },
+      proxyTokenUrl: { type: 'string', alias: 'P' },
+
     })
     .help();
 
   const { uri: proxyUri, host: proxyHost, port: proxyPort } = params.proxyUri ? checkUri(params.proxyUri) : { uri: 'http://localhost:3003/', host: 'localhost', port: '3003' };
   const { uri: upstreamUri, host: upstreamHost, port: upstreamPort, scheme: upstreamScheme } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000/', host: 'localhost', port: '3000', scheme: 'http:' };
+  const urlWebIdFactoryClaim = params.urlWebIdFactoryClaim ?? ((params.proxUri ?? 'http://localhost:3003') + '/webid');
+  const redirectUri = params.redirectUri ?? ((params.proxUri ?? 'http://localhost:3003') + '/redirect');
+  const clientId = params.clientId ?? 'r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF';
+  const clientSecret = params.clientSecret ?? 'SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto';
+  const proxyTokenUrl = params.proxyTokenUrl ?? ((params.proxUri ?? 'http://localhost:3003') + '/oauth/token');
 
   const mainModulePath = params.mainModulePath
     ? path.isAbsolute(params.mainModulePath)
@@ -139,6 +150,11 @@ export const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:upstreamScheme': upstreamScheme,
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': openidConfigurationFilePath,
     'urn:dgt-id-proxy:variables:jwksFilePath': jwksFilePath,
+    'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': urlWebIdFactoryClaim,
+    'urn:dgt-id-proxy:variables:redirectUri': redirectUri,
+    'urn:dgt-id-proxy:variables:clientId': clientId,
+    'urn:dgt-id-proxy:variables:clientSecret': clientSecret,
+    'urn:dgt-id-proxy:variables:proxyTokenUrl': proxyTokenUrl,
   };
 
 };
