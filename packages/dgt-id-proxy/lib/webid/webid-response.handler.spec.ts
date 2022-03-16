@@ -16,6 +16,7 @@ describe('WebIdResponseHandler', () => {
   };
 
   const webIdResponseHandler = new WebIdResponseHandler(singleClaimWebIdFactory);
+  const webIdResponseHandlerWithAccessTokenOnlyCustom = new WebIdResponseHandler(singleClaimWebIdFactory, 'access_token');
 
   beforeEach(() => {
 
@@ -53,6 +54,12 @@ describe('WebIdResponseHandler', () => {
 
     expect(() => new WebIdResponseHandler(null)).toThrow('A webIdFactory must be provided');
     expect(() => new WebIdResponseHandler(undefined)).toThrow('A webIdFactory must be provided');
+
+  });
+
+  it('should error if tokenType is not access_token or id_token', () => {
+
+    expect(() => new WebIdResponseHandler(singleClaimWebIdFactory, 'invalid_token_type')).toThrow('The tokenType must be either id_token or access_token');
 
   });
 
@@ -111,13 +118,12 @@ describe('WebIdResponseHandler', () => {
 
     });
 
-    it('should add a webid claim based on the uri encoded custom claim, to the payload of the access token and id token', async () => {
+    it('should add a webid claim based on the uri encoded custom claim, to the payload of the access token if tokenType is access_token', async () => {
 
       delete response.body.access_token.payload.webid;
       delete response.body.id_token.payload.webid;
-      const responseGotten = await lastValueFrom(webIdResponseHandler.handle(response));
+      const responseGotten = await lastValueFrom(webIdResponseHandlerWithAccessTokenOnlyCustom.handle(response));
       expect(responseGotten.body.access_token.payload.webid).toEqual(webIdWithCustomClaim);
-      expect(responseGotten.body.id_token.payload.webid).toEqual(webIdWithCustomClaim);
 
     });
 
