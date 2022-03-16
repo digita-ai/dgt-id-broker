@@ -65,18 +65,26 @@ describe('Auth0PasswordlessApiHandler', () => {
 
   });
 
-  it('should error when no clientStateToClientRedirectUriStore or upstreamStateToClientStateStore is provided', () => {
+  it.each([
+    [ 'clientSentStateStore' ],
+    [ 'clientStateToClientRedirectUriStore' ],
+    [ 'upstreamUrl' ],
+    [ 'proxyRedirectUri' ],
+    [ 'handler' ],
+  ])('should error when $1 is not set', (error) => {
 
-    expect(() => new Auth0PasswordlessApiHandler(undefined, clientStateToClientRedirectUriStore, upstreamUrl, proxyRedirectUri, nestedHandler)).toThrowError('A clientSentStateStore must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(null, clientStateToClientRedirectUriStore, upstreamUrl, proxyRedirectUri, nestedHandler)).toThrow('A clientSentStateStore must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, undefined, upstreamUrl, proxyRedirectUri, nestedHandler)).toThrow('A clientStateToClientRedirectUriStore must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, null, upstreamUrl, proxyRedirectUri, nestedHandler)).toThrow('A clientStateToClientRedirectUriStore must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, clientStateToClientRedirectUriStore, null, proxyRedirectUri, nestedHandler)).toThrow('A upstreamUrl must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, clientStateToClientRedirectUriStore, undefined, proxyRedirectUri, nestedHandler)).toThrow('A upstreamUrl must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, clientStateToClientRedirectUriStore, upstreamUrl, null, nestedHandler)).toThrow('A proxyRedirectUri must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, clientStateToClientRedirectUriStore, upstreamUrl, undefined, nestedHandler)).toThrow('A proxyRedirectUri must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, clientStateToClientRedirectUriStore, upstreamUrl, proxyRedirectUri, null)).toThrow('A handler must be provided');
-    expect(() => new Auth0PasswordlessApiHandler(clientSentStateStore, clientStateToClientRedirectUriStore, upstreamUrl, proxyRedirectUri, undefined)).toThrow('A handler must be provided');
+    const items = {
+      clientSentStateStore,
+      clientStateToClientRedirectUriStore,
+      upstreamUrl,
+      proxyRedirectUri,
+      handler: nestedHandler,
+    };
+
+    items[error] = undefined;
+    expect(() => new Auth0PasswordlessApiHandler(items.clientSentStateStore, items.clientStateToClientRedirectUriStore, items.upstreamUrl, items.proxyRedirectUri, items.handler)).toThrowError(`A ${error} must be provided`);
+    items[error] = null;
+    expect(() => new Auth0PasswordlessApiHandler(items.clientSentStateStore, items.clientStateToClientRedirectUriStore, items.upstreamUrl, items.proxyRedirectUri, items.handler)).toThrowError(`A ${error} must be provided`);
 
   });
 

@@ -45,14 +45,18 @@ describe('Auth0LoginStateHandler', () => {
 
   });
 
-  it('should error when no clientStateToClientRedirectUriStore, upstreamStateToClientStateStore or handler is provided', () => {
+  it.each([
+    [ 'clientStateToClientRedirectUriStore' ],
+    [ 'upstreamStateToClientStateStore' ],
+    [ 'handler' ],
+  ])('should error when $1 is not set', (error) => {
 
-    expect(() => new Auth0LoginStateHandler(undefined, upstreamStateToClientStateStore, nestedHandler)).toThrow('A clientStateToClientRedirectUriStore must be provided');
-    expect(() => new Auth0LoginStateHandler(null, upstreamStateToClientStateStore, nestedHandler)).toThrow('A clientStateToClientRedirectUriStore must be provided');
-    expect(() => new Auth0LoginStateHandler(clientStateToClientRedirectUriStore, undefined, nestedHandler)).toThrow('A upstreamStateToClientStateStore must be provided');
-    expect(() => new Auth0LoginStateHandler(clientStateToClientRedirectUriStore, null, nestedHandler)).toThrow('A upstreamStateToClientStateStore must be provided');
-    expect(() => new Auth0LoginStateHandler(clientStateToClientRedirectUriStore, upstreamStateToClientStateStore, undefined)).toThrow('A handler must be provided');
-    expect(() => new Auth0LoginStateHandler(clientStateToClientRedirectUriStore, upstreamStateToClientStateStore, null)).toThrow('A handler must be provided');
+    const items = { clientStateToClientRedirectUriStore, upstreamStateToClientStateStore, handler: nestedHandler };
+
+    items[error] = undefined;
+    expect(() => new Auth0LoginStateHandler(items.clientStateToClientRedirectUriStore, items.upstreamStateToClientStateStore, items.handler)).toThrow(`A ${error} must be provided`);
+    items[error] = null;
+    expect(() => new Auth0LoginStateHandler(items.clientStateToClientRedirectUriStore, items.upstreamStateToClientStateStore, items.handler)).toThrow(`A ${error} must be provided`);
 
   });
 
