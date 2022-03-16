@@ -1,4 +1,4 @@
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, cleanHeaders } from '@digita-ai/handlersjs-http';
 import { of, throwError, Observable } from 'rxjs';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { v4 as uuidv4 } from 'uuid';
@@ -93,7 +93,7 @@ export class Auth0PasswordlessApiHandler extends HttpHandler {
 
     }
 
-    const headers = this.cleanHeaders(context.request.headers);
+    const headers = cleanHeaders(context.request.headers);
 
     if(headers['content-type'] !== 'application/json') {
 
@@ -158,22 +158,5 @@ export class Auth0PasswordlessApiHandler extends HttpHandler {
       : of(false);
 
   }
-
-  /**
-   * Small helper function that cleans up headers and turns them all into lowercase.
-   *
-   * @param headers
-   */
-  private cleanHeaders = (headers: { [key: string]: string }) => Object.keys(headers).reduce<{ [key: string]: string }>(
-    (acc, key) => {
-
-      const lKey = key.toLowerCase();
-
-      return acc[lKey]
-        ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }
-        : { ... acc, [lKey]: headers[key] };
-
-    }, {} as { [key: string]: string },
-  );
 
 }
