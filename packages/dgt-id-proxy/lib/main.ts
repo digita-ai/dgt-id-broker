@@ -107,8 +107,8 @@ export const createVariables = (args: string[]): Record<string, any> => {
   const { uri: upstreamUri, host: upstreamHost, port: upstreamPort, scheme: upstreamScheme } = params.upstreamUri ? checkUri(params.upstreamUri) : { uri: 'http://localhost:3000/', host: 'localhost', port: '3000', scheme: 'http:' };
   const urlWebIdFactoryClaim = params.urlWebIdFactoryClaim ?? ((params.proxUri ?? 'http://localhost:3003') + '/webid');
   const redirectUri = params.redirectUri ?? ((params.proxUri ?? 'http://localhost:3003') + '/redirect');
-  const clientId = params.clientId ?? 'r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF';
-  const clientSecret = params.clientSecret ?? 'SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto';
+  const clientId = params.clientId;
+  const clientSecret = params.clientSecret;
   const proxyTokenUrl = params.proxyTokenUrl ?? ((params.proxUri ?? 'http://localhost:3003') + '/oauth/token');
 
   const mainModulePath = params.mainModulePath

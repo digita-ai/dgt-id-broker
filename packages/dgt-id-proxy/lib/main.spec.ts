@@ -122,7 +122,7 @@ describe('Main.ts', () => {
 
     it('should return the correct variables of the given arguments', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath, '-i',  'r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF', '-s', 'SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto' ]))
         .toEqual({
           'urn:dgt-id-proxy:variables:customConfigPath': configPath,
           'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
@@ -146,7 +146,7 @@ describe('Main.ts', () => {
 
     it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/', '-i',  'r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF', '-s', 'SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto' ]))
         .toEqual(variables);
 
     });
