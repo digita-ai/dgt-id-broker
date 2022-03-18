@@ -456,10 +456,10 @@
       ],
       "handler": {
         "@type": "HttpHandlerStaticAssetService",
-        "logger": {
+        "HttpHandlerStaticAssetService:_logger": {
           "@type": "ConsoleLogger",
-          "minimumLevel": 1,
-          "minimumLevelPrintData": 1
+          "ConsoleLogger:_minimumLevel": 1,
+          "ConsoleLogger:_minimumLevelPrintData": 1
         },
         "path": {
           "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath"

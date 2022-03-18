@@ -18,7 +18,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    * Creates a { ClientIdDynamicTokenHandler }.
    *
    * @param { KeyValueStore } store - the store used to retrieve a clients register data.
-   * @param {HttpHandler} httpHandler - the handler through which to pass requests
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests
    */
   constructor(
     private store: RegistrationStore,

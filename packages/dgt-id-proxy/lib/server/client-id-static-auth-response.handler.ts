@@ -2,7 +2,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { of, from, throwError, Observable } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 
 export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 

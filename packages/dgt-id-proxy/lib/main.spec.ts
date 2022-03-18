@@ -28,7 +28,7 @@ describe('Main.ts', () => {
   const variables = {
     'urn:dgt-id-proxy:variables:customConfigPath': configPath,
     'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
-    'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
+    'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003/',
     'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
     'urn:dgt-id-proxy:variables:proxyPort': '3003',
     'urn:dgt-id-proxy:variables:upstreamUri': 'https://digita-ai.eu.auth0.com/',
@@ -37,6 +37,11 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:upstreamScheme': 'https:',
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': path.join(mainModulePath, 'assets/openid-configuration.json'),
     'urn:dgt-id-proxy:variables:jwksFilePath': path.join(mainModulePath, 'assets/jwks.json'),
+    'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
+    'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
+    'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
+    'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
+    'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
   } as Record<string, any>;
 
   const handler = {
@@ -76,19 +81,19 @@ describe('Main.ts', () => {
 
     it('should return a valid uri (with port 80 and http if no protocol was given)',  () => {
 
-      expect(checkUri('digita')).toEqual({ uri: 'http://digita', host: 'digita', port: '80', scheme: 'http:' });
+      expect(checkUri('digita')).toEqual({ uri: 'http://digita/', host: 'digita', port: '80', scheme: 'http:' });
 
     });
 
     it('should use port 443 if https is protocol and no port was provided',  () => {
 
-      expect(checkUri('https://digita')).toEqual({ uri: 'https://digita', host: 'digita', port: '443', scheme: 'https:' });
+      expect(checkUri('https://digita')).toEqual({ uri: 'https://digita/', host: 'digita', port: '443', scheme: 'https:' });
 
     });
 
     it('should not changed port if port was provided',  () => {
 
-      expect(checkUri('https://digita:3000')).toEqual({ uri: 'https://digita:3000', host: 'digita', port: '3000', scheme: 'https:' });
+      expect(checkUri('https://digita:3000')).toEqual({ uri: 'https://digita:3000/', host: 'digita', port: '3000', scheme: 'https:' });
 
     });
 
@@ -117,35 +122,40 @@ describe('Main.ts', () => {
 
     it('should return the correct variables of the given arguments', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath, '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to' ]))
         .toEqual({
           'urn:dgt-id-proxy:variables:customConfigPath': configPath,
           'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
-          'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003',
+          'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003/',
           'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
           'urn:dgt-id-proxy:variables:proxyPort': '3003',
-          'urn:dgt-id-proxy:variables:upstreamUri': 'http://localhost:3000',
+          'urn:dgt-id-proxy:variables:upstreamUri': 'http://localhost:3000/',
           'urn:dgt-id-proxy:variables:upstreamHost': 'localhost',
           'urn:dgt-id-proxy:variables:upstreamPort': '3000',
           'urn:dgt-id-proxy:variables:upstreamScheme': 'http:',
           'urn:dgt-id-proxy:variables:openidConfigurationFilePath': oidcPath,
           'urn:dgt-id-proxy:variables:jwksFilePath': jwkPath,
+          'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
+          'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
+          'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
+          'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
+          'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
         });
 
     });
 
     it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/', '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to' ]))
         .toEqual(variables);
 
     });
 
-    it('should return the variables with the given proxyUri & upstreamUri', () => {
+    it('should return the variables with the given proxyUri & upstreamUri with added trailing slash', () => {
 
       expect(createVariables([ 'npm run start', '--', '-c', configPath, '-u', 'http://digita-ai.proxy.com', '-U', 'https://digita-ai.eu.auth0.com/', '-o', oidcPath, '-j', jwkPath ]))
         .toMatchObject({
-          'urn:dgt-id-proxy:variables:proxyUri': 'http://digita-ai.proxy.com',
+          'urn:dgt-id-proxy:variables:proxyUri': 'http://digita-ai.proxy.com/',
           'urn:dgt-id-proxy:variables:proxyHost': 'digita-ai.proxy.com',
           'urn:dgt-id-proxy:variables:proxyPort': '80',
           'urn:dgt-id-proxy:variables:upstreamUri': 'https://digita-ai.eu.auth0.com/',

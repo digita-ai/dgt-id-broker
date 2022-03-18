@@ -5,6 +5,7 @@ import { Issuer } from './models/issuer.model';
 import { Source } from './models/source.model';
 import { SolidService } from './solid.service';
 import { Client } from './models/client.model';
+import { AuthorizationAgent } from './models/authorization-agent.model';
 
 /**
  * An implementation of the Solid service which uses Solid Client.
@@ -104,6 +105,41 @@ export class SolidSDKService implements SolidService {
         return { uri: iss, icon, description };
 
       });
+
+    }));
+
+  }
+
+  async getAuthorizationAgents(webId: string): Promise<AuthorizationAgent[]> {
+
+    const profile = await this.getProfileThing(webId);
+    const agents: string[] = getUrlAll(profile, 'http://www.w3.org/ns/solid/interop#hasAuthorizationAgent');
+
+    if (agents.length === 0) { throw new Error(`No authorization agents for WebID: ${webId}`); }
+
+    return Promise.all(agents.map((agent) => {
+
+      const url = new URL(agent).host.split('.');
+      let description = (url.length > 2 ? url[1] : url[0]).split(':')[0];
+      description = description.charAt(0).toUpperCase() + description.slice(1);
+      const favicon = agent.endsWith('/') ? `${agent}favicon.ico` : `${agent}/favicon.ico`;
+      const standardIcon = 'https://www.donkey.bike/wp-content/uploads/2020/12/user-member-avatar-face-profile-icon-vector-22965342-300x300.jpg';
+
+      try {
+
+        return fetch(favicon).then((response) => {
+
+          const icon = response.status === 200 ? favicon : standardIcon;
+
+          return { uri: agent, icon, description };
+
+        });
+
+      } catch {
+
+        return { uri: agent, icon: standardIcon, description };
+
+      }
 
     }));
 

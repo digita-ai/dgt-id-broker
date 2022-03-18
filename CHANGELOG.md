@@ -3,6 +3,88 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.16.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.2...v0.16.0) (2022-03-18)
+
+
+### **Bug Fixes**
+
+* add error handling to getAuthorizationAgents() ([#334](https://github.com/digita-ai/dgt-id-broker/issues/334)) ([7ac2579](https://github.com/digita-ai/dgt-id-broker/commit/7ac25795a4c3c6c2c8c2e181c74ce64e440fe8f7))
+
+
+### **Features**
+
+* add auth0 audience in the client credentials handler ([#340](https://github.com/digita-ai/dgt-id-broker/issues/340)) ([1d9b9f5](https://github.com/digita-ai/dgt-id-broker/commit/1d9b9f5e2e3e20c7073167d4ed74541089b347a2))
+* auth0 lock library handlers ([#338](https://github.com/digita-ai/dgt-id-broker/issues/338)) ([c8e0358](https://github.com/digita-ai/dgt-id-broker/commit/c8e0358753462f4ac8a5e17c6bbb6206c73fba59))
+
+
+
+### [0.15.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.1...v0.15.2) (2022-02-24)
+
+
+### **Features**
+
+* client-credentials-handler ([#336](https://github.com/digita-ai/dgt-id-broker/issues/336)) ([5e35e58](https://github.com/digita-ai/dgt-id-broker/commit/5e35e588996eb2f87a145e3c53ad829c2df244f1))
+
+
+
+### [0.15.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.0...v0.15.1) (2022-02-24)
+
+**Note:** Version bump only for package root
+
+
+
+
+
+## [0.15.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.3...v0.15.0) (2022-02-23)
+
+
+### **Features**
+
+* add getAuthorizationAgents() to SDK ([#333](https://github.com/digita-ai/dgt-id-broker/issues/333)) ([ef5fd85](https://github.com/digita-ai/dgt-id-broker/commit/ef5fd85f720a59505a43b29deb12c8adac6b7024))
+
+
+
+### [0.14.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.2...v0.14.3) (2022-02-17)
+
+
+### **Features**
+
+* always add trailing slash to proxy url ([#332](https://github.com/digita-ai/dgt-id-broker/issues/332)) ([4b59b98](https://github.com/digita-ai/dgt-id-broker/commit/4b59b98ea40c93a2c89c7b9779a6343232f978b0))
+
+
+
+### [0.14.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.1...v0.14.2) (2022-02-17)
+
+**Note:** Version bump only for package root
+
+
+
+
+
+### [0.14.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.0...v0.14.1) (2022-02-17)
+
+
+### **Features**
+
+* url-claim-webid-factory ([#331](https://github.com/digita-ai/dgt-id-broker/issues/331)) ([6afe8a4](https://github.com/digita-ai/dgt-id-broker/commit/6afe8a4396ddb16233e48b7d2251d442bc874d94))
+
+
+
+## [0.14.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.1...v0.14.0) (2022-02-16)
+
+
+### **Documentation**
+
+* change license ([#323](https://github.com/digita-ai/dgt-id-broker/issues/323)) ([6f3b66c](https://github.com/digita-ai/dgt-id-broker/commit/6f3b66c273525a762ef37781ba75dd89b1d8c6be))
+* fixed incorrect path to features and getting started pages ([548efaf](https://github.com/digita-ai/dgt-id-broker/commit/548efaf2a782f0effe6018c49e61c0d4d7c93920))
+
+
+### **Features**
+
+* use keyvaluestore from handlersjs ([#329](https://github.com/digita-ai/dgt-id-broker/issues/329)) ([f69b4c8](https://github.com/digita-ai/dgt-id-broker/commit/f69b4c870d1e7ddcea42b09685b1e2d8fe95357a))
+
+
+
 ### [0.13.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.0...v0.13.1) (2022-01-14)
 
 **Note:** Version bump only for package root
