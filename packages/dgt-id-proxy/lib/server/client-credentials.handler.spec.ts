@@ -6,13 +6,13 @@
 import { lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
-import { ClientCredentialsPathHandler } from './client-credentials-path.handler';
+import { ClientCredentialsHandler } from './client-credentials.handler';
 
 describe('ClientCredentialsPathHandler', () => {
 
   const httpHandler = new PassThroughHttpRequestHandler('http://localhost:3003', 3003, 'http:', 'http://localhost:3003/oauth');
   const audience = 'https://audience.com';
-  const handler = new ClientCredentialsPathHandler(httpHandler, audience);
+  const handler = new ClientCredentialsHandler(httpHandler, audience);
   const context = { request: { headers: { 'accept-encoding': 'gzip' }, method: 'POST', url: new URL('http://localhost:3003/oauth/client') } } as HttpHandlerContext;
 
   it('should be correctly instantiated', () => {
