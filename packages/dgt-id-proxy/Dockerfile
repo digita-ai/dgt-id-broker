@@ -28,12 +28,6 @@ ENTRYPOINT [ "./bin/server.js" ]
 CMD [ \
     "-c", "./config/presets/auth0-config.json", \
     "-u", "http://0.0.0.0:3003", \
-    "-U", "https://dev.op.use.id", \
     "-o", "./assets/openid-configuration.json", \ 
     "-j", "./assets/jwks.json", \
-    "-C", "https://dev.idp.use.id/webid", \
-    "-r", "https://dev.idp.use.id/redirect", \
-    "-i", "ofIPE04OZ9jFxxc6CRZQAgXaOFuiQDTo", \
-    "-s", "Vpmk4Q7sfEcNSOyvPa7ORagL8WNlgVww6MD0F79qNyux2cE5oQ4zzUVrpqCIhu6A", \
-    "-P", "https://dev.idp.use.id/oauth/token" \
 ]
