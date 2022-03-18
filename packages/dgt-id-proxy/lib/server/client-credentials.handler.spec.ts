@@ -8,7 +8,7 @@ import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 import { ClientCredentialsHandler } from './client-credentials.handler';
 
-describe('ClientCredentialsPathHandler', () => {
+describe('ClientCredentialsHandler', () => {
 
   const httpHandler = new PassThroughHttpRequestHandler('http://localhost:3003', 3003, 'http:', 'http://localhost:3003/oauth');
   const audience = 'https://audience.com';
