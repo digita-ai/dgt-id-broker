@@ -6,7 +6,7 @@
 import { lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
-import { ClientCredentialsHandler } from './client-credentials-path.handler';
+import { ClientCredentialsHandler } from './client-credentials.handler';
 
 describe('ClientCredentialsHandler', () => {
 
