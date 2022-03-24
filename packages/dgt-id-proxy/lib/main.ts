@@ -99,7 +99,7 @@ export const createVariables = (args: string[]): Record<string, any> => {
       clientId: { type: 'string', alias: 'i' },
       clientSecret: { type: 'string', alias: 's' },
       proxyTokenUrl: { type: 'string', alias: 'P' },
-
+      proxyClientUrl: { type: 'string', alias: 'L' },
     })
     .help();
 
@@ -110,6 +110,7 @@ export const createVariables = (args: string[]): Record<string, any> => {
   const clientId = params.clientId;
   const clientSecret = params.clientSecret;
   const proxyTokenUrl = params.proxyTokenUrl ?? ((params.proxUri ?? 'http://localhost:3003') + '/oauth/token');
+  const proxyClientUrl = params.proxyClientUrl ?? ((params.proxUri ?? 'http://localhost:3003') + '/oauth/client');
 
   const mainModulePath = params.mainModulePath
     ? path.isAbsolute(params.mainModulePath)
@@ -155,6 +156,7 @@ export const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:clientId': clientId,
     'urn:dgt-id-proxy:variables:clientSecret': clientSecret,
     'urn:dgt-id-proxy:variables:proxyTokenUrl': proxyTokenUrl,
+    'urn:dgt-id-proxy:variables:proxyClientUrl': proxyClientUrl,
   };
 
 };
