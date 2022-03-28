@@ -42,6 +42,7 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
     'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
     'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
+    'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
   } as Record<string, any>;
 
   const handler = {
@@ -140,6 +141,7 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
           'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
           'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
+          'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
         });
 
     });
