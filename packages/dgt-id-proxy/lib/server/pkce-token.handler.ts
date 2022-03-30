@@ -166,6 +166,8 @@ export class PkceTokenHandler extends HttpHandler {
 
     if (method !== 'S256' && method !== 'plain') {
 
+      this.logger.info('Algorithm not supported', method);
+
       return throwError(() => createErrorResponse('Transform algorithm not supported.', 'invalid_request'));
 
     }
@@ -173,6 +175,8 @@ export class PkceTokenHandler extends HttpHandler {
     switch (method) {
 
       case 'S256': {
+
+        this.logger.info('Generating code challenge with algorithm: ', method);
 
         const hash = createHash('sha256');
         hash.update(code_verifier);
@@ -186,7 +190,11 @@ export class PkceTokenHandler extends HttpHandler {
 
       }
 
-      case 'plain': return of(code_verifier);
+      case 'plain':
+
+        this.logger.info('Generating code challenge with algorithm: ', method);
+
+        return of(code_verifier);
 
     }
 

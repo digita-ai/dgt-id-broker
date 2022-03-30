@@ -1,3 +1,4 @@
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { Observable, of, throwError } from 'rxjs';
 import { ParsedJSON } from '../util/parsed-json';
 import { WebIdFactory } from './webid-factory';
@@ -7,6 +8,8 @@ import { WebIdFactory } from './webid-factory';
  * from the given custom claim.
  */
 export class UrlClaimWebIdFactory extends WebIdFactory {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a {UrlClaimWebIdFactory}.
@@ -29,11 +32,15 @@ export class UrlClaimWebIdFactory extends WebIdFactory {
 
     if (!payload){
 
+      this.logger.verbose('No payload provided', payload);
+
       return throwError(() => new Error('No payload was provided'));
 
     }
 
     if (!payload[this.claim]){
+
+      this.logger.verbose(`Custom claim (${this.claim}) is not present in id token payload`, payload);
 
       return throwError(() => new Error('The custom claim provided was not found in the id token payload'));
 

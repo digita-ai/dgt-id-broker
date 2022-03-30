@@ -166,7 +166,13 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       }),
       switchMap((newContext) => zip(of(newContext), of(recalculateContentLength(newContext.request)))),
       tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
-      switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
+      switchMap(([ newContext ]) => {
+
+        this.logger.info('Handeling context', context);
+
+        return this.httpHandler.handle(newContext);
+
+      }),
       switchMap((response) => {
 
         if (!response.body.access_token) {
