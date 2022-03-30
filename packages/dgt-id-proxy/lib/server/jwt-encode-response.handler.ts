@@ -7,6 +7,7 @@ import { of, throwError, zip, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { JWK, JWTPayload, SignJWT, importJWK } from 'jose';
 import { v4 as uuid }  from 'uuid';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
  * A {JwtField} class, used to enforce the existance of a field and type in the jwtFields parameter of {JwtEncodeResponseHandler}
@@ -29,6 +30,8 @@ export class JwtField {
  * specified fields in the response body.
  */
 export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a {JwtEncodeResponseHandler}.
@@ -61,19 +64,35 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
-    if (!response) { return throwError(() => new Error('response cannot be null or undefined')); }
+    if (!response) {
 
-    if (response.status !== 200) { return of(response); }
+      this.logger.verbose('No response was provided', response);
+
+      return throwError(() => new Error('response cannot be null or undefined'));
+
+    }
+
+    if (response.status !== 200) {
+
+      this.logger.info('Response was not successful', response.status);
+
+      return of(response);
+
+    }
 
     for (const { field } of this.jwtFields) {
 
       if (!response.body[field]) {
+
+        this.logger.verbose('The response body did not include the correct field', response.body);
 
         return throwError(() => new Error(`the response body did not include the field "${field}"`));
 
       }
 
       if (!response.body[field].payload || !response.body[field].header) {
+
+        this.logger.verbose('The response body does not include a payload or header for the field', response.body);
 
         return throwError(() => new Error(`the response body did not include a header and payload property for the field "${field}"`));
 
@@ -105,7 +124,13 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
     switchMap((keyFile: Buffer) => of<JWK>(JSON.parse(keyFile.toString()).keys[0])),
     switchMap((jwk: JWK) => {
 
-      if (!jwk.alg) return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
+      if (!jwk.alg) {
+
+        this.logger.verbose('The jwk did not contain an "alg" property', jwk);
+
+        return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
+
+      }
 
       return zip(of(jwk.alg), of(jwk.kid), from(importJWK(jwk)));
 
@@ -128,6 +153,8 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    * @param {HttpHandlerResponse} response
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', response);
 
     return response
       ? of(true)

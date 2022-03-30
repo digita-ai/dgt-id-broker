@@ -1,4 +1,7 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { getLogger } from '@digita-ai/handlersjs-logging';
+
+const logger = getLogger();
 
 export const createErrorResponse = (
   msg: string,
@@ -21,6 +24,8 @@ export const checkError = (response: HttpHandlerResponse) => {
       : undefined;
 
   } catch (err) {
+
+    logger.info('Failed to create error response for error: ', err);
 
     return undefined;
 

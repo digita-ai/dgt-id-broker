@@ -1,16 +1,23 @@
 import { base64url, JWK, importJWK, jwtVerify, JWTVerifyResult } from 'jose';
 import { throwError, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
+import { getLogger } from '@digita-ai/handlersjs-logging';
+
+const logger = getLogger();
 
 export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observable<JWTVerifyResult> => {
 
   if (!token){
+
+    logger.verbose('No token provided', token);
 
     return throwError(() => new Error('token must be defined'));
 
   }
 
   if (!upstreamUrl) {
+
+    logger.verbose('No upstreamUrl provided', upstreamUrl);
 
     return throwError(() => new Error('upstreamUrl must be defined'));
 
@@ -22,6 +29,8 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   } catch (error) {
 
+    logger.warn('the upstream url provided is not a valid URL', upstreamUrl);
+
     return throwError(() => new Error('upstreamUrl is not a valid URL'));
 
   }
@@ -29,6 +38,8 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
   const splitToken = token.split('.');
 
   if (splitToken.length < 3) {
+
+    logger.warn('the token provided is not a valid JWT, length is below 3', splitToken);
 
     return throwError(() => new Error('token is not a valid JWT'));
 
@@ -38,11 +49,15 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   if (!decodedHeader.kid) {
 
+    logger.warn('the token provided is not a valid JWT, no kid found', decodedHeader);
+
     return throwError(() => new Error('Given token does not contain a key-id to verify'));
 
   }
 
   if (!decodedHeader.alg || decodedHeader.alg === 'none') {
+
+    logger.warn('the token provided is not a valid JWT, no alg found', decodedHeader);
 
     return throwError(() => new Error('Token did not contain an alg, and is therefore invalid'));
 
@@ -56,6 +71,8 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
     switchMap((jwk) => {
 
       if (!jwk) {
+
+        logger.warn('the token provided is not a valid JWT, no jwk with that id was found', decodedHeader);
 
         return throwError(() => new Error('No JWK with that ID was found'));
 

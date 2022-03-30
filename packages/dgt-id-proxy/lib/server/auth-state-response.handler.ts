@@ -3,12 +3,15 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
  * A { Handler<HttpHandlerResponse, HttpHandlerResponse> } that handles the response from the upstream
  * Authorization Endpoint that contains a state.
  */
 export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * creates an { AuthStateResponseHandler }
@@ -45,6 +48,8 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     if (!response) {
 
+      this.logger.verbose('No response was provided', response);
+
       return throwError(() => new Error('Response cannot be null or undefined'));
 
     }
@@ -54,10 +59,14 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
       const url = new URL(response.headers.location);
       const state = url.searchParams.get('state') ?? '';
 
+      this.logger.info('Checking state in store', state);
+
       return from(this.keyValueStore.get(state)).pipe(
         switchMap((clientSentState) => {
 
           if (clientSentState === undefined) {
+
+            this.logger.verbose('State sent by client was not found in the keyValueStore', state);
 
             return throwError(() => new Error('Unknown state'));
 
@@ -65,11 +74,14 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
           if (!clientSentState) {
 
+            this.logger.info('Removing generated state from URL', state);
+
             url.searchParams.delete('state');
             response.headers.location = url.toString();
 
           }
 
+          this.logger.info('Removing state from store', state);
           this.keyValueStore.delete(state);
 
           return of(response);
@@ -78,6 +90,8 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
       );
 
     } catch (error) {
+
+      this.logger.warn('Handling state failed:', error);
 
       return of(response);
 
@@ -91,6 +105,8 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
    * @param {HttpHandlerResponse} response
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', response);
 
     return response
       ? of(true)

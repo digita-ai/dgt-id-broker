@@ -1,6 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, map } from 'rxjs/operators';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { getClientRegistrationData } from '../util/process-client-registration-data';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
@@ -12,6 +13,8 @@ import { OidcClientMetadata } from '../util/oidc-client-metadata';
  * - replaces the client id, client secret and redirect url in the context
  */
 export class ClientIdStaticTokenHandler extends HttpHandler {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a { ClientIdStaticTokenHandler }.
@@ -44,6 +47,8 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     } catch (e) {
 
+      this.logger.warn('The registration_uri is not a valid url', redirectUri);
+
       throw new Error('redirectUri must be a valid URI');
 
     }
@@ -63,36 +68,86 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(() => new Error('A context must be provided')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context provided', context);
 
-    if (!context.request.body) { return throwError(() => new Error('No body was included in the request')); }
+      return throwError(() => new Error('A context must be provided'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context.request);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.body) {
+
+      this.logger.verbose('No body was provided', context.request.body);
+
+      return throwError(() => new Error('No body was included in the request'));
+
+    }
 
     const params  = new URLSearchParams(context.request.body);
     const client_id = params.get('client_id');
 
-    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
+    if (!client_id) {
+
+      this.logger.warn('No client id was provided', client_id);
+
+      return throwError(() => new Error('No client_id was provided'));
+
+    }
 
     const grant_type = params.get('grant_type');
 
-    if (!grant_type) { return throwError(() => new Error('No grant_type was provided')); }
+    if (!grant_type) {
 
-    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') { return throwError(() => new Error('grant_type must be either "authorization_code" or "refresh_token"')) ; }
+      this.logger.warn('No grant type was provided', grant_type);
+
+      return throwError(() => new Error('No grant_type was provided'));
+
+    }
+
+    if (grant_type !== 'authorization_code' && grant_type !== 'refresh_token') {
+
+      this.logger.warn('The grant type is not supported', grant_type);
+
+      return throwError(() => new Error('grant_type must be either "authorization_code" or "refresh_token"')) ;
+
+    }
 
     const redirect_uri = params.get('redirect_uri');
 
-    if (grant_type === 'authorization_code' && !redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
+    if (grant_type === 'authorization_code' && !redirect_uri) {
+
+      this.logger.warn('No redirect uri was provided', redirect_uri);
+
+      return throwError(() => new Error('No redirect_uri was provided'));
+
+    }
 
     const refresh_token = params.get('refresh_token');
 
-    if (grant_type === 'refresh_token' && !refresh_token) { return throwError(() => new Error('No refresh_token was provided')); }
+    if (grant_type === 'refresh_token' && !refresh_token) {
+
+      this.logger.warn('No refresh token was provided', refresh_token);
+
+      return throwError(() => new Error('No refresh_token was provided'));
+
+    }
 
     try {
 
       new URL(client_id);
 
     } catch (error) {
+
+      this.logger.warn('The client id is not a valid url', client_id);
 
       return this.httpHandler.handle(context);
 
@@ -114,9 +169,21 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       switchMap(([ newContext ]) => this.httpHandler.handle(newContext)),
       switchMap((response) => {
 
-        if (!response.body.access_token) { return throwError(() => new Error('response body did not contain an access_token')); }
+        if (!response.body.access_token) {
 
-        if (!response.body.access_token.payload) { return throwError(() => new Error('Access token in response body did not contain a decoded payload')); }
+          this.logger.verbose('No access token was provided', response.body);
+
+          return throwError(() => new Error('response body did not contain an access_token'));
+
+        }
+
+        if (!response.body.access_token.payload) {
+
+          this.logger.verbose('No access token payload was provided', response.body.access_token);
+
+          return throwError(() => new Error('Access token in response body did not contain a decoded payload'));
+
+        }
 
         response.body.access_token.payload.client_id = client_id;
         response.body.id_token.payload.aud = client_id;
@@ -136,6 +203,8 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
+    this.logger.info('Checking canHandle', context);
+
     return context
     && context.request
     && context.request.body
@@ -145,6 +214,8 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
   }
 
   private checkClientRegistrationData(clientId: string, grantType: string): Observable<OidcClientMetadata> {
+
+    this.logger.info(`Checking client registration data for clientId: ${clientId} for grantType: `, grantType);
 
     return from(getClientRegistrationData(clientId))
       .pipe(

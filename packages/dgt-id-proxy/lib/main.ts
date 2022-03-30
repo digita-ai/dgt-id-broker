@@ -6,6 +6,9 @@ import { ComponentsManager } from 'componentsjs';
 import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+import { getLogger } from '@digita-ai/handlersjs-logging';
+
+const logger = getLogger();
 
 export const checkUri = (uri: string) => {
 
@@ -27,6 +30,8 @@ export const checkUri = (uri: string) => {
 
   } catch (e) {
 
+    logger.warn('Invalid uri parameter', e);
+
     throw new Error('Invalid uri parameter');
 
   }
@@ -41,6 +46,8 @@ export const checkFile = (filePath: string): void => {
     JSON.parse(file.toString());
 
   } catch (e: any) {
+
+    logger.warn(`Reading file '${filePath}' failed with Error:`, e);
 
     throw new Error(`Reading file '${filePath}' failed with Error: ${e.message}`);
 
@@ -78,8 +85,8 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
   await server.start();
 
-  // eslint-disable-next-line no-console -- top-level log
-  console.log(`Proxy server started.`);
+  logger.info(`Proxy server started on ${variables['urn:dgt-id-proxy:variables:proxyUri']}`);
+  logger.info(`Proxy server server started with variables`, variables);
 
 };
 

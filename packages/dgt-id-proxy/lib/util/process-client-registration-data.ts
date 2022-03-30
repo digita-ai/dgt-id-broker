@@ -2,11 +2,14 @@ import { Observable, throwError, of, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { ForbiddenHttpError } from '@digita-ai/handlersjs-http';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { getLogger } from '@digita-ai/handlersjs-logging';
 import { OidcClientMetadata } from './oidc-client-metadata';
 import { OidcClientRegistrationResponse } from './oidc-client-registration-response';
 
 export type CombinedRegistrationData = OidcClientMetadata & OidcClientRegistrationResponse;
 export type RegistrationStore = KeyValueStore<string, CombinedRegistrationData>;
+
+const logger = getLogger();
 
 /**
  * Performs a get request to retrieve the client registration file
@@ -15,7 +18,7 @@ export type RegistrationStore = KeyValueStore<string, CombinedRegistrationData>;
  *
  * @param { string } client id
  */
-export const getClientRegistrationData = async (clientid: string): Promise<CombinedRegistrationData> =>{
+export const getClientRegistrationData = async (clientid: string): Promise<CombinedRegistrationData> => {
 
   const data = await fetch(clientid, {
     method: 'GET',
@@ -24,11 +27,25 @@ export const getClientRegistrationData = async (clientid: string): Promise<Combi
     },
   });
 
-  if (data.headers.get('content-type') !== ('application/ld+json')) {  throw new Error(`Incorrect content-type: expected application/ld+json but got ${data.headers.get('content-type')}`); }
+  if (!data) { logger.error(`Failed to fetch webid for client ${clientid}`); }
+
+  if (data.headers.get('content-type') !== ('application/ld+json')) {
+
+    logger.info(`Client registration data for ${clientid} is not a valid JSON-LD document`, data.headers.get('content-type'));
+
+    throw new Error(`Incorrect content-type: expected application/ld+json but got ${data.headers.get('content-type')}`);
+
+  }
 
   const dataJSON = await data.json();
 
-  if (!dataJSON['@context']) { throw new Error('client registration data should use the normative JSON-LD @context'); }
+  if (!dataJSON['@context']) {
+
+    logger.info('Data does not contain the normative JSON-LD @context', dataJSON);
+
+    throw new Error('client registration data should use the normative JSON-LD @context');
+
+  }
 
   return dataJSON;
 
@@ -48,6 +65,8 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (clientData.client_id !== searchParams.get('client_id')) {
 
+    logger.error(`client_id does not match: ${clientData.client_id} !== ${searchParams.get('client_id')}`);
+
     return throwError(() => new ForbiddenHttpError('The client id in the request does not match the one in the client registration data'));
 
   }
@@ -56,6 +75,8 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (redirect_uri && !clientData.redirect_uris?.includes(redirect_uri)) {
 
+    logger.error(`redirect_uri ${redirect_uri} is not included in: ${clientData.redirect_uris}`);
+
     return throwError(() => new ForbiddenHttpError('The redirect_uri in the request is not included in the client registration data'));
 
   }
@@ -63,6 +84,8 @@ export const compareClientRegistrationDataWithRequest = (
   const response_type = searchParams.get('response_type');
 
   if (response_type && !clientData.response_types?.includes(response_type))  {
+
+    logger.error(`response_type ${response_type} is not included in: ${clientData.response_types}`);
 
     return throwError(() => new ForbiddenHttpError('Response types do not match'));
 
@@ -85,9 +108,15 @@ export const retrieveAndValidateClientRegistrationData = (
   contextRequestUrlSearchParams: URLSearchParams
 ): Observable<CombinedRegistrationData> =>
   from(getClientRegistrationData(clientId)).pipe(
-    switchMap((clientData) => compareClientRegistrationDataWithRequest(
-      clientData,
-      contextRequestUrlSearchParams
-    ))
+    switchMap((clientData) => {
+
+      logger.verbose(`Retrieved client data for clientId ${clientId}: `, clientData);
+
+      return compareClientRegistrationDataWithRequest(
+        clientData,
+        contextRequestUrlSearchParams
+      );
+
+    })
   );
 

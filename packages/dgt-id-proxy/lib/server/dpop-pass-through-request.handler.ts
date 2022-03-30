@@ -2,12 +2,15 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError, tap, map } from 'rxjs/operators';
 import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyResult, generateKeyPair, exportJWK, SignJWT, base64url } from 'jose';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
  * A {Handler<HttpHandlerContext, HttpHandlerContext>} that verifies the DPoP-proof, replaces the htm with one pointing to the upstream,
  * and then encodes the DPoP-proof again.
  */
 export class DpopPassThroughRequestHandler extends HttpHandler {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a {DpopPassThroughRequestHandler} passing requests through the given handler.
@@ -37,13 +40,33 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context was provided', context);
 
-    if (!context.request.headers) { return throwError(() => new Error('No headers were included in the request')); }
+      return throwError(() => new Error('Context cannot be null or undefined'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context.request);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.headers) {
+
+      this.logger.verbose('No request headers were provided', context.request.headers);
+
+      return throwError(() => new Error('No headers were included in the request'));
+
+    }
 
     if (!context.request.headers.dpop) {
+
+      this.logger.debug('No DPoP proof was provided', context.request.headers.dpop);
 
       return of({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
@@ -82,6 +105,8 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   ): Observable<string> {
 
     if (payload.htu !== this.proxyTokenUrl) {
+
+      this.logger.debug('DPoP proof does not point to the proxy token endpoint', payload.htu);
 
       return throwError(() => new Error('htu does not match'));
 
@@ -133,6 +158,8 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
       && context.request

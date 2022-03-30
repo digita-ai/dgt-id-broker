@@ -1,6 +1,7 @@
 import { of, Observable, throwError } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { createErrorResponse } from '../util/error-response-factory';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 
@@ -8,6 +9,8 @@ import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
  * A {HttpHandler} that handles pkce requests to the authorization endpoint.
  */
 export class PkceAuthRequestHandler extends HttpHandler {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a {PkceAuthRequestHandler}
@@ -36,24 +39,62 @@ export class PkceAuthRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context provided', context);
 
-    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
+      return throwError(() => new Error('Context cannot be null or undefined'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request provided', context);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.url) {
+
+      this.logger.verbose('No request url provided', context.request);
+
+      return throwError(() => new Error('No url was included in the request'));
+
+    }
 
     const challenge = context.request.url.searchParams.get('code_challenge');
     const method = context.request.url.searchParams.get('code_challenge_method');
     const state = context.request.url.searchParams.get('state');
 
-    if (!state) { return throwError(() => new Error('Request must contain a state. Add state handlers to the proxy.')); }
+    if (!state) {
 
-    if (!challenge) { return of(createErrorResponse('A code challenge must be provided.', 'invalid_request')); }
+      this.logger.verbose('No state was provided', context.request.url.searchParams);
 
-    if (!method) { return of(createErrorResponse('A code challenge method must be provided', 'invalid_request')); }
+      return throwError(() => new Error('Request must contain a state. Add state handlers to the proxy.'));
 
+    }
+
+    if (!challenge) {
+
+      this.logger.verbose('No code challenge was provided', context.request.url.searchParams);
+
+      return of(createErrorResponse('A code challenge must be provided.', 'invalid_request'));
+
+    }
+
+    if (!method) {
+
+      this.logger.verbose('No code challenge method was provided', context.request.url.searchParams);
+
+      return of(createErrorResponse('A code challenge method must be provided', 'invalid_request'));
+
+    }
+
+    this.logger.warn('Saving code challenge and method in store', { challenge, method, state });
     this.store.set(state, { challenge, method });
 
+    this.logger.warn('Deleting code challenge and method from url', { challenge, method });
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
 
@@ -68,6 +109,8 @@ export class PkceAuthRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
       && context.request

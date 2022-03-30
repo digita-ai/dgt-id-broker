@@ -1,14 +1,17 @@
 import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable, from, of } from 'rxjs';
+import { Observable, from, of, catchError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { JWK } from 'jose';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
  * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
  */
 export class JwkRequestHandler extends HttpHandler {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a {JwkRequestHandler} that returns a json response of the JWK keys from the file in the given path.
@@ -36,6 +39,8 @@ export class JwkRequestHandler extends HttpHandler {
       .pipe(
         map((file) => JSON.parse(file.toString())),
         switchMap((jwks) => {
+
+          this.logger.info('Creating JWKs for response', jwks);
 
           const jwksForResponse = {
             keys: jwks.keys.map((jwk: JWK) => ({
@@ -71,6 +76,8 @@ export class JwkRequestHandler extends HttpHandler {
    * @param {HttpHandlerContext} context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean>{
+
+    this.logger.info('Checking canHandle', context);
 
     return of(true);
 
