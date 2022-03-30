@@ -178,6 +178,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     const regResponse = await response.json();
     redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);
 
+    this.logger.warn(`Registered ${client_id} with data: `, data);
+
     return regResponse;
 
   }
@@ -234,6 +236,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       if (clientData[item]) { reqData[item] = clientData[item]; }
 
     });
+
+    this.logger.warn('Created request data', reqData);
 
     return reqData;
 
@@ -298,7 +302,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     return from(this.store.get(redirectUri)).pipe(
       switchMap((registerData) => {
 
-        this.logger.verbose(`Retrieved register data for ${redirectUri}: `, registerData);
+        this.logger.info(`Retrieved register data for ${redirectUri}: `, registerData);
 
         return registerData
           ? of(registerData)

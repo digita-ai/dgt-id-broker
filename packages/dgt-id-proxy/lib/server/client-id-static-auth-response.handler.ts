@@ -59,6 +59,8 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
     } catch (error) {
 
+      this.logger.error('Error occurred while handling the response', error);
+
       return of(response);
 
     }

@@ -40,8 +40,6 @@ export class JwkRequestHandler extends HttpHandler {
         map((file) => JSON.parse(file.toString())),
         switchMap((jwks) => {
 
-          this.logger.info('Creating JWKs for response', jwks);
-
           const jwksForResponse = {
             keys: jwks.keys.map((jwk: JWK) => ({
               kty: jwk.kty, // key type: defines thecryptographic algorithm family used with the key
@@ -58,6 +56,8 @@ export class JwkRequestHandler extends HttpHandler {
               y: jwk.y, // used by EC key types
             })),
           };
+
+          this.logger.info('Created JWKs for response', jwksForResponse);
 
           return of({
             body: JSON.stringify(jwksForResponse),

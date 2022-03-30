@@ -7,7 +7,7 @@ import { RegistrationStore } from '../util/process-client-registration-data';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 
 /**
- * A {HttpHandler} that
+ * A { HttpHandler } that
  * - gets the registered data from the store and if not errors
  * - replaces the client id in the body with the registered random client id in the store
  * - recalculates the content length because the body has changed
@@ -151,9 +151,23 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
         } else {
 
-          if (!response.body.access_token) { return throwError(() => new Error('response body did not contain an access_token')); }
+          if (!response.body.access_token) {
 
-          if (!response.body.access_token.payload) { return throwError(() => new Error('Access token in response body did not contain a decoded payload')); }
+            this.logger.verbose('Response has no access token', response.body);
+
+            return throwError(() => new Error('response body did not contain an access_token'));
+
+          }
+
+          if (!response.body.access_token.payload) {
+
+            this.logger.verbose('Response has no access token payload', response.body.access_token);
+
+            return throwError(() => new Error('Access token in response body did not contain a decoded payload'));
+
+          }
+
+          this.logger.warn('Switching client id in response payload', response.body.access_token.payload);
 
           response.body.access_token.payload.client_id = client_id;
 
@@ -166,12 +180,16 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
         if (client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' && grant_type === 'authorization_code' && response.body.refresh_token) {
 
+          this.logger.info('Client id is public, retrieving register info from store', client_id);
+
           return from(this.store.get(redirect_uri)).pipe(
             map((registerInfo) => {
 
               if (registerInfo) {
 
+                this.logger.warn('Deleting redirect_uri from store', redirect_uri);
                 this.store.delete(redirect_uri);
+                this.logger.warn('Pairing  refresh token to register info in store', { refresh_token, registerInfo });
                 this.store.set(response.body.refresh_token, registerInfo);
 
               }

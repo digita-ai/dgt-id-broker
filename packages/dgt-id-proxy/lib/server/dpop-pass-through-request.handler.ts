@@ -112,6 +112,8 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
     }
 
+    this.logger.warn('Updating DPoP', { payload, protectedHeader: header });
+
     return from(generateKeyPair('ES256')).pipe(
       switchMap(({ publicKey, privateKey }) =>  zip(from(exportJWK(publicKey)), of(privateKey))),
       switchMap(([ publicJwk, privateKey ]) => from(
@@ -139,6 +141,8 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   private updateDpopResponse(response: HttpHandlerResponse, originalDpopProof: string) {
 
     const originalDpopProofHeader = JSON.parse(base64url.decode(originalDpopProof.split('.')[0]).toString());
+
+    this.logger.warn('Updating DPoP response', response);
 
     return from(calculateJwkThumbprint(originalDpopProofHeader.jwk)).pipe(
       tap((thumbprint) => response.body.access_token.payload.cnf = { 'jkt': thumbprint }),

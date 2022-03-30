@@ -159,7 +159,14 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
         params.set('client_id', this.clientId);
         params.set('client_secret', this.clientSecret);
-        if (grant_type === 'authorization_code') params.set('redirect_uri', this.redirectUri);
+
+        if (grant_type === 'authorization_code') {
+
+          this.logger.warn('Replacing the redirect uri with the one provided in the constructor', redirect_uri);
+
+          params.set('redirect_uri', this.redirectUri);
+
+        }
 
         return { ...context, request: { ...context.request, body: params.toString() } };
 
@@ -191,7 +198,9 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
         }
 
+        this.logger.warn('Switching client id in access token to the one provided in the request', client_id);
         response.body.access_token.payload.client_id = client_id;
+        this.logger.warn('Setting client id as audience in access_token', client_id);
         response.body.id_token.payload.aud = client_id;
 
         return of(response);
