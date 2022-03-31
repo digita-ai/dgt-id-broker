@@ -99,7 +99,7 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
       if (id_token_payload.webid) {
 
-        this.logger.warn('adding webid from id token to access token', id_token_payload.webid);
+        this.logger.info('adding webid from id token to access token', id_token_payload.webid);
 
         access_token_payload.webid = id_token_payload.webid;
 
@@ -107,7 +107,7 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
       } else {
 
-        this.logger.warn('No webid in id token, minting webid', response.body.id_token);
+        this.logger.info('No webid in id token, minting webid', response.body.id_token);
 
         return this.webIdFactory.handle(id_token_payload).pipe(
           switchMap((minted_webid) => {
@@ -124,7 +124,7 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     } else {
 
-      this.logger.warn('No webid in access token, minting webid', response.body.access_token);
+      this.logger.info('No webid in access token, minting webid', response.body.access_token);
 
       return this.webIdFactory.handle(access_token_payload).pipe(
         switchMap((minted_webid) => {

@@ -185,7 +185,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     if (typeof partial_payload !== 'object') {
 
-      this.logger.info('Payload is not an object', partial_payload);
+      this.logger.warn('Payload is not an object', partial_payload);
 
       throw new Error('Unexpected payload structure');
 
@@ -193,7 +193,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     if (!segments.length) {
 
-      this.logger.info('No segments found', segments);
+      this.logger.warn('No segments found', segments);
 
       throw new Error('Segments cannot be empty');
 
@@ -251,7 +251,7 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
       if (!jwk.alg) {
 
-        this.logger.info('JWK does not contain an alg property', jwk);
+        this.logger.warn('JWK does not contain an alg property', jwk);
 
         return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
 
