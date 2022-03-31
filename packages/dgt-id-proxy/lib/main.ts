@@ -6,9 +6,7 @@ import { ComponentsManager } from 'componentsjs';
 import { NodeHttpServer } from '@digita-ai/handlersjs-http';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
-import { getLogger } from '@digita-ai/handlersjs-logging';
-
-const logger = getLogger();
+import { ConsoleLoggerFactory, getLogger, getLoggerFor, setLogger, setLoggerFactory } from '@digita-ai/handlersjs-logging';
 
 export const checkUri = (uri: string) => {
 
@@ -30,7 +28,7 @@ export const checkUri = (uri: string) => {
 
   } catch (e) {
 
-    logger.error('Invalid uri parameter', e);
+    getLogger().error('Invalid uri parameter', e);
 
     throw new Error('Invalid uri parameter');
 
@@ -47,7 +45,7 @@ export const checkFile = (filePath: string): void => {
 
   } catch (e: any) {
 
-    logger.error(`Reading file '${filePath}' failed with Error:`, e);
+    getLogger().error(`Reading file '${filePath}' failed with Error:`, e);
 
     throw new Error(`Reading file '${filePath}' failed with Error: ${e.message}`);
 
@@ -81,12 +79,15 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
 
   await manager.configRegistry.register(configPath);
 
+  setLoggerFactory(new ConsoleLoggerFactory());
+  setLogger(getLoggerFor('TEST', 6, 6));
+
   const server: NodeHttpServer = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
 
   await server.start();
 
-  logger.info(`Proxy server started on ${variables['urn:dgt-id-proxy:variables:proxyUri']}`);
-  logger.info(`Proxy server server started with variables`, variables);
+  getLogger().info(`Proxy server started on ${variables['urn:dgt-id-proxy:variables:proxyUri']}`);
+  getLogger().info(`Proxy server server started with variables`, variables);
 
 };
 
