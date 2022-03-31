@@ -30,7 +30,7 @@ export const checkUri = (uri: string) => {
 
   } catch (e) {
 
-    logger.warn('Invalid uri parameter', e);
+    logger.error('Invalid uri parameter', e);
 
     throw new Error('Invalid uri parameter');
 
@@ -47,7 +47,7 @@ export const checkFile = (filePath: string): void => {
 
   } catch (e: any) {
 
-    logger.warn(`Reading file '${filePath}' failed with Error:`, e);
+    logger.error(`Reading file '${filePath}' failed with Error:`, e);
 
     throw new Error(`Reading file '${filePath}' failed with Error: ${e.message}`);
 
