@@ -5,7 +5,7 @@ import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyResult, genera
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {Handler<HttpHandlerContext, HttpHandlerContext>} that verifies the DPoP-proof, replaces the htm with one pointing to the upstream,
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } that verifies the DPoP-proof, replaces the htm with one pointing to the upstream,
  * and then encodes the DPoP-proof again.
  */
 export class DpopPassThroughRequestHandler extends HttpHandler {
@@ -13,11 +13,11 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {DpopPassThroughRequestHandler} passing requests through the given handler.
+   * Creates a { DpopPassThroughRequestHandler } passing requests through the given handler.
    *
-   * @param {HttpHandler} handler - The handler to which to pass the request.
-   * @param {string} proxyTokenUrl - the url of the proxy server's token endpoint.
-   * @param {string} upstreamTokenUrl - the url of the upstream server's token endpoint.
+   * @param { HttpHandler } handler - The handler to which to pass the request.
+   * @param { string } proxyTokenUrl - the url of the proxy server's token endpoint.
+   * @param { string } upstreamTokenUrl - the url of the upstream server's token endpoint.
    */
   constructor(private handler: HttpHandler, private proxyTokenUrl: string, private upstreamTokenUrl: string) {
 
@@ -36,7 +36,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * in the DPoP proof to the upstream's token endpoint and encode the DPoP proof before passing on the request.
    * Returns an error response if the DPoP proof is invalid.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -135,7 +135,15 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   });
 
   private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
-    switchMap((response) => response.status === 200 ? of(response) : throwError(() => response)),
+    switchMap((response) => {
+
+      if (response.status === 200) return of(response);
+
+      this.logger.debug(`Upstream returned unsuccessful, status: ${response.status}`, response);
+
+      return throwError(() => response);
+
+    })
   );
 
   private updateDpopResponse(response: HttpHandlerResponse, originalDpopProof: string) {
@@ -159,7 +167,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or the request's method, headers, or url are not included.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

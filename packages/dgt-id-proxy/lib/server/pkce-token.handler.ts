@@ -9,7 +9,7 @@ import { createErrorResponse } from '../util/error-response-factory';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 
 /**
- * A {HttpHandler} that handles pkce requests to the token endpoint. It checks that the code verifier that is sent
+ * A { HttpHandler } that handles pkce requests to the token endpoint. It checks that the code verifier that is sent
  * in a request matches the code challenge of the authorization code in a {KeyValueStore}.
  */
 export class PkceTokenHandler extends HttpHandler {
@@ -17,10 +17,10 @@ export class PkceTokenHandler extends HttpHandler {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {PkceTokenHandler}
+   * Creates a { PkceTokenHandler }
    *
-   * @param {HttpHandler} httpHandler - the handler through which to pass requests
-   * @param {KeyValueStore<Code, ChallengeAndMethod>} store - the store that contains the code challenge and challenge method used for each code
+   * @param { HttpHandler } httpHandler - the handler through which to pass requests
+   * @param { KeyValueStore<Code, ChallengeAndMethod> } store - the store that contains the code challenge and challenge method used for each code
    */
   constructor(
     private httpHandler: HttpHandler,
@@ -119,9 +119,22 @@ export class PkceTokenHandler extends HttpHandler {
 
     return from(this.store.get(code))
       .pipe(
-        switchMap((codeChallengeAndMethod) => codeChallengeAndMethod
-          ? zip(of(codeChallengeAndMethod), this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method))
-          : throwError(() => new InternalServerError('No stored challenge and method found.'))),
+        switchMap((codeChallengeAndMethod) => {
+
+          if (codeChallengeAndMethod) {
+
+            return zip(
+              of(codeChallengeAndMethod),
+              this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method)
+            );
+
+          }
+
+          this.logger.info('No code challenge and method was found for the code', code);
+
+          return throwError(() => new InternalServerError('No stored challenge and method found.'));
+
+        }),
         switchMap(([ codeChallengeAndMethod, challenge ]) => challenge === codeChallengeAndMethod.challenge
           ? this.httpHandler.handle(context)
           : of(createErrorResponse('Code challenges do not match.', 'invalid_grant'))),

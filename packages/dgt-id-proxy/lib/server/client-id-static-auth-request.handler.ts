@@ -7,7 +7,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
- * A {Handler<HttpHandlerContext, HttpHandlerContext>} that gets the registration data data and retrieves oidcRegistration. If the info is
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } that gets the registration data data and retrieves oidcRegistration. If the info is
  * valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
@@ -44,8 +44,6 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     } catch (e) {
 
-      this.logger.warn('The redirect uri is not a valid URL', redirectUri);
-
       throw new Error('redirectUri must be a valid URI');
 
     }
@@ -62,7 +60,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * It replaces the client id and redirect uri in the context with the one given to the constructor,
    * and adds the client secret.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
@@ -147,7 +145,9 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     return of(client_id).pipe(
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : retrieveAndValidateClientRegistrationData(clientId, context.request.url.searchParams)),
+      tap(() => this.logger.warn('Setting the client id in the url to the static client id of the upstream', this.clientId)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
+      tap(() => this.logger.warn('Setting the redirect uri in the url to the static redirect uri of the upstream', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       mapTo(context),
     );
@@ -158,7 +158,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or request url are not included.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

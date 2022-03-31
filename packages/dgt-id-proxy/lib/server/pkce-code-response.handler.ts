@@ -15,9 +15,9 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {PkceCodeRequestHandler}
+   * Creates a { PkceCodeRequestHandler }
    *
-   * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method, code challenge, and wether or not the user sent state.
+   * @param { KeyValueStore<Code, ChallengeAndMethod> }  store - stores the challenge method, code challenge, and wether or not the user sent state.
    */
   constructor(
     private store: KeyValueStore<Code, ChallengeAndMethod>,
@@ -37,7 +37,7 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
    * Handles the response by checking if it contains a code and state parameter.
    * If it does, the state is used to find the code challenge and method in the store
    * that were used to request the authorization code. The authorization code then replaces the state as the key in the
-   * {KeyValueStore}, so it can later be found when a request is made for a token.
+   * { KeyValueStore }, so it can later be found when a request is made for a token.
    *
    * @param {HttpHandlerResponse} response
    */
@@ -102,9 +102,15 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
     response.body = '';
 
     return from(this.store.get(state)).pipe(
-      switchMap((challengeAndMethod) => challengeAndMethod
-        ? of(challengeAndMethod)
-        : throwError(() => new Error('No data was found in the store'))),
+      switchMap((challengeAndMethod) => {
+
+        if (challengeAndMethod) return of(challengeAndMethod);
+
+        this.logger.info('No challenge and method found in the keyValueStore for state: ', state);
+
+        return throwError(() => new Error('No data was found in the store'));
+
+      }),
       tap((challengeAndMethod) => {
 
         this.logger.warn('Deleting state from store', state);

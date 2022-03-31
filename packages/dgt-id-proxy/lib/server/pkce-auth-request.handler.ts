@@ -13,10 +13,10 @@ export class PkceAuthRequestHandler extends HttpHandler {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {PkceAuthRequestHandler}
+   * Creates a { PkceAuthRequestHandler }
    *
-   * @param {HttpHandler} handler - the handler to which to pass the request.
-   * @param {KeyValueStore<Code, ChallengeAndMethod>}  store - stores the challenge method and code challenge.
+   * @param { HttpHandler } handler - the handler to which to pass the request.
+   * @param { KeyValueStore<Code, ChallengeAndMethod> }  store - stores the challenge method and code challenge.
    */
   constructor(
     private handler: HttpHandler,

@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError, tap } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyOptions, JWK, JWTVerifyResult } from 'jose';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { InMemoryStore } from '../storage/in-memory-store';
@@ -14,15 +14,15 @@ export class DpopTokenRequestHandler extends HttpHandler {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {DpopTokenRequestHandler} passing requests through the given handler.
+   * Creates a { DpopTokenRequestHandler } passing requests through the given handler.
    *
-   * @param {HttpHandler} handler - the handler through which to pass incoming requests.
-   * @param {InMemoryStore<string, string[]>} keyValueStore - the KeyValueStore in which to save jti's.
-   * @param {string} proxyTokenUrl - the url of the proxy server's token endpoint.
-   * @param {number} clockTolerance - tolerance in seconds that a token will still be considered valid if it is
+   * @param { HttpHandler } handler - the handler through which to pass incoming requests.
+   * @param { InMemoryStore<string, string[]> } keyValueStore - the KeyValueStore in which to save jti's.
+   * @param { string } proxyTokenUrl - the url of the proxy server's token endpoint.
+   * @param { number } clockTolerance - tolerance in seconds that a token will still be considered valid if it is
    * either too old or too new. Should prevent tokens from being rejected due to clock skews between servers and clients.
    * 10 seconds by default.
-   * @param {number} maxDpopProofTokenAge - maximum age in seconds at which a DPoP proof token will be considered valid. Default of 1 minute.
+   * @param { number } maxDpopProofTokenAge - maximum age in seconds at which a DPoP proof token will be considered valid. Default of 1 minute.
    */
   constructor(
     private handler: HttpHandler,
@@ -135,7 +135,21 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates thumbprint or errors
       switchMap((verified) => from(calculateJwkThumbprint(verified.protectedHeader.jwk))),
       // builds error body around previous errors
-      catchError((error) => error.message ? throwError(() => this.dpopError(error.message)) : throwError(() => new Error('DPoP verification failed due to an unknown error'))),
+      catchError((error) => {
+
+        if (error.message) {
+
+          this.logger.info('DPoP verification failed: ', error.message);
+
+          return throwError(() => this.dpopError(error.message));
+
+        }
+
+        this.logger.warn('DPoP verification failed due to unknown error');
+
+        return throwError(() => new Error('DPoP verification failed due to an unknown error'));
+
+      }),
       // gets successful response or errors with body
       switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
       // creates dpop response
@@ -203,6 +217,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         }
 
+        this.logger.warn(`Updating JTI's in store `);
+
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
 
         return of({ payload, protectedHeader: { ... header, jwk } });
@@ -227,6 +243,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
   private createDpopResponse(response: HttpHandlerResponse, thumbprint: string) {
 
+    this.logger.warn('Creating DPoP response, adding thumbprint to cnf claim and setting token type to DPoP');
+
     // set the cnf claim to contain the thumbprint of the client's jwk
     response.body.access_token.payload.cnf = { 'jkt': thumbprint };
     response.body.token_type = 'DPoP';
@@ -243,7 +261,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or the request's method, headers, or url are not included.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean>{
 

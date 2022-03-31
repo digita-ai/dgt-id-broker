@@ -7,7 +7,7 @@ import { getClientRegistrationData } from '../util/process-client-registration-d
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 
 /**
- * A {HttpHandler} that
+ * A { HttpHandler } that
  * - gets the client registration data and retrieves oidcRegistration
  * - checks the if the registration data is valid and compares the grant types
  * - replaces the client id, client secret and redirect url in the context
@@ -47,8 +47,6 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     } catch (e) {
 
-      this.logger.warn('The registration_uri is not a valid url', redirectUri);
-
       throw new Error('redirectUri must be a valid URI');
 
     }
@@ -64,7 +62,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    * It replaces the client id, client secret and redirect url in the context with the one given to the constructor.
    * and recalculates the content length because the body has changed
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -214,7 +212,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or request body are not included.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
@@ -234,9 +232,15 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     return from(getClientRegistrationData(clientId))
       .pipe(
-        switchMap((registrationData) => (registrationData.grant_types?.includes(grantType))
-          ? of(registrationData)
-          : (throwError(() => new Error('The grant type in the request is not included in the client registration data')))),
+        switchMap((registrationData) => {
+
+          if (registrationData.grant_types?.includes(grantType)) return of(registrationData);
+
+          this.logger.warn(`The client registration data for clientId: ${clientId} does not support grantType: `, grantType);
+
+          return (throwError(() => new Error('The grant type in the request is not included in the client registration data')));
+
+        })
       );
 
   }

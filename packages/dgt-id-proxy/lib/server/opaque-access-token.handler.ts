@@ -4,7 +4,7 @@ import { map, switchMap, catchError } from 'rxjs/operators';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {HttpHandler} that handles Access Token responses for an upstream server that returns Opaque Access Tokens
+ * A { HttpHandler } that handles Access Token responses for an upstream server that returns Opaque Access Tokens
  * by turning them into valid JSON Web Tokens
  */
 export class OpaqueAccessTokenHandler extends HttpHandler {
@@ -12,10 +12,10 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates an {OpaqueAccessTokenHandler} which passes requests it receives through the given handler,
+   * Creates an { OpaqueAccessTokenHandler } which passes requests it receives through the given handler,
    * and uses the upstream url to verify the id token it receives.
    *
-   * @param {HttpHandler} handler - the handler to pass requests to
+   * @param { HttpHandler } handler - the handler to pass requests to
    */
   constructor(private handler: HttpHandler){
 
@@ -34,7 +34,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * The sub, aud, iat and exp claims from the id_token returned by the upstream server, along with the client_id,
    * are used to create a valid JWT Access Token.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -154,9 +154,9 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or the request's method, headers, url or body are not included.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
-  canHandle(context: HttpHandlerContext) {
+  canHandle(context: HttpHandlerContext): Observable<boolean> {
 
     this.logger.info('Checking canHandle', context);
 

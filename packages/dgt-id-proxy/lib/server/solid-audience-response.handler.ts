@@ -4,7 +4,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {Handler} that adds 'solid' to the audience claim of a JWT Access Token
+ * A { Handler } that adds 'solid' to the audience claim of a JWT Access Token
  */
 export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 

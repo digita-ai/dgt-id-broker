@@ -40,8 +40,6 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     } catch (error) {
 
-      this.logger.warn('The registration_uri is not a valid url', registration_uri);
-
       throw new Error('The provided registration_uri is not a valid URL');
 
     }
@@ -164,6 +162,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     redirect_uri?: string,
   ): Promise<CombinedRegistrationData> {
 
+    this.logger.info('Registering client', { data, client_id });
+
     const response = await fetch(this.registration_uri, {
       method: 'POST',
       headers: {
@@ -173,7 +173,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       body: JSON.stringify(data),
     });
 
-    if (!response) { this.logger.error(`Failed to register ${client_id} with data: `, data); }
+    if (!response) this.logger.error(`Failed to register ${client_id} with data: `, data);
 
     const regResponse = await response.json();
     redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);

@@ -43,9 +43,15 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
       response.body = '';
 
       return from(this.keyValueStore.get(state)).pipe(
-        switchMap((redirectURL) => redirectURL
-          ? of(redirectURL)
-          : throwError(() => new Error(`Response containing state '${state}' does not have a matching request`))),
+        switchMap((redirectURL) => {
+
+          if (redirectURL) return of(redirectURL);
+
+          this.logger.info(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
+
+          return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
+
+        }),
         tap((redirectURL) => {
 
           locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));

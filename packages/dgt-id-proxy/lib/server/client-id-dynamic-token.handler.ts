@@ -44,7 +44,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
    * handles the request and catches the response, if the response is successful and
    * contains a access token the it's client id in the payload is switched again the to original given client id
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -121,12 +121,20 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
     return from(this.store.get(client_id === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? (grant_type === 'authorization_code' ? redirect_uri : refresh_token) : client_id)).pipe(
 
-      switchMap((registerInfo) => registerInfo
-        ? of(registerInfo)
-        : throwError(() => new Error('No data was found in the store'))),
+      switchMap((registerInfo) => {
+
+        if (registerInfo) return of(registerInfo);
+
+        this.logger.warn('No register info was found for client_id', client_id);
+
+        return throwError(() => new Error('No data was found in the store'));
+
+      }),
       map((registerInfo) => {
 
         params.set('client_id', registerInfo.client_id);
+
+        this.logger.warn('Setting client_id to the one received from the register endpoint: ', registerInfo.client_id);
 
         return { ...context, request: { ...context.request, body: params.toString() } };
 

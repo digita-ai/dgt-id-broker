@@ -1,22 +1,22 @@
 import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable, from, of, catchError } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { JWK } from 'jose';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
+ * A { HttpHandler } reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
  */
 export class JwkRequestHandler extends HttpHandler {
 
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {JwkRequestHandler} that returns a json response of the JWK keys from the file in the given path.
+   * Creates a { JwkRequestHandler } that returns a json response of the JWK keys from the file in the given path.
    *
-   * @param {string} jwkPath - the relative path to the file containing JWK keys.
+   * @param { string } jwkPath - the relative path to the file containing JWK keys.
    */
   constructor(private jwkPath: string) {
 
@@ -29,7 +29,7 @@ export class JwkRequestHandler extends HttpHandler {
    * removing the private claims in the JWKs, and creating a response containing the public JWKs
    * in the body.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 

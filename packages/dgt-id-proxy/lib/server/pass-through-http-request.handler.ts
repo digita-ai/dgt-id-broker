@@ -8,7 +8,7 @@ import { switchMap } from 'rxjs/operators';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
+ * A { HttpRequestHandler } passing all request to and responses from the upstream server without modification.
  */
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
@@ -18,11 +18,11 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   /**
    * Creates a PassThroughHttpRequestHandler with an upstream server on the provided location.
    *
-   * @param {string} host - the host of the upstream server without scheme (is always http).
-   * @param {number} port - the port to connect to on the upstream server.
-   * @param {string} scheme - either 'http:' or 'https:'.
-   * @param {string} proxyUrl - the url of the proxy server.
-   * @param {boolean} errorHandling - toggles whether the handler should create it's own error response or use the upstream's
+   * @param { string } host - the host of the upstream server without scheme (is always http).
+   * @param { number } port - the port to connect to on the upstream server.
+   * @param { string } scheme - either 'http:' or 'https:'.
+   * @param { string } proxyUrl - the url of the proxy server.
+   * @param { boolean } errorHandling - toggles whether the handler should create it's own error response or use the upstream's
    */
   constructor(
     private host: string,
@@ -77,8 +77,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * Takes the necessary parameters out of the {HttpHandlerRequest} from the {HttpHandlerContext} and passes them to fetchRequest.
-   * Returns the response as an {Observable<HttpHandlerResponse>}.
+   * Takes the necessary parameters out of the { HttpHandlerRequest } from the { HttpHandlerContext } and passes them to fetchRequest.
+   * Returns the response as an { Observable<HttpHandlerResponse> }.
    *
    * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
    */
@@ -134,6 +134,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
         if (this.errorHandling && response.status >= 400) {
 
+          this.logger.verbose(`Request failed in PassThroughHttpRequestHandler with status ${response.status}: `, response.headers);
+
           return throwError(() => ({ headers: response.headers, status: response.status }));
 
         }
@@ -146,9 +148,9 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * Indicates that this handler can handle every {HttpHandlerContext} with non-null parameters.
+   * Indicates that this handler can handle every { HttpHandlerContext } with non-null parameters.
    *
-   * @param {HttpHandlerContext} context - a {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}
+   * @param { HttpHandlerContext } context - a { HttpHandlerContext } object containing a { HttpHandlerRequest } and { HttpHandlerRoute }
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
@@ -343,6 +345,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     (acc, key) => {
 
       const lKey = key.toLowerCase();
+
+      this.logger.warn('cleaning headers: ', lKey);
 
       return acc[lKey]
         ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }

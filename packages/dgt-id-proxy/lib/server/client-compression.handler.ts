@@ -119,7 +119,13 @@ export class ClientCompressionHandler extends HttpHandler {
 
       }
 
-    } else delete response.headers['content-encoding'];
+    } else {
+
+      this.logger.info('No body to encode, deleting content-encoding header', response);
+
+      delete response.headers['content-encoding'];
+
+    }
 
     return response;
 
@@ -128,7 +134,7 @@ export class ClientCompressionHandler extends HttpHandler {
   /**
    * Specifies that if the context, context request, and context request headers are defined this handler can handle the response.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
