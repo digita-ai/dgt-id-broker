@@ -111,7 +111,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     } catch (error) {
 
-      this.logger.warn('The client id is not a valid url', client_id);
+      this.logger.error('The client id is not a valid url', client_id);
 
       return of(context);
 
@@ -178,7 +178,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     const regResponse = await response.json();
     redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);
 
-    this.logger.warn(`Registered ${client_id} with data: `, data);
+    this.logger.info(`Registered ${client_id} with data: `, data);
 
     return regResponse;
 
@@ -237,7 +237,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     });
 
-    this.logger.warn('Created request data', reqData);
+    this.logger.info('Created request data', reqData);
 
     return reqData;
 

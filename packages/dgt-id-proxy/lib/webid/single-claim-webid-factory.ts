@@ -5,7 +5,7 @@ import { ParsedJSON } from '../util/parsed-json';
 import { WebIdFactory } from './webid-factory';
 
 /**
- * A {SingleClaimWebIdFactory} class that implements the WebIdFactory interface and creates a minted webid
+ * A { SingleClaimWebIdFactory } class that implements the WebIdFactory interface and creates a minted webid
  * using the webid pattern en custom claim provided
  */
 export class SingleClaimWebIdFactory extends WebIdFactory {
@@ -13,11 +13,11 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {SingleClaimWebIdFactory}.
+   * Creates a { SingleClaimWebIdFactory }.
    *
-   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
+   * @param { string } webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the custom claim in the id token.
-   * @param {string} claim - the name of the custom claim that needs to be retrieved from the id token
+   * @param { string } claim - the name of the custom claim that needs to be retrieved from the id token
    * and added to the webIdPattern above.
    */
   constructor(public webIdPattern: string, public claim: string = 'sub') {
@@ -51,6 +51,8 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
     }
 
     const custom_claim = payload[this.claim].toString().replace(/[|:]/g, '');
+
+    this.logger.info('Minting webid for custom claim: ', custom_claim);
 
     const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]\.[0-9]\.[0-9]\.[0-9]|[a-zA-Z0-9]):+[a-zA-Z0-9][^\/.]+'), slugify(custom_claim));
 

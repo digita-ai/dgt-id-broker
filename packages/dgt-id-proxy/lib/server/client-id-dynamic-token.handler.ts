@@ -134,7 +134,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
         params.set('client_id', registerInfo.client_id);
 
-        this.logger.warn('Setting client_id to the one received from the register endpoint: ', registerInfo.client_id);
+        this.logger.info('Setting client_id to the one received from the register endpoint: ', registerInfo.client_id);
 
         return { ...context, request: { ...context.request, body: params.toString() } };
 
@@ -153,7 +153,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
         if (isError) {
 
-          this.logger.info('Response has errored', isError.error);
+          this.logger.error('Response has errored', isError.error);
 
           return of(createErrorResponse(isError.error_description, isError.error, response.headers));
 
@@ -175,7 +175,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
           }
 
-          this.logger.warn('Switching client id in response payload', response.body.access_token.payload);
+          this.logger.info('Switching client id in response payload', response.body.access_token.payload);
 
           response.body.access_token.payload.client_id = client_id;
 
@@ -195,9 +195,9 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
               if (registerInfo) {
 
-                this.logger.warn('Deleting redirect_uri from store', redirect_uri);
+                this.logger.info('Deleting redirect_uri from store', redirect_uri);
                 this.store.delete(redirect_uri);
-                this.logger.warn('Pairing  refresh token to register info in store', { refresh_token, registerInfo });
+                this.logger.info('Pairing  refresh token to register info in store', { refresh_token, registerInfo });
                 this.store.set(response.body.refresh_token, registerInfo);
 
               }

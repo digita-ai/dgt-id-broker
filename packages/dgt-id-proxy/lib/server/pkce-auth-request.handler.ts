@@ -91,10 +91,10 @@ export class PkceAuthRequestHandler extends HttpHandler {
 
     }
 
-    this.logger.warn('Saving code challenge and method in store', { challenge, method, state });
+    this.logger.info('Saving code challenge and method in store', { challenge, method, state });
     this.store.set(state, { challenge, method });
 
-    this.logger.warn('Deleting code challenge and method from url', { challenge, method });
+    this.logger.info('Deleting code challenge and method from url', { challenge, method });
     context.request.url.searchParams.delete('code_challenge');
     context.request.url.searchParams.delete('code_challenge_method');
 

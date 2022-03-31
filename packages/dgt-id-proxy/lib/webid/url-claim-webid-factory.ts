@@ -4,7 +4,7 @@ import { ParsedJSON } from '../util/parsed-json';
 import { WebIdFactory } from './webid-factory';
 
 /**
- * A {UrlClaimWebIdFactory} class that implements the WebIdFactory interface and extracts the webID
+ * A { UrlClaimWebIdFactory } class that implements the WebIdFactory interface and extracts the webID
  * from the given custom claim.
  */
 export class UrlClaimWebIdFactory extends WebIdFactory {
@@ -12,9 +12,9 @@ export class UrlClaimWebIdFactory extends WebIdFactory {
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {UrlClaimWebIdFactory}.
+   * Creates a { UrlClaimWebIdFactory }.
    *
-   * @param {string} claim - the name of the custom claim that needs to be retrieved from the id token.
+   * @param { string } claim - the name of the custom claim that needs to be retrieved from the id token.
    */
   constructor(public claim: string) {
 
@@ -46,6 +46,8 @@ export class UrlClaimWebIdFactory extends WebIdFactory {
 
     }
 
+    this.logger.info('Minting webid for custom claim: ', payload[this.claim]);
+
     return of(payload[this.claim].toString());
 
   }
@@ -56,6 +58,8 @@ export class UrlClaimWebIdFactory extends WebIdFactory {
    * @param {ParsedJSON} payload
    */
   canHandle(payload: ParsedJSON): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', payload);
 
     return payload ? of(true) : of(false);
 

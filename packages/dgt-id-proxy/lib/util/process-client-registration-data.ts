@@ -41,7 +41,7 @@ export const getClientRegistrationData = async (clientid: string): Promise<Combi
 
   if (!dataJSON['@context']) {
 
-    logger.info('Data does not contain the normative JSON-LD @context', dataJSON);
+    logger.warn('Data does not contain the normative JSON-LD @context', dataJSON);
 
     throw new Error('client registration data should use the normative JSON-LD @context');
 
@@ -65,7 +65,7 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (clientData.client_id !== searchParams.get('client_id')) {
 
-    logger.error(`client_id does not match: ${clientData.client_id} !== ${searchParams.get('client_id')}`);
+    logger.warn(`client_id does not match: ${clientData.client_id} !== ${searchParams.get('client_id')}`);
 
     return throwError(() => new ForbiddenHttpError('The client id in the request does not match the one in the client registration data'));
 
@@ -75,7 +75,7 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (redirect_uri && !clientData.redirect_uris?.includes(redirect_uri)) {
 
-    logger.error(`redirect_uri ${redirect_uri} is not included in: ${clientData.redirect_uris}`);
+    logger.warn(`redirect_uri ${redirect_uri} is not included in: ${clientData.redirect_uris}`);
 
     return throwError(() => new ForbiddenHttpError('The redirect_uri in the request is not included in the client registration data'));
 
@@ -85,7 +85,7 @@ export const compareClientRegistrationDataWithRequest = (
 
   if (response_type && !clientData.response_types?.includes(response_type))  {
 
-    logger.error(`response_type ${response_type} is not included in: ${clientData.response_types}`);
+    logger.warn(`response_type ${response_type} is not included in: ${clientData.response_types}`);
 
     return throwError(() => new ForbiddenHttpError('Response types do not match'));
 
@@ -110,7 +110,7 @@ export const retrieveAndValidateClientRegistrationData = (
   from(getClientRegistrationData(clientId)).pipe(
     switchMap((clientData) => {
 
-      logger.verbose(`Retrieved client data for clientId ${clientId}: `, clientData);
+      logger.info(`Retrieved client data for clientId ${clientId}: `, clientData);
 
       return compareClientRegistrationDataWithRequest(
         clientData,

@@ -145,7 +145,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
     } catch (error) {
 
-      this.logger.warn('The client id is not a valid url', client_id);
+      this.logger.error('The client id is not a valid url', client_id);
 
       return this.httpHandler.handle(context);
 
@@ -160,7 +160,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
         if (grant_type === 'authorization_code') {
 
-          this.logger.warn('Replacing the redirect uri with the one provided in the constructor', redirect_uri);
+          this.logger.info('Replacing the redirect uri with the one provided in the constructor', redirect_uri);
 
           params.set('redirect_uri', this.redirectUri);
 
@@ -173,7 +173,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
       tap(([ newContext, length ]) => newContext.request.headers['content-length'] = length),
       switchMap(([ newContext ]) => {
 
-        this.logger.info('Handeling context', context);
+        this.logger.info('Handling context', context);
 
         return this.httpHandler.handle(newContext);
 
@@ -196,9 +196,9 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
         }
 
-        this.logger.warn('Switching client id in access token to the one provided in the request', client_id);
+        this.logger.info('Switching client id in access token to the one provided in the request', client_id);
         response.body.access_token.payload.client_id = client_id;
-        this.logger.warn('Setting client id as audience in access_token', client_id);
+        this.logger.info('Setting client id as audience in access_token', client_id);
         response.body.id_token.payload.aud = client_id;
 
         return of(response);

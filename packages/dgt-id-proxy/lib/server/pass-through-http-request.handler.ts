@@ -317,23 +317,23 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     switch (compressionType) {
 
       case 'br':
-        this.logger.warn('decompressing with brotli');
+        this.logger.info('decompressing with brotli');
 
         return brotliDecompressSync(data);
       case 'gzip':
-        this.logger.warn('decompressing with gzip');
+        this.logger.info('decompressing with gzip');
 
         return gunzipSync(data);
       case 'deflate':
-        this.logger.warn('decompressing with deflate');
+        this.logger.info('decompressing with deflate');
 
         return inflateSync(data);
       case 'identity':
-        this.logger.warn('compressionType is identity, returning data');
+        this.logger.info('compressionType is identity, returning data');
 
         return data;
       default:
-        this.logger.warn('Received unknown decompression type: ',  compressionType);
+        this.logger.info('Received unknown decompression type: ',  compressionType);
 
         throw new Error(`Compression type '${compressionType}' is unknown`);
 
@@ -346,7 +346,7 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
       const lKey = key.toLowerCase();
 
-      this.logger.warn('cleaning headers: ', lKey);
+      this.logger.info('cleaning headers: ', lKey);
 
       return acc[lKey]
         ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }

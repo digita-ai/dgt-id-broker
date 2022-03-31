@@ -64,7 +64,7 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
 
         } catch (error) {
 
-          this.logger.info('Error handling code response', error);
+          this.logger.debug('Error handling code response', error);
 
           return of(resp);
 

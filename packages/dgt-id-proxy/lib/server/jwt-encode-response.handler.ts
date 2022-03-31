@@ -74,7 +74,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     if (response.status !== 200) {
 
-      this.logger.info('Response was not successful', response.status);
+      this.logger.verbose('Response was not successful', response);
 
       return of(response);
 
@@ -84,7 +84,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       if (!response.body[field]) {
 
-        this.logger.verbose('The response body did not include the correct field', response.body);
+        this.logger.warn('The response body did not include the correct field', response.body);
 
         return throwError(() => new Error(`the response body did not include the field "${field}"`));
 
@@ -92,7 +92,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       if (!response.body[field].payload || !response.body[field].header) {
 
-        this.logger.verbose('The response body does not include a payload or header for the field', response.body);
+        this.logger.warn('The response body does not include a payload or header for the field', response.body);
 
         return throwError(() => new Error(`the response body did not include a header and payload property for the field "${field}"`));
 
@@ -126,7 +126,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       if (!jwk.alg) {
 
-        this.logger.verbose('The jwk did not contain an "alg" property', jwk);
+        this.logger.warn('The jwk did not contain an "alg" property', jwk);
 
         return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
 
@@ -138,7 +138,7 @@ export class JwtEncodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
   );
 
   private signJwtPayload = (jwtPayload: JWTPayload, typ: string) => zip(of(jwtPayload), this.getSigningKit()).pipe(
-    tap(() => this.logger.warn('Signing JWT payload', jwtPayload)),
+    tap(() => this.logger.info('Signing JWT payload', jwtPayload)),
     switchMap(([ payload, [ alg, kid, key ] ]) => from(
       new SignJWT(payload)
         .setProtectedHeader({ alg, kid, typ })

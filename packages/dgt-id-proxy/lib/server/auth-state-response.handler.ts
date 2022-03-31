@@ -48,7 +48,7 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     if (!response) {
 
-      this.logger.verbose('No response was provided', response);
+      this.logger.verbose('No response was provided');
 
       return throwError(() => new Error('Response cannot be null or undefined'));
 
@@ -91,7 +91,7 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     } catch (error) {
 
-      this.logger.warn('Handling state failed:', error);
+      this.logger.error('Handling state failed:', error);
 
       return of(response);
 

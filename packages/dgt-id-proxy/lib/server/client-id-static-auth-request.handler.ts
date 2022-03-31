@@ -114,7 +114,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     } catch(error) {
 
-      this.logger.warn('The redirect uri is not a valid url', redirect_uri);
+      this.logger.error('The redirect uri is not a valid url', redirect_uri);
 
       return throwError(() => new Error('redirect_uri must be a valid URL'));
 
@@ -128,7 +128,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     }
 
-    this.logger.warn('Pairing state to redirect uri in store', redirect_uri);
+    this.logger.info('Pairing state to redirect uri in store', redirect_uri);
     this.keyValueStore.set(state, new URL(redirect_uri));
 
     try {
@@ -137,7 +137,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     } catch (error) {
 
-      this.logger.warn('The client id is not a valid url', client_id);
+      this.logger.error('The client id is not a valid url', client_id);
 
       return of(context);
 
@@ -145,9 +145,9 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     return of(client_id).pipe(
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : retrieveAndValidateClientRegistrationData(clientId, context.request.url.searchParams)),
-      tap(() => this.logger.warn('Setting the client id in the url to the static client id of the upstream', this.clientId)),
+      tap(() => this.logger.info('Setting the client id in the url to the static client id of the upstream', this.clientId)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
-      tap(() => this.logger.warn('Setting the redirect uri in the url to the static redirect uri of the upstream', this.clientId)),
+      tap(() => this.logger.info('Setting the redirect uri in the url to the static redirect uri of the upstream', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       mapTo(context),
     );

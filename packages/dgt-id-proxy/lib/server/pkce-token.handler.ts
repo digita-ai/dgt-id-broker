@@ -130,7 +130,7 @@ export class PkceTokenHandler extends HttpHandler {
 
           }
 
-          this.logger.info('No code challenge and method was found for the code', code);
+          this.logger.warn('No code challenge and method was found for the code', code);
 
           return throwError(() => new InternalServerError('No stored challenge and method found.'));
 

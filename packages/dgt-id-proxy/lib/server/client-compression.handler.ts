@@ -97,17 +97,17 @@ export class ClientCompressionHandler extends HttpHandler {
       switch (encodingPossibilities) {
 
         case 'br':
-          this.logger.verbose('Encoding body with brotli', response.body);
+          this.logger.info('Encoding body with brotli', response.body);
           response.body = brotliCompressSync(response.body);
           response.headers['content-encoding'] = 'br';
           break;
         case 'gzip':
-          this.logger.verbose('Encoding body with gzip', response.body);
+          this.logger.info('Encoding body with gzip', response.body);
           response.body = gzipSync(response.body);
           response.headers['content-encoding'] = 'gzip';
           break;
         case 'deflate':
-          this.logger.verbose('Encoding body with deflate', response.body);
+          this.logger.info('Encoding body with deflate', response.body);
           response.body = deflateSync(response.body);
           response.headers['content-encoding'] = 'deflate';
           break;

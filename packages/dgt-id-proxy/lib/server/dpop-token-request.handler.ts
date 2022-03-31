@@ -97,7 +97,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     if (!context.request.headers.dpop) {
 
-      this.logger.debug('No DPoP proof was provided', context.request.headers.dpop);
+      this.logger.verbose('No DPoP proof was provided', context.request.headers.dpop);
 
       return of({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
@@ -139,7 +139,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         if (error.message) {
 
-          this.logger.info('DPoP verification failed: ', error.message);
+          this.logger.warn('DPoP verification failed: ', error.message);
 
           return throwError(() => this.dpopError(error.message));
 
@@ -157,7 +157,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
       catchError((error) => {
 
-        this.logger.verbose('DPoP handler error: ', error);
+        this.logger.debug('DPoP handler error: ', error);
 
         return error.body && error.headers && error.status ? of(error) : throwError(() => error);
 
@@ -211,13 +211,13 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         if (jtis?.includes(jti)) {
 
-          this.logger.info('This JTI was already used before and must be unique', jti);
+          this.logger.warn('This JTI was already used before and must be unique', jti);
 
           return throwError(() => new Error('jti must be unique'));
 
         }
 
-        this.logger.warn(`Updating JTI's in store `);
+        this.logger.info(`Updating JTI's in store `);
 
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
 
@@ -243,7 +243,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
   private createDpopResponse(response: HttpHandlerResponse, thumbprint: string) {
 
-    this.logger.warn('Creating DPoP response, adding thumbprint to cnf claim and setting token type to DPoP');
+    this.logger.info('Creating DPoP response, adding thumbprint to cnf claim and setting token type to DPoP');
 
     // set the cnf claim to contain the thumbprint of the client's jwk
     response.body.access_token.payload.cnf = { 'jkt': thumbprint };

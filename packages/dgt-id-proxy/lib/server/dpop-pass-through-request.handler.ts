@@ -66,7 +66,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
     if (!context.request.headers.dpop) {
 
-      this.logger.debug('No DPoP proof was provided', context.request.headers.dpop);
+      this.logger.verbose('No DPoP proof was provided', context.request.headers.dpop);
 
       return of({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
@@ -106,13 +106,13 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
     if (payload.htu !== this.proxyTokenUrl) {
 
-      this.logger.debug('DPoP proof does not point to the proxy token endpoint', payload.htu);
+      this.logger.warn('DPoP proof does not point to the proxy token endpoint', payload.htu);
 
       return throwError(() => new Error('htu does not match'));
 
     }
 
-    this.logger.warn('Updating DPoP', { payload, protectedHeader: header });
+    this.logger.info('Updating DPoP', { payload, protectedHeader: header });
 
     return from(generateKeyPair('ES256')).pipe(
       switchMap(({ publicKey, privateKey }) =>  zip(from(exportJWK(publicKey)), of(privateKey))),
@@ -139,7 +139,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
       if (response.status === 200) return of(response);
 
-      this.logger.debug(`Upstream returned unsuccessful, status: ${response.status}`, response);
+      this.logger.warn(`Upstream returned unsuccessful, status: ${response.status}`, response);
 
       return throwError(() => response);
 
@@ -150,7 +150,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
     const originalDpopProofHeader = JSON.parse(base64url.decode(originalDpopProof.split('.')[0]).toString());
 
-    this.logger.warn('Updating DPoP response', response);
+    this.logger.info('Updating DPoP response', response);
 
     return from(calculateJwkThumbprint(originalDpopProofHeader.jwk)).pipe(
       tap((thumbprint) => response.body.access_token.payload.cnf = { 'jkt': thumbprint }),

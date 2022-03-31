@@ -25,7 +25,7 @@
 import type { KeyValueStore } from './key-value-store';
 
 /**
- * A {@link KeyValueStore} which uses a JavaScript Map for internal storage.
+ * A { @link KeyValueStore } which uses a JavaScript Map for internal storage.
  * Warning: Uses a Map object, which internally uses `Object.is` for key equality,
  * so object keys have to be the same objects.
  */

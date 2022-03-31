@@ -64,9 +64,25 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
   }
 
   return from(fetch(new URL('/.well-known/openid-configuration', upstreamUrl).href)).pipe(
-    switchMap((response) => response.status === 200 ? from(response.json()) : throwError(() => new Error('There was a problem fetching upstream config'))),
+    switchMap((response) => {
+
+      if (response.status === 200) return from(response.json());
+
+      logger.warn('Could not retrieve the upstream configuration', response);
+
+      return throwError(() => new Error('There was a problem fetching upstream config'));
+
+    }),
     switchMap((data) => from(fetch(data.jwks_uri))),
-    switchMap((response) => response.status === 200 ? from(response.json()) : throwError(() => new Error('There was a problem fetching upstream jwks'))),
+    switchMap((response) => {
+
+      if (response.status === 200) return from(response.json());
+
+      logger.warn('Could not retrieve the upstream jwks', response);
+
+      return throwError(() => new Error('There was a problem fetching upstream jwks'));
+
+    }),
     map((jwks) => jwks.keys.find((key: JWK) => key.kid === decodedHeader.kid)),
     switchMap((jwk) => {
 

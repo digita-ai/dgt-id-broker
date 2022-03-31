@@ -47,7 +47,7 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
           if (redirectURL) return of(redirectURL);
 
-          this.logger.info(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
+          this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
 
           return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
 
@@ -65,7 +65,7 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
     } catch (error) {
 
-      this.logger.error('Error occurred while handling the response', error);
+      this.logger.debug('Error occurred while handling the response', error);
 
       return of(response);
 

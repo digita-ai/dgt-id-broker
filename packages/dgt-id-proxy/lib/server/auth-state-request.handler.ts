@@ -47,7 +47,7 @@ export class AuthStateRequestHandler extends Handler<HttpHandlerContext, HttpHan
 
     if (!context) {
 
-      this.logger.verbose('No context was provided', context);
+      this.logger.verbose('No context was provided');
 
       return throwError(() => new Error('Context cannot be null or undefined'));
 
@@ -55,7 +55,7 @@ export class AuthStateRequestHandler extends Handler<HttpHandlerContext, HttpHan
 
     if (!context.request) {
 
-      this.logger.verbose('No request was provided', context.request);
+      this.logger.verbose('No request was provided', context);
 
       return throwError(() => new Error('No request was included in the context'));
 
@@ -63,7 +63,7 @@ export class AuthStateRequestHandler extends Handler<HttpHandlerContext, HttpHan
 
     if (!context.request.headers) {
 
-      this.logger.verbose('No request headers were provided', context.request.headers);
+      this.logger.verbose('No request headers were provided', context.request);
 
       return throwError(() => new Error('No headers were included in the request'));
 
@@ -71,7 +71,7 @@ export class AuthStateRequestHandler extends Handler<HttpHandlerContext, HttpHan
 
     if (!context.request.url) {
 
-      this.logger.verbose('No request url was provided', context.request.url);
+      this.logger.verbose('No request url was provided', context.request);
 
       return throwError(() => new Error('No url was included in the request'));
 
