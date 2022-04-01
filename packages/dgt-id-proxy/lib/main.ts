@@ -80,7 +80,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
   await manager.configRegistry.register(configPath);
 
   setLoggerFactory(new ConsoleLoggerFactory());
-  setLogger(getLoggerFor('TEST', 6, 6));
+  setLogger(getLoggerFor('PROXY', 6, 6));
 
   const server: NodeHttpServer = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
 
