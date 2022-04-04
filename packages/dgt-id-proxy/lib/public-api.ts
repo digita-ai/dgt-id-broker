@@ -21,6 +21,8 @@ export * from './server/solid-audience-response.handler';
 export * from './server/auth0-client-redirect.handler';
 export * from './server/auth0-login-state.handler';
 export * from './server/auth0-passwordless-api.handler';
+export * from './server/safari-cookie-restore.handler';
+export * from './server/safari-cookie-save.handler';
 export * from './storage/in-memory-store';
 export * from './storage/key-value-store';
 export * from './util/code-challenge-method';
