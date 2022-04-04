@@ -74,15 +74,15 @@ describe('SafariCookieSaveHandler', () => {
 
     });
 
-    it('should error when no url is provided', () => {
+    it('should error when no url is provided', async () => {
 
-      expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: undefined } }))).rejects.toThrow('A URL must be provided');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: undefined } }))).rejects.toThrow('A URL must be provided');
 
     });
 
-    it('should error when not state was found', () => {
+    it('should error when not state was found', async () => {
 
-      expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: new URL('http://localhost:3003/authorize?state=') } }))).rejects.toThrow('No state was found in the request');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: new URL('http://localhost:3003/authorize?state=') } }))).rejects.toThrow('No state was found in the request');
 
     });
 
@@ -123,28 +123,28 @@ describe('SafariCookieSaveHandler', () => {
 
     it('should return false if no context was provided', async () => {
 
-      expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
-      expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
-    it('should return false if no request was provided', () => {
+    it('should return false if no request was provided', async () => {
 
-      expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
 
     });
 
-    it('should return false if no url is provided', () => {
+    it('should return false if no url is provided', async () => {
 
-      expect(lastValueFrom(handler.canHandle(
+      await expect(lastValueFrom(handler.canHandle(
         { ...context, request: { ...context.request, url: undefined } }
       ))).resolves.toEqual(false);
 
     });
 
-    it('should return false if no headers are provided', () => {
+    it('should return false if no headers are provided', async () => {
 
-      expect(lastValueFrom(handler.canHandle(
+      await expect(lastValueFrom(handler.canHandle(
         { ...context, request: { ...context.request, headers: undefined } }
       ))).resolves.toEqual(false);
 
