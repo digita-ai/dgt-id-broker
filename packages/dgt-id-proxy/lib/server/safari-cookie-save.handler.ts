@@ -44,8 +44,6 @@ export class SafariCookieSaveHandler extends HttpHandler {
 
         const cookies = response.headers['set-cookie'];
 
-        if (!cookies) return of(response);
-
         if(safariAgent) {
 
           this.cookieStore.set(state, cookies);

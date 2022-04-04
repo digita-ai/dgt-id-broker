@@ -117,6 +117,15 @@ describe('SafariCookieSaveHandler', () => {
 
     });
 
+    it('should not save cookies when user agent is not Safari', async () => {
+
+      store.set = jest.fn();
+      await expect(lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36' } } }))).resolves.toEqual(response);
+
+      expect(store.set).not.toHaveBeenCalled();
+
+    });
+
   });
 
   describe('canHandle', () => {
@@ -147,6 +156,12 @@ describe('SafariCookieSaveHandler', () => {
       await expect(lastValueFrom(handler.canHandle(
         { ...context, request: { ...context.request, headers: undefined } }
       ))).resolves.toEqual(false);
+
+    });
+
+    it('should return true if all is provided', async () => {
+
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 
