@@ -291,7 +291,14 @@
                   "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
                 },
                 {
-                  "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+                  "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
+                  "@type": "SafariCookieSaveHandler",
+                  "httpHandler": {
+                    "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+                  },
+                  "cookieStore": {
+                    "@id": "urn:dgt-id-proxy:default:CookieStore"
+                  }
                 }
               ]
             }
@@ -371,8 +378,8 @@
         }
       ],
       "handler": {
-          "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
-          "@type": "SafariCookieSaveHandler",
+          "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+          "@type": "SafariCookieRestoreHandler",
           "httpHandler": {
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
           },
