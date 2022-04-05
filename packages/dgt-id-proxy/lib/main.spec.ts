@@ -37,6 +37,12 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:upstreamScheme': 'https:',
     'urn:dgt-id-proxy:variables:openidConfigurationFilePath': path.join(mainModulePath, 'assets/openid-configuration.json'),
     'urn:dgt-id-proxy:variables:jwksFilePath': path.join(mainModulePath, 'assets/jwks.json'),
+    'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
+    'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
+    'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
+    'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
+    'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
+    'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
   } as Record<string, any>;
 
   const handler = {
@@ -117,7 +123,7 @@ describe('Main.ts', () => {
 
     it('should return the correct variables of the given arguments', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath, '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to' ]))
         .toEqual({
           'urn:dgt-id-proxy:variables:customConfigPath': configPath,
           'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
@@ -130,13 +136,19 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:upstreamScheme': 'http:',
           'urn:dgt-id-proxy:variables:openidConfigurationFilePath': oidcPath,
           'urn:dgt-id-proxy:variables:jwksFilePath': jwkPath,
+          'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
+          'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
+          'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
+          'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
+          'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
+          'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
         });
 
     });
 
     it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/', '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to' ]))
         .toEqual(variables);
 
     });

@@ -23,5 +23,11 @@ RUN chmod +x ./bin/server.js
 
 # Expose ports.
 EXPOSE 3003
+
 ENTRYPOINT [ "./bin/server.js" ]
-CMD [ "-u", "http://0.0.0.0:3003" ]
+CMD [ \
+    "-c", "./config/presets/auth0-config.json", \
+    "-u", "http://0.0.0.0:3003", \
+    "-o", "./assets/openid-configuration.json", \ 
+    "-j", "./assets/jwks.json", \
+]
