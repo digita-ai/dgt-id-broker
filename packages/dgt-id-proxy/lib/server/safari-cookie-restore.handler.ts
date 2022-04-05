@@ -35,7 +35,7 @@ export class SafariCookieRestoreHandler extends HttpHandler {
     return from(this.cookieStore.get(state)).pipe(
       switchMap((cookies) => {
 
-        if (!cookies)return throwError(() => new Error('No matching cookies found for state ' + state));
+        if (!cookies) return throwError(() => new Error('No matching cookies found for state ' + state));
 
         context.request.headers.cookie = cookies;
 
