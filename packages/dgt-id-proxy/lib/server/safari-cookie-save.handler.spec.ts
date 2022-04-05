@@ -10,7 +10,7 @@ describe('SafariCookieSaveHandler', () => {
   const cookies = 'did=s%3Av0%3Af9a07f70-b419-11ec-a357-91ddac1a39df.rSBdlgwAjdvMukpYnLu0z1o41xGKujmwsT2Wpdtcy%2BE; Max-Age=31557600; Path=/; Expires=Tue, 04 Apr 2023 19:20:19 GMT; HttpOnly; Secure; SameSite=None';
 
   const response = {
-    headers: { 'set-cookie': cookies },
+    headers: { 'set-cookie': cookies, 'location': `http://localhost:3003/authorize?state=${state}` },
   };
 
   const nestedHandler = {
@@ -80,12 +80,6 @@ describe('SafariCookieSaveHandler', () => {
 
     });
 
-    it('should error when not state was found', async () => {
-
-      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, url: new URL('http://localhost:3003/authorize?state=') } }))).rejects.toThrow('No state was found in the request');
-
-    });
-
     it('should error when no request headers were found', async () => {
 
       await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: undefined } }))).rejects.toThrow('No headers were found in the request');
@@ -102,7 +96,6 @@ describe('SafariCookieSaveHandler', () => {
 
       await lastValueFrom(handler.handle(context));
 
-      expect(nestedHandler.handle).toHaveBeenCalledTimes(1);
       expect(nestedHandler.handle).toHaveBeenCalledWith(context);
 
     });

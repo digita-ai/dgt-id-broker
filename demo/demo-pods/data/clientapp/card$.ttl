@@ -9,5 +9,5 @@
 <http://localhost:3002/clientapp/card#me>
     a foaf:Person;
     foaf:name "clientapp";
-    solid:oidcIssuer <http://localhost:3003> ;
+    solid:oidcIssuer <http://localhost:3003/> ;
     solid:oidcIssuerRegistrationToken "" .

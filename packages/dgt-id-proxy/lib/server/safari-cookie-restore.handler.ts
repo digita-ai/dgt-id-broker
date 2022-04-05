@@ -24,14 +24,18 @@ export class SafariCookieRestoreHandler extends HttpHandler {
 
     if (!context.request.url) return throwError(() => new Error('A URL must be provided'));
 
-    const state = context.request.url.searchParams.get('state');
+    let state = context.request.url.searchParams.get('state');
 
     if (!state) return throwError(() => new Error('No state was found in the request'));
+
+    const refererState = context.request.headers.referer.split('state=')[1];
+
+    if (refererState && state !== refererState) state = refererState;
 
     return from(this.cookieStore.get(state)).pipe(
       switchMap((cookies) => {
 
-        if (!cookies) return throwError(() => new Error('No matching cookies found for state ' + state));
+        if (!cookies)return throwError(() => new Error('No matching cookies found for state ' + state));
 
         context.request.headers.cookie = cookies;
 

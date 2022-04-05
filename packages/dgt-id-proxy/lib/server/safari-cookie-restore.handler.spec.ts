@@ -6,6 +6,7 @@ import { SafariCookieRestoreHandler } from './safari-cookie-restore.handler';
 describe('SafaraCookieRestoreHandler', () => {
 
   const state = 'hKFo2SBHdzJBMFFwLUxIcmp3Um';
+  const refererState = 'o2NpZNkgcjVvaW9ObFgxSXlNOWduUTJ';
   const cookies = 'did=s%3Av0%3Af9a07f70-b419-11ec-a357-91ddac1a39df.rSBdlgwAjdvMukpYnLu0z1o41xGKujmwsT2Wpdtcy%2BE; Max-Age=31557600; Path=/; Expires=Tue, 04 Apr 2023 19:20:19 GMT; HttpOnly; Secure; SameSite=None';
 
   const nestedHandler = {
@@ -22,7 +23,7 @@ describe('SafaraCookieRestoreHandler', () => {
 
     context = {
       request: {
-        headers: {},
+        headers: { 'referer': `http://localhost:3003/u/login?state=${state}` },
         body: {},
         method: 'POST',
         url: new URL(`http://localhost:3003/u/login?state=${state}`),
@@ -104,6 +105,17 @@ describe('SafaraCookieRestoreHandler', () => {
         store.get = jest.fn().mockReturnValueOnce(of(undefined));
 
         await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No matching cookies found for state ' + state);
+
+      });
+
+      it('should swap states with refererState if not the same', async () => {
+
+        store.get = jest.fn().mockReturnValueOnce(of(cookies));
+
+        await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'referer': `http://localhost:3003/u/login?state=${refererState}` } } }));
+
+        expect(store.get).toHaveBeenCalledTimes(1);
+        expect(store.get).toHaveBeenCalledWith(refererState);
 
       });
 

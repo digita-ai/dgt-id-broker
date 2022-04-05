@@ -1,5 +1,5 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { Observable, of, switchMap, throwError } from 'rxjs';
+import { mapTo, Observable, of, switchMap, throwError } from 'rxjs';
 import { KeyValueStore } from '../storage/key-value-store';
 
 export class SafariCookieSaveHandler extends HttpHandler {
@@ -22,10 +22,6 @@ export class SafariCookieSaveHandler extends HttpHandler {
 
     if (!context.request.url) return throwError(() => new Error('A URL must be provided'));
 
-    const state = context.request.url.searchParams.get('state');
-
-    if (!state) return throwError(() => new Error('No state was found in the request'));
-
     if (!context.request.headers) return throwError(() => new Error('No headers were found in the request'));
 
     const userAgent = context.request.headers['user-agent'];
@@ -42,17 +38,15 @@ export class SafariCookieSaveHandler extends HttpHandler {
     return this.httpHandler.handle(context).pipe(
       switchMap((response: HttpHandlerResponse) => {
 
+        const state = response.headers.location.split('state=')[1];
+
         const cookies = response.headers['set-cookie'];
 
-        if(safariAgent) {
-
-          this.cookieStore.set(state, cookies);
-
-        }
+        if(safariAgent) this.cookieStore.set(state, cookies);
 
         return of(response);
 
-      })
+      }),
     );
 
   }
