@@ -354,7 +354,14 @@
         "@type": "PipeThroughHandler",
         "handlers": [
           {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+            "@type": "SafariCookieRestoreHandler",
+            "httpHandler": {
+              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            "cookieStore": {
+               "@id": "urn:dgt-id-proxy:default:CookieStore"
+            }
           },
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
