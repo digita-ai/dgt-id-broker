@@ -408,7 +408,7 @@
         }
       ],
       "handler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "path": "/u/consent"
     },
