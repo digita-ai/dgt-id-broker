@@ -15,6 +15,8 @@ describe('SafaraCookieRestoreHandler', () => {
     safeHandle: jest.fn(),
   };
 
+  const chromeAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36';
+  const safariAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15';
   const store = new InMemoryStore() as InMemoryStore<string, string>;
   const handler = new SafariCookieRestoreHandler(nestedHandler, store);
   let context: HttpHandlerContext;
@@ -23,7 +25,7 @@ describe('SafaraCookieRestoreHandler', () => {
 
     context = {
       request: {
-        headers: { 'referer': `http://localhost:3003/u/login?state=${state}` },
+        headers: { 'referer': `http://localhost:3003/u/login?state=${state}`, 'user-agent': safariAgent },
         body: {},
         method: 'POST',
         url: new URL(`http://localhost:3003/u/login?state=${state}`),
@@ -112,10 +114,37 @@ describe('SafaraCookieRestoreHandler', () => {
 
         store.get = jest.fn().mockReturnValueOnce(of(cookies));
 
-        await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'referer': `http://localhost:3003/u/login?state=${refererState}` } } }));
+        await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'referer': `http://localhost:3003/u/login?state=${refererState}`, 'user-agent': safariAgent } } }));
 
         expect(store.get).toHaveBeenCalledTimes(1);
         expect(store.get).toHaveBeenCalledWith(refererState);
+
+      });
+
+      it('should error when no user agent was found', async () => {
+
+        await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'user-agent': undefined } } }))).rejects.toThrow('No userAgent was found in the request');
+
+      });
+
+      it('should straight handle context if user agent is not Safari', async () => {
+
+        store.get = jest.fn();
+        await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'user-agent': chromeAgent } } }));
+
+        expect(nestedHandler.handle).toHaveBeenCalledWith({ ...context, request: { ...context.request, headers: { 'user-agent': chromeAgent } } });
+        expect(store.get).not.toHaveBeenCalled();
+
+      });
+
+      it('should call the cookie store with state if no refererState', async () => {
+
+        store.get = jest.fn().mockReturnValueOnce(of(cookies));
+
+        await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'user-agent': safariAgent, 'referer': `http://localhost:3003/u/login` } } }));
+
+        expect(store.get).toHaveBeenCalledTimes(1);
+        expect(store.get).toHaveBeenCalledWith(state);
 
       });
 

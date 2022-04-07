@@ -1,10 +1,14 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { mapTo, Observable, of, switchMap, throwError } from 'rxjs';
+import { Observable, of, switchMap, throwError } from 'rxjs';
 import { KeyValueStore } from '../storage/key-value-store';
+import { verifyUserAgent } from '../util/verify-user-agent';
 
 export class SafariCookieSaveHandler extends HttpHandler {
 
-  constructor(private httpHandler: HttpHandler, private cookieStore: KeyValueStore<string, string>) {
+  constructor(
+    private httpHandler: HttpHandler,
+    private cookieStore: KeyValueStore<string, string>
+  ) {
 
     super();
 
@@ -28,12 +32,7 @@ export class SafariCookieSaveHandler extends HttpHandler {
 
     if (!userAgent) return throwError(() => new Error('No userAgent was found in the request'));
 
-    // check if user matches safari
-    let safariAgent = userAgent.indexOf('Safari') > -1;
-    const chromeAgent = userAgent.indexOf('Chrome') > -1;
-
-    // chrome user agent also matches safari so made sure to rule that out
-    if ((chromeAgent) && (safariAgent)) safariAgent = false;
+    const safariAgent = verifyUserAgent(context.request.headers['user-agent']);
 
     return this.httpHandler.handle(context).pipe(
       switchMap((response: HttpHandlerResponse) => {
