@@ -408,7 +408,14 @@
         }
       ],
       "handler": {
-        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+        "@type": "SafariCookieRestoreHandler",
+        "httpHandler": {
+          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        },
+        "cookieStore": {
+           "@id": "urn:dgt-id-proxy:default:CookieStore"
+        }
       },
       "path": "/u/consent"
     },
