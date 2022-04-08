@@ -41,8 +41,6 @@ export class SafariCookieRestoreHandler extends HttpHandler {
     were initially linked to in the store */
     const refererState = context.request.headers.referer.split('state=')[1];
 
-    // console.log('retrieving cookies', refererState ?? state);
-
     // retrieve the cookies with refererState (or state if no referer is present, (initial request))
     return from(this.cookieStore.get(refererState ?? state)).pipe(
       switchMap((cookies) => {
