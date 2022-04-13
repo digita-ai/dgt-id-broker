@@ -3,7 +3,7 @@ import { lastValueFrom, of } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { SafariCookieRestoreHandler } from './safari-cookie-restore.handler';
 
-describe('SafaraCookieRestoreHandler', () => {
+describe('SafariCookieRestoreHandler', () => {
 
   const state = 'hKFo2SBHdzJBMFFwLUxIcmp3Um';
   const refererState = 'o2NpZNkgcjVvaW9ObFgxSXlNOWduUTJ';
