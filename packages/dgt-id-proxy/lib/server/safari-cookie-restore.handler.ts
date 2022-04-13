@@ -1,7 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { from, Observable, of, switchMap, throwError } from 'rxjs';
 import { KeyValueStore } from '../storage/key-value-store';
-import { verifyUserAgent } from '../util/verify-user-agent';
+import { isSafariUserAgent } from '../util/is-safari-user-agent';
 
 export class SafariCookieRestoreHandler extends HttpHandler {
 
@@ -29,7 +29,7 @@ export class SafariCookieRestoreHandler extends HttpHandler {
 
     if (!userAgent) return throwError(() => new Error('No userAgent was found in the request'));
     // check if user agent is safari
-    const safariAgent = verifyUserAgent(context.request.headers['user-agent']);
+    const safariAgent = isSafariUserAgent(context.request.headers['user-agent']);
     // if not safari no need to store cookies
     if (!safariAgent) return this.httpHandler.handle(context);
 
