@@ -2,5 +2,9 @@
     "HttpHandler",
     "Handler",
     "HttpHandlerController",
-    "RegistrationStore"
+    "RegistrationStore",
+    "Error",
+    "Date",
+    "URL",
+    "TimedTypedKeyValueStore"
 ]
