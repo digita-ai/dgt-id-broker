@@ -204,7 +204,7 @@
         "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
         "@type": "OpaqueAccessTokenHandler",
         "handler": {
-          "@type": "PipeThroughHandler",
+          "@type": "SequenceHandler",
           "handlers": [
             {
               "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -265,7 +265,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "SequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
@@ -281,7 +281,7 @@
               "@type": "InMemoryStore"
             },
             "handler": {
-              "@type": "PipeThroughHandler",
+              "@type": "SequenceHandler",
               "handlers": [
                 {
                   "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
@@ -311,7 +311,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "SequenceHandler",
         "handlers": [
           {
             "@type": "Auth0ClientRedirectHandler",
@@ -340,7 +340,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "SequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -415,7 +415,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "SequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler"
