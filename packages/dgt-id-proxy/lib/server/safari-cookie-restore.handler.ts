@@ -27,7 +27,7 @@ export class SafariCookieRestoreHandler extends HttpHandler {
 
     const userAgent = context.request.headers['user-agent'];
 
-    if (!userAgent) return throwError(() => new Error('No userAgent was found in the request'));
+    if (!userAgent) return this.httpHandler.handle(context);
     // check if user agent is safari
     const safariAgent = isSafariUserAgent(context.request.headers['user-agent']);
     // if not safari no need to store cookies

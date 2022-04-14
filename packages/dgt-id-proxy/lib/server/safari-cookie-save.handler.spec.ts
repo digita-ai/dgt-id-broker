@@ -86,9 +86,13 @@ describe('SafariCookieSaveHandler', () => {
 
     });
 
-    it('should error when no user agent was found', async () => {
+    it('should straight handle context when no user agent was found', async () => {
 
-      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'user-agent': undefined } } }))).rejects.toThrow('No userAgent was found in the request');
+      store.set = jest.fn();
+      await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'user-agent': undefined } } }));
+
+      expect(nestedHandler.handle).toHaveBeenCalledWith({ ...context, request: { ...context.request, headers: { 'user-agent': undefined } } });
+      expect(store.set).not.toHaveBeenCalled();
 
     });
 

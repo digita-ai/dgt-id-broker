@@ -30,7 +30,7 @@ export class SafariCookieSaveHandler extends HttpHandler {
 
     const userAgent = context.request.headers['user-agent'];
 
-    if (!userAgent) return throwError(() => new Error('No userAgent was found in the request'));
+    if (!userAgent) return this.httpHandler.handle(context);
 
     const safariAgent = isSafariUserAgent(context.request.headers['user-agent']);
 
