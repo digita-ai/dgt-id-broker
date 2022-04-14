@@ -148,7 +148,11 @@
     },
     {
       "@id": "urn:dgt-id-proxy:default:StateStore",
-      "@type": "InMemoryStore"
+      "range": {
+        "@type": "ParameterRangeGenericComponent",
+        "genericTypeInstancesComponentScope": "InMemoryStore",
+        "genericTypeInstances": [ "xsd:string", "xsd:boolean" ]
+      }
     },
     {
       "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
@@ -265,7 +269,7 @@
         }
       ],
       "handler": {
-        "@type": "SequenceHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
@@ -311,7 +315,7 @@
         }
       ],
       "handler": {
-        "@type": "SequenceHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@type": "Auth0ClientRedirectHandler",
@@ -340,7 +344,7 @@
         }
       ],
       "handler": {
-        "@type": "SequenceHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -415,7 +419,7 @@
         }
       ],
       "handler": {
-        "@type": "SequenceHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler"
