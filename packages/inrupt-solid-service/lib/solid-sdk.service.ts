@@ -214,7 +214,7 @@ export class SolidSDKService implements SolidService {
     const session = await handleIncomingRedirect({ restorePreviousSession: this.restorePreviousSession });
 
     return session && session.isLoggedIn && session.webId
-      ? { webId: session.webId, ...session } : Promise.reject();
+      ? { webId: session.webId } : Promise.reject();
 
   }
 
