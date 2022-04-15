@@ -6,8 +6,7 @@
 
 import { writeFileSync } from 'fs';
 import * as path from 'path';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { fromKeyLike } from 'jose/jwk/from_key_like';
+import { generateKeyPair, exportJWK } from 'jose';
 import { v4 as uuid } from 'uuid';
 
 const args = process.argv.slice(2);
@@ -16,13 +15,13 @@ const filePath = args[0] ?? '../../assets/jwks.json';
 const generateKeys = async () => {
 
   const ecKey =  await generateKeyPair('ES256');
-  const ecJwk = await fromKeyLike(ecKey.privateKey);
+  const ecJwk = await exportJWK(ecKey.privateKey);
   ecJwk.kid = uuid();
   ecJwk.alg = 'ES256';
   ecJwk.use = 'sig';
 
   const rsaKey =  await generateKeyPair('RS256');
-  const rsaJwk = await fromKeyLike(rsaKey.privateKey);
+  const rsaJwk = await exportJWK(rsaKey.privateKey);
   rsaJwk.kid = uuid();
   rsaJwk.alg = 'RS256';
   rsaJwk.use = 'sig';

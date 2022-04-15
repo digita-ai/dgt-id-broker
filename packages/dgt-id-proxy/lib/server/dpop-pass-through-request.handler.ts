@@ -1,14 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError, tap, map } from 'rxjs/operators';
-import { EmbeddedJWK } from 'jose/jwk/embedded';
-import { calculateThumbprint } from 'jose/jwk/thumbprint';
-import { jwtVerify } from 'jose/jwt/verify';
-import { JWTVerifyResult } from 'jose/types';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { fromKeyLike } from 'jose/jwk/from_key_like';
-import { SignJWT } from 'jose/jwt/sign';
-import { decode } from 'jose/util/base64url';
+import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyResult, generateKeyPair, exportJWK, SignJWT, base64url } from 'jose';
 
 /**
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that verifies the DPoP-proof, replaces the htm with one pointing to the upstream,
@@ -101,7 +94,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
     }
 
     return from(generateKeyPair('ES256')).pipe(
-      switchMap(({ publicKey, privateKey }) =>  zip(from(fromKeyLike(publicKey)), of(privateKey))),
+      switchMap(({ publicKey, privateKey }) =>  zip(from(exportJWK(publicKey)), of(privateKey))),
       switchMap(([ publicJwk, privateKey ]) => from(
         new SignJWT({ ...payload, htu: this.upstreamTokenUrl })
           .setProtectedHeader({ ...header, jwk: publicJwk })
@@ -147,9 +140,9 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
     originalDpopProof: string
   ): Observable<HttpHandlerResponse> {
 
-    const originalDpopProofHeader = JSON.parse(decode(originalDpopProof.split('.')[0]).toString());
+    const originalDpopProofHeader = JSON.parse(base64url.decode(originalDpopProof.split('.')[0]).toString());
 
-    return from(calculateThumbprint(originalDpopProofHeader.jwk)).pipe(
+    return from(calculateJwkThumbprint(originalDpopProofHeader.jwk)).pipe(
       tap((thumbprint) => response.body.access_token.payload.cnf = { 'jkt': thumbprint }),
       map(() => ({
         body: response.body,

@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
@@ -73,22 +73,22 @@ describe('PkceAuthRequestHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => pkceHandler.handle(undefined).toPromise()).rejects.toThrow('Context cannot be null or undefined');
-      await expect(() => pkceHandler.handle(null).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(pkceHandler.handle(undefined))).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(pkceHandler.handle(null))).rejects.toThrow('Context cannot be null or undefined');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => pkceHandler.handle({ ... context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => pkceHandler.handle({ ... context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(pkceHandler.handle({ ... context, request: null }))).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(pkceHandler.handle({ ... context, request: undefined }))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
-      await expect(() => pkceHandler.handle({ ... context, request: { ...context.request, url: null } }).toPromise()).rejects.toThrow('No url was included in the request');
-      await expect(() => pkceHandler.handle({ ... context, request: { ...context.request, url: undefined } }).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(pkceHandler.handle({ ... context, request: { ...context.request, url: null } }))).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(pkceHandler.handle({ ... context, request: { ...context.request, url: undefined } }))).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -98,13 +98,13 @@ describe('PkceAuthRequestHandler', () => {
       noStateURL.searchParams.set('state', '');
       const emptyStateContext = { ... context, request: { ...context.request, url: noStateURL } };
 
-      await expect(() => pkceHandler.handle(emptyStateContext).toPromise())
+      await expect(() => lastValueFrom(pkceHandler.handle(emptyStateContext)))
         .rejects.toThrow('Request must contain a state. Add state handlers to the proxy.');
 
       noStateURL.searchParams.delete('state');
       const noStateContext = { ... context, request: { ...context.request, url: noStateURL } };
 
-      await expect(() => pkceHandler.handle(noStateContext).toPromise())
+      await expect(() => lastValueFrom(pkceHandler.handle(noStateContext)))
         .rejects.toThrow('Request must contain a state. Add state handlers to the proxy.');
 
     });
@@ -117,12 +117,12 @@ describe('PkceAuthRequestHandler', () => {
       const responseBody = JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge must be provided.' });
       const noChallengeContext = { ... context, request: { ...context.request, url: noChallengeURL } };
 
-      await expect(pkceHandler.handle(noChallengeContext).toPromise())
+      await expect(lastValueFrom(pkceHandler.handle(noChallengeContext)))
         .resolves.toEqual({ ...response, body: responseBody });
 
       noChallengeURL.searchParams.delete('code_challenge');
 
-      await expect(pkceHandler.handle(noChallengeContext).toPromise())
+      await expect(lastValueFrom(pkceHandler.handle(noChallengeContext)))
         .resolves.toEqual({ ...response, body: responseBody });
 
     });
@@ -135,19 +135,19 @@ describe('PkceAuthRequestHandler', () => {
       const responseBody = JSON.stringify({ error: 'invalid_request', error_description: 'A code challenge method must be provided' });
       const noMethodContext = { ... context, request: { ...context.request, url: noMethodURL } };
 
-      await expect(pkceHandler.handle(noMethodContext).toPromise())
+      await expect(lastValueFrom(pkceHandler.handle(noMethodContext)))
         .resolves.toEqual({ ...response, body: responseBody });
 
       noMethodURL.searchParams.delete('code_challenge_method');
 
-      await expect(pkceHandler.handle(noMethodContext).toPromise())
+      await expect(lastValueFrom(pkceHandler.handle(noMethodContext)))
         .resolves.toEqual({ ...response, body: responseBody });
 
     });
 
     it('should use the given state as a key to save the challenge & method & state in memory', async () => {
 
-      await pkceHandler.handle(context).toPromise();
+      await lastValueFrom(pkceHandler.handle(context));
 
       await expect(store.get(state)
         .then((data) => data)).resolves.toEqual(challengeAndMethodAndState);
@@ -160,21 +160,21 @@ describe('PkceAuthRequestHandler', () => {
 
     it('should return false if no context was provided', async () => {
 
-      await expect(pkceHandler.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(pkceHandler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(pkceHandler.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(pkceHandler.canHandle(undefined))).resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(pkceHandler.canHandle({ ...context, request: undefined }).toPromise()).resolves.toEqual(false);
-      await expect(pkceHandler.canHandle({ ...context, request: null }).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(pkceHandler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
+      await expect(lastValueFrom(pkceHandler.canHandle({ ...context, request: null }))).resolves.toEqual(false);
 
     });
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(pkceHandler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(pkceHandler.canHandle(context))).resolves.toEqual(true);
 
     });
 

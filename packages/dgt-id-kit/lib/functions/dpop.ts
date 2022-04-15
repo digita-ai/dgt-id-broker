@@ -1,9 +1,5 @@
-import { fromKeyLike } from 'jose/jwk/from_key_like';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
-import { SignJWT } from 'jose/jwt/sign';
+import { exportJWK, generateKeyPair, SignJWT, importJWK, JWK } from 'jose';
 import { v4 } from 'uuid';
-import { parseJwk } from 'jose/jwk/parse';
-import { JWK } from 'jose/types';
 import { KeyGenerationAlgorithm } from '../models/key-generation-algorithm.model';
 
 export interface generateKeysReturnObject {
@@ -25,8 +21,8 @@ export const generateKeys = async (
 
     const keyPair = await generateKeyPair(algorithm, { extractable: true });
 
-    const privateKey = await fromKeyLike(keyPair.privateKey);
-    const publicKey = await fromKeyLike(keyPair.publicKey);
+    const privateKey = await exportJWK(keyPair.privateKey);
+    const publicKey = await exportJWK(keyPair.publicKey);
 
     return {
       privateKey,
@@ -61,6 +57,7 @@ export const createDpopProof = async (
   if (!htu) throw new Error('Parameter "htu" should be set');
   if (!publicKey) throw new Error('Parameter "publicKey" should be set');
   if (!privateKey) throw new Error('Parameter "privateKey" should be set');
+  if (!publicKey.alg) throw new Error('Parameter "publicKey.alg" should be set');
 
   try {
 
@@ -74,7 +71,7 @@ export const createDpopProof = async (
       })
       .setJti(v4())
       .setIssuedAt()
-      .sign(await parseJwk(privateKey, publicKey.alg));
+      .sign(await importJWK(privateKey, publicKey.alg));
 
   } catch (error: unknown) {
 

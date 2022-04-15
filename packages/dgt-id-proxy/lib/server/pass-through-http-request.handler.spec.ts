@@ -2,6 +2,7 @@ import http, { IncomingMessage, OutgoingMessage } from 'http';
 import https from 'https';
 import { Socket } from 'net';
 import { gzipSync, brotliCompressSync, deflateSync } from 'zlib';
+import { lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { PassThroughHttpRequestHandler } from './pass-through-http-request.handler';
 
@@ -73,50 +74,50 @@ describe('PassThroughHttpRequestHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('Context cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('Context cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('Context cannot be null or undefined');
 
     });
 
     it('should error when no context request is provided', async () => {
 
       context.request = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No request was included in the context');
       context.request = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request method is provided', async () => {
 
       context.request.method = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No method was included in the request');
       context.request.method = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No method was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No method was included in the request');
 
     });
 
     it('should error when no context request headers are provided', async () => {
 
       context.request.headers = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No headers were included in the request');
       context.request.headers = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No headers were included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No headers were included in the request');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
       context.request.url = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
       context.request.url = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
 
     });
 
     it('should call http.request when scheme is http', async () => {
 
-      await expect(handler.handle(context).toPromise()).resolves
+      await expect(lastValueFrom(handler.handle(context))).resolves
         .toEqual({ body: mockHttpBuffer, status: 200, headers: {} });
 
       expect(http.request).toHaveBeenCalledTimes(1);
@@ -126,7 +127,7 @@ describe('PassThroughHttpRequestHandler', () => {
     it('should call https.request when scheme is https', async () => {
 
       const httpsHandler = new PassThroughHttpRequestHandler('localhost', 3000, 'https:', 'http://urlofproxy.com');
-      await expect(httpsHandler.handle(context).toPromise()).resolves.toEqual({ body: Buffer.from('mockHttps'), status: 200, headers: {} });
+      await expect(lastValueFrom(httpsHandler.handle(context))).resolves.toEqual({ body: Buffer.from('mockHttps'), status: 200, headers: {} });
       expect(https.request).toHaveBeenCalledTimes(1);
 
     });
@@ -134,7 +135,7 @@ describe('PassThroughHttpRequestHandler', () => {
     it('should call write on the request when the request includes a body', async () => {
 
       context.request.body = 'mockBody';
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       expect(httpRequest.write).toHaveBeenCalledTimes(1);
 
     });
@@ -142,7 +143,7 @@ describe('PassThroughHttpRequestHandler', () => {
     it('should call write on the request with a stringified JSON string when the request includes a JSON object body', async () => {
 
       context.request.body = { mockKey: 'mockValue' };
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       expect(httpRequest.write).toHaveBeenCalledTimes(1);
       expect(httpRequest.write).toHaveBeenCalledWith(JSON.stringify(context.request.body));
 
@@ -154,7 +155,7 @@ describe('PassThroughHttpRequestHandler', () => {
         location: 'http://localhost:3000/mock/path',
       };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: mockHttpBuffer, status: 200, headers: { location: 'http://urlofproxy.com/mock/path' } });
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({ body: mockHttpBuffer, status: 200, headers: { location: 'http://urlofproxy.com/mock/path' } });
 
     });
 
@@ -164,7 +165,7 @@ describe('PassThroughHttpRequestHandler', () => {
         location: 'http://notupstream.com/mock/path',
       };
 
-      await expect(handler.handle(context).toPromise()).resolves.toEqual({ body: mockHttpBuffer, status: 200, headers: { location: 'http://notupstream.com/mock/path' } });
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual({ body: mockHttpBuffer, status: 200, headers: { location: 'http://notupstream.com/mock/path' } });
 
     });
 
@@ -172,7 +173,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       resp.statusCode = undefined;
 
-      await expect(handler.handle(context).toPromise()).resolves
+      await expect(lastValueFrom(handler.handle(context))).resolves
         .toEqual({ body: mockHttpBuffer, status: 500, headers: {} });
 
     });
@@ -182,7 +183,7 @@ describe('PassThroughHttpRequestHandler', () => {
       resp.statusCode = 400;
       const errorHandlingHandler = new PassThroughHttpRequestHandler('digita.ai', 80, 'http:', 'http://urlofproxy.com', true);
 
-      await expect(errorHandlingHandler.handle(context).toPromise()).rejects.toEqual({ headers: {}, status: 400 });
+      await expect(lastValueFrom(errorHandlingHandler.handle(context))).rejects.toEqual({ headers: {}, status: 400 });
 
     });
 
@@ -199,7 +200,7 @@ describe('PassThroughHttpRequestHandler', () => {
       };
 
       http.request = jest.fn().mockImplementation((options, callback) => mockErrorResponseImplementation('mockHttp', callback));
-      await expect(handler.handle(context).toPromise()).rejects.toThrow('Error resolving the response in the PassThroughHandler: mock error');
+      await expect(lastValueFrom(handler.handle(context))).rejects.toThrow('Error resolving the response in the PassThroughHandler: mock error');
 
     });
 
@@ -210,7 +211,7 @@ describe('PassThroughHttpRequestHandler', () => {
       };
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('<src="http://localhost:3000/test"\><action="http://localhost:3000/test"\><href="http://localhost:3000/test"\><value="http://localhost:3000/test"\>'), callback));
-      const response = await handler.handle(context).toPromise();
+      const response = await lastValueFrom(handler.handle(context));
 
       expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><action="http://urlofproxy.com/test"\><href="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
@@ -227,7 +228,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
 
-      const response = await handler.handle(context).toPromise();
+      const response = await lastValueFrom(handler.handle(context));
 
       expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
@@ -244,7 +245,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
 
-      const response = await handler.handle(context).toPromise();
+      const response = await lastValueFrom(handler.handle(context));
 
       expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
@@ -261,7 +262,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
 
-      const response = await handler.handle(context).toPromise();
+      const response = await lastValueFrom(handler.handle(context));
 
       expect(response.body.toString()).toEqual('<src="http://urlofproxy.com/test"\><value="http://localhost:3000/test"\>');
 
@@ -278,7 +279,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
 
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow(`Compression type 'unknownDecompressionType' is unknown`);
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow(`Compression type 'unknownDecompressionType' is unknown`);
 
     });
 
@@ -293,7 +294,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(body, callback));
 
-      const response = await handler.handle(context).toPromise();
+      const response = await lastValueFrom(handler.handle(context));
 
       expect(response.body).toEqual(JSON.stringify({ mockKey: 'mockValue' }));
       expect(response.headers['content-encoding']).toBeUndefined();
@@ -312,7 +313,7 @@ describe('PassThroughHttpRequestHandler', () => {
 
       http.request = jest.fn().mockImplementation((options, callback) => mockRequestImplementation(Buffer.from('some body'), callback));
 
-      const response = await handler.handle(context).toPromise();
+      const response = await lastValueFrom(handler.handle(context));
 
       expect(response.headers).toEqual({
         'content-type': 'application/json,text/html',
@@ -329,20 +330,20 @@ describe('PassThroughHttpRequestHandler', () => {
 
     it('should return false if no context was provided', async () => {
 
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
     it('should return false if no context request was provided', async () => {
 
       context.request = undefined;
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(false);
 
     });
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 

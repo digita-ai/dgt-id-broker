@@ -2,7 +2,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
-import { KeyValueStore } from '../storage/key-value-store';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**

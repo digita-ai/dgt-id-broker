@@ -6,9 +6,7 @@ import { Observable, of, throwError, from, zip } from 'rxjs';
 import { map, mapTo, switchMap } from 'rxjs/operators';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Writer, DataFactory } from 'n3';
-import { JWK, JWTPayload } from 'jose/types';
-import parseJwk from 'jose/jwk/parse';
-import SignJWT from 'jose/jwt/sign';
+import { importJWK, JWK, JWTPayload, SignJWT } from 'jose';
 import { v4 as uuid }  from 'uuid';
 
 /**
@@ -203,7 +201,13 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     path.isAbsolute(this.pathToJwks) ? this.pathToJwks : path.join(process.cwd(), this.pathToJwks)
   )).pipe(
     switchMap((keyFile: Buffer) => of<JWK>(JSON.parse(keyFile.toString()).keys[0])),
-    switchMap((jwk: JWK) => zip(of(jwk.alg), of(jwk.kid), from(parseJwk(jwk)))),
+    switchMap((jwk: JWK) => {
+
+      if (!jwk.alg) return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
+
+      return zip(of(jwk.alg), of(jwk.kid), from(importJWK(jwk)));
+
+    }),
   );
 
   private signJwtPayload = (jwtPayload: JWTPayload, typ: string) => zip(of(jwtPayload), this.getSigningKit()).pipe(

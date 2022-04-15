@@ -1,3 +1,4 @@
+import { lastValueFrom  } from 'rxjs';
 import { SingleClaimWebIdFactory } from './single-claim-webid-factory';
 
 describe('SingleClaimWebIdFactory', () => {
@@ -38,7 +39,7 @@ describe('SingleClaimWebIdFactory', () => {
 
       const factory = new SingleClaimWebIdFactory(pattern);
 
-      const minted_webid = await factory.handle(id_token_payload).toPromise();
+      const minted_webid = await lastValueFrom(factory.handle(id_token_payload));
 
       expect(minted_webid).toEqual(expected);
 
@@ -47,7 +48,7 @@ describe('SingleClaimWebIdFactory', () => {
     it('should set the claim as sub if no claim was provided', async () => {
 
       const noClaimWebIdFactory = new SingleClaimWebIdFactory(webIdPattern);
-      const minted_webid = await noClaimWebIdFactory.handle(id_token_payload).toPromise();
+      const minted_webid = await lastValueFrom(noClaimWebIdFactory.handle(id_token_payload));
 
       expect(minted_webid).toEqual('http://localhost:3002/123456789/profile/card#me');
 
@@ -55,16 +56,16 @@ describe('SingleClaimWebIdFactory', () => {
 
     it('should error when no payload was provided', async () => {
 
-      await expect(() => singleClaimWebIdFactory.handle(null).toPromise()).rejects.toThrow('No payload was provided');
-      await expect(() => singleClaimWebIdFactory.handle(undefined).toPromise()).rejects.toThrow('No payload was provided');
+      await expect(() => lastValueFrom(singleClaimWebIdFactory.handle(null))).rejects.toThrow('No payload was provided');
+      await expect(() => lastValueFrom(singleClaimWebIdFactory.handle(undefined))).rejects.toThrow('No payload was provided');
 
     });
 
     it('should error when custom claim is missing in the payload was provided', async () => {
 
-      await expect(() => singleClaimWebIdFactory.handle({
+      await expect(() => lastValueFrom(singleClaimWebIdFactory.handle({
         'webid': 'http://example.com/examplename/profile/card#me',
-      },).toPromise()).rejects.toThrow('The custom claim provided was not found in the id token payload');
+      },))).rejects.toThrow('The custom claim provided was not found in the id token payload');
 
     });
 
@@ -74,14 +75,14 @@ describe('SingleClaimWebIdFactory', () => {
 
     it('should return false if no payload was provided', async () => {
 
-      await expect(singleClaimWebIdFactory.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(singleClaimWebIdFactory.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(singleClaimWebIdFactory.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(singleClaimWebIdFactory.canHandle(undefined))).resolves.toEqual(false);
 
     });
 
     it('should return true if payload was provided', async () => {
 
-      await expect(singleClaimWebIdFactory.canHandle({ 'sub': '123' }).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(singleClaimWebIdFactory.canHandle({ 'sub': '123' }))).resolves.toEqual(true);
 
     });
 

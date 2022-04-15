@@ -1,8 +1,6 @@
-import { decode } from 'jose/util/base64url';
+import { base64url, JWK, importJWK, jwtVerify, JWTVerifyResult } from 'jose';
 import { throwError, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
-import { JWK, parseJwk } from 'jose/jwk/parse';
-import { jwtVerify, JWTVerifyResult } from 'jose/jwt/verify';
 
 /**
  * Verifies the upstream JWK. Checks if all necessary headers are present.
@@ -45,7 +43,7 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
   }
 
-  const decodedHeader = JSON.parse(decode(splitToken[0]).toString());
+  const decodedHeader = JSON.parse(base64url.decode(splitToken[0]).toString());
 
   if (!decodedHeader.kid) {
 
@@ -72,7 +70,7 @@ export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observabl
 
       }
 
-      return from(parseJwk(jwk, decodedHeader.alg));
+      return from(importJWK(jwk, decodedHeader.alg));
 
     }),
     switchMap((jwkAsKeyLike) => from(jwtVerify(token, jwkAsKeyLike))),

@@ -1,4 +1,5 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
+import { lastValueFrom } from 'rxjs';
 import { JwkRequestHandler } from './jwk-request.handler';
 
 jest.mock('fs/promises', () => {
@@ -79,7 +80,7 @@ describe('JwkRequestHandler', () => {
 
     it('should return a list of keys with only the public claims of the jwks', async () => {
 
-      const resp = await handler.handle(context).toPromise();
+      const resp = await lastValueFrom(handler.handle(context));
       expect(resp.headers).toEqual({ 'Content-Type': 'application/jwk-set+json' });
       expect(resp.status).toEqual(200);
       expect(JSON.parse(resp.body)).toEqual(publicJwksJson);
@@ -92,7 +93,7 @@ describe('JwkRequestHandler', () => {
 
     it('should return true for any context', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 

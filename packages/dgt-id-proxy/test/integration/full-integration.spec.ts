@@ -1,13 +1,13 @@
 import nock = require('nock');
 import { ComponentsManager } from 'componentsjs';
 import fetchMock from 'jest-fetch-mock';
-import { fromKeyLike, JWK, KeyLike } from 'jose/jwk/from_key_like';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { exportJWK, JWK, KeyLike, generateKeyPair, SignJWT, base64url } from 'jose';
 import { v4 as uuid } from 'uuid';
-import { SignJWT } from 'jose/jwt/sign';
 import { NodeHttpServer } from '@digita-ai/handlersjs-http';
-import { decode } from 'jose/util/base64url';
+import { lastValueFrom } from 'rxjs';
 import { variables, mainModulePath, configPath } from '../setup-tests';
+
+jest.setTimeout(50000);
 
 describe('full integration', () => {
 
@@ -99,10 +99,10 @@ describe('full integration', () => {
     const keyPair = await generateKeyPair('ES256');
     privateKey1 = keyPair.privateKey;
     privateKey2 = keyPair.privateKey;
-    publicJwk1 = await fromKeyLike(keyPair.publicKey);
+    publicJwk1 = await exportJWK(keyPair.publicKey);
     publicJwk1.kid = 'mockKeyId';
     publicJwk1.alg = 'ES256';
-    publicJwk2 = await fromKeyLike(keyPair.publicKey);
+    publicJwk2 = await exportJWK(keyPair.publicKey);
     publicJwk2.kid = 'mockKeyId';
     publicJwk2.alg = 'ES256';
 
@@ -115,7 +115,7 @@ describe('full integration', () => {
 
     server = await manager.instantiate('urn:handlersjs-http:default:NodeHttpServer', { variables });
 
-    await server.start().toPromise();
+    await lastValueFrom(server.start());
 
   });
 
@@ -139,7 +139,7 @@ describe('full integration', () => {
 
   afterAll(async () => {
 
-    await server.stop().toPromise();
+    await lastValueFrom(server.stop());
 
   });
 
@@ -405,12 +405,12 @@ describe('full integration', () => {
         responseBodyJSON = await response.json();
 
         access_token = responseBodyJSON.access_token;
-        decodedHeaderAccessToken = JSON.parse(decode(access_token.split('.')[0]).toString());
-        decodedPayloadAccessToken = JSON.parse(decode(access_token.split('.')[1]).toString());
+        decodedHeaderAccessToken = JSON.parse(base64url.decode(access_token.split('.')[0]).toString());
+        decodedPayloadAccessToken = JSON.parse(base64url.decode(access_token.split('.')[1]).toString());
 
         id_token = responseBodyJSON.id_token;
-        decodedHeaderIdToken = JSON.parse(decode(id_token.split('.')[0]).toString());
-        decodedPayloadIdToken = JSON.parse(decode(id_token.split('.')[1]).toString());
+        decodedHeaderIdToken = JSON.parse(base64url.decode(id_token.split('.')[0]).toString());
+        decodedPayloadIdToken = JSON.parse(base64url.decode(id_token.split('.')[1]).toString());
 
       });
 
@@ -480,7 +480,7 @@ describe('full integration', () => {
 
         it('should contain iss claim with a valid URL of the proxy', () => {
 
-          expect(decodedPayloadAccessToken.iss).toEqual(proxyUrl);
+          expect(decodedPayloadAccessToken.iss).toEqual('http://localhost:3003/');
 
         });
 

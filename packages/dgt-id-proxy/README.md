@@ -4,9 +4,9 @@ This package provides a Proxy Server that can be used to upgrade existing OIDC I
 
 This is done through handlers which can be configured to accomplish various different needs and are completely modular. You can configure the handlers to fill in the gaps of an IdP. If your IdP can provide PKCE, do not include handlers that would add PKCE in the proxy. The reason this is possible is due to a dependency injection framework called [componentsjs](https://componentsjs.readthedocs.io/en/latest/). The proxy can be configured through JSON config files.
 
-Take a look at the list of [features](../../docs/modules/proxy/pages/index.adoc) that are supported. The documentation for each feature will also explain how the feature can be enabled by configuring handlers.
+Take a look at the list of [features](../../docs/modules/features/pages/index.adoc) that are supported. The documentation for each feature will also explain how the feature can be enabled by configuring handlers.
 
-It might also be a good idea to take a look at the [getting started page](../../docs/modules/proxy/pages/getting_started.adoc).
+It might also be a good idea to take a look at the [getting started page](../../docs/modules/features/pages/getting_started.adoc).
 
 ## Starting the proxy
 
@@ -33,7 +33,7 @@ To start the proxy open a terminal in the folder, and execute the command `npm r
 - The proxy's URL will be `http://localhost:3003`
 - The proxy will assume that the URL of the upstream server is `http://localhost:3000`
 - The proxy will be run with the config [solid-compliant-opaque-access-tokens.json](./config/presets/solid-compliant-opaque-access-tokens.json)
-- The proxy will try to find jwks under `assets/jwks.json`. You can generate JWKs by running `npm run` 
+- The proxy will try to find jwks under `assets/jwks.json`. You can generate JWKs by running `npm run generate:keys` 
 - The proxy will try to find `.well-known/openid-configuration` under `assets/openid-configuration.json`
 - The proxy will use this directory as it's main module path.
 

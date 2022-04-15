@@ -1,6 +1,7 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
-import { KeyValueStore } from '../storage/key-value-store';
+import { lastValueFrom } from 'rxjs';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { ClientIdStaticAuthRequestHandler } from './client-id-static-auth-request.handler';
 
@@ -82,24 +83,24 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     it('should error when no context was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('A context must be provided');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('A context must be provided');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('A context must be provided');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('A context must be provided');
 
     });
 
     it('should error when no context request is provided', async () => {
 
-      await expect(() => handler.handle({ ...context, request: null }).toPromise()).rejects.toThrow('No request was included in the context');
-      await expect(() => handler.handle({ ...context, request: undefined }).toPromise()).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: null }))).rejects.toThrow('No request was included in the context');
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: undefined }))).rejects.toThrow('No request was included in the context');
 
     });
 
     it('should error when no context request url is provided', async () => {
 
       context.request.url = null;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
       context.request.url = undefined;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No url was included in the request');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No url was included in the request');
 
     });
 
@@ -109,10 +110,10 @@ describe('ClientIdStaticAuthRequestHandler', () => {
       const noClientIdContext = { ... context, request: { ...context.request, url: noClientIdURL } };
 
       noClientIdContext.request.url.searchParams.set('client_id', '');
-      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('No client_id was provided');
 
       noClientIdContext.request.url.searchParams.delete('client_id');
-      await expect(() => handler.handle(noClientIdContext).toPromise()).rejects.toThrow('No client_id was provided');
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('No client_id was provided');
 
     });
 
@@ -120,7 +121,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
       url.searchParams.set('client_id', 'static_client');
       context = { ...context, request: { ...context.request, url } };
-      await expect(handler.handle(context).toPromise()).resolves.toEqual(context);
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(context);
 
     });
 
@@ -128,7 +129,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
       url.searchParams.delete('state');
       context.request.url = url;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('Request must contain a state. Add state handlers to the proxy');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('Request must contain a state. Add state handlers to the proxy');
 
     });
 
@@ -137,7 +138,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
       await expect(store.get('1234')).resolves.toBeUndefined();
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       await expect(store.get('1234')).resolves.toEqual(new URL(redirect_uri));
 
     });
@@ -146,7 +147,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
       url.searchParams.set('client_id', 'notAUrlToAWebIdDocument');
       await expect(store.get('1234')).resolves.toBeUndefined();
-      await handler.handle({ ...context, request: { ...context.request, url } }).toPromise();
+      await lastValueFrom(handler.handle({ ...context, request: { ...context.request, url } }));
       await expect(store.get('1234')).resolves.toEqual(new URL(redirect_uri));
 
     });
@@ -154,10 +155,10 @@ describe('ClientIdStaticAuthRequestHandler', () => {
     it('should error when no redirect_uri was provided', async () => {
 
       context.request.url.searchParams.set('redirect_uri', '');
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No redirect_uri was provided');
 
       context.request.url.searchParams.delete('redirect_uri');
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('No redirect_uri was provided');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('No redirect_uri was provided');
 
     });
 
@@ -165,7 +166,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
       url.searchParams.set('redirect_uri', 'notAValidURL');
       context.request.url = url;
-      await expect(() => handler.handle(context).toPromise()).rejects.toThrow('redirect_uri must be a valid URL');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('redirect_uri must be a valid URL');
 
     });
 
@@ -174,7 +175,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
       url.searchParams.set('client_id', 'http://www.w3.org/ns/solid/terms#PublicOidcClient');
       context = { ... context, request: { ...context.request, url } };
 
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
       expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
 
     });
@@ -184,7 +185,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'text/html' }, status: 200 });
 
       const badIdContext = { ...context, request: { ...context.request, url: differentClientIdURL } };
-      await expect(handler.handle(badIdContext).toPromise()).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
+      await expect(lastValueFrom(handler.handle(badIdContext))).rejects.toThrow(`Incorrect content-type: expected application/ld+json but got text/html`);
 
     });
 
@@ -192,7 +193,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
       fetchMock.once(JSON.stringify({ ...clientRegistrationData, '@context': undefined }), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await expect(handler.handle(context).toPromise()).rejects.toThrow(`client registration data should use the normative JSON-LD @context`);
+      await expect(lastValueFrom(handler.handle(context))).rejects.toThrow(`client registration data should use the normative JSON-LD @context`);
 
     });
 
@@ -200,7 +201,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
       fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
 
-      await handler.handle(context).toPromise();
+      await lastValueFrom(handler.handle(context));
 
       expect(context.request.url.searchParams.get('client_id')).toEqual(client_id_constructor);
 
@@ -212,24 +213,22 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
     it('should return true if correct context was provided', async () => {
 
-      await expect(handler.canHandle(context).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(context))).resolves.toEqual(true);
 
     });
 
     it('should return false if no context was provided', async () => {
 
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
 
     });
 
     it('should return false if no request was provided', async () => {
 
-      await expect(handler.canHandle({ ...context, request: null })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: null }))).resolves.toEqual(false);
 
-      await expect(handler.canHandle({ ...context, request: undefined })
-        .toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle({ ...context, request: undefined }))).resolves.toEqual(false);
 
     });
 

@@ -124,7 +124,7 @@ Accept: application/json
 ### an authorization request
 GET {{providerUrl}}/{{authEndpoint}}?response_type=code&scope=openid&client_id=http%3A%2F%2Flocalhost:3002%2Ftonypaillard%2Fprofile%2Fcard%23me&redirect_uri=http%3A%2F%2Flocalhost:3001%2Frequests.html HTTP/1.1
 
-### register a client exampple
+### register a client example
 POST {{providerUrl}}/{{registration}} HTTP/1.1
 Content-Type: application/json
 Accept: application/json
@@ -140,3 +140,32 @@ Accept: application/json
 ### read registration info on the client uri, using the bearer access token you received upon registration
 GET {{providerUrl}}/{{registration}}/12F77eK7STijj2KfjAQNC HTTP/1.1
 Authorization: Bearer xsTFEvcWOnm6hUmKkzV9S5pKF6_HBwQSudx2mbo1UA0
+
+### client credentials token request
+POST  http://localhost:3003/oauth/client HTTP/1.1
+Content-Type: application/json
+
+{
+    "grant_type":"client_credentials",
+    "client_id":"UdDoY0eFzeNZFHoNAD82aN4uAYjdTovH", 
+    "client_secret":"-is-LM99InKK9dXVjLNlWAxmxoi9uTYGRyW9ilMcbT0io8sGtaMi4iZsnwjb9REK",
+    "audience" : "https://useid-dev.eu.auth0.com/api/v2/"
+}
+
+###
+
+POST http://localhost:3003/passwordless/start
+Content-Type: application/json
+
+{
+  "client_id": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+  "client_secret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
+  "connection": "email",
+  "email": "...",
+  "send": "link",
+  "authParams": {
+    "scope": "openid",
+    "response_type": "code",
+    "redirect_uri": "http://localhost:3001/requests.html",
+  }
+}

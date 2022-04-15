@@ -3,6 +3,172 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.16.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.16.2...v0.16.3) (2022-03-24)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.16.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.16.1...v0.16.2) (2022-03-24)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.16.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.16.0...v0.16.1) (2022-03-22)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+## [0.16.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.2...v0.16.0) (2022-03-18)
+
+
+### **Features**
+
+* add auth0 audience in the client credentials handler ([#340](https://github.com/digita-ai/dgt-id-broker/issues/340)) ([1d9b9f5](https://github.com/digita-ai/dgt-id-broker/commit/1d9b9f5e2e3e20c7073167d4ed74541089b347a2))
+* auth0 lock library handlers ([#338](https://github.com/digita-ai/dgt-id-broker/issues/338)) ([c8e0358](https://github.com/digita-ai/dgt-id-broker/commit/c8e0358753462f4ac8a5e17c6bbb6206c73fba59))
+
+
+
+### [0.15.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.1...v0.15.2) (2022-02-24)
+
+
+### **Features**
+
+* client-credentials-handler ([#336](https://github.com/digita-ai/dgt-id-broker/issues/336)) ([5e35e58](https://github.com/digita-ai/dgt-id-broker/commit/5e35e588996eb2f87a145e3c53ad829c2df244f1))
+
+
+
+### [0.15.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.0...v0.15.1) (2022-02-24)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+## [0.15.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.3...v0.15.0) (2022-02-23)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.14.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.2...v0.14.3) (2022-02-17)
+
+
+### **Features**
+
+* always add trailing slash to proxy url ([#332](https://github.com/digita-ai/dgt-id-broker/issues/332)) ([4b59b98](https://github.com/digita-ai/dgt-id-broker/commit/4b59b98ea40c93a2c89c7b9779a6343232f978b0))
+
+
+
+### [0.14.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.1...v0.14.2) (2022-02-17)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.14.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.0...v0.14.1) (2022-02-17)
+
+
+### **Features**
+
+* url-claim-webid-factory ([#331](https://github.com/digita-ai/dgt-id-broker/issues/331)) ([6afe8a4](https://github.com/digita-ai/dgt-id-broker/commit/6afe8a4396ddb16233e48b7d2251d442bc874d94))
+
+
+
+## [0.14.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.1...v0.14.0) (2022-02-16)
+
+
+### **Documentation**
+
+* fixed incorrect path to features and getting started pages ([548efaf](https://github.com/digita-ai/dgt-id-broker/commit/548efaf2a782f0effe6018c49e61c0d4d7c93920))
+
+
+### **Features**
+
+* use keyvaluestore from handlersjs ([#329](https://github.com/digita-ai/dgt-id-broker/issues/329)) ([f69b4c8](https://github.com/digita-ai/dgt-id-broker/commit/f69b4c870d1e7ddcea42b09685b1e2d8fe95357a))
+
+
+
+### [0.13.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.0...v0.13.1) (2022-01-14)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+## [0.13.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.4...v0.13.0) (2022-01-14)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.12.4](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.3...v0.12.4) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.12.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.2...v0.12.3) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.12.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.1...v0.12.2) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+### [0.12.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.0...v0.12.1) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/dgt-id-proxy
+
+
+
+
+
+## [0.12.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.11.0...v0.12.0) (2021-12-17)
+
+
+### **Documentation**
+
+* fix incorrect script name ([a4d7ebf](https://github.com/digita-ai/dgt-id-broker/commit/a4d7ebff3009110eace8c2d0f764f5213d7c3551))
+
+
+### **Features**
+
+* webid minter setup ([#311](https://github.com/digita-ai/dgt-id-broker/issues/311)) ([9b4a26c](https://github.com/digita-ai/dgt-id-broker/commit/9b4a26ca230d8a9d1ed243e33daf93fee77dac3a))
+
+
+### **Bug Fixes**
+
+* audience claim should be client_id ([#313](https://github.com/digita-ai/dgt-id-broker/issues/313)) ([f915501](https://github.com/digita-ai/dgt-id-broker/commit/f91550151d400884abf13d16a3d027453acb2215))
+
+
+
 ## [0.11.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.10.3...v0.11.0) (2021-11-24)
 
 

@@ -3,6 +3,153 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+### [0.16.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.16.2...v0.16.3) (2022-03-24)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.16.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.16.1...v0.16.2) (2022-03-24)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.16.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.16.0...v0.16.1) (2022-03-22)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+## [0.16.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.2...v0.16.0) (2022-03-18)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.15.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.1...v0.15.2) (2022-02-24)
+
+
+### **Features**
+
+* client-credentials-handler ([#336](https://github.com/digita-ai/dgt-id-broker/issues/336)) ([5e35e58](https://github.com/digita-ai/dgt-id-broker/commit/5e35e588996eb2f87a145e3c53ad829c2df244f1))
+
+
+
+### [0.15.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.15.0...v0.15.1) (2022-02-24)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+## [0.15.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.3...v0.15.0) (2022-02-23)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.14.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.2...v0.14.3) (2022-02-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.14.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.1...v0.14.2) (2022-02-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.14.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.14.0...v0.14.1) (2022-02-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+## [0.14.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.1...v0.14.0) (2022-02-16)
+
+
+### **Features**
+
+* use keyvaluestore from handlersjs ([#329](https://github.com/digita-ai/dgt-id-broker/issues/329)) ([f69b4c8](https://github.com/digita-ai/dgt-id-broker/commit/f69b4c870d1e7ddcea42b09685b1e2d8fe95357a))
+
+
+
+### [0.13.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.13.0...v0.13.1) (2022-01-14)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+## [0.13.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.4...v0.13.0) (2022-01-14)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.12.4](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.3...v0.12.4) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.12.3](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.2...v0.12.3) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.12.2](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.1...v0.12.2) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+### [0.12.1](https://github.com/digita-ai/dgt-id-broker/compare/v0.12.0...v0.12.1) (2021-12-17)
+
+**Note:** Version bump only for package @digita-ai/solid-oidc-provider
+
+
+
+
+
+## [0.12.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.11.0...v0.12.0) (2021-12-17)
+
+
+### **Features**
+
+* webid minter setup ([#311](https://github.com/digita-ai/dgt-id-broker/issues/311)) ([9b4a26c](https://github.com/digita-ai/dgt-id-broker/commit/9b4a26ca230d8a9d1ed243e33daf93fee77dac3a))
+
+
+
 ## [0.11.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.10.3...v0.11.0) (2021-11-24)
 
 

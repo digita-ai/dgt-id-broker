@@ -1,9 +1,7 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
-import { SignJWT } from 'jose/jwt/sign';
-import { KeyLike, JWK } from 'jose/types';
-import { generateKeyPair } from 'jose/util/generate_key_pair';
+import { lastValueFrom } from 'rxjs';
+import { SignJWT, KeyLike, JWK, generateKeyPair, exportJWK } from 'jose';
 import fetchMock from 'jest-fetch-mock';
-import { fromKeyLike } from 'jose/jwk/from_key_like';
 import { JwtDecodeResponseHandler } from './jwt-decode-response.handler';
 
 describe('JwtDecodeResponseHandler', () => {
@@ -61,7 +59,7 @@ describe('JwtDecodeResponseHandler', () => {
 
     const keyPair = await generateKeyPair('ES256');
     privateKey = keyPair.privateKey;
-    publicJwk = await fromKeyLike(keyPair.publicKey);
+    publicJwk = await exportJWK(keyPair.publicKey);
     publicJwk.kid = 'mockKeyId';
     publicJwk.alg = 'ES256';
 
@@ -108,15 +106,14 @@ describe('JwtDecodeResponseHandler', () => {
 
     it('should error when no response was provided', async () => {
 
-      await expect(() => handler.handle(undefined).toPromise()).rejects.toThrow('response cannot be null or undefined');
-      await expect(() => handler.handle(null).toPromise()).rejects.toThrow('response cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(undefined))).rejects.toThrow('response cannot be null or undefined');
+      await expect(() => lastValueFrom(handler.handle(null))).rejects.toThrow('response cannot be null or undefined');
 
     });
 
     it('should pass the upstream error in an error response when needed and set status to 400', async () => {
 
-      await expect(handler.handle({ ...response, body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 })
-        .toPromise()).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
+      await expect(lastValueFrom(handler.handle({ ...response, body: JSON.stringify({ error: 'invalid_request' }), headers: { 'upstream': 'errorHeader' }, status: 401 }))).resolves.toEqual({ body: '{"error":"invalid_request"}', headers: { 'upstream': 'errorHeader' }, status: 400 });
 
     });
 
@@ -125,7 +122,7 @@ describe('JwtDecodeResponseHandler', () => {
       const token = await mockedUpstreamJwt();
       response.body = JSON.stringify({ 'access_token': token });
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include the field "id_token"');
+      await expect(() => lastValueFrom(handler.handle(response))).rejects.toThrow('the response body did not include the field "id_token"');
 
     });
 
@@ -134,7 +131,7 @@ describe('JwtDecodeResponseHandler', () => {
       const token = await mockedUpstreamJwt();
       response.body = JSON.stringify({ 'access_token': token, 'id_token': 'notAValidJwt' });
 
-      await expect(() => handler.handle(response).toPromise()).rejects.toThrow('the response body did not include a valid JWT for the field "id_token"');
+      await expect(() => lastValueFrom(handler.handle(response))).rejects.toThrow('the response body did not include a valid JWT for the field "id_token"');
 
     });
 
@@ -158,7 +155,7 @@ describe('JwtDecodeResponseHandler', () => {
         token_type: 'Bearer',
       });
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual({
+      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual({
         ...expectedResponse,
         body: {
           ...expectedResponse.body,
@@ -181,7 +178,7 @@ describe('JwtDecodeResponseHandler', () => {
         token_type: 'Bearer',
       });
 
-      await expect(handler.handle(response).toPromise()).resolves.toEqual(expectedResponse);
+      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(expectedResponse);
 
     });
 
@@ -191,14 +188,14 @@ describe('JwtDecodeResponseHandler', () => {
 
     it('should return false if no response was provided', async () => {
 
-      await expect(handler.canHandle(undefined).toPromise()).resolves.toEqual(false);
-      await expect(handler.canHandle(null).toPromise()).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(undefined))).resolves.toEqual(false);
+      await expect(lastValueFrom(handler.canHandle(null))).resolves.toEqual(false);
 
     });
 
     it('should return true if a response was provided', async () => {
 
-      await expect(handler.canHandle(response).toPromise()).resolves.toEqual(true);
+      await expect(lastValueFrom(handler.canHandle(response))).resolves.toEqual(true);
 
     });
 

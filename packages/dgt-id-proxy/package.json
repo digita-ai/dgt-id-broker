@@ -1,9 +1,10 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.11.0",
+  "version": "0.16.3",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
+  "license": "agpl-3.0",
   "exports": {
     "./package.json": "./package.json",
     ".": {
@@ -27,7 +28,7 @@
   },
   "scripts": {
     "start": "node ./bin/server.js",
-    "build": "rimraf ./dist && npm run build:ts && npm run build:components",
+    "build": "shx rm -rf dist && npm run build:ts && npm run build:components",
     "build:ts": "tsc",
     "build:components": "componentsjs-generator --typeScopedContexts -s lib -c dist/components -i .componentsignore",
     "test": "jest",
@@ -57,21 +58,22 @@
     "jest-fetch-mock": "^3.0.3",
     "jest-mock-extended": "^1.0.13",
     "lint-staged": "^12.0.2",
-    "rimraf": "^3.0.2",
+    "shx": "^0.3.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.3"
   },
   "dependencies": {
-    "@digita-ai/handlersjs-core": "^0.5.0",
-    "@digita-ai/handlersjs-http": "^0.5.0",
+    "@digita-ai/handlersjs-core": "^0.7.0",
+    "@digita-ai/handlersjs-http": "^0.7.0",
+    "@digita-ai/handlersjs-storage": "^0.7.0",
     "@types/uuid": "^8.3.0",
     "@types/yargs": "^16.0.1",
     "componentsjs": "^4.5.0",
-    "jose": "^3.11.6",
+    "jose": "^4.3.8",
     "lint-staged": "^10.5.4",
     "nock": "^13.1.1",
     "node-fetch": "^2.6.1",
-    "rxjs": "^7.4.0",
+    "rxjs": "^7.5.1",
     "slugify": "^1.5.3",
     "uuid": "^8.3.2",
     "yargs": "^17.0.1"
@@ -93,7 +95,6 @@
     "preset": "@digita-ai/jest-config",
     "displayName": "proxy",
     "testEnvironment": "node",
-    "testTimeout": 100000,
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"
     },
@@ -107,10 +108,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 97.72,
-        "functions": 99.71,
-        "lines": 99.89,
-        "statements": 99.66
+        "branches": 97.75,
+        "functions": 99.28,
+        "lines": 99.9,
+        "statements": 99.44
       }
     }
   }

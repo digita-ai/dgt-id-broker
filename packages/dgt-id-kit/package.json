@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-kit",
-  "version": "0.11.0",
+  "version": "0.16.3",
   "description": "Collection of client-side utilities for authentication with Solid services",
   "author": "Wouter Termont <wouter.termont@digita.ai>",
   "main": "./dist/index.js",
@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "demo": "vite",
-    "build": "rimraf ./dist && vite build && tsc",
+    "add": "cd ../.. && npx lerna --scope @digita-ai/dgt-id-kit add",
+    "build": "shx rm -rf dist && vite build && tsc",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "lint:staged": "lint-staged",
@@ -26,10 +27,11 @@
     "posttest": "jest-coverage-thresholds-bumper --silent --coverage-summary-path coverage-summary.json"
   },
   "dependencies": {
-    "@digita-ai/inrupt-solid-client": "0.11.0",
+    "@digita-ai/dgt-utils-core": "^0.11.3",
+    "@digita-ai/inrupt-solid-client": "0.16.3",
     "crypto-js": "^4.1.1",
     "jest-environment-jsdom": "^27.2.0",
-    "jose": "3.14.3",
+    "jose": "^4.3.8",
     "n3": "^1.11.0",
     "rdf-js": "^4.0.2",
     "uuid": "^8.3.2"
@@ -48,7 +50,7 @@
     "jest-coverage-thresholds-bumper": "^1.0.1",
     "jest-fetch-mock": "^3.0.3",
     "lint-staged": "^12.0.2",
-    "rimraf": "^3.0.2",
+    "shx": "^0.3.3",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4",
     "vite": "2.2.3"
@@ -76,14 +78,14 @@
     "testEnvironment": "<rootDir>/jest.env.js",
     "coverageThreshold": {
       "global": {
-        "branches": 98.8,
-        "functions": 100,
-        "lines": 99.44,
-        "statements": 99.61
+        "statements": 86.12,
+        "branches": 83.25,
+        "lines": 83.63,
+        "functions": 85.71
       }
     },
-    "testPathIgnorePatterns": [
-      "lib-old"
+    "transformIgnorePatterns": [
+      "node_modules/(?!(lit-element|lit-html|rx-lit|@appnest/lit-translate|@inrupt/solid-client|@digita-ai/ui-transfer-solid-client|@digita-ai/dgt-utils-core)/)"
     ],
     "moduleNameMapper": {
       "^jose/(.*)$": "<rootDir>/node_modules/jose/dist/node/cjs/$1"

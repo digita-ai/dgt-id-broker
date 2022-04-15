@@ -119,6 +119,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
         if (!response.body.access_token.payload) { return throwError(() => new Error('Access token in response body did not contain a decoded payload')); }
 
         response.body.access_token.payload.client_id = client_id;
+        response.body.id_token.payload.aud = client_id;
 
         return of(response);
 

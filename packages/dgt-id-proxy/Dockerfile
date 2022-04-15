@@ -11,6 +11,7 @@ ARG NPM_TOKEN
 COPY package.json /usr/src/app/
 COPY package-lock.json /usr/src/app/
 COPY .npmrc /usr/src/app/
+RUN npm set //npm.pkg.github.com/:_authToken $NPM_TOKEN
 RUN npm install
 
 # Bundle app source
@@ -22,5 +23,11 @@ RUN chmod +x ./bin/server.js
 
 # Expose ports.
 EXPOSE 3003
+
 ENTRYPOINT [ "./bin/server.js" ]
-CMD [ "-u", "http://0.0.0.0:3003" ]
+CMD [ \
+    "-c", "./config/presets/auth0-config.json", \
+    "-u", "http://0.0.0.0:3003", \
+    "-o", "./assets/openid-configuration.json", \ 
+    "-j", "./assets/jwks.json", \
+]

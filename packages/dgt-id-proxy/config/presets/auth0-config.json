@@ -56,50 +56,63 @@
         "httpHandler": {
           "@type": "HttpCorsRequestHandler",
           "handler": {
-            "@type": "ClientCompressionHandler",
-            "handler": {
-              "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
-              "@type": "RoutedHttpRequestHandler",
-              "handlerControllerList": [
-                {
-                  "@id": "urn:handlersjs-http:default:HttpHandlerController",
-                  "@type": "HttpHandlerController",
-                  "label": "ControllerList",
-                  "routes": [
-                    {
-                      "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint"
-                    }
-                  ]
-                }
-              ]
+            "@type": "ErrorHandler",
+            "nestedHandler": {
+              "@type": "ClientCompressionHandler",
+              "handler": {
+                "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
+                "@type": "RoutedHttpRequestHandler",
+                "handlerControllerList": [
+                  {
+                    "@id": "urn:handlersjs-http:default:HttpHandlerController",
+                    "@type": "HttpHandlerController",
+                    "label": "ControllerList",
+                    "routes": [
+                      {
+                        "@id": "urn:dgt-id-proxy:default:AuthorizationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:LoginEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:ConsentEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:UserinfoEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:WellKnownOpenidConfigurationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:ProxyRedirectEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:PasswordlessApiEndpoint"
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         }
       }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:CookieStore",
+      "@type": "InMemoryStore"
     },
     {
       "@id": "urn:dgt-id-proxy:default:SingleClaimWebIdFactory",
@@ -262,10 +275,33 @@
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
           },
           {
-            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            "@type": "Auth0LoginStateHandler",
+            "clientStateToClientRedirectUriStore": {
+              "@id": "urn:dgt-id-proxy:default:clientStateToClientRedirectUriStore",
+              "@type": "InMemoryStore"
+            },
+            "upstreamStateToClientStateStore": {
+              "@id": "urn:dgt-id-proxy:default:upstreamStateToClientStateStore",
+              "@type": "InMemoryStore"
+            },
+            "handler": {
+              "@type": "PipeThroughHandler",
+              "handlers": [
+                {
+                  "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
+                  "@type": "SafariCookieSaveHandler",
+                  "httpHandler": {
+                    "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+                  },
+                  "cookieStore": {
+                    "@id": "urn:dgt-id-proxy:default:CookieStore"
+                  }
+                }
+              ]
+            }
           },
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
@@ -276,6 +312,35 @@
         ]
       },
       "path": "/authorize"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:ProxyRedirectEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "handler": {
+        "@type": "PipeThroughHandler",
+        "handlers": [
+          {
+            "@type": "Auth0ClientRedirectHandler",
+            "clientStateToClientRedirectUriStore": {
+              "@id": "urn:dgt-id-proxy:default:clientStateToClientRedirectUriStore",
+              "@type": "InMemoryStore"
+            },
+            "upstreamStateToClientStateStore": {
+              "@id": "urn:dgt-id-proxy:default:upstreamStateToClientStateStore",
+              "@type": "InMemoryStore"
+            }
+          },
+          {
+            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+          }
+        ]
+      },
+      "path": "/redirect"
     },
     {
       "@id": "urn:dgt-id-proxy:default:AuthorizeResumeEndpoint",
@@ -289,7 +354,14 @@
         "@type": "PipeThroughHandler",
         "handlers": [
           {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+            "@type": "SafariCookieRestoreHandler",
+            "httpHandler": {
+              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+            },
+            "cookieStore": {
+               "@id": "urn:dgt-id-proxy:default:CookieStore"
+            }
           },
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
@@ -313,7 +385,14 @@
         }
       ],
       "handler": {
-        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+          "@type": "SafariCookieRestoreHandler",
+          "httpHandler": {
+            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+          },
+          "cookieStore": {
+             "@id": "urn:dgt-id-proxy:default:CookieStore"
+          }
       },
       "path": "/u/login"
     },
@@ -329,7 +408,14 @@
         }
       ],
       "handler": {
-        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+        "@type": "SafariCookieRestoreHandler",
+        "httpHandler": {
+          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        },
+        "cookieStore": {
+           "@id": "urn:dgt-id-proxy:default:CookieStore"
+        }
       },
       "path": "/u/consent"
     },
@@ -406,10 +492,10 @@
       ],
       "handler": {
         "@type": "HttpHandlerStaticAssetService",
-        "logger": {
+        "HttpHandlerStaticAssetService:_logger": {
           "@type": "ConsoleLogger",
-          "minimumLevel": 1,
-          "minimumLevelPrintData": 1
+          "ConsoleLogger:_minimumLevel": 1,
+          "ConsoleLogger:_minimumLevelPrintData": 1
         },
         "path": {
           "@id": "urn:dgt-id-proxy:variables:openidConfigurationFilePath"
@@ -432,7 +518,7 @@
           "@id": "urn:dgt-id-proxy:variables:jwksFilePath"
         }
       },
-      "path": "/jwks"
+      "path": "/.well-known/jwks.json"
     },
     {
       "@id": "urn:dgt-id-proxy:default:RegistrationEndpoint",
@@ -446,6 +532,32 @@
         "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
       },
       "path": "/oidc/register"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:PasswordlessApiEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:PostOperation"
+        }
+      ],
+      "handler": {
+        "@type": "Auth0PasswordlessApiHandler",
+        "clientSentStateStore": {
+          "@id": "urn:dgt-id-proxy:default:StateStore"
+        },
+        "clientStateToClientRedirectUriStore": {
+          "@id": "urn:dgt-id-proxy:default:clientStateToClientRedirectUriStore"
+        },
+        "upstreamUrl": {
+          "@id": "urn:dgt-id-proxy:variables:upstreamUri"
+        },
+        "proxyRedirectUri": "http://localhost:3003/redirect",
+        "handler": {
+          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+        }
+      },
+      "path": "/passwordless/start"
     }
   ]
 }
