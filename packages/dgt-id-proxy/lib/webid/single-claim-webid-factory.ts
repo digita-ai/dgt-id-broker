@@ -1,3 +1,4 @@
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { Observable, of, throwError } from 'rxjs';
 import slugify from 'slugify';
 import { ParsedJSON } from '../util/parsed-json';
@@ -8,6 +9,8 @@ import { WebIdFactory } from './webid-factory';
  * using the webid pattern en custom claim provided.
  */
 export class SingleClaimWebIdFactory extends WebIdFactory {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a { SingleClaimWebIdFactory }.
@@ -36,17 +39,23 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
 
     if (!payload){
 
+      this.logger.verbose('No payload provided', payload);
+
       return throwError(() => new Error('No payload was provided'));
 
     }
 
     if (!payload[this.claim]){
 
+      this.logger.verbose(`Custom claim (${this.claim}) is not present in id token payload`, payload);
+
       return throwError(() => new Error('The custom claim provided was not found in the id token payload'));
 
     }
 
     const custom_claim = payload[this.claim].toString().replace(/[|:]/g, '');
+
+    this.logger.info('Minting webid for custom claim: ', custom_claim);
 
     const minted_webid = this.webIdPattern.replace(new RegExp('(?<!localhost|[0-9]\.[0-9]\.[0-9]\.[0-9]|[a-zA-Z0-9]):+[a-zA-Z0-9][^\/.]+'), slugify(custom_claim));
 
@@ -61,6 +70,8 @@ export class SingleClaimWebIdFactory extends WebIdFactory {
    * @returns Boolean indicating if the handler can handle the payload.
    */
   canHandle(payload: ParsedJSON): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', payload);
 
     return payload ? of(true) : of(false);
 

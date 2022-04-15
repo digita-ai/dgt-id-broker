@@ -3,17 +3,19 @@ import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
- * A { Handler<HttpHandlerContext, HttpHandlerContext> } that gets the registration data and retrieves oidcRegistration. If the info is
- * valid, it replaces the client id and redirect uri in the request with those that were given
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } that gets the registration data and retrieves oidcRegistration.
+ * If the info is valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
  */
 export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
+  private logger = getLoggerFor(this, 5, 5);
   private redirectURL: URL;
 
   /**
@@ -61,19 +63,49 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
-    if (!context) { return throwError(() => new Error('A context must be provided')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context provided', context);
 
-    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
+      return throwError(() => new Error('A context must be provided'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context.request);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.url) {
+
+      this.logger.verbose('No url was provided', context.request.url);
+
+      return throwError(() => new Error('No url was included in the request'));
+
+    }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
     const state = context.request.url.searchParams.get('state');
 
-    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
+    if (!client_id) {
 
-    if (!redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
+      this.logger.warn('No client id was provided', client_id);
+
+      return throwError(() => new Error('No client_id was provided'));
+
+    }
+
+    if (!redirect_uri) {
+
+      this.logger.warn('No redirect uri was provided', redirect_uri);
+
+      return throwError(() => new Error('No redirect_uri was provided'));
+
+    }
 
     try {
 
@@ -81,12 +113,21 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     } catch(error) {
 
+      this.logger.error('The redirect uri is not a valid url', redirect_uri);
+
       return throwError(() => new Error('redirect_uri must be a valid URL'));
 
     }
 
-    if (!state) { return throwError(() => new Error('Request must contain a state. Add state handlers to the proxy.')); }
+    if (!state) {
 
+      this.logger.warn('No state was provided', state);
+
+      return throwError(() => new Error('Request must contain a state. Add state handlers to the proxy.'));
+
+    }
+
+    this.logger.info('Pairing state to redirect uri in store', redirect_uri);
     this.keyValueStore.set(state, new URL(redirect_uri));
 
     try {
@@ -95,13 +136,17 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
 
     } catch (error) {
 
+      this.logger.error('The client id is not a valid url', client_id);
+
       return of(context);
 
     }
 
     return of(client_id).pipe(
       switchMap((clientId) => clientId === 'http://www.w3.org/ns/solid/terms#PublicOidcClient' ? of({}) : retrieveAndValidateClientRegistrationData(clientId, context.request.url.searchParams)),
+      tap(() => this.logger.info('Setting the client id in the url to the static client id of the upstream', this.clientId)),
       tap(() => context.request.url.searchParams.set('client_id', this.clientId)),
+      tap(() => this.logger.info('Setting the redirect uri in the url to the static redirect uri of the upstream', this.clientId)),
       tap(() => context.request.url.searchParams.set('redirect_uri', this.redirectUri)),
       mapTo(context),
     );
@@ -116,6 +161,8 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
     && context.request

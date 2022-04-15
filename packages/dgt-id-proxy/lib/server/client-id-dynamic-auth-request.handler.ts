@@ -3,6 +3,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
@@ -15,6 +16,8 @@ import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientR
  * - stores the registration in the keyvalue store
  */
 export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a { ClientIdDynamicAuthRequestHandler }.
@@ -59,24 +62,56 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
-    if (!context) { return throwError(() => new Error('A context must be provided')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context provided', context);
 
-    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
+      return throwError(() => new Error('A context must be provided'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context.request);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.url) {
+
+      this.logger.verbose('No url was provided', context.request.url);
+
+      return throwError(() => new Error('No url was included in the request'));
+
+    }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
 
-    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
+    if (!client_id) {
 
-    if (!redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
+      this.logger.warn('No client id was provided', client_id);
+
+      return throwError(() => new Error('No client_id was provided'));
+
+    }
+
+    if (!redirect_uri) {
+
+      this.logger.warn('No redirect uri was provided', redirect_uri);
+
+      return throwError(() => new Error('No redirect_uri was provided'));
+
+    }
 
     try {
 
       new URL(client_id);
 
     } catch (error) {
+
+      this.logger.error('The client id is not a valid url', client_id);
 
       return of(context);
 
@@ -100,6 +135,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
     && context.request
@@ -126,6 +163,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     redirect_uri?: string,
   ): Promise<CombinedRegistrationData> {
 
+    this.logger.info('Registering client', { data, client_id });
+
     const response = await fetch(this.registration_uri, {
       method: 'POST',
       headers: {
@@ -135,8 +174,12 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       body: JSON.stringify(data),
     });
 
+    if (!response) this.logger.error(`Failed to register ${client_id} with data: `, data);
+
     const regResponse = await response.json();
     redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);
+
+    this.logger.info(`Registered ${client_id} with data: `, data);
 
     return regResponse;
 
@@ -197,6 +240,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     });
 
+    this.logger.info('Created request data', reqData);
+
     return reqData;
 
   }
@@ -241,6 +286,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     }
 
+    this.logger.info('Checking if registration data has changed: ', (registerDataItem !== clientDataItem));
+
     return (registerDataItem !== clientDataItem);
 
   }
@@ -266,9 +313,15 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     };
 
     return from(this.store.get(redirectUri)).pipe(
-      switchMap((registerData) => registerData
-        ? of(registerData)
-        : this.registerClient(clientData, clientId, redirectUri)),
+      switchMap((registerData) => {
+
+        this.logger.info(`Retrieved register data for ${redirectUri}: `, registerData);
+
+        return registerData
+          ? of(registerData)
+          : this.registerClient(clientData, clientId, redirectUri);
+
+      }),
     );
 
   }

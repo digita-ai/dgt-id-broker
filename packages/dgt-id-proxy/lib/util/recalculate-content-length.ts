@@ -1,4 +1,7 @@
 import { HttpHandlerRequest } from '@digita-ai/handlersjs-http';
+import { getLogger } from '@digita-ai/handlersjs-logging';
+
+const logger = getLogger();
 
 /**
  * Checks what char type is in the request header 'Content-Type'.
@@ -19,9 +22,13 @@ export const recalculateContentLength = (request: HttpHandlerRequest): string =>
 
   if (charsetString !== 'ascii' && charsetString !== 'utf8' && charsetString !== 'utf-8' && charsetString !== 'utf16le' && charsetString !== 'ucs2' && charsetString !== 'ucs-2' && charsetString !== 'base64' && charsetString !== 'latin1' && charsetString !== 'binary' && charsetString !== 'hex') {
 
+    logger.warn('The specified charset is not supported', charsetString);
+
     throw new Error('The specified charset is not supported');
 
   }
+
+  logger.info('Recalculating content-length');
 
   return Buffer.byteLength(request.body, charsetString).toString();
 

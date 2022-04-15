@@ -1,7 +1,8 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, from, throwError, zip, Observable } from 'rxjs';
-import { switchMap, catchError, tap } from 'rxjs/operators';
+import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyOptions, JWK, JWTVerifyResult } from 'jose';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**
@@ -9,6 +10,8 @@ import { InMemoryStore } from '../storage/in-memory-store';
  * and returns a valid DPoP bound token to the user upon success.
  */
 export class DpopTokenRequestHandler extends HttpHandler {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a { DpopTokenRequestHandler } passing requests through the given handler.
@@ -52,17 +55,49 @@ export class DpopTokenRequestHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
-    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context was provided', context);
 
-    if (!context.request.method) { return throwError(() => new Error('No method was included in the request')); }
+      return throwError(() => new Error('Context cannot be null or undefined'));
 
-    if (!context.request.headers) { return throwError(() => new Error('No headers were included in the request')); }
+    }
 
-    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.method) {
+
+      this.logger.verbose('No request method was provided', context);
+
+      return throwError(() => new Error('No method was included in the request'));
+
+    }
+
+    if (!context.request.headers) {
+
+      this.logger.verbose('No request headers were provided', context);
+
+      return throwError(() => new Error('No headers were included in the request'));
+
+    }
+
+    if (!context.request.url) {
+
+      this.logger.verbose('No request url was provided', context);
+
+      return throwError(() => new Error('No url was included in the request'));
+
+    }
 
     if (!context.request.headers.dpop) {
+
+      this.logger.verbose('No DPoP proof was provided', context.request.headers.dpop);
 
       return of({
         body: JSON.stringify({ error: 'invalid_dpop_proof', error_description: 'DPoP header missing on the request.' }),
@@ -100,7 +135,21 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // creates thumbprint or errors
       switchMap((verified) => from(calculateJwkThumbprint(verified.protectedHeader.jwk))),
       // builds error body around previous errors
-      catchError((error) => error.message ? throwError(() => this.dpopError(error.message)) : throwError(() => new Error('DPoP verification failed due to an unknown error'))),
+      catchError((error) => {
+
+        if (error.message) {
+
+          this.logger.warn('DPoP verification failed: ', error.message);
+
+          return throwError(() => this.dpopError(error.message));
+
+        }
+
+        this.logger.warn('DPoP verification failed due to unknown error');
+
+        return throwError(() => new Error('DPoP verification failed due to an unknown error'));
+
+      }),
       // gets successful response or errors with body
       switchMap((thumbprint) => zip(of(thumbprint), this.getUpstreamResponse(noDpopRequestContext))),
       // creates dpop response
@@ -108,8 +157,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
       // switches any errors with body into responses; all the rest are server errors which will hopefully be caught higher
       catchError((error) => {
 
-        // eslint-disable-next-line no-console
-        console.log('DPoP handler error: ', error);
+        this.logger.debug('DPoP handler error: ', error);
 
         return error.body && error.headers && error.status ? of(error) : throwError(() => error);
 
@@ -132,13 +180,37 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     const jwk = header.jwk;
 
-    if (!jwk) { return throwError(() => new Error('no JWK was found in the header')); }
+    if (!jwk) {
 
-    if (!payload.jti || typeof payload.jti !== 'string') { return throwError(() => new Error('must have a jti string property')); }
+      this.logger.verbose('No JWK was provided in the header', header);
 
-    if (payload.htm !== method) { return throwError(() => new Error('htm does not match the request method')); }
+      return throwError(() => new Error('no JWK was found in the header'));
 
-    if (payload.htu !== this.proxyTokenUrl) { return throwError(() => new Error('htu does not match')); }
+    }
+
+    if (!payload.jti || typeof payload.jti !== 'string') {
+
+      this.logger.verbose('No JTI was provided in the payload or it was not of type string', payload.jti);
+
+      return throwError(() => new Error('must have a jti string property'));
+
+    }
+
+    if (payload.htm !== method) {
+
+      this.logger.verbose(`The htm in the payload did not match the request method (${method})`, payload.htm);
+
+      return throwError(() => new Error('htm does not match the request method'));
+
+    }
+
+    if (payload.htu !== this.proxyTokenUrl) {
+
+      this.logger.verbose(`The htu in the payload did not match the proxy token url (${this.proxyTokenUrl})`, payload.htu);
+
+      return throwError(() => new Error('htu does not match'));
+
+    }
 
     const jti = payload.jti;
 
@@ -147,9 +219,13 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         if (jtis?.includes(jti)) {
 
+          this.logger.warn('This JTI was already used before and must be unique', jti);
+
           return throwError(() => new Error('jti must be unique'));
 
         }
+
+        this.logger.info(`Updating JTI's in store `);
 
         this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
 
@@ -194,6 +270,8 @@ export class DpopTokenRequestHandler extends HttpHandler {
    */
   private createDpopResponse(response: HttpHandlerResponse, thumbprint: string) {
 
+    this.logger.info('Creating DPoP response, adding thumbprint to cnf claim and setting token type to DPoP');
+
     // set the cnf claim to contain the thumbprint of the client's jwk
     response.body.access_token.payload.cnf = { 'jkt': thumbprint };
     response.body.token_type = 'DPoP';
@@ -209,10 +287,12 @@ export class DpopTokenRequestHandler extends HttpHandler {
   /**
    * Confirms if the handler can handle the context if one is present containing the correct parameters.
    *
-   * @param { HttpHandlerContext } context - The context to handle.
+   * @param { HttpHandlerContext } context - The incoming request context to handle.
    * @returns Boolean confirming if the handler can handle the context.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean>{
+
+    this.logger.info('Checking canHandle', context);
 
     return context
       && context.request

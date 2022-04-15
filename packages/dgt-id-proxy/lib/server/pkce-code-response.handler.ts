@@ -3,6 +3,7 @@ import { of,  from, Observable, throwError } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 
 /**
@@ -10,6 +11,8 @@ import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
  * in a response from the upstream server.
  */
 export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a { PkceCodeRequestHandler }.
@@ -42,6 +45,8 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
 
     if (!response) {
 
+      this.logger.verbose('No response received', response);
+
       return throwError(() => new Error('Context cannot be null or undefined'));
 
     }
@@ -59,6 +64,8 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
 
         } catch (error) {
 
+          this.logger.debug('Error handling code response', error);
+
           return of(resp);
 
         }
@@ -75,6 +82,8 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
    * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', response);
 
     return response
       ? of(true)
@@ -103,12 +112,20 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
     response.body = '';
 
     return from(this.store.get(state)).pipe(
-      switchMap((challengeAndMethod) => challengeAndMethod
-        ? of(challengeAndMethod)
-        : throwError(() => new Error('No data was found in the store'))),
+      switchMap((challengeAndMethod) => {
+
+        if (challengeAndMethod) return of(challengeAndMethod);
+
+        this.logger.info('No challenge and method found in the keyValueStore for state: ', state);
+
+        return throwError(() => new Error('No data was found in the store'));
+
+      }),
       tap((challengeAndMethod) => {
 
+        this.logger.warn('Deleting state from store', state);
         this.store.delete(state);
+        this.logger.warn('Saving code with challenge and method in store', { code, challengeAndMethod });
         this.store.set(code, challengeAndMethod);
 
       }),

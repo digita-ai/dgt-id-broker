@@ -5,12 +5,14 @@ import { gunzipSync, brotliDecompressSync, inflateSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
  * A { HttpRequestHandler } passing all request to and responses from the upstream server without modification.
  */
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
+  private logger = getLoggerFor(this, 5, 5);
   private proxyURL: URL;
 
   /**
@@ -84,11 +86,15 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     if (!context) {
 
+      this.logger.verbose('No context was provided', context);
+
       return throwError(() => new Error('Context cannot be null or undefined'));
 
     }
 
     if (!context.request) {
+
+      this.logger.verbose('No request was provided', context);
 
       return throwError(() => new Error('No request was included in the context'));
 
@@ -96,17 +102,23 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     if (!context.request.method) {
 
+      this.logger.verbose('No method was provided', context.request);
+
       return throwError(() => new Error('No method was included in the request'));
 
     }
 
     if (!context.request.headers) {
 
+      this.logger.verbose('No headers were provided', context.request);
+
       return throwError(() => new Error('No headers were included in the request'));
 
     }
 
     if (!context.request.url) {
+
+      this.logger.verbose('No url was provided', context.request);
 
       return throwError(() => new Error('No url was included in the request'));
 
@@ -121,6 +133,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
       switchMap((response) => {
 
         if (this.errorHandling && response.status >= 400) {
+
+          this.logger.verbose(`Request failed in PassThroughHttpRequestHandler with status ${response.status}: `, response.headers);
 
           return throwError(() => ({ headers: response.headers, status: response.status }));
 
@@ -140,6 +154,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
       && context.request
@@ -322,14 +338,24 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     switch (compressionType) {
 
       case 'br':
+        this.logger.info('decompressing with brotli');
+
         return brotliDecompressSync(data);
       case 'gzip':
+        this.logger.info('decompressing with gzip');
+
         return gunzipSync(data);
       case 'deflate':
+        this.logger.info('decompressing with deflate');
+
         return inflateSync(data);
       case 'identity':
+        this.logger.info('compressionType is identity, returning data');
+
         return data;
       default:
+        this.logger.info('Received unknown decompression type: ',  compressionType);
+
         throw new Error(`Compression type '${compressionType}' is unknown`);
 
     }
@@ -340,6 +366,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     (acc, key) => {
 
       const lKey = key.toLowerCase();
+
+      this.logger.info('cleaning headers: ', lKey);
 
       return acc[lKey]
         ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }

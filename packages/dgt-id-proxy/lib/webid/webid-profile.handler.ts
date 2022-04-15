@@ -8,6 +8,7 @@ import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Writer, DataFactory } from 'n3';
 import { importJWK, JWK, JWTPayload, SignJWT } from 'jose';
 import { v4 as uuid }  from 'uuid';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
  * A { Handler } that handles a { HttpHandlerResponse } by checking if the webId given in the id_token
@@ -15,15 +16,17 @@ import { v4 as uuid }  from 'uuid';
  */
 export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  private logger = getLoggerFor(this, 5, 5);
+
   /**
-   * Creates a {WebIdProfileHandler}.
+   * Creates a { WebIdProfileHandler }.
    *
    * @param { string } webId - The webId of this handler; should have authorization to write the profiles.
    * @param { string } idp - The URL of an IDP with which both the WebIDs and this handler can authenticate.
    * @param { string } pathToJwks - The path to a JSON file containing the private JWKs used by the IDP to sign tokens.
    * @param { string } webIdPattern - The pattern of the webid. Should contain a claim starting with ':'
    * that will be replaced by the custom claim in the id token. The claim should match ':[a-zA-Z]+'.
-   * @param { Record<string, string[]> } predicates - the predicates that need to be set in the profile document.
+   * @param { Record<string, string[]> } predicates - The predicates that need to be set in the profile document.
    */
   constructor(
     private webId: string,
@@ -55,10 +58,37 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) return throwError(() => new Error('A response must be provided'));
-    if (!response.body) return throwError(() => new Error('A response body must be provided'));
-    if (!response.body.id_token) return throwError(() => new Error('An id token must be provided'));
-    if (!response.body.id_token.payload.webid) return throwError(() => new Error('A webId must be provided'));
+    if (!response) {
+
+      this.logger.verbose('No response received', response);
+
+      return throwError(() => new Error('A response must be provided'));
+
+    }
+
+    if (!response.body) {
+
+      this.logger.verbose('No body received', response);
+
+      return throwError(() => new Error('A response body must be provided'));
+
+    }
+
+    if (!response.body.id_token) {
+
+      this.logger.verbose('No id token received', response.body);
+
+      return throwError(() => new Error('An id token must be provided'));
+
+    }
+
+    if (!response.body.id_token.payload.webid) {
+
+      this.logger.verbose('No webId received', response.body.id_token.payload);
+
+      return throwError(() => new Error('A webId must be provided'));
+
+    }
 
     const id_token_payload = response.body.id_token.payload;
 
@@ -68,7 +98,13 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     // create a new regex that matches anything that is put inplace of where the ':'-prefixed claim was
     const regExp = new RegExp(splitPattern.join('?.*'));
 
-    if (!regExp.test(id_token_payload.webid)) return of(response);
+    if (!regExp.test(id_token_payload.webid)) {
+
+      this.logger.info(`WebId (${id_token_payload.webid}) does not match pattern`,   this.webIdPattern);
+
+      return of(response);
+
+    }
 
     return from(fetch(id_token_payload.webid, { method: 'HEAD', headers: { Accept: 'text/turtle' } })).pipe(
       switchMap((resp) => resp.status === 200 ? of(void 0) : this.createProfile(id_token_payload)),
@@ -121,6 +157,8 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     const url = new URL(webId);
     const target = url.origin + url.pathname;
 
+    this.logger.info('Generating ACL document', target);
+
     return `# ACL resource for the WebID profile document
     @prefix acl: <http://www.w3.org/ns/auth/acl#>.
     @prefix foaf: <http://xmlns.com/foaf/0.1/>.
@@ -152,8 +190,21 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    */
   private getClaim(partial_payload: any, segments: string[]): string {
 
-    if (typeof partial_payload !== 'object') throw new Error('Unexpected payload structure');
-    if (!segments.length) throw new Error('Segments cannot be empty');
+    if (typeof partial_payload !== 'object') {
+
+      this.logger.warn('Payload is not an object', partial_payload);
+
+      throw new Error('Unexpected payload structure');
+
+    }
+
+    if (!segments.length) {
+
+      this.logger.warn('No segments found', segments);
+
+      throw new Error('Segments cannot be empty');
+
+    }
 
     return segments.length === 1
       ? partial_payload[segments[0]]
@@ -193,6 +244,8 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
     writer.end((err, result) => body = result);
 
+    this.logger.info('Generated profile document', body);
+
     return body;
 
   }
@@ -203,7 +256,13 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
     switchMap((keyFile: Buffer) => of<JWK>(JSON.parse(keyFile.toString()).keys[0])),
     switchMap((jwk: JWK) => {
 
-      if (!jwk.alg) return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
+      if (!jwk.alg) {
+
+        this.logger.warn('JWK does not contain an alg property', jwk);
+
+        return throwError(() => new Error(`JWK read from ${this.pathToJwks} did not contain an "alg" property.`));
+
+      }
 
       return zip(of(jwk.alg), of(jwk.kid), from(importJWK(jwk)));
 
@@ -225,6 +284,8 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
    * @param {HttpHandlerResponse} response
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', response);
 
     return response ? of(true) : of(false);
 

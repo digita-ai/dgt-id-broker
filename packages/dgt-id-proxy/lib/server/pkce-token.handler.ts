@@ -3,6 +3,7 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerErr
 import { from, of, Observable, throwError, zip } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { createErrorResponse } from '../util/error-response-factory';
 import { recalculateContentLength } from '../util/recalculate-content-length';
@@ -12,6 +13,8 @@ import { recalculateContentLength } from '../util/recalculate-content-length';
  * in a request matches the code challenge of the authorization code in a { KeyValueStore }.
  */
 export class PkceTokenHandler extends HttpHandler {
+
+  private logger = getLoggerFor(this, 5, 5);
 
   /**
    * Creates a { PkceTokenHandler }.
@@ -44,11 +47,29 @@ export class PkceTokenHandler extends HttpHandler {
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
-    if (!context) { return throwError(() => new Error('Context cannot be null or undefined')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context was provided', context);
 
-    if (!context.request.body) { return throwError(() => new Error('No body was included in the request')); }
+      return throwError(() => new Error('Context cannot be null or undefined'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.body) {
+
+      this.logger.verbose('No request body was provided', context.request);
+
+      return throwError(() => new Error('No body was included in the request'));
+
+    }
 
     const request = context.request;
 
@@ -62,20 +83,35 @@ export class PkceTokenHandler extends HttpHandler {
 
     const encodedCode_verifier = params.get('code_verifier');
 
-    if (!encodedCode_verifier) { return of(createErrorResponse('Code verifier is required.', 'invalid_request')); }
+    if (!encodedCode_verifier) {
+
+      this.logger.warn('No code verifier was provided', params);
+
+      return of(createErrorResponse('Code verifier is required.', 'invalid_request'));
+
+    }
 
     const code =  params.get('code');
 
-    if (!code) { return of(createErrorResponse('An authorization code is required.', 'invalid_request')); }
+    if (!code) {
+
+      this.logger.warn('No code was provided', params);
+
+      return of(createErrorResponse('An authorization code is required.', 'invalid_request'));
+
+    }
 
     const code_verifier = decodeURI(encodedCode_verifier);
 
     if (code_verifier.length < 43 || code_verifier.length > 128) {
 
+      this.logger.warn('Code verifier is not of the correct length', code_verifier.length);
+
       return of(createErrorResponse('Code verifier must be between 43 and 128 characters.', 'invalid_request'));
 
     }
 
+    this.logger.info('Deleting code verifier from URL');
     params.delete('code_verifier');
     request.body = params.toString();
 
@@ -83,9 +119,22 @@ export class PkceTokenHandler extends HttpHandler {
 
     return from(this.store.get(code))
       .pipe(
-        switchMap((codeChallengeAndMethod) => codeChallengeAndMethod
-          ? zip(of(codeChallengeAndMethod), this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method))
-          : throwError(() => new InternalServerError('No stored challenge and method found.'))),
+        switchMap((codeChallengeAndMethod) => {
+
+          if (codeChallengeAndMethod) {
+
+            return zip(
+              of(codeChallengeAndMethod),
+              this.generateCodeChallenge(code_verifier, codeChallengeAndMethod.method)
+            );
+
+          }
+
+          this.logger.warn('No code challenge and method was found for the code', code);
+
+          return throwError(() => new InternalServerError('No stored challenge and method found.'));
+
+        }),
         switchMap(([ codeChallengeAndMethod, challenge ]) => challenge === codeChallengeAndMethod.challenge
           ? this.httpHandler.handle(context)
           : of(createErrorResponse('Code challenges do not match.', 'invalid_grant'))),
@@ -105,6 +154,8 @@ export class PkceTokenHandler extends HttpHandler {
     const params = context && context.request && context.request.body
       ? new URLSearchParams(context.request.body)
       : undefined;
+
+    this.logger.info('Checking canHandle', { context, params });
 
     return context
       && context.request
@@ -129,6 +180,8 @@ export class PkceTokenHandler extends HttpHandler {
 
     if (method !== 'S256' && method !== 'plain') {
 
+      this.logger.info('Algorithm not supported', method);
+
       return throwError(() => createErrorResponse('Transform algorithm not supported.', 'invalid_request'));
 
     }
@@ -136,6 +189,8 @@ export class PkceTokenHandler extends HttpHandler {
     switch (method) {
 
       case 'S256': {
+
+        this.logger.info('Generating code challenge with algorithm: ', method);
 
         const hash = createHash('sha256');
         hash.update(code_verifier);
@@ -149,7 +204,11 @@ export class PkceTokenHandler extends HttpHandler {
 
       }
 
-      case 'plain': return of(code_verifier);
+      case 'plain':
+
+        this.logger.info('Generating code challenge with algorithm: ', method);
+
+        return of(code_verifier);
 
     }
 
