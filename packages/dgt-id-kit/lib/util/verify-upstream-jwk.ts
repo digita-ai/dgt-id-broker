@@ -2,6 +2,15 @@ import { base64url, JWK, importJWK, jwtVerify, JWTVerifyResult } from 'jose';
 import { throwError, from, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 
+/**
+ * Verifies the upstream JWK. Checks if all necessary headers are present.
+ * Fetches the openid configuration and retrieves the jwks_uri.
+ * It then compares the kid header from the token with the kid header from the JWK keys to see if they match
+ * and parses the JWK with the algorithm provided into a key and then verifies the token signature with said key.
+ *
+ * @param { string } token - The token to verify.
+ * @param { string } upstreamUrl - The URL of the upstream endpoint.
+ */
 export const verifyUpstreamJwk = (token: string, upstreamUrl: string): Observable<JWTVerifyResult> => {
 
   if (!token){

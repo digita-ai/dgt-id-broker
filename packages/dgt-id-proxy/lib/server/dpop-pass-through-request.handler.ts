@@ -16,8 +16,8 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * Creates a { DpopPassThroughRequestHandler } passing requests through the given handler.
    *
    * @param { HttpHandler } handler - The handler to which to pass the request.
-   * @param { string } proxyTokenUrl - the url of the proxy server's token endpoint.
-   * @param { string } upstreamTokenUrl - the url of the upstream server's token endpoint.
+   * @param { string } proxyTokenUrl - The url of the proxy server's token endpoint.
+   * @param { string } upstreamTokenUrl - The url of the upstream server's token endpoint.
    */
   constructor(private handler: HttpHandler, private proxyTokenUrl: string, private upstreamTokenUrl: string) {
 
@@ -36,7 +36,7 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
    * in the DPoP proof to the upstream's token endpoint and encode the DPoP proof before passing on the request.
    * Returns an error response if the DPoP proof is invalid.
    *
-   * @param { HttpHandlerContext } context
+   * @param {HttpHandlerContext} context - The context of the incoming request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -100,6 +100,12 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Replaces the HTU claim in the DPoP proof to match the upstream token endpoint.
+   *
+   * @param { JWTVerifyResult } { payload, protectedHeader: header } - The JWT to be updated.
+   * @returns a signed JWT with the expected HTU claim of the upstream.
+   */
   private updateDpopProof(
     { payload, protectedHeader: header }: JWTVerifyResult
   ): Observable<string> {
@@ -125,7 +131,12 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
 
   }
 
-  private dpopError = (error_description: string) => ({
+  /** Creates an error response specifically for DPoP related errors
+   *
+   * @param { string } error_description - The error description to include in the response body.
+   * @returns The error response.
+   */
+  private dpopError = (error_description: string): HttpHandlerResponse => ({
     body: JSON.stringify({
       error: 'invalid_dpop_proof',
       error_description,
@@ -134,6 +145,12 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
     status: 400,
   });
 
+  /**
+   * Returns an observable of the upstream response if it's a successful one or throws it as an error.
+   *
+   * @param { HttpHandlerContext } context - The context of the request to handle.
+   * @returns Observable<HttpHandlerResponse> | Observable<never> - Observable of a response object if successful or of an error.
+   */
   private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
     switchMap((response) => {
 
@@ -146,7 +163,17 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
     })
   );
 
-  private updateDpopResponse(response: HttpHandlerResponse, originalDpopProof: string) {
+  /**
+   * Updates the DPoP response so that it contains the thumbprint of the upstream and not the proxy.
+   *
+   * @param { HttpHandlerResponse } response - The original response to be modified before return.
+   * @param { string } originalDpopProof - The original DPoP proof containing the proxy's thumbprint of the .
+   * @returns Containing the updated DPoP proof with a new thumbprint.
+   */
+  private updateDpopResponse(
+    response: HttpHandlerResponse,
+    originalDpopProof: string
+  ): Observable<HttpHandlerResponse> {
 
     const originalDpopProofHeader = JSON.parse(base64url.decode(originalDpopProof.split('.')[0]).toString());
 
@@ -164,10 +191,10 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   }
 
   /**
-   * Returns true if the context is valid.
-   * Returns false if the context, it's request, or the request's method, headers, or url are not included.
+   * Confirms if the handler can handle the request by checking if the request headers are present.
    *
-   * @param { HttpHandlerContext } context
+   * @param {HttpHandlerContext} context - The context of the incoming request.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
@@ -182,3 +209,4 @@ export class DpopPassThroughRequestHandler extends HttpHandler {
   }
 
 }
+

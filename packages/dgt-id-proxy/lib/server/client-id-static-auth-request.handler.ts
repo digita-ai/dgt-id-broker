@@ -7,8 +7,8 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
 /**
- * A { Handler<HttpHandlerContext, HttpHandlerContext> } that gets the registration data data and retrieves oidcRegistration. If the info is
- * valid, it replaces the client id and redirect uri in the request with those that were given
+ * A { Handler<HttpHandlerContext, HttpHandlerContext> } that gets the registration data and retrieves oidcRegistration.
+ * If the info is valid, it replaces the client id and redirect uri in the request with those that were given
  * in the constructor, and saves the redirect uri that the client sent in the keyValueStore
  * with the state as key so that it can be replaced later when the redirect response is
  * sent by the upstream.
@@ -21,10 +21,9 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
   /**
    * Creates a { ClientIdStaticAuthRequestHandler }.
    *
-   * @param { string } clientId - the client_id of the static client configured on the upstream server.
-   * @param { string } clientSecret - the client secret used to the static client configured on the upstream server.
-   * @param { string } redirectUri - the redirectUri of the static client on the upstream server.
-   * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
+   * @param { string } clientId - The client_id of the static client configured on the upstream server.
+   * @param { string } redirectUri - The redirectUri of the static client on the upstream server.
+   * @param { KeyValueStore<string, URL> } keyValueStore - The keyValueStore in which to save client sent redirect uris
    */
   constructor(
     private clientId: string,
@@ -60,7 +59,7 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * It replaces the client id and redirect uri in the context with the one given to the constructor,
    * and adds the client secret.
    *
-   * @param { HttpHandlerContext } context
+   * @param {HttpHandlerContext} context - The context of the incoming request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
@@ -158,7 +157,8 @@ export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or request url are not included.
    *
-   * @param { HttpHandlerContext } context
+   * @param { HttpHandlerContext } context - The context of the incoming request.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

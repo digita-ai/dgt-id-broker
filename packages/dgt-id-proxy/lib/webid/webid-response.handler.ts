@@ -15,9 +15,9 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a {WebIdResponseHandler}.
+   * Creates a { WebIdResponseHandler }.
    *
-   * @param {WebIdFactory} webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param { WebIdFactory } webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters.
    */
   constructor(private webIdFactory: WebIdFactory, public tokenType: string = 'id_token') {
 
@@ -141,9 +141,10 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   }
 
   /**
-   * Returns true if the response is defined. Otherwise it returns false.
+   * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

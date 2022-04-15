@@ -4,10 +4,10 @@ import { DiscoveryStringField } from '../models/discovery-string-field.model';
 import { validateAndFetch } from '../util/validate-and-fetch';
 
 /**
- * Retrieve the openid-configuration of an issuer
+ * Retrieve the openid-configuration of an issuer.
  *
- * @param issuer the url of the oidc issuer
- * @returns the openid-configuration of the issuer as json
+ * @param { string } issuer - The url of the oidc issuer.
+ * @returns The openid-configuration of the issuer as JSON.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getIssuerConfig = async (issuer: string): Promise<any> => {
@@ -32,10 +32,10 @@ export const getIssuerConfig = async (issuer: string): Promise<any> => {
 };
 
 /**
- * Validate if an issuer is solid-oidc compliant
+ * Validates if an issuer is solid-oidc compliant
  *
- * @param issuer The issuer you want to validate
- * @returns a boolean stating whether the issuer is valid or not
+ * @param { string } issuer - The URL to the issuer you want to validate.
+ * @returns Boolean stating whether the issuer is valid or not.
  */
 export const isValidIssuer = async (issuer: string): Promise<boolean> => {
 
@@ -60,8 +60,8 @@ export const isValidIssuer = async (issuer: string): Promise<boolean> => {
 /**
  * Validate if an issuer is solid-oidc compliant
  *
- * @param issuer The issuer you want to validate
- * @returns the issuer back if it is a valid solid-oidc issuer
+ * @param { string } issuer - The URL to the issuer you want to validate.
+ * @returns The issuer back if it is a valid solid-oidc issuer.
  */
 export const validateIssuer = async (issuer: string): Promise<string> => {
 
@@ -90,8 +90,8 @@ export const validateIssuer = async (issuer: string): Promise<string> => {
 /**
  * Get a specific discovery field from an issuers openid-configuration
  *
- * @param issuer the url to the issuer
- * @param field the discovery field you want to get
+ * @param { string } issuer - The URL to the issuer you want to validate.
+ * @param { T } field - The discovery field you want to get.
  * @returns the requested discovery field if present in the configuration
  */
 export const getDiscoveryInfo =

@@ -6,14 +6,14 @@ import { createErrorResponse } from '../util/error-response-factory';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 
 /**
- * A {HttpHandler} that handles pkce requests to the authorization endpoint.
+ * A { HttpHandler } that handles pkce requests to the authorization endpoint.
  */
 export class PkceAuthRequestHandler extends HttpHandler {
 
   private logger = getLoggerFor(this, 5, 5);
 
   /**
-   * Creates a { PkceAuthRequestHandler }
+   * Creates a { PkceAuthRequestHandler }.
    *
    * @param { HttpHandler } handler - the handler to which to pass the request.
    * @param { KeyValueStore<Code, ChallengeAndMethod> }  store - stores the challenge method and code challenge.
@@ -35,7 +35,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
    * The store then saves the code challenge, challenge method with the state as the key.
    * The parameters code_challenge and challenge_method are then removed from the request so that it becomes a PKCE-less request.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context - The context containing the request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -103,10 +103,10 @@ export class PkceAuthRequestHandler extends HttpHandler {
   }
 
   /**
-   * Returns true if the context is valid.
-   * Returns false if the context, it's request, or the request's method, headers, or url are not included.
+   * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

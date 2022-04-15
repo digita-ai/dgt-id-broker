@@ -1,3 +1,7 @@
+/**
+ * An enum containing all possible HTTP methods
+ */
+
 export enum HttpMethods {
   CONNECT   = 'CONNECT',
   DELETE    = 'DELETE',

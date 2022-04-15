@@ -62,7 +62,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    * It replaces the client id, client secret and redirect url in the context with the one given to the constructor.
    * and recalculates the content length because the body has changed
    *
-   * @param { HttpHandlerContext } context
+   * @param { HttpHandlerContext } context - The context of the incoming request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -212,7 +212,8 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
    * Returns true if the context is valid.
    * Returns false if the context, it's request, or request body are not included.
    *
-   * @param { HttpHandlerContext } context
+   * @param { HttpHandlerContext } context - The context of the incoming request.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 
@@ -226,6 +227,13 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
   }
 
+  /**
+   * Retrieves the registered client data to check if the specified grant type is included in the registration data.
+   *
+   * @param { string } clientId - The id of the client for which to retrieve the registration data.
+   * @param { string } grantType - The grant type that should be checked for in the registration data.
+   * @returns Observable<OidcClientMetadata> - The registration data of the client or an error if the grant type is not included.
+   */
   private checkClientRegistrationData(clientId: string, grantType: string): Observable<OidcClientMetadata> {
 
     this.logger.info(`Checking client registration data for clientId: ${clientId} for grantType: `, grantType);

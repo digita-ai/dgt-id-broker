@@ -4,7 +4,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A { Handler } that adds 'solid' to the audience claim of a JWT Access Token
+ * A { Handler<HttpHandlerResponse, HttpHandlerResponse> } that adds 'solid' to the audience claim of a JWT Access Token
  */
 export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
@@ -14,7 +14,7 @@ export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, H
    * Handles the response. If the response is a 200 response it adds
    * the string 'solid' to the audience claim of the Access Token.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle containing the access token.
    */
   handle (response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
@@ -69,9 +69,10 @@ export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, H
   }
 
   /**
-   * Returns true if the response is defined and contains an access_token with a payload. Otherwise, returns false.
+   * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 
