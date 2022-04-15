@@ -22,6 +22,13 @@ interface SecureStore {
 
 export class SolidOidcClient {
 
+  /**
+   * Creates a { SolidOidcClient }.
+   *
+   * @param { SecureStore } store - A { SecureStore } to store the keys and tokens.
+   * @param { boolean } initialized - A boolean to indicate if the client is initialized.
+   * @param { string } clientId? - A string representing the client id.
+   */
   constructor(
     private store: SecureStore,
     private initialized = true,
@@ -32,6 +39,12 @@ export class SolidOidcClient {
 
   }
 
+  /**
+   * Initializes the client.
+   * Generates the keys and stores them in the store.
+   * Generates a code verifier and stores it in the store
+   * Sets the client id if present in the store.
+   */
   private async initialize(): Promise<void> {
 
     const keys = await generateKeys();
@@ -46,6 +59,16 @@ export class SolidOidcClient {
 
   }
 
+  /**
+   * Checks if all necessary parameters are present and retrieves the client id and code verifier from the store.
+   * Uses the code verifier to generate the code challenge and logs in using an issuer with the code challenge and the given parameters.
+   *
+   * @param { string } issuer - The clients Solid OIDC issuer.
+   * @param { string } scope - The scope of the request.
+   * @param { string } redirectUri - The uri to redirect the response to.
+   * @param { string } state? - The state of the request.
+   * @param { Promise<void> } handleAuthRequestUrl - The authentication request url.
+   */
   async loginWithIssuer(
     issuer: string,
     scope: string,
@@ -73,7 +96,16 @@ export class SolidOidcClient {
     await loginWithIssuer(issuer, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl);
 
   }
-
+  /**
+   * Checks if all necessary parameters are present and retrieves the client id and code verifier from the store.
+   * Uses the code verifier to generate the code challenge and logs in using a web id with the code challenge and the given parameters.
+   *
+   * @param { string } webId - The web id of the client.
+   * @param { string } scope - The scope of the request.
+   * @param { string } redirectUri - The uri to redirect the response to.
+   * @param { string } state? - The state of the request.
+   * @param { Promise<void> } handleAuthRequestUrl - The authentication request url.
+   */
   async loginWithWebId(
     webId: string,
     scope: string,
@@ -102,6 +134,9 @@ export class SolidOidcClient {
 
   }
 
+  /**
+   * Deletes all tokens from the store.
+   */
   async logout(): Promise<void> {
 
     await this.store.delete('accessToken');
@@ -110,6 +145,15 @@ export class SolidOidcClient {
 
   }
 
+  /**
+   * Gets the client id, private key, public key and code verifier from the store.
+   * Sets the client secret and the access-, id- and refresh token.
+   *
+   * @param { string } issuer - The clients Solid OIDC issuer.
+   * @param { string } redirectUri - The uri to redirect the response to.
+   * @param { Promise<string|null> } getAuthorizationCode - The authorization code.
+   * @param { string } clientSecret? - The clients secret.
+   */
   async handleIncomingRedirect(
     issuer: string,
     redirectUri: string,
@@ -159,10 +203,10 @@ export class SolidOidcClient {
   /**
    * Access a resource at the given url using the given parameters for authentication
    *
-   * @param resource the resource url
-   * @param method the http method
-   * @param body the body of the request
-   * @param contentType the content-type header
+   * @param { string } resource - The resource url.
+   * @param { HttpMethod } method - The http method.
+   * @param { string } body? - The body of the request.
+   * @param { string } contentType? - The content-type header.
    * @returns the response object of the request
    */
   async accessResource(

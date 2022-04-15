@@ -3,14 +3,14 @@ import * as path from 'path';
 import { readFile } from 'fs/promises';
 import { Handler } from '@digita-ai/handlersjs-core';
 import { Observable, of, throwError, from, zip } from 'rxjs';
-import { map, mapTo, switchMap, tap } from 'rxjs/operators';
+import { map, mapTo, switchMap } from 'rxjs/operators';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Writer, DataFactory } from 'n3';
 import { importJWK, JWK, JWTPayload, SignJWT } from 'jose';
 import { v4 as uuid }  from 'uuid';
 
 /**
- * A {Handler} that handles a {HttpHandlerResponse} by checking if the webId given in the id_token
+ * A { Handler } that handles a { HttpHandlerResponse } by checking if the webId given in the id_token
  * has a WebId profile document and if not creates a new profile & .acl document for the webId.
  */
 export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
@@ -18,12 +18,12 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
   /**
    * Creates a {WebIdProfileHandler}.
    *
-   * @param {string} webId - the webId of this handler; should have authorization to write the profiles
-   * @param {string} idp - the URL of an IDP with which both the WebIDs and this handler can authenticate
-   * @param {string} pathToJwks - the path to a JSON file containing the private JWKs used by the IDP to sign tokens
-   * @param {string} webIdPattern - the pattern of the webid. Should contain a claim starting with ':'
-   * that will be replaced by the custom claim in the id token. The claim should match ':[a-zA-Z]+'
-   * @param {Record<string, string[]>} predicates - the predicates that need to be set in the profile document
+   * @param { string } webId - The webId of this handler; should have authorization to write the profiles.
+   * @param { string } idp - The URL of an IDP with which both the WebIDs and this handler can authenticate.
+   * @param { string } pathToJwks - The path to a JSON file containing the private JWKs used by the IDP to sign tokens.
+   * @param { string } webIdPattern - The pattern of the webid. Should contain a claim starting with ':'
+   * that will be replaced by the custom claim in the id token. The claim should match ':[a-zA-Z]+'.
+   * @param { Record<string, string[]> } predicates - the predicates that need to be set in the profile document.
    */
   constructor(
     private webId: string,
@@ -48,10 +48,10 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
   }
 
   /**
-   * Handles the response. Checks if an id_token and webId is present.
+   * Checks if an id_token and webId is present.
    * Checks if a profile document already exists for the webId and if not creates a new one + acl document
    *
-   * @param {HttpHandlerResponse} response
+   * @param {HttpHandlerResponse} response - The response containing the id token.
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
@@ -113,7 +113,8 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
   /**
    * Generates an acl document based on the webId provided.
    *
-   * @param {string} webId - the webId provided in the id_token
+   * @param {string} webId - the webId provided in the id_ oken
+   * @returns String containing the content for the acl document.
    */
   private generateAclDocument(webId: string): string {
 
@@ -143,6 +144,12 @@ export class WebIdProfileHandler extends Handler<HttpHandlerResponse, HttpHandle
 
   }
 
+  /**
+   *
+   * @param partial_payload
+   * @param segments
+   * @returns
+   */
   private getClaim(partial_payload: any, segments: string[]): string {
 
     if (typeof partial_payload !== 'object') throw new Error('Unexpected payload structure');

@@ -4,8 +4,17 @@ import { of, from, throwError, Observable } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
 import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 
+/**
+ * A {Handler<HttpHandlerResponse, HttpHandlerResponse>} that takes a key-value store.
+ * It will redirect to the redirect URI and set the same query parameters as the once given in the response.
+ */
 export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  /**
+   * Creates a { ClientIdStaticAuthResponseHandler }.
+   *
+   * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
+   */
   constructor(private keyValueStore: KeyValueStore<string, URL>){
 
     super();
@@ -13,6 +22,13 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
     if (!keyValueStore) { throw new Error('No keyValueStore was provided'); }
 
   }
+
+  /**
+   * Handles the response. Clears the body of the response and checks it contains a state, if so retrieves the redirect uri from the keyValueStore
+   * using that state. It then transfer each query parameter from the response location to the redirect uri and redirects.
+   *
+   * @param { HttpHandlerResponse } response - The incoming response to handle.
+   */
 
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse>  {
 
@@ -51,7 +67,8 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
   /**
    * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The incoming response to handle.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
 

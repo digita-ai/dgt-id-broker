@@ -5,11 +5,12 @@ import { map } from 'rxjs/operators';
 
 /**
  * A { HttpHandler } that handles compression for the client.
+ * Handles encoding for incoming requests.
  */
 export class ClientCompressionHandler extends HttpHandler {
 
   /**
-   * Creates a { ClientCompressionHandler }
+   * Creates a { ClientCompressionHandler }.
    *
    * @param { HttpHandler } handler - the handler to which to pass the context.
    */
@@ -27,7 +28,7 @@ export class ClientCompressionHandler extends HttpHandler {
    * send the "accept-encoding" header, encode the response according to the preferences in the
    * header, and return it.
    *
-   * @param { HttpHandlerContext } context
+   * @param { HttpHandlerContext } context - The context containing the request to handle.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
@@ -49,6 +50,12 @@ export class ClientCompressionHandler extends HttpHandler {
 
   }
 
+  /**
+   * Retrieves the type of encoding from the client's "accept-encoding" header.
+   *
+   * @param { string } clientAcceptEncodingHeader - The header containing the client's "accept-encoding" preference.
+   * @returns A string containing the type of encoding used.
+   */
   private retrieveEncoding(clientAcceptEncodingHeader: string): string {
 
     // Accepted encodings are presented in a comma seperated list and can contain q weights.
@@ -59,6 +66,13 @@ export class ClientCompressionHandler extends HttpHandler {
 
   }
 
+  /**
+   * Encodes the response based preference list of encoding possibilities.
+   *
+   * @param { HttpHandlerResponse } response - The response to encode.
+   * @param { string } encodingPossibilities - A comma separated string containing the types of encodings possible.
+   * @returns { HttpHandlerResponse } - The response encoded according to the preference or not encoded if no encoding types matched.
+   */
   private handleEncoding(
     response: HttpHandlerResponse,
     encodingPossibilities: string,
@@ -95,9 +109,10 @@ export class ClientCompressionHandler extends HttpHandler {
   }
 
   /**
-   * Specifies that if the context, context request, and context request headers are defined this handler can handle the response.
+   * Confirms that if the context, context request, and request headers are defined this handler can handle the response.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context - The context containing the request to handle.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
 

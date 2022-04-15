@@ -5,21 +5,21 @@ import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyOptions, JWK, 
 import { InMemoryStore } from '../storage/in-memory-store';
 
 /**
- * A {HttpHandler} that handles DPoP requests for an upstream server that does not support them
+ * A { HttpHandler } that handles DPoP requests for an upstream server that does not support them
  * and returns a valid DPoP bound token to the user upon success.
  */
 export class DpopTokenRequestHandler extends HttpHandler {
 
   /**
-   * Creates a {DpopTokenRequestHandler} passing requests through the given handler.
+   * Creates a { DpopTokenRequestHandler } passing requests through the given handler.
    *
-   * @param {HttpHandler} handler - the handler through which to pass incoming requests.
-   * @param {InMemoryStore<string, string[]>} keyValueStore - the KeyValueStore in which to save jti's.
-   * @param {string} proxyTokenUrl - the url of the proxy server's token endpoint.
-   * @param {number} clockTolerance - tolerance in seconds that a token will still be considered valid if it is
+   * @param { HttpHandler } handler - the handler through which to pass incoming requests.
+   * @param { InMemoryStore<string, string[]> } keyValueStore - the KeyValueStore in which to save jti's.
+   * @param { string } proxyTokenUrl - the url of the proxy server's token endpoint.
+   * @param { number } clockTolerance - tolerance in seconds that a token will still be considered valid if it is
    * either too old or too new. Should prevent tokens from being rejected due to clock skews between servers and clients.
    * 10 seconds by default.
-   * @param {number} maxDpopProofTokenAge - maximum age in seconds at which a DPoP proof token will be considered valid. Default of 1 minute.
+   * @param { number } maxDpopProofTokenAge - maximum age in seconds at which a DPoP proof token will be considered valid. Default of 1 minute.
    */
   constructor(
     private handler: HttpHandler,
@@ -48,7 +48,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    * to the upstream server and modify the Access Token to be a valid DPoP bound Access Token.
    * Otherwise it will return error responses as specified by the DPoP proof spec otherwise.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context - The context containing the request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
@@ -118,6 +118,14 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Checks if the DPoP proof contains a JWK header, jti string, if the htm matches the request method,
+   * and the htu matches the token url.
+   *
+   * @param method
+   * @param param1
+   * @returns
+   */
   private verifyDpopProof(
     method: string, { payload, protectedHeader: header }: JWTVerifyResult,
   ): Observable<JWTVerifyResult & { protectedHeader: { jwk: Pick<JWK, 'kty' | 'crv' | 'x' | 'y' | 'e' | 'n'> } }> {
@@ -152,6 +160,12 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Creates a DPoP error response object with a custom error message.
+   *
+   * @param { string } error_description - The error message to include in the response body.
+   * @returns The DPoP error response object with the custom error message and status code 400.
+   */
   private dpopError = (error_description: string) => ({
     body: JSON.stringify({
       error: 'invalid_dpop_proof',
@@ -161,10 +175,23 @@ export class DpopTokenRequestHandler extends HttpHandler {
     status: 400,
   });
 
+  /**
+   * Returns an observable of the upstream response if it's a successful one or throws it as an error.
+   *
+   * @param { HttpHandlerContext } context - The context of the request to handle.
+   * @returns Observable of a response object if successful or of an error.
+   */
   private getUpstreamResponse = (context: HttpHandlerContext) => this.handler.handle(context).pipe(
     switchMap((response) => response.status === 200 ? of(response) : throwError(() => response)),
   );
 
+  /** Creates a successful DPoP response object by setting the cnf claim to contain the thumbprint of the DPoP proof.
+   * And setting the token type to DPoP.
+   *
+   * @param { HttpHandlerResponse } response - The response object containing the access token to set the cnf claim on.
+   * @param { string } thumbprint - The thumbprint to set on the cnf claim.
+   * @returns Response object containing a body with DPoP related properties and a status of 200.
+   */
   private createDpopResponse(response: HttpHandlerResponse, thumbprint: string) {
 
     // set the cnf claim to contain the thumbprint of the client's jwk
@@ -180,10 +207,10 @@ export class DpopTokenRequestHandler extends HttpHandler {
   }
 
   /**
-   * Returns true if the context is valid.
-   * Returns false if the context, it's request, or the request's method, headers, or url are not included.
+   * Confirms if the handler can handle the context if one is present containing the correct parameters.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context - The context to handle.
+   * @returns Boolean confirming if the handler can handle the context.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean>{
 
