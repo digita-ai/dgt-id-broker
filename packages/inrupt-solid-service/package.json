@@ -77,8 +77,8 @@
       "global": {
         "branches": 38.33,
         "functions": 51.85,
-        "lines": 43.24,
-        "statements": 44.06
+        "lines": 42.59,
+        "statements": 43.47
       }
     },
     "setupFiles": [
