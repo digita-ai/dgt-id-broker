@@ -3,24 +3,6 @@
 :toclevels: 1
 :imagesdir: ../images
 
-
-== Configuring & starting the proxy
-
-. If you haven't already, clone the link:https://github.com/digita-ai/dgt-id-broker.git[*dgt-id-broker*] repository.
-. Open your terminal in the root folder of the project and enter the following commands: 
-.. `npm run bootstrap` to install all the dependencies.
-.. `npm run build:all` to build the all packages in this workspace.
-.. `npm run start --scope @digita-ai/dgt-id-proxy` to start the proxy. This command will start all required packages in parallel.
-
-
-If you would like to start the proxy with different environment variables, such as a different URI or port you will have to start it manually. 
-
-. Open your terminal in the *dgt-id-proxy* folder and run the following command: 
-. `npm run start -- -u <SCHEME:URI:PORT>` (e.g. http://localhost:3004). With the `-u` flag you can overwrite the default proxy URI which is set to http://localhost:3003. 
-Note that you will have to start the other required packages manually as well. 
-. Open a terminal in the *demo/demo-client* and *demo/demo-pods* folder and run the following command: `npm run demo:keycloak` to start the demo client and demo pods.
-
-
 == Launching a Keycloak server
 
 If you haven't got an instance of Keycloak already you can start one through a Docker container as mentioned below.
@@ -28,7 +10,7 @@ If you haven't got an instance of Keycloak already you can start one through a D
 
 First we will pull our Docker image and run the container. 
 
-. Open your terminal and run the following command: 
+. Open your terminal and copy the following command replacing all the environment variables with your own:
 
 +
 [source,bash]
@@ -37,11 +19,13 @@ docker run -p <EPORT>:<IPORT> --name <NAME> -e KEYCLOAK_USER=<USER> -e KEYCLOAK_
 ----
 +
 
+e.g. : `docker run -p 8080:8080 --name keycloak -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:latest`
+
 Lets's break this down a little bit: 
 
 - The `IMAGE` for Keycloak is `quay.io/keycloak/keycloak:latest`, except for Apple devices on the M1 architecture, which work with `wizzn/keycloak:14`.
 
-- The `IPORT` of the default Keycloak images is `8080`. Map this to the desired port on you host with `EPORT`, e.g. `8080:8080`.
+- The `IPORT` of the default Keycloak images is `8080`. Map this to the desired port on you host with `EPORT`, e.g. `8080:3000`.
 
 - `USER` and `PWD` set the username and password for the initial admin account. (Alternatively, you can create an admin account on the Keycloak welcome page.)
 
@@ -57,22 +41,22 @@ image::keycloak-admin-login.png[Keycloak Admin Login]
 
 == Configuring a realm
 
-If you haven't already, you can create a realm in Keycloak as described below. (By default, there is already a Master realm, but it is advised to create another one for each purpose.)
+You can create a realm in Keycloak as described below. (By default, there is already a Master realm, but it is advised to create another one for each purpose.)
 
-. When in the Keycloak admin console, click on the dropdown menu on the top left, labeled with the name of the current real (`Master` on a fresh image), and chose *Add realm*.
+. When in the Keycloak admin console, click on the dropdown menu on the top left, labeled with the name of the current realm (*Master* on a fresh image), and choose *Add realm*.
 
-. Enter a name for the realm.
+. Enter a name for the realm, for this guide we will be using *_"digita"_*.
 
-. If desired, you can import a JSON file here containing a preexisting realm configuration. 
+. If desired, you can import a JSON file here containing a pre-existing realm configuration. 
 
-. Set the enabled flag to `True`.
+. Set the enabled flag to `On`.
 
 . Click *Create* to create the Realm.
 
-+
+
 [#img-keycloak-add-realm]
 image::add-demo-realm.png[Keycloak Add Realm]
-+
+
 
 Next you'll be able to set your realm settings. Make sure you have selected the realm you just created.
 
@@ -85,28 +69,42 @@ In order to let the proxy access the upstream provider's data we need to add it 
 
 . On the far right click *Create* to create a new client. Note that you again have the option to upload a JSON file containing the client configuration instead.
 
-. Fill in a *Client ID*, which will be used in URIs and tokens.
+. Fill in the *Client ID*, we will be using *_"static-client"_* for this guide, which will be used in URIs and tokens.
 
-. For *Client Protocol* select `openid-connect`, since Solid is based on the OpenID Connect standard.
-
-. For *Access Type* select `confidential` so that clients require a secret to initiate the login protocol.
-
-. Specify a *Root URL* that will be used as a prefix for relative URLs.
-
-. Click *Save* to create the client.
-
-+
 [#img-keycloak-add-client]
 image::add-client.png[Keycloak Add Client]
-+
 
-. You will be directed to the client settings page. There are some important settings in the *Settings* tab that you need to check here.
+. Click *Save* to create your client and start editing it's settings.
 
-. Make sure *Implicit Flow Enabled* is set to `OFF`` in order for your client to remain Solid-compliant. 
+. For *Client Protocol* select *_"openid-connect"_*, since Solid is based on the OpenID Connect standard.
 
-. Make sure to add the proxy's redirect URI to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly.
+. For *Access Type* select *_"confidential"_* so that clients require a secret to initiate the login protocol.
 
-. Switch to the *Credentials* tab and set the *Client Authenticator* to `Client ID and Secret`.
+. Specify the *Root URL*  *_"http://localhost:8080/digita"_* that will be used as a prefix for relative URLs.
+
+. Make sure *Implicit Flow Enabled* is set to `OFF` in order for your client to remain Solid-compliant. 
+
+. Add the proxy's redirect URI *_"http://localhost:3003/redirect"_* to the list of *Valid Redirect URIs*. The proxy's redirect URI is set in the `dgt-id-proxy/config/presets/keycloak-config.json` file under the *_redirectUri_* predicates for `ClientIdStaticTokenHandler` and `ClientIdStaticAuthRequestHandler`. Make sure these match. If you started the proxy using a custom URI make sure to change the redirect URI's accordingly. 
+
+. Save your client and switch to the *Credentials* tab that has just been added and check that *Client Authenticator* is set to `Client ID and Secret`. 
+
+In terms of Solid Compliant features specifically, you have the ability to create "Protocol Mappers", which you can use to add claims to both the ID Token and the Access Token. This can be used to add the webid claim.
+
+To add the webid claim to tokens:
+
+. In your realm, select your client
+
+. Select the *Mappers* option, and select *Create*.
+
+. Choose a name for your mapper, e.g. *_"webid"_*.
+
+. For *Mapper Type*, select *User Attribute*.
+
+. Set *Token Claim Name* to *_"webid"_*.
+
+. Set *Add to ID token* and *Add to access token* to on.
+
+If the claim *webid* exists on the user that is requesting a token, it will then be added to the *ID Token* and the *Access Token*.
 
 
 == Creating a user
@@ -126,3 +124,54 @@ image::add-user.png[Keycloak Add User]
 
 [#img-keycloak-user-credentials]
 image::user-credentials.png[Keycloak User Credentials]
+
+== Configuring & starting the proxy
+
+. If you haven't already, clone the link:https://github.com/digita-ai/dgt-id-broker.git[*dgt-id-broker*] repository.
+. Open your terminal in the root folder of the project and enter the following commands: 
+* `npm run bootstrap` to install all the dependencies. 
+* `npm run build:all` to build the all packages in this workspace.
+
+Before starting the proxy, make sure you have a JSON file containing JWKs, and a JSON file containing openid-configuration. These can both be generated by switching to the proxy folder and running the following commands:
+
+For jwks: 
+
+* Run `npm run generate:keys`. This will generate an RSA key and an ES256 key. By default these JWKs will be put under the directory `assets` with the filename `jwks.json`. 
+If you want them to be generated somewhere else, you can run `npm run generate:keys -- <relative path to file>`. If you want the JWKs to be under a directory to be under a directory called `jwks` with a filename of `myjwks.json` run `npm run generate:keys -- jwks/myjwks.json`.
+
+For openid-configuration:
+
+* Run `npm run generate:oidc -- <upstream server issuer url> <proxy issuer url> <relative path to file>(optional)`. The upstream server issuer url we will be using in this guide is `http://localhost:8080/auth/realms/digita`. You need to have your keycloak running for this to work. By default, it will try to find the provider config under the url of the upstream, and will replace all instances of that URL with the url of the proxy. By default it will place the file under the directory `assets` with the filename `openid-configuration.json`.
+
+Example: `npm run generate:oidc -- http://localhost:8080/auth/realms/digita http://localhost:3003 config/proxy-config.json`.
+
+
+Make sure that the *clientId* predicate on the `ClientIdStaticAuthRequestHandler` and `ClientIdStaticTokenHandler` is set to the `static-client` we created earlier. And change the *clientSecret* on `ClientIdStaticTokenHandler` to the one found under the credentials tab in your client settings of the client you created earlier.
+
+Now start the proxy using the following command:
+
+* `npm run start -- --scope @digita-ai/dgt-id-proxy -- --  -c ./config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita`.
+
+Note that this server runs with LTS versions of Node.js from v12 onward. 
+
+If you would like to start the proxy with different environment variables, such as a different URI or port you will have to start it manually. 
+
+The following variables are available for you to change:
+
+* `-c` to specify the path to the configuration file (e.g. *_../config/presets/keycloak-config.json_*).
+* `-u` to specify the URI for the proxy (default: *_http://localhost:3003_*).
+* `-U` to specify the URI of the upstream server (default: *_http://localhost:3000_*).
+* `-m` to specify the main module path (default: *_../_*). 
+* `-o` to specify the open id configuration file (default: *_assets/openid-configuration.json_*).
+* `-j` to specify the path to the JWKS file (default: *_assets/jwks.json_*).
+
+For example if you would like to start the proxy on a different port, open your terminal in the *dgt-id-proxy* folder and run the following command: 
+
+* `npm run start -- -u <SCHEME:URI:PORT>` (e.g. http://localhost:3004). With the `-u` flag you can overwrite the default proxy URI which is set default to http://localhost:3003. 
+
+Note that you still have to start the other required packages manually as well:
+
+* Open a terminal in the `demo/demo-pods` folder and run the following command: `npm run start` to start demo pods.
+
+* Open a terminal in the `demo/demo-client` folder and run the following command: `npm run demo:keycloak` to start the demo client.
+
