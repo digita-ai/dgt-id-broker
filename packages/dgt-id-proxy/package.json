@@ -4,6 +4,7 @@
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
+  "license": "agpl-3.0",
   "exports": {
     "./package.json": "./package.json",
     ".": {

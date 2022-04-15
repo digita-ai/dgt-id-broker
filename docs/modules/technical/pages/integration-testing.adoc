@@ -1,31 +1,58 @@
 :toc:
 :toclevels: 3
 
+= Integration testing
 
-= Integration testin
+== Checklist
 
+=== Auth flow 
+==== checking parameters incoming on /auth endpoint after passing through the proxy:
 
+. Checks if `scope` is provided and equal to `openid`.
+. Checks if `response_type` is present and equal to `code`.
+. Checks if `client_id` is provided in the request and equal (switched) to the one received from the registration endpoint response in the memory store.
+. Checks if the `redirect_uri` is provided and equal to the one provided in the initial auth request.
+. Checks if `state` is set in the query parameters (even if it was not provided by the user)
+and is a 36 digit uuid, if state was generated.
+. Checks if `code_challenge` and `code_challenge_method` are not present anymore in the query parameters.
 
-=== Checklist
+==== checking parameters coming from the upstream server outgoing to the client after passing the proxy:
 
-== Auth flow 
-checking parameters incoming on /auth endpoint:
+. Checks that `state` is not present in the query parameters anymore if none was provided in the initial request.
+. Checks that a `code` was received.
 
-. checks if state is set in the query parameters (even if it was not provided by the user)
-. checks if present state is a 36 digit uuid if state was generated
-. checks if client_id in the params is switched to the one received from the registration endpoint
-. checks if all required parameters were received (scope, redirect_uri, response_type and client_id)
-. checks if state is the one given in the intitial request parameters (NOT WORKING)
+=== Token flow
+==== checking parameters incoming on /token endpoint  after passing through the proxy:
 
-== Token flow
-checking parameters incoming on /token endpoint:
+. Checks if `client_id` is present in the params and is still to the one received from the registration endpoint.
+. Checks if `grant_type` is present and equal to `authorization_code`.
+. Checks if `code` is present in the body parameters.
+. Checks if `redirect_uri` is present in the body parameters and equals to the one provided in the initial request.
 
-. checks if client_id in the params is still to the one received from the registration endpoint
-. checks if the content-length is recalculated after the client_id has been switched
-. checks if the code_verifier has been removed fron the query parameters
-. checks if the redirect_uri is the same as the one received in the initial request
+. Checks if the `content-length` is recalculated after the `client_id` has been switched.
+. Checks if the `code_verifier` has been removed from the query parameters.
+. Check that no `DPoP token header` is present if none was provided in the initial request.
 
-== Checking response parameters after passing through the proxy
+==== checking token response parameters coming from the upstream server going to the client after passing the proxy
 
-# cannot figure out yet how to get to the response here, 
-# if I log in the passthrough handler it seems like the last token request was succesfully replied to but I can't seem to catch this response yet
+. Checks if `access_token` is present in the response and expires in 2 hours.
+. Checks if `token_type` is present and equal to `DPoP`.
+. Checks if `JWT tokens` are present and of the correct length.`
+
+access_token parameters:
+. Checks if `access_token` contains a kid header with the correct kid.
+. Checks if `access token` contains an `alg` header of 'ES256'.
+. Checks if `access_token` contains the correct client_id.
+. Checks if `access_token` contains a correctly minted webid as `webid` claim.
+. Checks if `access_token` contains an `aud` claim with 'solid' as audience.
+. Checks if `access_token` contains a correct jti claim with the correct length.
+. Checks if `access_token` contains an `iss` claim with a valid proxy url.
+. Checks if `access_token` contains `iat` and `exp` claims.
+. Checks if `access_token` contains a `cnf` containing a jkt.
+
+id_token parameters:
+. Checks if `id_token` contains a kid header with the correct kid.
+. Checks if `id_token` contains an `typ` header of 'JWT'.
+. Checks if `id_token` contains an `alg` header of 'ES256'.
+. Checks if `id_token` contains a correctly minted webid as `webid` claim.
+. Checks if `id_token` contains an `jti` claim with the correct length.`
