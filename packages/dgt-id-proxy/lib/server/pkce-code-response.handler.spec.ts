@@ -15,9 +15,9 @@ describe('PkceCodeResponseHandler', () => {
   };
 
   const store = new InMemoryStore() as InMemoryStore<Code, ChallengeAndMethod>;
-  const referer = 'client.example.com';
   const state = '9c59c72b-c282-4370-bfae-33f3f5dfb42e';
   const code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';
+  const redirectUri = 'http://redirect-uri.com';
 
   const challengeAndMethodAndState = {
     challenge: 'code_challenge_value',
@@ -30,14 +30,14 @@ describe('PkceCodeResponseHandler', () => {
     response = {
       body: '',
       headers: {
-        location: `http://${referer}/requests.html?code=${code}&state=${state}`,
+        location: `${redirectUri}/requests.html?code=${code}&state=${state}`,
       },
       status: 302,
     };
 
     store.set(state, challengeAndMethod);
 
-    pkceCodeRequestHandler = new PkceCodeResponseHandler(store);
+    pkceCodeRequestHandler = new PkceCodeResponseHandler(store, redirectUri);
 
   });
 
@@ -49,8 +49,15 @@ describe('PkceCodeResponseHandler', () => {
 
   it('should error when no handler or memory store was provided', () => {
 
-    expect(() => new PkceCodeResponseHandler(undefined)).toThrow('A store must be provided');
-    expect(() => new PkceCodeResponseHandler(null)).toThrow('A store must be provided');
+    expect(() => new PkceCodeResponseHandler(undefined, redirectUri)).toThrow('A store must be provided');
+    expect(() => new PkceCodeResponseHandler(null, redirectUri)).toThrow('A store must be provided');
+
+  });
+
+  it('should error when no redirectUri was provided', () => {
+
+    expect(() => new PkceCodeResponseHandler(store, undefined)).toThrow('A redirectUri must be provided');
+    expect(() => new PkceCodeResponseHandler(store, null)).toThrow('A redirectUri must be provided');
 
   });
 
@@ -95,14 +102,14 @@ describe('PkceCodeResponseHandler', () => {
 
     it('should error if no state in the location', async () => {
 
-      response.headers.location = `http://${referer}/requests.html?code=${code}`;
+      response.headers.location = `${redirectUri}/requests.html?code=${code}`;
       await expect(lastValueFrom(pkceCodeRequestHandler.handle(response))).rejects.toThrow('No data was found in the store');
 
     });
 
     it('should straight return the response when no code was included', async () => {
 
-      response.headers.location = `http://${referer}/requests.html?state=${state}`;
+      response.headers.location = `${redirectUri}/requests.html?state=${state}`;
       await expect(lastValueFrom(pkceCodeRequestHandler.handle(response))).resolves.toEqual(response);
 
     });

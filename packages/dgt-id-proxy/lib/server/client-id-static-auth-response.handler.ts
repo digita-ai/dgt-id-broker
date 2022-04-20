@@ -18,11 +18,13 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
    *
    * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
    */
-  constructor(private keyValueStore: KeyValueStore<string, URL>){
+  constructor(private keyValueStore: KeyValueStore<string, URL>, private redirectUri: string) {
 
     super();
 
-    if (!keyValueStore) { throw new Error('No keyValueStore was provided'); }
+    if (!keyValueStore) throw new Error('No keyValueStore was provided');
+
+    if (!redirectUri) throw new Error('No redirectUri was provided');
 
   }
 
@@ -58,26 +60,36 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
       response.body = '';
 
-      return from(this.keyValueStore.get(state)).pipe(
-        switchMap((redirectURL) => {
+      if(locationUrl.href.startsWith(this.redirectUri)) {
 
-          if (redirectURL) return of(redirectURL);
+        return from(this.keyValueStore.get(state)).pipe(
+          switchMap((redirectURL) => {
 
-          this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
+            if (redirectURL) return of(redirectURL);
 
-          return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
+            this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
 
-        }),
-        tap((redirectURL) => {
+            return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
 
-          locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
-          response.headers.location = redirectURL.toString();
+          }),
+          tap((redirectURL) => {
 
-          this.logger.info('Replaced the redirect uri in the response', response);
+            locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
+            response.headers.location = redirectURL.toString();
 
-        }),
-        mapTo(response),
-      );
+            this.logger.info('Replaced the redirect uri in the response', response);
+
+          }),
+          mapTo(response),
+        );
+
+      } else {
+
+        this.logger.verbose('Location header does not contain a valid redirect URI', response.headers.location);
+
+        return of(response);
+
+      }
 
     } catch (error) {
 

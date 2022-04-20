@@ -20,16 +20,14 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
    * @param {KeyValueStore<Code, ChallengeAndMethod>} store - Stores the challenge method, code challenge, and wether or not the user sent state.
    */
   constructor(
-    private store: KeyValueStore<Code, ChallengeAndMethod>,
+    private store: KeyValueStore<Code, ChallengeAndMethod>, private redirectUri: string,
   ){
 
     super();
 
-    if (!store) {
+    if (!store) throw new Error('A store must be provided');
 
-      throw new Error('A store must be provided');
-
-    }
+    if (!redirectUri) throw new Error('A redirectUri must be provided');
 
   }
 
@@ -60,7 +58,9 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
           const state = url.searchParams.get('state') ?? '';
           const code = url.searchParams.get('code');
 
-          return code ? this.handleCodeResponse(resp, state, code, url) : of(resp);
+          return code && url.href.startsWith(this.redirectUri)
+            ? this.handleCodeResponse(resp, state, code, url)
+            : of(resp);
 
         } catch (error) {
 
