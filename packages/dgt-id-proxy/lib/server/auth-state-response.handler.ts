@@ -53,12 +53,12 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     }
 
-    const url = new URL(response.headers.location);
-    const state = url.searchParams.get('state') ?? '';
+    if(response.headers.location.startsWith(this.redirectUri)) {
 
-    this.logger.info('Checking state in store', state);
+      const url = new URL(response.headers.location);
+      const state = url.searchParams.get('state') ?? '';
 
-    if(url.href.startsWith(this.redirectUri)) {
+      this.logger.info('Checking state in store', state);
 
       return from(this.keyValueStore.get(state)).pipe(
         switchMap((clientSentState) => {

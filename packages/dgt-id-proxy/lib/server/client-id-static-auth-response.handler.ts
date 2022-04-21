@@ -45,20 +45,20 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
     }
 
-    const locationUrl = new URL(response.headers.location);
-    const state = locationUrl.searchParams.get('state');
-
-    if (!state) {
-
-      this.logger.verbose('No state was provided in the response', response.headers.location);
-
-      return throwError(() => new Error('No state was found on the response. Cannot handle the response.'));
-
-    }
-
     response.body = '';
 
-    if(locationUrl.href.startsWith(this.redirectUri)) {
+    if(response.headers.location.startsWith(this.redirectUri)) {
+
+      const locationUrl = new URL(response.headers.location);
+      const state = locationUrl.searchParams.get('state');
+
+      if (!state) {
+
+        this.logger.verbose('No state was provided in the response', response.headers.location);
+
+        return throwError(() => new Error('No state was found on the response. Cannot handle the response.'));
+
+      }
 
       return from(this.keyValueStore.get(state)).pipe(
         switchMap((redirectURL) => {

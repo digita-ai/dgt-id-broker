@@ -52,13 +52,17 @@ export class PkceCodeResponseHandler extends Handler<HttpHandlerResponse, HttpHa
     return of(response).pipe(
       switchMap((resp) => {
 
-        const url = new URL(resp.headers.location);
-        const state = url.searchParams.get('state') ?? '';
-        const code = url.searchParams.get('code');
+        if (resp.headers.location.startsWith(this.redirectUri)) {
 
-        return code && url.href.startsWith(this.redirectUri)
-          ? this.handleCodeResponse(resp, state, code, url)
-          : of(resp);
+          const url = new URL(resp.headers.location);
+          const state = url.searchParams.get('state') ?? '';
+          const code = url.searchParams.get('code');
+
+          return code
+            ? this.handleCodeResponse(resp, state, code, url)
+            : of(resp);
+
+        } else { return of(resp); }
 
       }),
     );
