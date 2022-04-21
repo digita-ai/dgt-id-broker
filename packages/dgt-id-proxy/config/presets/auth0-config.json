@@ -100,6 +100,9 @@
                       },
                       {
                         "@id": "urn:dgt-id-proxy:default:PasswordlessApiEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:IndexEndpoint"
                       }
                     ]
                   }
@@ -108,6 +111,26 @@
             }
           }
         }
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
+      "@type": "SafariCookieSaveHandler",
+      "httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "cookieStore": {
+        "@id": "urn:dgt-id-proxy:default:CookieStore"
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+      "@type": "SafariCookieRestoreHandler",
+      "httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "cookieStore": {
+        "@id": "urn:dgt-id-proxy:default:CookieStore"
       }
     },
     {
@@ -152,11 +175,7 @@
     },
     {
       "@id": "urn:dgt-id-proxy:default:StateStore",
-      "range": {
-        "@type": "ParameterRangeGenericComponent",
-        "genericTypeInstancesComponentScope": "InMemoryStore",
-        "genericTypeInstances": [ "xsd:string", "xsd:boolean" ]
-      }
+      "@type": "InMemoryStore"
     },
     {
       "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
@@ -295,14 +314,7 @@
                   "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
                 },
                 {
-                  "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
-                  "@type": "SafariCookieSaveHandler",
-                  "httpHandler": {
-                    "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-                  },
-                  "cookieStore": {
-                    "@id": "urn:dgt-id-proxy:default:CookieStore"
-                  }
+                  "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler"
                 }
               ]
             }
@@ -358,14 +370,7 @@
         "@type": "HttpSequenceHandler",
         "handlers": [
           {
-            "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
-            "@type": "SafariCookieRestoreHandler",
-            "httpHandler": {
-              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-            },
-            "cookieStore": {
-               "@id": "urn:dgt-id-proxy:default:CookieStore"
-            }
+            "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler"
           },
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
@@ -389,14 +394,7 @@
         }
       ],
       "handler": {
-          "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
-          "@type": "SafariCookieRestoreHandler",
-          "httpHandler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-          },
-          "cookieStore": {
-             "@id": "urn:dgt-id-proxy:default:CookieStore"
-          }
+          "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler"
       },
       "path": "/u/login"
     },
@@ -412,14 +410,7 @@
         }
       ],
       "handler": {
-        "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
-        "@type": "SafariCookieRestoreHandler",
-        "httpHandler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-        },
-        "cookieStore": {
-           "@id": "urn:dgt-id-proxy:default:CookieStore"
-        }
+        "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler"
       },
       "path": "/u/consent"
     },
@@ -562,6 +553,20 @@
         }
       },
       "path": "/passwordless/start"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:IndexEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "handler": {
+        "@type": "StatusHandler",
+        "packagePath": "package.json"
+      },
+      "path": "/"
     }
   ]
 }

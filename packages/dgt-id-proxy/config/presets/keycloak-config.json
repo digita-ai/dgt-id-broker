@@ -87,6 +87,9 @@
                     },
                     {
                       "@id": "urn:dgt-id-proxy:default:JwksEndpoint"
+                    },
+                    {
+                      "@id": "urn:dgt-id-proxy:default:IndexEndpoint"
                     }
                   ]
                 }
@@ -396,6 +399,20 @@
         }
       },
       "path": "/jwks"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:IndexEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "handler": {
+        "@type": "StatusHandler",
+        "packagePath": "package.json"
+      },
+      "path": "/"
     }
   ]
 }
