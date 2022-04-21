@@ -188,7 +188,7 @@ describe('Main.ts', () => {
       await launch({ ...variables, ['urn:dgt-id-proxy:variables:mainModulePath'] : undefined });
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
-      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly' });
+      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly', typeChecking: false });
 
     });
 
@@ -197,7 +197,7 @@ describe('Main.ts', () => {
       await launch(variables);
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
-      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly' });
+      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly', typeChecking: false });
 
     });
 

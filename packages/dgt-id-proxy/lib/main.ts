@@ -90,6 +90,7 @@ export const launch: (variables: Record<string, any>) => Promise<void> = async (
   const manager = await ComponentsManager.build({
     mainModulePath,
     logLevel: 'silly',
+    typeChecking: false,
   });
 
   await manager.configRegistry.register(configPath);
