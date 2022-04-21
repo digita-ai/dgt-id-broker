@@ -1,5 +1,6 @@
 import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { Observable, of, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { checkError, createErrorResponse } from '../public-api';
@@ -11,10 +12,12 @@ import { WebIdFactory } from './webid-factory';
  */
 export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  private logger = getLoggerFor(this, 5, 5);
+
   /**
-   * Creates a {WebIdResponseHandler}.
+   * Creates a { WebIdResponseHandler }.
    *
-   * @param {WebIdFactory} webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters
+   * @param { WebIdFactory } webIdFactory - a WebIdFactory implementation that receives a WebIdPattern and Claim parameters.
    */
   constructor(private webIdFactory: WebIdFactory, public tokenType: string = 'id_token') {
 
@@ -36,9 +39,17 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) { return throwError(() => new Error('A response must be provided')); }
+    if (!response) {
+
+      this.logger.verbose('No response provided', response);
+
+      return throwError(() => new Error('A response must be provided'));
+
+    }
 
     if (checkError(response)) {
+
+      this.logger.verbose('Response contains an error', response);
 
       return of(createErrorResponse(
         checkError(response).error_description,
@@ -48,27 +59,55 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     }
 
-    if (!response.body) { return throwError(() => new Error('The response did not contain a body')); }
+    if (!response.body) {
 
-    if (!response.body.access_token) { return throwError(() => new Error('The response body did not contain an access_token')); }
+      this.logger.verbose('No body in response', response);
 
-    if (!response.body.access_token.payload) { return throwError(() => new Error('The access_token did not contain a payload')); }
+      return throwError(() => new Error('The response did not contain a body'));
+
+    }
+
+    if (!response.body.access_token) {
+
+      this.logger.verbose('No access_token in response', response.body);
+
+      return throwError(() => new Error('The response body did not contain an access_token'));
+
+    }
+
+    if (!response.body.access_token.payload) {
+
+      this.logger.verbose('No payload in access_token', response.body.access_token);
+
+      return throwError(() => new Error('The access_token did not contain a payload'));
+
+    }
 
     const access_token_payload = response.body.access_token.payload;
 
     if (this.tokenType === 'id_token') {
 
-      if (!response.body.id_token) { return throwError(() => new Error('The response body did not contain an id_token')); }
+      if (!response.body.id_token) {
+
+        this.logger.verbose('No id_token in response', response.body);
+
+        return throwError(() => new Error('The response body did not contain an id_token'));
+
+      }
 
       const id_token_payload = response.body.id_token.payload;
 
       if (id_token_payload.webid) {
+
+        this.logger.info('adding webid from id token to access token', id_token_payload.webid);
 
         access_token_payload.webid = id_token_payload.webid;
 
         return of(response);
 
       } else {
+
+        this.logger.info('No webid in id token, minting webid', response.body.id_token);
 
         return this.webIdFactory.handle(id_token_payload).pipe(
           switchMap((minted_webid) => {
@@ -85,6 +124,8 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
     } else {
 
+      this.logger.info('No webid in access token, minting webid', response.body.access_token);
+
       return this.webIdFactory.handle(access_token_payload).pipe(
         switchMap((minted_webid) => {
 
@@ -100,11 +141,14 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
   }
 
   /**
-   * Returns true if the response is defined. Otherwise it returns false.
+   * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', response);
 
     return response ? of(true) : of(false);
 

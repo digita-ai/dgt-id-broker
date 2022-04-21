@@ -4,16 +4,19 @@ import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai
 import { Observable, from, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { JWK } from 'jose';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {HttpHandler} reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
+ * A { HttpHandler } reading JWK keys from a file and returning them as a response for the jwk_uri endpoint.
  */
 export class JwkRequestHandler extends HttpHandler {
 
+  private logger = getLoggerFor(this, 5, 5);
+
   /**
-   * Creates a {JwkRequestHandler} that returns a json response of the JWK keys from the file in the given path.
+   * Creates a { JwkRequestHandler } that returns a json response of the JWK keys from the file in the given path.
    *
-   * @param {string} jwkPath - the relative path to the file containing JWK keys.
+   * @param { string } jwkPath - The relative path to the file containing JWK keys.
    */
   constructor(private jwkPath: string) {
 
@@ -26,7 +29,7 @@ export class JwkRequestHandler extends HttpHandler {
    * removing the private claims in the JWKs, and creating a response containing the public JWKs
    * in the body.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse>{
 
@@ -54,6 +57,8 @@ export class JwkRequestHandler extends HttpHandler {
             })),
           };
 
+          this.logger.info('Created JWKs for response', jwksForResponse);
+
           return of({
             body: JSON.stringify(jwksForResponse),
             headers: { 'Content-Type': 'application/jwk-set+json' },
@@ -68,9 +73,12 @@ export class JwkRequestHandler extends HttpHandler {
   /**
    * Specifies that this handler can handle any context.
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context
+   * @returns { boolean } - Boolean stating any context can be handled.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean>{
+
+    this.logger.info('Checking canHandle', context);
 
     return of(true);
 

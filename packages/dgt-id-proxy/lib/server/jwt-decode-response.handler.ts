@@ -4,21 +4,24 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { of, throwError, Observable, zip } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { base64url } from 'jose';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { verifyUpstreamJwk } from '../util/verify-upstream-jwk';
 import { checkError, createErrorResponse } from '../util/error-response-factory';
 
 /**
- * A {Handler} decoding JWTs for the specified fields of a {HttpHandlerResponse} body. Optionally verifies
+ * A { Handler } decoding JWTs for the specified fields of a { HttpHandlerResponse } body. Optionally verifies
  * the keys that were used to sign the tokens by an upstream server.
  */
 export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
+  private logger = getLoggerFor(this, 5, 5);
+
   /**
-   * Creates a {JwtDecodeResponseHandler}.
+   * Creates a { JwtDecodeResponseHandler }.
    *
-   * @param {string[]} jwtFields - the fields of the response body containing tokens to decode.
-   * @param {string} upstreamUrl - the url of the upstream server. Used to get the JWKs that were used to sign tokens.
-   * @param {boolean} verifyJwk - specifies wether or not JWKs should be verified.
+   * @param { string[] } jwtFields - The fields of the response body containing tokens to decode.
+   * @param { string } upstreamUrl - The url of the upstream server. Used to get the JWKs that were used to sign tokens.
+   * @param { boolean } verifyJwk - Specifies wether or not JWKs should be verified.
    */
   constructor (private jwtFields: string[], private upstreamUrl: string, private verifyJwk: boolean) {
 
@@ -38,13 +41,21 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
    * decodes the header and payload by itself, and sets them in the response body. The response body will then contain json
    * objects with a header and payload object for each decoded token.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response containing the JWT.
    */
   handle(response: HttpHandlerResponse): Observable<HttpHandlerResponse> {
 
-    if (!response) { return throwError(() => new Error('response cannot be null or undefined')); }
+    if (!response) {
+
+      this.logger.verbose('No response was received', response);
+
+      return throwError(() => new Error('response cannot be null or undefined'));
+
+    }
 
     if (checkError(response)) {
+
+      this.logger.verbose('Response is an error', response);
 
       return of(createErrorResponse(
         checkError(response).error_description,
@@ -61,11 +72,15 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       if (!parsedBody[field]) {
 
+        this.logger.verbose(`Response body does not contain the ${field}: `, parsedBody);
+
         return throwError(() => new Error(`the response body did not include the field "${field}"`));
 
       }
 
       if (typeof parsedBody[field] !== 'string' || parsedBody[field].split('.').length < 3) {
+
+        this.logger.verbose('Response body field is not a valid jwt', parsedBody[field]);
 
         return throwError(() => new Error(`the response body did not include a valid JWT for the field "${field}"`));
 
@@ -101,9 +116,12 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
   /**
    * Specifies that if the response is defined this handler can handle the response.
    *
-   * @param {HttpHandlerResponse} response
+   * @param { HttpHandlerResponse } response - The response to handle.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(response: HttpHandlerResponse): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', response);
 
     return response
       ? of(true)

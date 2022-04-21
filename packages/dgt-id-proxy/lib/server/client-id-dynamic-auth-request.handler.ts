@@ -3,6 +3,7 @@ import { Handler } from '@digita-ai/handlersjs-core';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { Observable,  throwError, of, from, zip } from 'rxjs';
 import { switchMap, tap, mapTo } from 'rxjs/operators';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientRegistrationData } from '../util/process-client-registration-data';
 
@@ -10,16 +11,18 @@ import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientR
  * A { Handler<HttpHandlerContext, HttpHandlerContext> } that
  * - checks if a client is already registered
  * - compares the client registration data with the request data
- * - compares the store data with the clien registration data
+ * - compares the store data with the client registration data
  * - registers if not registered or information is updated
  * - stores the registration in the keyvalue store
  */
 export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
+  private logger = getLoggerFor(this, 5, 5);
+
   /**
    * Creates a { ClientIdDynamicAuthRequestHandler }.
    *
-   * @param {string} registration_uri - the registration endpoint for the currently used provider.
+   * @param { string } registration_uri - the registration endpoint for the currently used provider.
    * @param { KeyValueStore } store - the store used to save a clients register data.
    */
   constructor(
@@ -55,28 +58,60 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * If nothing changed it doesn't register.
    * It replaces the given client id in the context with the random client id it retrieved from the registration endpoint
    *
-   * @param {HttpHandlerContext} context
+   * @param { HttpHandlerContext } context - The context of the incoming request.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerContext> {
 
-    if (!context) { return throwError(() => new Error('A context must be provided')); }
+    if (!context) {
 
-    if (!context.request) { return throwError(() => new Error('No request was included in the context')); }
+      this.logger.verbose('No context provided', context);
 
-    if (!context.request.url) { return throwError(() => new Error('No url was included in the request')); }
+      return throwError(() => new Error('A context must be provided'));
+
+    }
+
+    if (!context.request) {
+
+      this.logger.verbose('No request was provided', context.request);
+
+      return throwError(() => new Error('No request was included in the context'));
+
+    }
+
+    if (!context.request.url) {
+
+      this.logger.verbose('No url was provided', context.request.url);
+
+      return throwError(() => new Error('No url was included in the request'));
+
+    }
 
     const client_id = context.request.url.searchParams.get('client_id');
     const redirect_uri = context.request.url.searchParams.get('redirect_uri');
 
-    if (!client_id) { return throwError(() => new Error('No client_id was provided')); }
+    if (!client_id) {
 
-    if (!redirect_uri) { return throwError(() => new Error('No redirect_uri was provided')); }
+      this.logger.warn('No client id was provided', client_id);
+
+      return throwError(() => new Error('No client_id was provided'));
+
+    }
+
+    if (!redirect_uri) {
+
+      this.logger.warn('No redirect uri was provided', redirect_uri);
+
+      return throwError(() => new Error('No redirect_uri was provided'));
+
+    }
 
     try {
 
       new URL(client_id);
 
     } catch (error) {
+
+      this.logger.error('The client id is not a valid url', client_id);
 
       return of(context);
 
@@ -94,12 +129,14 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   }
 
   /**
-   * Returns true if the context is valid.
-   * Returns false if the context, it's request, or request url are not included.
+   * Confirms if the handler can handle the context by checking if a request and request URL object is present.
    *
-   * @param {HttpHandlerContext} context
+   * @param {HttpHandlerContext} context - The context containing the request to handle.
+   * @returns Boolean stating if the context can be handled or not.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
     && context.request
@@ -116,14 +153,17 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * and returns a JSON of the response and saves
    * this response in the KeyValue store with the client id as key.
    *
-   * @param { OidcClientMetadata } data
-   * @param { string } client_id
+   * @param { OidcClientMetadata } data - The clients metadata to register with.
+   * @param { string } client_id - E.g. a URI to a web id profile.
+   * @returns Object containing the registration data received from the registration endpoint.
    */
   async registerClient(
     data: OidcClientMetadata,
     client_id: string,
     redirect_uri?: string,
   ): Promise<CombinedRegistrationData> {
+
+    this.logger.info('Registering client', { data, client_id });
 
     const response = await fetch(this.registration_uri, {
       method: 'POST',
@@ -134,8 +174,12 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       body: JSON.stringify(data),
     });
 
+    if (!response) this.logger.error(`Failed to register ${client_id} with data: `, data);
+
     const regResponse = await response.json();
     redirect_uri ? this.store.set(redirect_uri, regResponse) : this.store.set(client_id, regResponse);
+
+    this.logger.info(`Registered ${client_id} with data: `, data);
 
     return regResponse;
 
@@ -146,7 +190,9 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * It combines all the parameters that are possible for a register request
    * that are present in the client registration data.
    *
-   * @param { OidcClientMetadata } clientData
+   * @param { OidcClientMetadata } clientData - The client registration data found in the webid.
+   * @returns The request data to send to the registration endpoint containing
+   * only the possible parameters for a register request that were found in the clientData.
    */
   createRequestData(clientData: OidcClientMetadata): OidcClientMetadata {
 
@@ -194,6 +240,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     });
 
+    this.logger.info('Created request data', reqData);
+
     return reqData;
 
   }
@@ -204,8 +252,9 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * If registered again it saves the new register data in the KeyValue store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
-   * @param { OidcClientMetadata } clientData - the data retrieved from the webid.
-   * @param { CombinedRegistrationData } registerData - the data retrieved from the store.
+   * @param { OidcClientMetadata } clientData - The data retrieved from the webid.
+   * @param { CombinedRegistrationData } registerData - The data retrieved from the store.
+   * @returns { boolean } - Boolean stating if the data in the store is different from the data in the webid.
    */
   clientRegistrationDataChanged(
     clientData: OidcClientMetadata,
@@ -216,7 +265,14 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
       this.compareClientRegistrationParameter(clientData[key], registerData[key], key));
 
   }
-
+  /**
+   * Compares each of the registration items to check if they are equal, or lists both contain the item.
+   *
+   * @param { unknown } clientDataItem - The item from the client registration data (data retrieved from the webid) to compare.
+   * @param { unknown } registerDataItem - The item from the registration data (data retrieved from the key value store) to compare.
+   * @param { string } key - The key of the item to compare.
+   * @returns Confirms whether the items are equal.
+   */
   compareClientRegistrationParameter(clientDataItem: unknown, registerDataItem: unknown, key: string): boolean {
 
     if (([ 'client_id', 'scope', '@context' ].includes(key))) { return false; }
@@ -230,6 +286,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
 
     }
 
+    this.logger.info('Checking if registration data has changed: ', (registerDataItem !== clientDataItem));
+
     return (registerDataItem !== clientDataItem);
 
   }
@@ -241,6 +299,8 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    *
    * @param { string } clientId : the clientId (public webid) provided in the request
    * @param { string } redirectUri : the redirectUri provided in the request
+   * @returns Returns the registration data either retrieved from the store
+   * when already registered or from the response from the registration endpoint upon registering.
    */
   private checkRedirectUri(
     clientId: string,
@@ -253,9 +313,15 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
     };
 
     return from(this.store.get(redirectUri)).pipe(
-      switchMap((registerData) => registerData
-        ? of(registerData)
-        : this.registerClient(clientData, clientId, redirectUri)),
+      switchMap((registerData) => {
+
+        this.logger.info(`Retrieved register data for ${redirectUri}: `, registerData);
+
+        return registerData
+          ? of(registerData)
+          : this.registerClient(clientData, clientId, redirectUri);
+
+      }),
     );
 
   }
@@ -264,8 +330,10 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * Calls retrieveAndValidateClientRegistrationData, checks if client is already registered,
    * calls compareClientRegistrationDataWithStore and registers if not registered yet or if something changed.
    *
-   * @param { string } clientId: the clientId (client registration data) provided in the request
-   * @param { URLSearchParams } contextRequestUrlSearchParams: the URL parameters given in the request
+   * @param { string } clientId - The clientId (client registration data) provided in the request.
+   * @param { URLSearchParams } contextRequestUrlSearchParams - The URL parameters given in the request.
+   * @returns Returns the registration data either retrieved from the store
+   * when already registered or from the response from the registration endpoint upon registering.
    */
   private checkClientRegistrationData(
     clientId: string,

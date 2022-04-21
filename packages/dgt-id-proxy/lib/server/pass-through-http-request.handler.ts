@@ -5,22 +5,24 @@ import { gunzipSync, brotliDecompressSync, inflateSync } from 'zlib';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, from, throwError } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 /**
- * A {HttpRequestHandler} passing all request to and responses from the upstream server without modification.
+ * A { HttpRequestHandler } passing all request to and responses from the upstream server without modification.
  */
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
+  private logger = getLoggerFor(this, 5, 5);
   private proxyURL: URL;
 
   /**
    * Creates a PassThroughHttpRequestHandler with an upstream server on the provided location.
    *
-   * @param {string} host - the host of the upstream server without scheme (is always http).
-   * @param {number} port - the port to connect to on the upstream server.
-   * @param {string} scheme - either 'http:' or 'https:'.
-   * @param {string} proxyUrl - the url of the proxy server.
-   * @param {boolean} errorHandling - toggles whether the handler should create it's own error response or use the upstream's
+   * @param { string } host - The host of the upstream server without scheme (is always http).
+   * @param { number } port - The port to connect to on the upstream server.
+   * @param { string } scheme - Either 'http:' or 'https:'.
+   * @param { string } proxyUrl - The url of the proxy server.
+   * @param { boolean } errorHandling - Toggles whether the handler should create it's own error response or use the upstream's.
    */
   constructor(
     private host: string,
@@ -75,14 +77,16 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * Takes the necessary parameters out of the {HttpHandlerRequest} from the {HttpHandlerContext} and passes them to fetchRequest.
-   * Returns the response as an {Observable<HttpHandlerResponse>}.
+   * Takes the necessary parameters out of the { HttpHandlerRequest } from the { HttpHandlerContext } and passes them to fetchRequest.
+   * Returns the response as an { Observable<HttpHandlerResponse> }.
    *
-   * @param {HttpHandlerContext} context - a HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute
+   * @param { HttpHandlerContext } context - A HttpHandlerContext object containing a HttpHandlerRequest and HttpHandlerRoute.
    */
   handle(context: HttpHandlerContext): Observable<HttpHandlerResponse> {
 
     if (!context) {
+
+      this.logger.verbose('No context was provided', context);
 
       return throwError(() => new Error('Context cannot be null or undefined'));
 
@@ -90,11 +94,15 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     if (!context.request) {
 
+      this.logger.verbose('No request was provided', context);
+
       return throwError(() => new Error('No request was included in the context'));
 
     }
 
     if (!context.request.method) {
+
+      this.logger.verbose('No method was provided', context.request);
 
       return throwError(() => new Error('No method was included in the request'));
 
@@ -102,11 +110,15 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
     if (!context.request.headers) {
 
+      this.logger.verbose('No headers were provided', context.request);
+
       return throwError(() => new Error('No headers were included in the request'));
 
     }
 
     if (!context.request.url) {
+
+      this.logger.verbose('No url was provided', context.request);
 
       return throwError(() => new Error('No url was included in the request'));
 
@@ -122,6 +134,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
         if (this.errorHandling && response.status >= 400) {
 
+          this.logger.verbose(`Request failed in PassThroughHttpRequestHandler with status ${response.status}: `, response.headers);
+
           return throwError(() => ({ headers: response.headers, status: response.status }));
 
         }
@@ -134,11 +148,14 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
   }
 
   /**
-   * Indicates that this handler can handle every {HttpHandlerContext} with non-null parameters.
+   * Specifies that if the response is defined this handler can handle the response by checking if it contains the necessary information.
    *
-   * @param {HttpHandlerContext} context - a {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}
+   * @param {HttpHandlerContext} context - A {HttpHandlerContext} object containing a {HttpHandlerRequest} and {HttpHandlerRoute}.
+   * @returns Boolean stating if the handler can handle the response.
    */
   canHandle(context: HttpHandlerContext): Observable<boolean> {
+
+    this.logger.info('Checking canHandle', context);
 
     return context
       && context.request
@@ -154,10 +171,11 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
    * Makes a request to the host server using Node's http.request method.
    * Converts the response to a {HttpHandlerResponse} and returns it in an {Observable}.
    *
-   * @param path - the path to make a request to on the host
-   * @param method - the HTTP method
-   * @param headers - the HTTP request headers
-   * @param body - the request body
+   * @param { URL } url - The URL to make the request to.
+   * @param { string } method - The HTTP method.
+   * @param { IncomingHttpHeaders } headers - The HTTP request headers.
+   * @param { any } body (optional) - The body to add to the request if required.
+   * @returns The response to the request that was made.
    */
   private fetchRequest(
     url: URL,
@@ -196,6 +214,13 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   }
 
+  /**
+   * Resolves the response from the upstream server.
+   *
+   * @param { any } requestOpts - The HTTP request options to add to the request.
+   * @param { any } body - The body to be added to the request.
+   * @returns The response from the upstream server.
+   */
   private resolveResponse = (requestOpts: any, body: any) => new Promise<HttpHandlerResponse>((resolve, reject) => {
 
     const responseCallback = (res: IncomingMessage) => this.responseCallback(res,  resolve, reject);
@@ -210,6 +235,11 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   });
 
+  /**
+   *
+   *
+   *
+   */
   private responseCallback = (
     res: IncomingMessage,
     resolve: (value: HttpHandlerResponse) => void,
@@ -296,19 +326,36 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
   };
 
+  /**
+   * Decompresses the data buffer based on the specified compression type.
+   *
+   * @param { Buffer } data - The data to be decompressed.
+   * @param { string } compressionType - The compression type of the compressed data.
+   * @returns The buffer containing the decompressed data.
+   */
   private decompress = (data: Buffer, compressionType: string): Buffer => {
 
     switch (compressionType) {
 
       case 'br':
+        this.logger.info('decompressing with brotli');
+
         return brotliDecompressSync(data);
       case 'gzip':
+        this.logger.info('decompressing with gzip');
+
         return gunzipSync(data);
       case 'deflate':
+        this.logger.info('decompressing with deflate');
+
         return inflateSync(data);
       case 'identity':
+        this.logger.info('compressionType is identity, returning data');
+
         return data;
       default:
+        this.logger.info('Received unknown decompression type: ',  compressionType);
+
         throw new Error(`Compression type '${compressionType}' is unknown`);
 
     }
@@ -319,6 +366,8 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     (acc, key) => {
 
       const lKey = key.toLowerCase();
+
+      this.logger.info('cleaning headers: ', lKey);
 
       return acc[lKey]
         ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }
