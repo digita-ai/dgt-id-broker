@@ -367,8 +367,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
 
       const lKey = key.toLowerCase();
 
-      this.logger.info('cleaning headers: ', lKey);
-
       return acc[lKey]
         ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }
         : { ... acc, [lKey]: headers[key] };

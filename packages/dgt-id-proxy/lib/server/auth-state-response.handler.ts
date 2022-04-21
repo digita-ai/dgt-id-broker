@@ -53,54 +53,44 @@ export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
     }
 
-    try {
+    const url = new URL(response.headers.location);
+    const state = url.searchParams.get('state') ?? '';
 
-      const url = new URL(response.headers.location);
-      const state = url.searchParams.get('state') ?? '';
+    this.logger.info('Checking state in store', state);
 
-      this.logger.info('Checking state in store', state);
+    if(url.href.startsWith(this.redirectUri)) {
 
-      if(url.href.startsWith(this.redirectUri)) {
+      return from(this.keyValueStore.get(state)).pipe(
+        switchMap((clientSentState) => {
 
-        return from(this.keyValueStore.get(state)).pipe(
-          switchMap((clientSentState) => {
+          if (clientSentState === undefined) {
 
-            if (clientSentState === undefined) {
+            this.logger.verbose('State sent by client was not found in the keyValueStore', state);
 
-              this.logger.verbose('State sent by client was not found in the keyValueStore', state);
+            return throwError(() => new Error('Unknown state'));
 
-              return throwError(() => new Error('Unknown state'));
+          }
 
-            }
+          if (!clientSentState) {
 
-            if (!clientSentState) {
+            this.logger.info('Client did not sent state, removing generated state from URL', state);
 
-              this.logger.info('Client did not sent state, removing generated state from URL', state);
+            url.searchParams.delete('state');
+            response.headers.location = url.toString();
 
-              url.searchParams.delete('state');
-              response.headers.location = url.toString();
+          }
 
-            }
+          this.logger.info('Removing state from store', state);
+          this.keyValueStore.delete(state);
 
-            this.logger.info('Removing state from store', state);
-            this.keyValueStore.delete(state);
+          return of(response);
 
-            return of(response);
+        })
+      );
 
-          })
-        );
+    } else {
 
-      } else {
-
-        this.logger.verbose('Location header does not contain a valid redirect URI', response.headers.location);
-
-        return of(response);
-
-      }
-
-    } catch (error) {
-
-      this.logger.error('Handling state failed:', error);
+      this.logger.verbose('Location header does not contain a valid redirect URI', response.headers.location);
 
       return of(response);
 
