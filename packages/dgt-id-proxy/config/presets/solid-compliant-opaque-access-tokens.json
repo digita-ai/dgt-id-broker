@@ -56,48 +56,51 @@
         "httpHandler": {
           "@type": "HttpCorsRequestHandler",
           "handler": {
-            "@type": "ClientCompressionHandler",
-            "handler":{
-              "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
-              "@type": "RoutedHttpRequestHandler",
-              "handlerControllerList": [
-                {
-                  "@id": "urn:handlersjs-http:default:HttpHandlerController",
-                  "@type": "HttpHandlerController",
-                  "label": "ControllerList",
-                  "routes": [
-                    {
-                      "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:OpenidConfigurationRoute"
-                    },
-                    {
-                      "@id": "urn:dgt-id-proxy:default:JwksRoute"
-                    }
-                  ]
+            "@type": "ErrorHandler",
+            "nestedHandler": {
+              "@type": "ClientCompressionHandler",
+              "handler":{
+                "@id": "urn:handlersjs-http:default:RoutedHttpRequestHandler",
+                "@type": "RoutedHttpRequestHandler",
+                "handlerControllerList": [
+                  {
+                    "@id": "urn:handlersjs-http:default:HttpHandlerController",
+                    "@type": "HttpHandlerController",
+                    "label": "ControllerList",
+                    "routes": [
+                      {
+                        "@id": "urn:dgt-id-proxy:default:AuthenticationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:AuthenticationDynamicEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:TokenEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:InteractionEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:InteractionLoginEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:InteractionConfirmEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:OpenidConfigurationRoute"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:JwksRoute"
+                      }
+                    ]
+                  }
+                ],
+                "defaultHandler": {
+                  "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
                 }
-              ],
-              "defaultHandler": {
-                "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
               }
             }
           }
