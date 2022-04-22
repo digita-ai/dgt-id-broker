@@ -8,13 +8,12 @@ describe('AuthStateResponseHandler', () => {
   let handler: AuthStateResponseHandler;
   let nestedHandler: HttpHandler;
   let response: HttpHandlerResponse;
-  const redirectUri = 'http://redirect-uri.com';
 
   let store: InMemoryStore<string, boolean>;
 
   beforeEach(() => {
 
-    response = { body: 'mockBody', headers: { location: `${redirectUri}/redirect?state=1234` }, status:200 };
+    response = { body: 'mockBody', headers: { location: 'http://redirect-uri.com/redirect?state=1234' }, status:200 };
     store = new InMemoryStore<string, boolean>();
 
     nestedHandler = {
@@ -23,7 +22,7 @@ describe('AuthStateResponseHandler', () => {
       safeHandle: jest.fn(),
     };
 
-    handler = new AuthStateResponseHandler(store, redirectUri);
+    handler = new AuthStateResponseHandler(store);
 
   });
 
@@ -35,15 +34,8 @@ describe('AuthStateResponseHandler', () => {
 
   it('should error when no keyValueStore is provided', () => {
 
-    expect(() => new AuthStateResponseHandler(undefined, redirectUri)).toThrow('A keyValueStore must be provided');
-    expect(() => new AuthStateResponseHandler(null, redirectUri)).toThrow('A keyValueStore must be provided');
-
-  });
-
-  it('should error when no redirectUri is provided', () => {
-
-    expect(() => new AuthStateResponseHandler(store, undefined)).toThrow('A redirectUri must be provided');
-    expect(() => new AuthStateResponseHandler(store, null)).toThrow('A redirectUri must be provided');
+    expect(() => new AuthStateResponseHandler(undefined)).toThrow('A keyValueStore must be provided');
+    expect(() => new AuthStateResponseHandler(null)).toThrow('A keyValueStore must be provided');
 
   });
 
@@ -90,13 +82,6 @@ describe('AuthStateResponseHandler', () => {
     it('should return the response if the location header is not a valid URL', async () => {
 
       response.headers.location = '/relative/location/header';
-      await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(response);
-
-    });
-
-    it('should return the response if redirectUri does not match', async () => {
-
-      response.headers.location = 'http://other-redirect-uri.com/redirect?state=1234';
       await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(response);
 
     });

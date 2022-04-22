@@ -18,13 +18,11 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
    *
    * @param { KeyValueStore<string, URL> } keyValueStore - the keyValueStore in which to save client sent redirect uris
    */
-  constructor(private keyValueStore: KeyValueStore<string, URL>, private redirectUri: string) {
+  constructor(private keyValueStore: KeyValueStore<string, URL>){
 
     super();
 
-    if (!keyValueStore) throw new Error('No keyValueStore was provided');
-
-    if (!redirectUri) throw new Error('No redirectUri was provided');
+    if (!keyValueStore) { throw new Error('No keyValueStore was provided'); }
 
   }
 
@@ -45,39 +43,49 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
     }
 
-    response.body = '';
+    try {
 
-    const locationUrl = new URL(response.headers.location);
-    const state = locationUrl.searchParams.get('state');
+      const locationUrl = new URL(response.headers.location);
+      const state = locationUrl.searchParams.get('state');
 
-    if (!state) {
+      if (!state) {
 
-      this.logger.verbose('No state was provided in the response', response.headers.location);
+        this.logger.verbose('No state was provided in the response', response.headers.location);
 
-      return throwError(() => new Error('No state was found on the response. Cannot handle the response.'));
+        return throwError(() => new Error('No state was found on the response. Cannot handle the response.'));
+
+      }
+
+      response.body = '';
+
+      return from(this.keyValueStore.get(state)).pipe(
+        switchMap((redirectURL) => {
+
+          if (redirectURL) return of(redirectURL);
+
+          this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
+
+          return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
+
+        }),
+        tap((redirectURL) => {
+
+          locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
+          response.headers.location = redirectURL.toString();
+
+          this.logger.info('Replaced the redirect uri in the response', response);
+
+        }),
+        mapTo(response),
+      );
+
+    } catch (error) {
+
+      this.logger.debug('Error occurred while handling the response', error);
+
+      return of(response);
 
     }
-
-    return from(this.keyValueStore.get(state)).pipe(
-      switchMap((redirectURL) => {
-
-        if (redirectURL) return of(redirectURL);
-
-        this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
-
-        return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
-
-      }),
-      tap((redirectURL) => {
-
-        locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
-        response.headers.location = redirectURL.toString();
-
-        this.logger.info('Replaced the redirect uri in the response', response);
-
-      }),
-      mapTo(response),
-    );
 
   }
 

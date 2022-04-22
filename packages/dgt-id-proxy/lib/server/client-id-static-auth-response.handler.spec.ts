@@ -10,7 +10,6 @@ describe('ClientIdStaticAuthResponseHandler', () => {
   let response: HttpHandlerResponse;
   let store: KeyValueStore<string, URL>;
   let handler: ClientIdStaticAuthResponseHandler;
-  const redirectUri = 'http://static-redirect-uri.com';
 
   beforeAll(() => fetchMock.enableMocks());
 
@@ -19,7 +18,7 @@ describe('ClientIdStaticAuthResponseHandler', () => {
     store = new InMemoryStore();
     store.set('1234', new URL('http://client-redirect-uri.com/client'));
 
-    handler  = new ClientIdStaticAuthResponseHandler(store, redirectUri);
+    handler  = new ClientIdStaticAuthResponseHandler(store);
 
     response = {
       body: 'mockBody',
@@ -37,15 +36,8 @@ describe('ClientIdStaticAuthResponseHandler', () => {
 
   it('should error when no keyValueStore is provided', () => {
 
-    expect(() => new ClientIdStaticAuthResponseHandler(undefined, redirectUri)).toThrow('No keyValueStore was provided');
-    expect(() => new ClientIdStaticAuthResponseHandler(null, redirectUri)).toThrow('No keyValueStore was provided');
-
-  });
-
-  it('should error when no redirectUri is provided', () => {
-
-    expect(() => new ClientIdStaticAuthResponseHandler(store, undefined)).toThrow('No redirectUri was provided');
-    expect(() => new ClientIdStaticAuthResponseHandler(store, null)).toThrow('No redirectUri was provided');
+    expect(() => new ClientIdStaticAuthResponseHandler(undefined)).toThrow('No keyValueStore was provided');
+    expect(() => new ClientIdStaticAuthResponseHandler(null)).toThrow('No keyValueStore was provided');
 
   });
 
@@ -84,13 +76,6 @@ describe('ClientIdStaticAuthResponseHandler', () => {
       await expect(lastValueFrom(handler.handle(response))).resolves.toEqual(
         { ...response, headers: { location: 'http://client-redirect-uri.com/client?code=abcdefg&state=1234' } }
       );
-
-    });
-
-    it('should return response if redirectUri does not match', () => {
-
-      response.headers.location = 'http://client-redirect-uri.com/client?code=abcdefg&state=1234';
-      expect(lastValueFrom(handler.handle(response))).resolves.toEqual(response);
 
     });
 
