@@ -5,7 +5,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
 
 export class RedirectUriConditionHandler extends Handler<HttpHandlerResponse, boolean> {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   constructor(public redirectUri: string) {
 

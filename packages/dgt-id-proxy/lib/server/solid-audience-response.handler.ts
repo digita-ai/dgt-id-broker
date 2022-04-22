@@ -8,7 +8,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
  */
 export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Handles the response. If the response is a 200 response it adds

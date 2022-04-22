@@ -14,7 +14,7 @@ import { OidcClientMetadata } from '../util/oidc-client-metadata';
  */
 export class ClientIdStaticTokenHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { ClientIdStaticTokenHandler }.

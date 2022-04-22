@@ -12,7 +12,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
  */
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
   private proxyURL: URL;
 
   /**

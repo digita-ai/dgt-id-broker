@@ -10,7 +10,7 @@ import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
  */
 export class PkceAuthRequestHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { PkceAuthRequestHandler }.

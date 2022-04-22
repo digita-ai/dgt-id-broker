@@ -14,7 +14,7 @@ import { recalculateContentLength } from '../util/recalculate-content-length';
  */
 export class PkceTokenHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { PkceTokenHandler }.
