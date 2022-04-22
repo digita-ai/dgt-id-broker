@@ -138,8 +138,7 @@
       "@type": "ClientIdStaticAuthResponseHandler",
       "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
-      },
-      "redirectUri": "http://localhost:3003/redirect"
+      }
     },
     {
       "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler",
@@ -167,8 +166,7 @@
       "@type": "AuthStateResponseHandler",
       "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StateStore"
-      },
-      "redirectUri": "http://localhost:3003/redirect"
+      }
     },
     {
       "@id": "urn:dgt-id-proxy:default:JwtEncodeResponseHandler",
