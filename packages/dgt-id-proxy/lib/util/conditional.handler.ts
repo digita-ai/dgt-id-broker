@@ -16,6 +16,7 @@ export class TrivialHandler<T> implements Handler<T, T> {
 
   }
 
+  /* istanbul ignore next */
   safeHandle(input: T, intermediateOutput: T): Observable<T> {
 
     throw new Error('Method not implemented.');
@@ -50,11 +51,13 @@ export class ConditionalHandler<T, St, Sf = T> implements Handler<T, St | Sf> {
 
   }
 
+  /* istanbul ignore next */
   canHandle(input: T, intermediateOutput?: St | Sf): Observable<boolean> {
 
     throw new Error('Method not implemented.');
 
   }
+  /* istanbul ignore next */
   safeHandle(input: T, intermediateOutput: St | Sf): Observable<St | Sf> {
 
     throw new Error('Method not implemented.');
