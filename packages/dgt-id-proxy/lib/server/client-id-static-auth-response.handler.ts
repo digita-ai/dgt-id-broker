@@ -47,47 +47,37 @@ export class ClientIdStaticAuthResponseHandler extends Handler<HttpHandlerRespon
 
     response.body = '';
 
-    if(response.headers.location.startsWith(this.redirectUri)) {
+    const locationUrl = new URL(response.headers.location);
+    const state = locationUrl.searchParams.get('state');
 
-      const locationUrl = new URL(response.headers.location);
-      const state = locationUrl.searchParams.get('state');
+    if (!state) {
 
-      if (!state) {
+      this.logger.verbose('No state was provided in the response', response.headers.location);
 
-        this.logger.verbose('No state was provided in the response', response.headers.location);
-
-        return throwError(() => new Error('No state was found on the response. Cannot handle the response.'));
-
-      }
-
-      return from(this.keyValueStore.get(state)).pipe(
-        switchMap((redirectURL) => {
-
-          if (redirectURL) return of(redirectURL);
-
-          this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
-
-          return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
-
-        }),
-        tap((redirectURL) => {
-
-          locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
-          response.headers.location = redirectURL.toString();
-
-          this.logger.info('Replaced the redirect uri in the response', response);
-
-        }),
-        mapTo(response),
-      );
-
-    } else {
-
-      this.logger.verbose('Location header does not contain a valid redirect URI', response.headers.location);
-
-      return of(response);
+      return throwError(() => new Error('No state was found on the response. Cannot handle the response.'));
 
     }
+
+    return from(this.keyValueStore.get(state)).pipe(
+      switchMap((redirectURL) => {
+
+        if (redirectURL) return of(redirectURL);
+
+        this.logger.warn(`No redirect URI found for state ${state} in keyValueStore`, redirectURL);
+
+        return throwError(() => new Error(`Response containing state '${state}' does not have a matching request`));
+
+      }),
+      tap((redirectURL) => {
+
+        locationUrl.searchParams.forEach((value, key) => redirectURL.searchParams.set(key, value));
+        response.headers.location = redirectURL.toString();
+
+        this.logger.info('Replaced the redirect uri in the response', response);
+
+      }),
+      mapTo(response),
+    );
 
   }
 

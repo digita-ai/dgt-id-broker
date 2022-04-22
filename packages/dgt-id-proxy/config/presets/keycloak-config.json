@@ -262,10 +262,25 @@
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
           },
           {
-            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+            "@type": "ConditionalHandler",
+            "condition": {
+              "@type": "RedirectUriConditionHandler",
+              "redirectUri": "http://localhost:3003/redirect"
+            },
+            "successHandler": {
+              "@type": "PipeThroughHandler",
+              "handlers": [
+                {
+                  "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+                }
+              ]
+            },
+            "failureHandler": {
+              "@type": "TrivialHandler"
+            }
           }
         ]
       },
@@ -289,10 +304,25 @@
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
           },
           {
-            "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
-          },
-          {
-            "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+            "@type": "ConditionalHandler",
+            "condition": {
+              "@type": "RedirectUriConditionHandler",
+              "redirectUri": "http://localhost:3003/redirect"
+            },
+            "successHandler": {
+              "@type": "PipeThroughHandler",
+              "handlers": [
+                {
+                  "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
+                },
+                {
+                  "@id": "urn:dgt-id-proxy:default:AuthStateResponseHandler"
+                }
+              ]
+            },
+            "failureHandler": {
+              "@type": "TrivialHandler"
+            }
           }
         ]
       },
