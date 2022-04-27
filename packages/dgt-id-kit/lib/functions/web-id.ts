@@ -21,9 +21,7 @@ export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
     quads = await getTurtleFileAsQuads(webid);
 
     // Verify that it is in fact a profile
-    profileDocumentQuadPresent = quads.some((quad: Quad) =>
-      quad?.predicate?.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' &&
-      quad?.object?.value === 'http://xmlns.com/foaf/0.1/PersonalProfileDocument');
+    profileDocumentQuadPresent = quads.some((quad: Quad) => quad?.object?.value === 'http://xmlns.com/foaf/0.1/PersonalProfileDocument');
 
   } catch(error: unknown) {
 
