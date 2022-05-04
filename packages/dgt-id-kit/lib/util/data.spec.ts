@@ -3,6 +3,17 @@ import { getTurtleFileAsQuads } from './data';
 
 enableFetchMocks();
 
+const mockedResponse = `
+@prefix : <#>.
+@prefix solid: <http://www.w3.org/ns/solid/terms#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+
+:me
+  solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
+  solid:publicTypeIndex </settings/publicTypeIndex.ttl>;
+  foaf:name "HRlinkIT".
+`;
+
 beforeEach(() => {
 
   fetchMock.resetMocks();
@@ -15,22 +26,19 @@ describe('getTurtleFileAsQuads()', () => {
 
   it('should return all quads present in the file', async () => {
 
-    const mockedResponse = `
-        @prefix : <#>.
-        @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-        @prefix foaf: <http://xmlns.com/foaf/0.1/>.
-
-        :me
-          solid:privateTypeIndex </settings/privateTypeIndex.ttl>;
-          solid:publicTypeIndex </settings/publicTypeIndex.ttl>;
-          foaf:name "HRlinkIT".
-      `;
-
-    fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
+    fetchMock.mockResponseOnce(mockedResponse, { status: 200, headers: { 'Content-Type': 'text/turtle' } });
 
     const result = getTurtleFileAsQuads(requestUrl);
 
     await expect(result).resolves.toHaveLength(3);
+
+  });
+
+  it('should error when content-type is not text/turtle', async () => {
+
+    fetchMock.mockResponseOnce(mockedResponse, { status: 200, headers: { 'Content-Type': 'application/json' } });
+
+    await expect(getTurtleFileAsQuads(requestUrl)).rejects.toThrow('Content type is not text/turtle');
 
   });
 
@@ -53,9 +61,9 @@ describe('getTurtleFileAsQuads()', () => {
 
   it('should throw when the file does not contain valid turtle', async () => {
 
-    const mockedResponse = `This ain't no turtle mate`;
+    const badMockedResponse = `This ain't no turtle mate`;
 
-    fetchMock.mockResponseOnce(mockedResponse, { status: 200 });
+    fetchMock.mockResponseOnce(badMockedResponse, { status: 200, headers: { 'Content-Type': 'text/turtle' } });
 
     const result = getTurtleFileAsQuads(requestUrl);
 

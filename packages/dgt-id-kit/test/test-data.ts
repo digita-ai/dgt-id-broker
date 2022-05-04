@@ -64,6 +64,12 @@ export const profileInvalid = `
     foaf:name "name".
 `;
 
+export const profileInvalidQuads = `
+  ${prefixes}
+    ${typeindexesTurtle}
+    foaf:name "name"
+`;
+
 export const invalidSolidOidcObject = {
   issuer: 'https://inrupt.net',
   jwks_uri: 'https://inrupt.net/jwks',

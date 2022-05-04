@@ -14,22 +14,16 @@ export const getWebIdProfile = async (webid: string): Promise<Quad[]> => {
   if (!webid) throw new Error('Parameter "webid" should be defined!');
 
   let quads: Quad[];
-  let profileDocumentQuadPresent: boolean;
 
   try {
 
     quads = await getTurtleFileAsQuads(webid);
-
-    // Verify that it is in fact a profile
-    profileDocumentQuadPresent = quads.some((quad: Quad) => quad?.object?.value === 'http://xmlns.com/foaf/0.1/PersonalProfileDocument');
 
   } catch(error: unknown) {
 
     throw new Error(`Something went wrong getting the profile for webId"${webid.toString()}": ${error}`);
 
   }
-
-  if (!profileDocumentQuadPresent) throw new Error(`No valid profile found for WebID: "${webid}"`);
 
   return quads;
 
