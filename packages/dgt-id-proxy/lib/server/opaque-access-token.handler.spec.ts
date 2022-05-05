@@ -41,8 +41,6 @@ describe('OpaqueAccessTokenHandler', () => {
 
     nestedHandler = {
       handle: jest.fn(),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
     };
 
     handler = new OpaqueAccessTokenHandler(nestedHandler);

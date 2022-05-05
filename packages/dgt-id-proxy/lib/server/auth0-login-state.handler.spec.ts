@@ -27,8 +27,6 @@ describe('Auth0LoginStateHandler', () => {
 
     nestedHandler = {
       handle: jest.fn().mockReturnValue(of(upstreamResponse)),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
     };
 
     handler = new Auth0LoginStateHandler(
