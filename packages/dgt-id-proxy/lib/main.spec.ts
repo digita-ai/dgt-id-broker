@@ -43,7 +43,7 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
     'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
     'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
-    'urn:dgt-id-proxy:variables:auth0api': 'https:​//useid.eu.auth0.com/api/v2/',
+    'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
   } as Record<string, any>;
 
   const handler = {
@@ -143,7 +143,7 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
           'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
           'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
-          'urn:dgt-id-proxy:variables:auth0api': 'https:​//useid.eu.auth0.com/api/v2/',
+          'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
         });
 
     });
