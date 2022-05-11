@@ -100,6 +100,9 @@
                       },
                       {
                         "@id": "urn:dgt-id-proxy:default:PasswordlessApiEndpoint"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:IndexEndpoint"
                       }
                     ]
                   }
@@ -108,6 +111,26 @@
             }
           }
         }
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
+      "@type": "SafariCookieSaveHandler",
+      "httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "cookieStore": {
+        "@id": "urn:dgt-id-proxy:default:CookieStore"
+      }
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
+      "@type": "SafariCookieRestoreHandler",
+      "httpHandler": {
+        "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
+      },
+      "cookieStore": {
+        "@id": "urn:dgt-id-proxy:default:CookieStore"
       }
     },
     {
@@ -208,7 +231,7 @@
         "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
         "@type": "OpaqueAccessTokenHandler",
         "handler": {
-          "@type": "PipeThroughHandler",
+          "@type": "SequenceHandler",
           "handlers": [
             {
               "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -269,7 +292,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
@@ -285,20 +308,13 @@
               "@type": "InMemoryStore"
             },
             "handler": {
-              "@type": "PipeThroughHandler",
+              "@type": "SequenceHandler",
               "handlers": [
                 {
                   "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler"
                 },
                 {
-                  "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler",
-                  "@type": "SafariCookieSaveHandler",
-                  "httpHandler": {
-                    "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-                  },
-                  "cookieStore": {
-                    "@id": "urn:dgt-id-proxy:default:CookieStore"
-                  }
+                  "@id": "urn:dgt-id-proxy:default:SafariCookieSaveHandler"
                 }
               ]
             }
@@ -337,7 +353,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@type": "Auth0ClientRedirectHandler",
@@ -366,17 +382,10 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
-            "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
-            "@type": "SafariCookieRestoreHandler",
-            "httpHandler": {
-              "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-            },
-            "cookieStore": {
-               "@id": "urn:dgt-id-proxy:default:CookieStore"
-            }
+            "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler"
           },
           {
             "@type": "ConditionalHandler",
@@ -415,14 +424,7 @@
         }
       ],
       "handler": {
-          "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
-          "@type": "SafariCookieRestoreHandler",
-          "httpHandler": {
-            "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-          },
-          "cookieStore": {
-             "@id": "urn:dgt-id-proxy:default:CookieStore"
-          }
+          "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler"
       },
       "path": "/u/login"
     },
@@ -438,14 +440,7 @@
         }
       ],
       "handler": {
-        "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler",
-        "@type": "SafariCookieRestoreHandler",
-        "httpHandler": {
-          "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-        },
-        "cookieStore": {
-           "@id": "urn:dgt-id-proxy:default:CookieStore"
-        }
+        "@id": "urn:dgt-id-proxy:default:SafariCookieRestoreHandler"
       },
       "path": "/u/consent"
     },
@@ -477,7 +472,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdStaticTokenHandler"
@@ -588,6 +583,20 @@
         }
       },
       "path": "/passwordless/start"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:IndexEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "handler": {
+        "@type": "StatusHandler",
+        "packagePath": "package.json"
+      },
+      "path": "/"
     }
   ]
 }

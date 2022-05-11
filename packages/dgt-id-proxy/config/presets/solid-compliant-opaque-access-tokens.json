@@ -94,6 +94,9 @@
                       },
                       {
                         "@id": "urn:dgt-id-proxy:default:JwksRoute"
+                      },
+                      {
+                        "@id": "urn:dgt-id-proxy:default:IndexEndpoint"
                       }
                     ]
                   }
@@ -175,7 +178,7 @@
     },
     {
       "@id": "urn:dgt-id-proxy:default:PipeThroughPkceCodeAuthState",
-      "@type": "PipeThroughHandler",
+      "@type": "HttpSequenceHandler",
       "handlers": [
         {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -225,7 +228,7 @@
       "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
       "@type": "OpaqueAccessTokenHandler",
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -300,7 +303,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
@@ -414,7 +417,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "HttpSequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler"
@@ -486,6 +489,20 @@
         }
       },
       "path": "/jwks"
+    },
+    {
+      "@id": "urn:dgt-id-proxy:default:IndexEndpoint",
+      "@type": "HttpHandlerRoute",
+      "operations": [
+        {
+          "@id": "urn:dgt-id-proxy:default:GetOperation"
+        }
+      ],
+      "handler": {
+        "@type": "StatusHandler",
+        "packagePath": "package.json"
+      },
+      "path": "/"
     }
   ]
 }

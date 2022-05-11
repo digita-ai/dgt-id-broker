@@ -43,6 +43,7 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
     'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
     'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
+    'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
   } as Record<string, any>;
 
   const handler = {
@@ -123,7 +124,7 @@ describe('Main.ts', () => {
 
     it('should return the correct variables of the given arguments', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath, '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath, '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to', '-A', 'https:​//useid.eu.auth0.com/api/v2/' ]))
         .toEqual({
           'urn:dgt-id-proxy:variables:customConfigPath': configPath,
           'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
@@ -142,13 +143,14 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
           'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
           'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
+          'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
         });
 
     });
 
     it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/', '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to' ]))
+      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/', '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to', '-A', 'https:​//useid.eu.auth0.com/api/v2/' ]))
         .toEqual(variables);
 
     });
@@ -188,7 +190,7 @@ describe('Main.ts', () => {
       await launch({ ...variables, ['urn:dgt-id-proxy:variables:mainModulePath'] : undefined });
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
-      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly' });
+      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly', typeChecking: false });
 
     });
 
@@ -197,7 +199,7 @@ describe('Main.ts', () => {
       await launch(variables);
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
-      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly' });
+      expect(ComponentsManager.build).toHaveBeenCalledWith({ mainModulePath, logLevel: 'silly', typeChecking: false });
 
     });
 

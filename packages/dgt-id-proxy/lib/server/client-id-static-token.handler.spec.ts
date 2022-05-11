@@ -56,9 +56,7 @@ describe('ClientIdStaticTokenHandler', () => {
   beforeEach(() => {
 
     httpHandler = {
-      canHandle: jest.fn(),
       handle: jest.fn().mockReturnValue(of({})),
-      safeHandle: jest.fn(),
     };
 
     handler = new ClientIdStaticTokenHandler(

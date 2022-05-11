@@ -172,7 +172,7 @@
     },
     {
       "@id": "urn:dgt-id-proxy:default:PipeThroughPkceCodeAuthState",
-      "@type": "PipeThroughHandler",
+      "@type": "SequenceHandler",
       "handlers": [
         {
           "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -222,7 +222,7 @@
       "@id": "urn:dgt-id-proxy:default:OpaqueAccessTokenHandler",
       "@type": "OpaqueAccessTokenHandler",
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "SequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
@@ -297,7 +297,7 @@
         }
       ],
       "handler": {
-        "@type": "PipeThroughHandler",
+        "@type": "SequenceHandler",
         "handlers": [
           {
             "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler"
@@ -411,7 +411,7 @@
         }
       ],
       "handler": {
-          "@type": "PipeThroughHandler",
+          "@type": "SequenceHandler",
           "handlers": [
             {
               "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler"

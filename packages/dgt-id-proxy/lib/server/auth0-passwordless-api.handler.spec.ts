@@ -45,8 +45,6 @@ describe('Auth0PasswordlessApiHandler', () => {
 
     nestedHandler = {
       handle: jest.fn(),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
     };
 
     handler = new Auth0PasswordlessApiHandler(
