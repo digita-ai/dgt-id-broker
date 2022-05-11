@@ -123,7 +123,21 @@ describe('ClientIdStaticTokenHandler', () => {
     it('should error when no client_id was provided', async () => {
 
       const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody } };
-      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('No client_id was provided');
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('Request must contain a client_id claim');
+
+    });
+
+    it('should error when no client_id was provided and authorization header is not basic', async () => {
+
+      const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody, headers: { 'Authorization': 'dGVzdA==' } } };
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('Request must contain a client_id claim');
+
+    });
+
+    it('should error when no client_id was provided and authorization header does not contain a client_id claim', async () => {
+
+      const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody, headers: { 'Authorization': 'Basic dGVzdA==' } } };
+      await expect(() => lastValueFrom(handler.handle(noClientIdContext))).rejects.toThrow('Request must contain a client_id claim');
 
     });
 
@@ -396,6 +410,27 @@ describe('ClientIdStaticTokenHandler', () => {
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
 
       await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('Access token in response body did not contain a decoded payload');
+
+    });
+
+    it('should return the client_id from the authorization header if one is present', async () => {
+
+      fetchMock.once(JSON.stringify(clientRegistrationData), { headers: { 'content-type':'application/ld+json' }, status: 200 });
+      ((handler as any).checkClientRegistrationData) = jest.fn().mockReturnValueOnce(of(clientRegistrationData));
+
+      const response = {
+        body: {
+          access_token: { payload: { client_id: client_id_constructor } },
+          id_token: { payload: { aud: 'mockAudience' } },
+        }, status: 200, headers: {},
+      };
+
+      httpHandler.handle = jest.fn().mockReturnValueOnce(of(response));
+
+      const noClientIdContext = { ... context, request: { ...context.request, body:  noClientIDRequestBody, headers: { 'Authorization': 'Basic aHR0cDovL2NsaWVudF9pZC9wcm9maWxlL2NhcmQjbWU6Y2xpZW50X3NlY3JldA==' } } };
+      await lastValueFrom(handler.handle(noClientIdContext));
+
+      expect(((handler as any).checkClientRegistrationData)).toHaveBeenCalledWith('http://client_id/profile/card#me', 'authorization_code');
 
     });
 

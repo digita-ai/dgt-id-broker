@@ -117,10 +117,57 @@ describe('OpaqueAccessTokenHandler', () => {
 
     });
 
-    it('should error when no request body does not contain a client_id is provided', async () => {
+    it('should error when request body does not contain a client_id and no authorization header is present', async () => {
 
       context.request.body = 'noClientId';
-      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('Request body must contain a client_id claim');
+      await expect(() => lastValueFrom(handler.handle(context))).rejects.toThrow('Request must contain a client_id claim');
+
+    });
+
+    it('should error when request body does not contain a client_id and authorization header does not contain a client_id', async () => {
+
+      context.request.body = 'noClientId';
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'Authorization': 'Basic bm9fY2xpZW50X2lk' } } }))).rejects.toThrow('Request must contain a client_id claim');
+
+    });
+
+    it('should error when request body does not contain a client_id and authorization header is not basic', async () => {
+
+      context.request.body = 'noClientId';
+      await expect(() => lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'Authorization': 'bm9fY2xpZW50X2lk' } } }))).rejects.toThrow('Request must contain a client_id claim');
+
+    });
+
+    it('should retrieve the client _id from the auth header if one is present and no client_id is in the body', async () => {
+
+      context.request.body = 'noClientId';
+
+      (handler as any).createJwtAccessToken = jest.fn().mockReturnValueOnce('mockJwtAccessToken');
+
+      const respBody = {
+        access_token: 'opaqueaccesstoken',
+        id_token: {
+          header: {},
+          payload: {
+            sub: '23121d3c-84df-44ac-b458-3d63a9a05497',
+            iat: 1619085373,
+            exp: 1619092573,
+            aud: 'mockClient',
+          },
+        },
+        expires_in: 7200,
+        scope: '',
+        token_type: 'Bearer',
+      };
+
+      nestedHandler.handle = jest.fn().mockReturnValueOnce(of({
+        ...response,
+        body: respBody,
+      }));
+
+      await lastValueFrom(handler.handle({ ...context, request: { ...context.request, headers: { 'Authorization': 'Basic Y2xpZW50X2lkOmNsaWVudF9zZWNyZXQ=' } } }));
+
+      expect((handler as any).createJwtAccessToken).toHaveBeenCalledWith(respBody, 'client_id');
 
     });
 

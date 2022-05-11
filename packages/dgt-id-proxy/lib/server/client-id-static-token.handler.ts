@@ -91,13 +91,34 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
     }
 
     const params  = new URLSearchParams(context.request.body);
-    const client_id = params.get('client_id');
+    let client_id = params.get('client_id') ?? '';
 
     if (!client_id) {
 
-      this.logger.warn('No client id was provided', client_id);
+      const authorizationHeader = context.request.headers['Authorization'];
 
-      return throwError(() => new Error('No client_id was provided'));
+      if (!authorizationHeader) return throwError(() => new Error('Request must contain a client_id claim'));
+
+      if (authorizationHeader.includes('Basic')) {
+
+        const authorizationHash = authorizationHeader.split(' ')[1];
+        const decodedAuthHeader = Buffer.from(authorizationHash, 'base64').toString('binary');
+
+        if (decodedAuthHeader.split(':').length > 1) {
+
+          client_id = decodedAuthHeader.substring(0, decodedAuthHeader.lastIndexOf(':'));
+
+        } else {
+
+          return throwError(() => new Error('Request must contain a client_id claim'));
+
+        }
+
+      } else {
+
+        return throwError(() => new Error('Request must contain a client_id claim'));
+
+      }
 
     }
 
