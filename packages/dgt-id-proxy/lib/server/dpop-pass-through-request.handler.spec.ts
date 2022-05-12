@@ -70,8 +70,6 @@ describe('DpopPassThroughRequestHandler', () => {
 
     nestedHandler = {
       handle: jest.fn(),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
     };
 
     handler = new DpopPassThroughRequestHandler(nestedHandler, 'http://proxy.com/token', 'http://upstream.com/token');

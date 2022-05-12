@@ -20,8 +20,6 @@ describe('ClientCompressionHandler', () => {
 
     nestedHandler = {
       handle: jest.fn().mockReturnValue(of(response)),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
     };
 
     handler = new ClientCompressionHandler(nestedHandler);

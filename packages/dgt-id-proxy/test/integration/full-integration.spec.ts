@@ -109,6 +109,7 @@ describe('full integration', () => {
     manager = await ComponentsManager.build({
       mainModulePath,
       logLevel: 'silly',
+      typeChecking: false,
     });
 
     await manager.configRegistry.register(configPath);

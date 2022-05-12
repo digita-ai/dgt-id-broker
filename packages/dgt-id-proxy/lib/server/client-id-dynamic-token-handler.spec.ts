@@ -83,9 +83,7 @@ describe('ClientIdDynamicTokenHandler', () => {
     store.set(client_id, registerInfo);
 
     httpHandler = {
-      canHandle: jest.fn(),
       handle: jest.fn().mockReturnValue(of(response)),
-      safeHandle: jest.fn(),
     };
 
     handler = new ClientIdDynamicTokenHandler(store, httpHandler);
