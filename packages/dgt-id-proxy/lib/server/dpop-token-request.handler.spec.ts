@@ -108,8 +108,6 @@ describe('DpopTokenRequestHandler', () => {
 
     nestedHandler = {
       handle: jest.fn(),
-      canHandle: jest.fn(),
-      safeHandle: jest.fn(),
     };
 
     keyValueStore = new InMemoryStore();
