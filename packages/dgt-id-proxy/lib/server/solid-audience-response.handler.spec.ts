@@ -63,6 +63,22 @@ describe('SolidAudienceResponseHandler', () => {
 
     });
 
+    it('should return a token with an aud claim set to solid, if the claim from upstream is undefined or null', async () => {
+
+      response.body.access_token.payload.aud = undefined;
+      const resp1 = await lastValueFrom(handler.handle(response));
+      expect(resp1.status).toEqual(200);
+      expect(resp1.body.access_token.payload).toBeDefined();
+      expect(resp1.body.access_token.payload.aud).toEqual('solid');
+
+      response.body.access_token.payload.aud = null;
+      const resp2 = await lastValueFrom(handler.handle(response));
+      expect(resp2.status).toEqual(200);
+      expect(resp2.body.access_token.payload).toBeDefined();
+      expect(resp2.body.access_token.payload.aud).toEqual('solid');
+
+    });
+
     it('should return a token with an aud array containing solid', async () => {
 
       // single aud claim

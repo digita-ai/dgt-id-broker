@@ -42,6 +42,12 @@ export class SolidAudienceResponseHandler extends Handler<HttpHandlerResponse, H
 
     }
 
+    if (response.body.access_token.payload.aud === undefined || response.body.access_token.payload.aud === null) {
+
+      response.body.access_token.payload.aud = 'solid';
+
+    }
+
     if (response.body.access_token.payload.aud !== 'solid'){
 
       if (Array.isArray(response.body.access_token.payload.aud)) {
