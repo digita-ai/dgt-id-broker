@@ -57,6 +57,7 @@
           "@type": "HttpCorsRequestHandler",
           "handler": {
             "@type": "ErrorHandler",
+            "showUpstreamError": true,
             "nestedHandler": {
               "@type": "ClientCompressionHandler",
               "handler": {
