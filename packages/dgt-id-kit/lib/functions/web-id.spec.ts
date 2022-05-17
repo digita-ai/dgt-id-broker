@@ -1,5 +1,5 @@
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
-import { plainProfile, issuer1, issuer2, requestUrl, profileWithIssuers, profileWithIssuersQuads, profileWithNoIssuers, profileWithNoIssuersQuads, profileInvalid, plainProfileQuads, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc } from '../../test/test-data';
+import { plainProfile, issuer1, issuer2, requestUrl, profileWithIssuers, profileWithIssuersQuads, profileWithNoIssuers, profileWithNoIssuersQuads, plainProfileQuads, mockedResponseValidSolidOidc, mockedResponseInvalidSolidOidc } from '../../test/test-data';
 import { getFirstIssuerFromQuads, getFirstIssuerFromWebId, getIssuersFromQuads, getIssuersFromWebId, getWebIdProfile } from './web-id';
 
 enableFetchMocks();
@@ -14,7 +14,7 @@ describe('getWebIdProfile()', () => {
 
   it('should return all quads for a persons profile', async () => {
 
-    fetchMock.mockResponseOnce(plainProfile, { status: 200 });
+    fetchMock.mockResponseOnce(plainProfile, { status: 200, headers: { 'Content-Type': 'text/turtle' } });
     const result = getWebIdProfile(requestUrl);
     await expect(result).resolves.toHaveLength(4);
     await expect(result).resolves.toEqual(plainProfileQuads);
@@ -33,14 +33,6 @@ describe('getWebIdProfile()', () => {
 
     const result = getWebIdProfile(undefined);
     await expect(result).rejects.toThrow('Parameter "webid" should be defined!');
-
-  });
-
-  it('should throw when the url does not lead to a valid profile', async () => {
-
-    fetchMock.mockResponseOnce(profileInvalid, { status: 200 });
-    const result = getWebIdProfile(requestUrl);
-    await expect(result).rejects.toThrow('No valid profile found for WebID: ');
 
   });
 
@@ -101,9 +93,9 @@ describe('getIssuersFromWebId()', () => {
   it('should return all issuer objects from a profile', async () => {
 
     fetchMock.mockResponses(
-      [ profileWithIssuers, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ]
+      [ profileWithIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ]
     );
 
     const result = getIssuersFromWebId(requestUrl);
@@ -120,7 +112,7 @@ describe('getIssuersFromWebId()', () => {
 
   it('should return an empty list when no issuer was found', async () => {
 
-    fetchMock.mockResponseOnce(profileWithNoIssuers, { status: 200 });
+    fetchMock.mockResponseOnce(profileWithNoIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } });
     const result = getIssuersFromWebId(requestUrl);
     await expect(result).resolves.toEqual([]);
 
@@ -137,9 +129,9 @@ describe('getIssuersFromWebId()', () => {
   it('should return only a list of valid issuers', async () => {
 
     fetchMock.mockResponses(
-      [ profileWithIssuers, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ mockedResponseInvalidSolidOidc, { status: 200 } ]
+      [ profileWithIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ]
     );
 
     const result = getIssuersFromWebId(requestUrl);
@@ -154,9 +146,9 @@ describe('getFirstIssuerFromWebId()', () => {
   it('should return the first issuer object from a profile', async () => {
 
     fetchMock.mockResponses(
-      [ profileWithIssuers, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ]
+      [ profileWithIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ]
     );
 
     const result = getFirstIssuerFromWebId(requestUrl);
@@ -173,7 +165,7 @@ describe('getFirstIssuerFromWebId()', () => {
 
   it('should return undefined when no issuer was found', async () => {
 
-    fetchMock.mockResponseOnce(profileWithNoIssuers, { status: 200 });
+    fetchMock.mockResponseOnce(profileWithNoIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } });
     const result = getFirstIssuerFromWebId(requestUrl);
     await expect(result).resolves.toBe(undefined);
 
@@ -190,9 +182,9 @@ describe('getFirstIssuerFromWebId()', () => {
   it('should return the second issuer found if the first issuer is not valid', async () => {
 
     fetchMock.mockResponses(
-      [ profileWithIssuers, { status: 200 } ],
-      [ mockedResponseInvalidSolidOidc, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ]
+      [ profileWithIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' }  } ]
     );
 
     const result = getFirstIssuerFromWebId(requestUrl);

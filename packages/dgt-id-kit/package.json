@@ -78,10 +78,10 @@
     "testEnvironment": "<rootDir>/jest.env.js",
     "coverageThreshold": {
       "global": {
-        "statements": 86.12,
-        "branches": 83.25,
-        "lines": 83.63,
-        "functions": 85.71
+        "statements": 86.07,
+        "branches": 83.09,
+        "lines": 83.56,
+        "functions": 85.5
       }
     },
     "transformIgnorePatterns": [

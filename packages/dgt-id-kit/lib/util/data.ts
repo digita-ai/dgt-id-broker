@@ -15,6 +15,9 @@ export const getTurtleFileAsQuads = async (url: string): Promise<Quad[]> => {
   try {
 
     const result = await validateAndFetch(url);
+
+    if (!result.headers.get('content-type')?.includes('text/turtle')) throw new Error('Content type is not text/turtle');
+
     const body = await result.text();
 
     return new Parser().parse(body);

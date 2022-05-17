@@ -57,9 +57,9 @@ describe('loginWithWebId()', () => {
   it('should throw when no valid issuer was found on the profile of the webId', async () => {
 
     fetchMock.mockResponses(
-      [ profileWithIssuers, { status: 200 } ],
-      [ mockedResponseInvalidSolidOidc, { status: 200 } ],
-      [ mockedResponseInvalidSolidOidc, { status: 200 } ]
+      [ profileWithIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseInvalidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ]
     );
 
     const result = loginWithWebId(webId, clientId, scope, redirectUri, codeChallenge, state, handleAuthRequestUrl);
@@ -70,9 +70,9 @@ describe('loginWithWebId()', () => {
   it('should call loginWithIssuer', async () => {
 
     fetchMock.mockResponses(
-      [ profileWithIssuers, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ],
-      [ mockedResponseValidSolidOidc, { status: 200 } ]
+      [ profileWithIssuers, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ],
+      [ mockedResponseValidSolidOidc, { status: 200, headers: { 'Content-Type': 'text/turtle' } } ]
     );
 
     const spy = jest.spyOn(clientModule, 'loginWithIssuer').mockResolvedValueOnce();
