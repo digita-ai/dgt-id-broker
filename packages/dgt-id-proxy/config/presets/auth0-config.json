@@ -151,7 +151,7 @@
     {
       "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthRequestHandler",
       "@type": "ClientIdStaticAuthRequestHandler",
-      "clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
+      "clientId": "sSSa9xIbaI24tNw0XOYBYjlNZoUbIHtL",
       "redirectUri": "http://localhost:3003/redirect",
       "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StaticAuthStore"
@@ -170,8 +170,8 @@
       "httpHandler": {
         "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
       },
-      "clientId": "r5oioNlX1IyM9gnQ2j6rlZxfx0UjptcF",
-      "clientSecret": "SbvZ_apuxaT8dU5kHpr_u5qVtEsz2BY5uY7h7egyafNcwnj33KFy1xzbBTMnDsto",
+      "clientId": "sSSa9xIbaI24tNw0XOYBYjlNZoUbIHtL",
+      "clientSecret": "3R2oX27zKf85-DYLoDnCvbI_I02lYTt1lcESltXeHWdHJfT-8jaiWcNio8OqlKXC",
       "redirectUri": "http://localhost:3003/redirect"
     },
     {
