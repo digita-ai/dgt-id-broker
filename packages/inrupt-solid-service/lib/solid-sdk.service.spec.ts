@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/dot-notation */
 import { addUrl, createSolidDataset, createThing, saveSolidDatasetAt, getDefaultSession, login, handleIncomingRedirect } from '@digita-ai/inrupt-solid-client';
 import * as sdk from '@digita-ai/inrupt-solid-client';
 import fetchMock, { enableFetchMocks } from 'jest-fetch-mock';
@@ -17,7 +18,7 @@ describe('SolidSDKService', () => {
 
   beforeEach(async () => {
 
-    service = new SolidSDKService('test');
+    service = new SolidSDKService({ clientName: 'test' });
 
   });
 
@@ -29,7 +30,7 @@ describe('SolidSDKService', () => {
 
   it('should error when clientSecret is set but clientId is not', () => {
 
-    expect(() => new SolidSDKService('test', { 'https://issuer/':{ clientName: 'test', clientSecret: 'mockSecret' } })).toThrow('clientId must be set if clientSecret is set');
+    expect(() => new SolidSDKService({ clientName: 'test', clientSecret: 'mockSecret' })).toThrow('clientId must be set if clientSecret is set');
 
   });
 
@@ -77,11 +78,9 @@ describe('SolidSDKService', () => {
     };
 
     const mockClient = {
-      [mockIssuer.uri]: {
-        clientName: 'test',
-        clientSecret: 'mockSecret',
-        clientId: 'mockId',
-      },
+      clientName: 'test',
+      clientSecret: 'mockSecret',
+      clientId: 'mockId',
     };
 
     it('should error when webId is undefined', async () => {
@@ -107,14 +106,14 @@ describe('SolidSDKService', () => {
 
       expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
         oidcIssuer: mockIssuer.uri,
-        clientName: mockClient[mockIssuer.uri].clientName,
+        clientName: mockClient.clientName,
       }));
 
     });
 
     it('should call login with correct clientname, secret and id if set', async () => {
 
-      service = new SolidSDKService('test', mockClient);
+      service = new SolidSDKService(mockClient);
 
       (login as any) = jest.fn();
       service.getIssuers = jest.fn(async () => [ mockIssuer ]);
@@ -123,27 +122,9 @@ describe('SolidSDKService', () => {
 
       expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
         oidcIssuer: mockIssuer.uri,
-        clientName: mockClient[mockIssuer.uri].clientName,
-        clientId: mockClient[mockIssuer.uri].clientId,
-        clientSecret: mockClient[mockIssuer.uri].clientSecret,
-      }));
-
-    });
-
-    it('should call login with only clientname if no match was found in clients', async () => {
-
-      service = new SolidSDKService('test', mockClient);
-      (login as any) = jest.fn();
-      // login with different issuer
-      service.getIssuers = jest.fn(async () => [ mockIssuer2 ]);
-
-      await service.login('https://web.id/');
-
-      expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
-        oidcIssuer: mockIssuer2.uri,
-        clientName: mockClient[mockIssuer.uri].clientName,
-        clientId: undefined,
-        clientSecret: undefined,
+        clientName: mockClient.clientName,
+        clientId: mockClient.clientId,
+        clientSecret: mockClient.clientSecret,
       }));
 
     });
@@ -165,11 +146,9 @@ describe('SolidSDKService', () => {
     };
 
     const mockClient = {
-      [mockIssuer.uri]: {
-        clientName: 'test',
-        clientSecret: 'mockSecret',
-        clientId: 'mockId',
-      },
+      clientName: 'test',
+      clientSecret: 'mockSecret',
+      clientId: 'mockId',
     };
 
     it('should error when issuer is undefined', async () => {
@@ -186,41 +165,62 @@ describe('SolidSDKService', () => {
 
       expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
         oidcIssuer: mockIssuer.uri,
-        clientName: mockClient[mockIssuer.uri].clientName,
+        clientName: mockClient.clientName,
       }));
 
     });
 
     it('should call login with correct clientname, secret and id if set', async () => {
 
-      service = new SolidSDKService('test', mockClient);
+      service = new SolidSDKService(mockClient);
       (login as any) = jest.fn();
 
       await service.loginWithIssuer(mockIssuer);
 
       expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
         oidcIssuer: mockIssuer.uri,
-        clientName: mockClient[mockIssuer.uri].clientName,
-        clientId: mockClient[mockIssuer.uri].clientId,
-        clientSecret: mockClient[mockIssuer.uri].clientSecret,
+        clientName: mockClient.clientName,
+        clientId: mockClient.clientId,
+        clientSecret: mockClient.clientSecret,
       }));
 
     });
 
-    it('should call login with only clientname if no match was found in clients', async () => {
+  });
 
-      service = new SolidSDKService('test', mockClient);
-      (login as any) = jest.fn();
+  describe('logout', () => {
 
-      // login with different issuer
-      await service.loginWithIssuer(mockIssuer2);
+    it('should call sdk.logout', async () => {
 
-      expect(sdk.login).toHaveBeenCalledWith(expect.objectContaining({
-        oidcIssuer: mockIssuer2.uri,
-        clientName: mockClient[mockIssuer.uri].clientName,
-        clientId: undefined,
-        clientSecret: undefined,
-      }));
+      (sdk.logout as any) = jest.fn(async () => ({}));
+
+      await service.logout();
+
+      expect(sdk.logout).toHaveBeenCalled();
+
+    });
+
+  });
+
+  describe('getProfile', () => {
+
+    const webId = 'https://web.id/alice';
+
+    it('should always return webid in profile', async () => {
+
+      (service['getProfileThing'] as any) = jest.fn(async () => 'profile thing');
+      (sdk.getStringNoLocale as any) = jest.fn(() => null);
+
+      await expect(service.getProfile('https://web.id/alice')).resolves.toEqual({ uri: webId, name: undefined });
+
+    });
+
+    it('should include name in return when it is set', async () => {
+
+      (service['getProfileThing'] as any) = jest.fn(async () => 'profile thing');
+      (sdk.getStringNoLocale as any) = jest.fn(() => 'name');
+
+      await expect(service.getProfile('https://web.id/alice')).resolves.toEqual({ uri: webId, name: 'name' });
 
     });
 
@@ -242,6 +242,12 @@ describe('SolidSDKService', () => {
   });
 
   describe('getAuthorizationAgents', () => {
+
+    beforeEach(() => {
+
+      mockProfile = sdk.removeAll(mockProfile, 'http://www.w3.org/ns/solid/interop#hasAuthorizationAgent');
+
+    });
 
     it('should error when no authorization agents are present', async () => {
 
@@ -266,6 +272,28 @@ describe('SolidSDKService', () => {
       expect(awaitedResult[0]).toEqual(expect.objectContaining({ uri: mockAuthorizationAgent }));
 
     });
+
+    // it('should return agent with standard icon when no favicon found', async () => {
+
+    //   // should be called when fetch throws, but currently because we return Promise.all,
+    //   // the error will always be thrown on the place where getAuthorizationAgents is called
+
+    //   const mockAuthorizationAgent = 'https://authz.agent';
+    //   mockProfile = addUrl(mockProfile, 'http://www.w3.org/ns/solid/interop#hasAuthorizationAgent', mockAuthorizationAgent);
+
+    //   fetchMock.mockRejectOnce();
+    //   (service as any).getProfileThing = jest.fn(async () => mockProfile);
+    //   const result = service.getAuthorizationAgents(mockWebId);
+
+    //   await expect(result).resolves.toHaveLength(1);
+    //   const awaitedResult = await result;
+
+    //   expect(awaitedResult[0]).toEqual(expect.objectContaining({
+    //     uri: mockAuthorizationAgent,
+    //     icon: expect.stringContaining('donkey.bike'),
+    //   }));
+
+    // });
 
   });
 
@@ -309,6 +337,68 @@ describe('SolidSDKService', () => {
 
       // eslint-disable-next-line @typescript-eslint/dot-notation
       await expect(service['getProfileThing']('invalid-url')).rejects.toThrow();
+
+    });
+
+  });
+
+  describe('getProfileDataset', () => {
+
+    it('should error when fetching dataset fails', async () => {
+
+      (sdk.getSolidDataset as any) = jest.fn(() => { throw new Error(); });
+
+      await expect(service['getProfileDataset']('https://web.id/alice')).rejects.toThrow(`No profile for WebId: `);
+
+    });
+
+    it('should error when no dataset was found', async () => {
+
+      (sdk.getSolidDataset as any) = jest.fn(() => undefined);
+
+      await expect(service['getProfileDataset']('https://web.id/alice')).rejects.toThrow(`Could not read profile for WebId: `);
+
+    });
+
+    it('should return profile dataset when successful', async () => {
+
+      (sdk.getSolidDataset as any) = jest.fn(() => 'profile dataset');
+
+      await expect(service['getProfileDataset']('https://web.id/alice')).resolves.toEqual('profile dataset');
+
+    });
+
+  });
+
+  describe('getProfileThing', () => {
+
+    it('should error when webid is undefined', async () => {
+
+      await expect(service['getProfileThing'](undefined)).rejects.toThrow(`WebId must be defined.`);
+
+    });
+
+    it('should error when webid is an invalid URL', async () => {
+
+      await expect(service['getProfileThing']('invalid.url')).rejects.toThrow(`Invalid WebId: `);
+
+    });
+
+    it('should throw when no profile thing was found', async () => {
+
+      (service['getProfileDataset'] as any) = jest.fn(async () => 'profile dataset');
+      (sdk.getThing as any) = jest.fn(() => undefined);
+
+      await expect(service['getProfileThing']('https://web.id/alice')).rejects.toThrow(`No profile info for WebId: `);
+
+    });
+
+    it('should return the profile Thing when successful', async () => {
+
+      (service['getProfileDataset'] as any) = jest.fn(async () => 'profile dataset');
+      (sdk.getThing as any) = jest.fn(() => 'profile thing');
+
+      await expect(service['getProfileThing']('https://web.id/alice')).resolves.toEqual('profile thing');
 
     });
 
