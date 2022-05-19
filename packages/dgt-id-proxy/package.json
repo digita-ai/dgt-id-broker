@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/dgt-id-proxy",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "description": "Identity proxy server package of the ID-Broker repo",
   "main": "./dist/public-api.js",
   "types": "./dist/public-api.d.ts",
@@ -39,7 +39,7 @@
     "lint:staged": "lint-staged",
     "generate:oidc": "node dist/scripts/generate-openid-configuration.js",
     "generate:keys": "node dist/scripts/generate-keys.js",
-    "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://digita-ai.eu.auth0.com/ -o assets/auth0-configuration.json",
+    "demo:auth0": "npm run start -- -c config/presets/auth0-config.json -U https://dgt-demo.eu.auth0.com/ -o assets/auth0-configuration.json",
     "demo:panva": "npm run start",
     "demo:keycloak": "npm run start -- -c config/presets/keycloak-config.json -U http://localhost:8080/auth/realms/digita",
     "demo:id-kit:panva": "npm run start",

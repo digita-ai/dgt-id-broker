@@ -17,13 +17,9 @@ export class SolidSDKService implements SolidService {
   /**
    * Instantiates a solid sdk service.
    */
-  constructor (private defaultClientName: string, private clients?: { [key: string]: Client }) {
+  constructor (private client: Client) {
 
-    for (const client in clients) {
-
-      if (clients[client].clientSecret && !clients[client].clientId) throw new Error('clientId must be set if clientSecret is set');
-
-    }
+    if (client.clientSecret && !client.clientId) throw new Error('clientId must be set if clientSecret is set');
 
   }
 
@@ -237,16 +233,12 @@ export class SolidSDKService implements SolidService {
 
     }
 
-    const client = this.clients && this.clients[issuer.uri]
-      ? this.clients[issuer.uri]
-      : { clientName: this.defaultClientName };
-
     await login({
       oidcIssuer: issuer.uri,
       redirectUrl: window.location.href,
-      clientName: client.clientName,
-      clientId: client.clientId,
-      clientSecret: client.clientSecret,
+      clientName: this.client.clientName,
+      clientId: this.client.clientId,
+      clientSecret: this.client.clientSecret,
     });
 
   }
@@ -262,16 +254,12 @@ export class SolidSDKService implements SolidService {
 
     }
 
-    const client = this.clients && this.clients[issuer.uri]
-      ? this.clients[issuer.uri]
-      : { clientName: this.defaultClientName };
-
     await login({
       oidcIssuer: issuer.uri,
       redirectUrl: window.location.href,
-      clientName: client.clientName,
-      clientId: client.clientId,
-      clientSecret: client.clientSecret,
+      clientName: this.client.clientName,
+      clientId: this.client.clientId,
+      clientSecret: this.client.clientSecret,
     });
 
   }

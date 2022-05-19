@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.19.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.18.0...v0.19.0) (2022-05-18)
+
+
+### **Bug Fixes**
+
+* handle aud claim if not in token ([#378](https://github.com/digita-ai/dgt-id-broker/issues/378)) ([7786f9b](https://github.com/digita-ai/dgt-id-broker/commit/7786f9bf5da39c00c9f56b7cc819cebbd0fc7d26))
+
+
+### **Features**
+
+* refactor clients in solid service ([c6a411e](https://github.com/digita-ai/dgt-id-broker/commit/c6a411e1dbc2bb9b9b63f4ee8d78d1b394a08923))
+
+
+
 ## [0.18.0](https://github.com/digita-ai/dgt-id-broker/compare/v0.17.1...v0.18.0) (2022-05-11)
 
 

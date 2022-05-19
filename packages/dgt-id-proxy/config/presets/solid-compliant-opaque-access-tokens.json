@@ -57,6 +57,7 @@
           "@type": "HttpCorsRequestHandler",
           "handler": {
             "@type": "ErrorHandler",
+            "showUpstreamError": true,
             "nestedHandler": {
               "@type": "ClientCompressionHandler",
               "handler":{
@@ -100,10 +101,7 @@
                       }
                     ]
                   }
-                ],
-                "defaultHandler": {
-                  "@id": "urn:dgt-id-proxy:default:PassThroughHandler"
-                }
+                ]
               }
             }
           }
