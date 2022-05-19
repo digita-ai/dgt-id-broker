@@ -94,7 +94,7 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
 
       if (!authorizationHeader) return throwError(() => new Error('Request must contain a client_id claim'));
 
-      if (authorizationHeader.includes('Basic')) {
+      if (authorizationHeader.startsWith('Basic ')) {
 
         const authorizationHash = authorizationHeader.split(' ')[1];
         const decodedAuthHeader = Buffer.from(authorizationHash, 'base64').toString('binary');

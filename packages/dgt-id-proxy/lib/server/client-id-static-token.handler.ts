@@ -91,7 +91,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
     }
 
     const params  = new URLSearchParams(context.request.body);
-    let client_id = params.get('client_id') ?? '';
+    let client_id = params.get('client_id');
 
     if (!client_id) {
 
@@ -99,7 +99,7 @@ export class ClientIdStaticTokenHandler extends HttpHandler {
 
       if (!authorizationHeader) return throwError(() => new Error('Request must contain a client_id claim'));
 
-      if (authorizationHeader.includes('Basic')) {
+      if (authorizationHeader.startsWith('Basic ')) {
 
         const authorizationHash = authorizationHeader.split(' ')[1];
         const decodedAuthHeader = Buffer.from(authorizationHash, 'base64').toString('binary');
