@@ -1,11 +1,8 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
 import { lastValueFrom } from 'rxjs';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
-import { InMemoryStore } from '../storage/in-memory-store';
-import { OidcClientMetadata } from '../util/oidc-client-metadata';
-import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { RegistrationStore } from '../util/process-client-registration-data';
+import { KeyValueStore, MemoryStore } from '@digita-ai/handlersjs-storage';
+import { CombinedRegistrationData, RegistrationStore } from '../util/process-client-registration-data';
 import { ClientIdDynamicAuthRequestHandler } from './client-id-dynamic-auth-request.handler';
 
 describe('ClientIdDynamicAuthRequestHandler', () => {
@@ -13,7 +10,7 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
 
-  const store: RegistrationStore = new InMemoryStore();
+  const store: RegistrationStore = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
   const referer = 'client.example.com';
   const client_id = 'http://client.example.com/clientapp/profile';
@@ -242,8 +239,8 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should use the redirect_uri as key for the store if a public webid is used', async () => {
 
-      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-      = new InMemoryStore();
+      const public_store: KeyValueStore<string, CombinedRegistrationData>
+      = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
       const handler2
       = new ClientIdDynamicAuthRequestHandler(registration_uri, public_store);
@@ -260,8 +257,8 @@ describe('ClientIdDynamicAuthRequestHandler', () => {
 
     it('should check the redirect uri and not register if a public webid was used', async () => {
 
-      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-      = new InMemoryStore();
+      const public_store: KeyValueStore<string, CombinedRegistrationData>
+      = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
       const handler2
       = new ClientIdDynamicAuthRequestHandler(registration_uri, public_store);

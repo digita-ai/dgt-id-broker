@@ -1,6 +1,6 @@
 import { of, lastValueFrom } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceAuthRequestHandler } from './pkce-auth-request.handler';
 
@@ -8,7 +8,7 @@ describe('PkceAuthRequestHandler', () => {
 
   let context: HttpHandlerContext;
 
-  const store = new InMemoryStore<Code, ChallengeAndMethod>();
+  const store = new MemoryStore<{ [key: Code]: ChallengeAndMethod }>();
   const code_challenge_value = 'F2IIZNXwqJIJwWHtmf3K7Drh0VROhtIY-JTRYWHUYQQ';
   const code_challenge_method_value = 'S256';
 

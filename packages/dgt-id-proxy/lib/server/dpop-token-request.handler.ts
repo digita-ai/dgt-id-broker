@@ -3,7 +3,7 @@ import { of, from, throwError, zip, Observable } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { EmbeddedJWK, calculateJwkThumbprint, jwtVerify, JWTVerifyOptions, JWK, JWTVerifyResult } from 'jose';
 import { getLoggerFor } from '@digita-ai/handlersjs-logging';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 
 /**
  * A { HttpHandler } that handles DPoP requests for an upstream server that does not support them
@@ -17,7 +17,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    * Creates a { DpopTokenRequestHandler } passing requests through the given handler.
    *
    * @param { HttpHandler } handler - the handler through which to pass incoming requests.
-   * @param { InMemoryStore<string, string[]> } keyValueStore - the KeyValueStore in which to save jti's.
+   * @param { MemoryStore<{ [key: string]: string[] }> } store - the store in which to save jti's.
    * @param { string } proxyTokenUrl - the url of the proxy server's token endpoint.
    * @param { number } clockTolerance - tolerance in seconds that a token will still be considered valid if it is
    * either too old or too new. Should prevent tokens from being rejected due to clock skews between servers and clients.
@@ -26,7 +26,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
    */
   constructor(
     private handler: HttpHandler,
-    private keyValueStore: InMemoryStore<string, string[]>,
+    private store: MemoryStore<{ [key: string]: string[] }>,
     private proxyTokenUrl: string,
     private clockTolerance: number = 10,
     private maxDpopProofTokenAge: number = 60
@@ -36,7 +36,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     if (!handler) { throw new Error('A HttpHandler must be provided'); }
 
-    if (!keyValueStore) { throw new Error('A keyValueStore must be provided'); }
+    if (!store) { throw new Error('A store must be provided'); }
 
     if (!proxyTokenUrl) { throw new Error('A proxyTokenUrl must be provided'); }
 
@@ -214,7 +214,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
     const jti = payload.jti;
 
-    return from(this.keyValueStore.get('jtis')).pipe(
+    return from(this.store.get('jtis')).pipe(
       switchMap((jtis) => {
 
         if (jtis?.includes(jti)) {
@@ -227,7 +227,7 @@ export class DpopTokenRequestHandler extends HttpHandler {
 
         this.logger.info(`Updating JTI's in store `);
 
-        this.keyValueStore.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
+        this.store.set('jtis', jtis ? [ ...jtis, jti ] : [ jti ]);
 
         return of({ payload, protectedHeader: { ... header, jwk } });
 

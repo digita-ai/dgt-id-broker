@@ -1,6 +1,6 @@
 import { HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import{ lastValueFrom } from 'rxjs';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceCodeResponseHandler } from './pkce-code-response.handler';
 
@@ -14,7 +14,7 @@ describe('PkceCodeResponseHandler', () => {
     method: 'S256',
   };
 
-  const store = new InMemoryStore() as InMemoryStore<Code, ChallengeAndMethod>;
+  const store = new MemoryStore() as MemoryStore<{ [key: Code]: ChallengeAndMethod }>;
   const referer = 'client.example.com';
   const state = '9c59c72b-c282-4370-bfae-33f3f5dfb42e';
   const code = 'bPzRowxr9fwlkNRcFTHp0guPuErKP0aUN9lvwiNT5ET';

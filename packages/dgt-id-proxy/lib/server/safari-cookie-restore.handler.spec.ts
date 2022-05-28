@@ -1,6 +1,6 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { lastValueFrom, of } from 'rxjs';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { SafariCookieRestoreHandler } from './safari-cookie-restore.handler';
 
 describe('SafariCookieRestoreHandler', () => {
@@ -17,7 +17,7 @@ describe('SafariCookieRestoreHandler', () => {
 
   const chromeAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36';
   const safariAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15';
-  const store = new InMemoryStore() as InMemoryStore<string, string>;
+  const store = new MemoryStore() as MemoryStore<{ [key: string]: string }>;
   const handler = new SafariCookieRestoreHandler(nestedHandler, store);
   let context: HttpHandlerContext;
 

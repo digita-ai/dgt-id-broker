@@ -2,7 +2,8 @@
   "@context": [
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/dgt-id-proxy/^0.0.0/components/context.jsonld",
     "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-core/^0.0.0/components/context.jsonld",
-    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-http/^0.0.0/components/context.jsonld"
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-http/^0.0.0/components/context.jsonld",
+    "https://linkedsoftwaredependencies.org/bundles/npm/@digita-ai/handlersjs-storage/^0.0.0/components/context.jsonld"
   ],
   "@graph": [
     {
@@ -110,14 +111,14 @@
       "SingleClaimWebIdFactory:_webIdPattern": "http://localhost:3002/clientapp/:customclaim/profile/card#me"
     },
     {
-      "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore",
-      "@type": "InMemoryStore"
+      "@id": "urn:dgt-id-proxy:default:DynamicRegistrationMemoryStore",
+      "@type": "MemoryStore"
     },
     {
       "@id": "urn:dgt-id-proxy:default:ClientIdDynamicAuthRequestHandler",
       "@type": "ClientIdDynamicAuthRequestHandler",
       "store": {
-        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
+        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationMemoryStore"
       },
       "ClientIdDynamicAuthRequestHandler:_registration_uri": "http://localhost:3000/reg"
     },
@@ -125,7 +126,7 @@
       "@id": "urn:dgt-id-proxy:default:ClientIdDynamicTokenHandler",
       "@type": "ClientIdDynamicTokenHandler",
       "store": {
-        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationInMemoryStore"
+        "@id": "urn:dgt-id-proxy:default:DynamicRegistrationMemoryStore"
       },
       "httpHandler": {
         "@id": "urn:dgt-id-proxy:default:DpopTokenRequestHandler"
@@ -150,11 +151,11 @@
     },
     {
       "@id": "urn:dgt-id-proxy:default:PkceStore",
-      "@type": "InMemoryStore"
+      "@type": "MemoryStore"
     },
     {
       "@id": "urn:dgt-id-proxy:default:StateStore",
-      "@type": "InMemoryStore"
+      "@type": "MemoryStore"
     },
     {
       "@id": "urn:dgt-id-proxy:default:AuthStateRequestHandler",
@@ -249,8 +250,8 @@
       "handler": {
         "@id": "urn:dgt-id-proxy:default:PkceTokenHandler"
       },
-      "keyValueStore": {
-        "@type": "InMemoryStore"
+      "store": {
+        "@type": "MemoryStore"
       },
       "proxyTokenUrl": "http://localhost:3003/token"
     },

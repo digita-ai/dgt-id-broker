@@ -3,7 +3,7 @@ import { HttpHandlerContext, HttpHandler } from '@digita-ai/handlersjs-http';
 import { generateKeyPair, exportJWK, JWK, KeyLike, SignJWT } from 'jose';
 import { v4 as uuid } from 'uuid';
 import * as jose from 'jose';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { DpopTokenRequestHandler } from './dpop-token-request.handler';
 
 jest.mock('fs/promises', () => {
@@ -33,7 +33,7 @@ describe('DpopTokenRequestHandler', () => {
 
   let handler: DpopTokenRequestHandler;
   let nestedHandler: HttpHandler;
-  let keyValueStore: InMemoryStore<string, string[]>;
+  let store: MemoryStore<{ [key: string]: string[] }>;
   let context: HttpHandlerContext;
   let privateKey: KeyLike;
   let publicJwk: JWK;
@@ -110,8 +110,8 @@ describe('DpopTokenRequestHandler', () => {
       handle: jest.fn(),
     };
 
-    keyValueStore = new InMemoryStore();
-    handler = new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token');
+    store = new MemoryStore();
+    handler = new DpopTokenRequestHandler(nestedHandler, store, 'http://localhost:3003/token');
 
   });
 
@@ -121,27 +121,27 @@ describe('DpopTokenRequestHandler', () => {
 
   });
 
-  it('should error when no handler, keyValueStore, or proxyUrl is provided', () => {
+  it('should error when no handler, store, or proxyUrl is provided', () => {
 
-    expect(() => new DpopTokenRequestHandler(undefined, keyValueStore, 'http://localhost:3003/token')).toThrow('A HttpHandler must be provided');
-    expect(() => new DpopTokenRequestHandler(null, keyValueStore, 'http://localhost:3003/token')).toThrow('A HttpHandler must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, undefined, 'http://localhost:3003/token')).toThrow('A keyValueStore must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, null, 'http://localhost:3003/token')).toThrow('A keyValueStore must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, undefined)).toThrow('A proxyTokenUrl must be provided');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, null)).toThrow('A proxyTokenUrl must be provided');
+    expect(() => new DpopTokenRequestHandler(undefined, store, 'http://localhost:3003/token')).toThrow('A HttpHandler must be provided');
+    expect(() => new DpopTokenRequestHandler(null, store, 'http://localhost:3003/token')).toThrow('A HttpHandler must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, undefined, 'http://localhost:3003/token')).toThrow('A store must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, null, 'http://localhost:3003/token')).toThrow('A store must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, store, undefined)).toThrow('A proxyTokenUrl must be provided');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, store, null)).toThrow('A proxyTokenUrl must be provided');
 
   });
 
   it('should error when clockTolerance is negative', () => {
 
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', -1)).toThrow('clockTolerance cannot be negative.');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, store, 'http://localhost:3003/token', -1)).toThrow('clockTolerance cannot be negative.');
 
   });
 
   it('should error when maxDpopProofTokenAge is not greater than 0', () => {
 
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 10, 0)).toThrow('maxDpopProofTokenAge must be greater than 0.');
-    expect(() => new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 10, -1)).toThrow('maxDpopProofTokenAge must be greater than 0.');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, store, 'http://localhost:3003/token', 10, 0)).toThrow('maxDpopProofTokenAge must be greater than 0.');
+    expect(() => new DpopTokenRequestHandler(nestedHandler, store, 'http://localhost:3003/token', 10, -1)).toThrow('maxDpopProofTokenAge must be greater than 0.');
 
   });
 
@@ -313,7 +313,7 @@ describe('DpopTokenRequestHandler', () => {
 
       nestedHandler.handle = jest.fn().mockReturnValue(successfulProxiedServerResponse());
 
-      const testHandler = new DpopTokenRequestHandler(nestedHandler, keyValueStore, 'http://localhost:3003/token', 30, 90);
+      const testHandler = new DpopTokenRequestHandler(nestedHandler, store, 'http://localhost:3003/token', 30, 90);
 
       const dpopJwt = await new SignJWT({
         'htm': 'POST',
@@ -545,9 +545,9 @@ describe('DpopTokenRequestHandler', () => {
 
     });
 
-    it('should add the jti to the "jtis" key in the keyValueStore when none were in the store yet', async () => {
+    it('should add the jti to the "jtis" key in the store when none were in the store yet', async () => {
 
-      await expect(keyValueStore.get('jtis')).resolves.toBeUndefined();
+      await expect(store.get('jtis')).resolves.toBeUndefined();
 
       const jti = uuid();
 
@@ -569,13 +569,13 @@ describe('DpopTokenRequestHandler', () => {
       // send the jti once
       await lastValueFrom(handler.handle(context));
 
-      await expect(keyValueStore.get('jtis')).resolves.toEqual([ jti ]);
+      await expect(store.get('jtis')).resolves.toEqual([ jti ]);
 
     });
 
-    it('should add the jti to the list of jtis in the keyValueStore if there are already jtis in the store', async () => {
+    it('should add the jti to the list of jtis in the store if there are already jtis in the store', async () => {
 
-      keyValueStore.set('jtis', [ 'mockJti' ]);
+      store.set('jtis', [ 'mockJti' ]);
 
       const jti = uuid();
 
@@ -597,7 +597,7 @@ describe('DpopTokenRequestHandler', () => {
       // send the jti once
       await lastValueFrom(handler.handle(context));
 
-      await expect(keyValueStore.get('jtis')).resolves.toEqual([ 'mockJti', jti ]);
+      await expect(store.get('jtis')).resolves.toEqual([ 'mockJti', jti ]);
 
     });
 

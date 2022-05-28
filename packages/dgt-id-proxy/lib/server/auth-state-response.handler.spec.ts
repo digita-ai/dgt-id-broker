@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, lastValueFrom } from 'rxjs';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { AuthStateResponseHandler } from './auth-state-response.handler';
 
 describe('AuthStateResponseHandler', () => {
@@ -10,12 +10,12 @@ describe('AuthStateResponseHandler', () => {
   let context: HttpHandlerContext;
   let response: HttpHandlerResponse;
 
-  let store: InMemoryStore<string, boolean>;
+  let store: MemoryStore<{ [key: string]: boolean }>;
 
   beforeEach(() => {
 
     response = { body: 'mockBody', headers: { location: 'http://redirect-uri.com/redirect?state=1234' }, status:200 };
-    store = new InMemoryStore<string, boolean>();
+    store = new MemoryStore<{ [key: string]: boolean }>();
 
     nestedHandler = {
       handle: jest.fn().mockReturnValue(of(response)),
