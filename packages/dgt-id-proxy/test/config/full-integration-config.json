@@ -168,7 +168,7 @@
       "@type": "AuthStateResponseHandler",
       "keyValueStore": {
         "@id": "urn:dgt-id-proxy:default:StateStore"
-      }
+      } 
     },
     {
       "@id": "urn:dgt-id-proxy:default:PipeThroughPkceCodeAuthState",

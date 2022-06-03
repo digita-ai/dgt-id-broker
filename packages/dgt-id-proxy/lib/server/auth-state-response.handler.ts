@@ -11,7 +11,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
  */
 export class AuthStateResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * creates an { AuthStateResponseHandler }

@@ -9,7 +9,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
  */
 export class OpaqueAccessTokenHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 1, 1);
 
   /**
    * Creates an { OpaqueAccessTokenHandler } which passes requests it receives through the given handler,
@@ -86,13 +86,34 @@ export class OpaqueAccessTokenHandler extends HttpHandler {
 
     }
 
-    const client_id = new URLSearchParams(context.request.body).get('client_id');
+    let client_id = new URLSearchParams(context.request.body).get('client_id') ?? '';
 
     if (!client_id) {
 
-      this.logger.verbose('No client_id provided', context.request.body);
+      const authorizationHeader = context.request.headers['Authorization'];
 
-      return throwError(() => new Error('Request body must contain a client_id claim'));
+      if (!authorizationHeader) return throwError(() => new Error('Request must contain a client_id claim'));
+
+      if (authorizationHeader.startsWith('Basic ')) {
+
+        const authorizationHash = authorizationHeader.split(' ')[1];
+        const decodedAuthHeader = Buffer.from(authorizationHash, 'base64').toString('binary');
+
+        if (decodedAuthHeader.split(':').length > 1) {
+
+          client_id = decodedAuthHeader.substring(0, decodedAuthHeader.lastIndexOf(':'));
+
+        } else {
+
+          return throwError(() => new Error('Request must contain a client_id claim'));
+
+        }
+
+      } else {
+
+        return throwError(() => new Error('Request must contain a client_id claim'));
+
+      }
 
     }
 

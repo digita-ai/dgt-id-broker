@@ -15,7 +15,7 @@ import { retrieveAndValidateClientRegistrationData } from '../util/process-clien
  */
 export class ClientIdStaticAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
   private redirectURL: URL;
 
   /**

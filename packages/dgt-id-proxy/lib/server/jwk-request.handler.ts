@@ -11,7 +11,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
  */
 export class JwkRequestHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { JwkRequestHandler } that returns a json response of the JWK keys from the file in the given path.
