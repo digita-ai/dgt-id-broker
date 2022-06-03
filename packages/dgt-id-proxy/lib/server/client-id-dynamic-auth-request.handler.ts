@@ -17,7 +17,7 @@ import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientR
  */
 export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { ClientIdDynamicAuthRequestHandler }.

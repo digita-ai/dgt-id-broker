@@ -10,7 +10,7 @@ import { WebIdFactory } from './webid-factory';
  */
 export class SingleClaimWebIdFactory extends WebIdFactory {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { SingleClaimWebIdFactory }.

@@ -9,7 +9,7 @@ import { WebIdFactory } from './webid-factory';
  */
 export class UrlClaimWebIdFactory extends WebIdFactory {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { UrlClaimWebIdFactory }.

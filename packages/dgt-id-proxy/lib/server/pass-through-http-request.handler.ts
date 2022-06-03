@@ -12,7 +12,7 @@ import { getLoggerFor } from '@digita-ai/handlersjs-logging';
  */
 export class PassThroughHttpRequestHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
   private proxyURL: URL;
 
   /**
@@ -366,8 +366,6 @@ export class PassThroughHttpRequestHandler extends HttpHandler {
     (acc, key) => {
 
       const lKey = key.toLowerCase();
-
-      this.logger.info('cleaning headers: ', lKey);
 
       return acc[lKey]
         ? { ... acc, [lKey]: `${acc[lKey]},${headers[key]}` }

@@ -14,7 +14,7 @@ import { checkError, createErrorResponse } from '../util/error-response-factory'
  */
 export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpHandlerResponse> {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { JwtDecodeResponseHandler }.

@@ -1,4 +1,4 @@
-import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
+import { HttpHandler, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { of, lastValueFrom } from 'rxjs';
 import { InMemoryStore } from '../storage/in-memory-store';
 import { AuthStateResponseHandler } from './auth-state-response.handler';
@@ -7,7 +7,6 @@ describe('AuthStateResponseHandler', () => {
 
   let handler: AuthStateResponseHandler;
   let nestedHandler: HttpHandler;
-  let context: HttpHandlerContext;
   let response: HttpHandlerResponse;
 
   let store: InMemoryStore<string, boolean>;

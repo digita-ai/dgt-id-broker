@@ -14,7 +14,7 @@ import { recalculateContentLength } from '../util/recalculate-content-length';
  */
 export class PkceTokenHandler extends HttpHandler {
 
-  private logger = getLoggerFor(this, 5, 5);
+  private logger = getLoggerFor(this, 2, 2);
 
   /**
    * Creates a { PkceTokenHandler }.
@@ -130,7 +130,7 @@ export class PkceTokenHandler extends HttpHandler {
 
           }
 
-          this.logger.warn('No code challenge and method was found for the code', code);
+          this.logger.warn('No code challenge and method was found for code', code);
 
           return throwError(() => new InternalServerError('No stored challenge and method found.'));
 
