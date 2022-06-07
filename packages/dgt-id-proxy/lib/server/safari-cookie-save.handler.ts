@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { Observable, of, switchMap, throwError } from 'rxjs';
-import { KeyValueStore } from '../storage/key-value-store';
+import { KeyValueStore } from '@digita-ai/handlersjs-storage';
 import { isSafariUserAgent } from '../util/is-safari-user-agent';
 
 export class SafariCookieSaveHandler extends HttpHandler {

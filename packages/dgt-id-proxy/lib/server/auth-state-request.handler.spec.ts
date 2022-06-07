@@ -1,6 +1,6 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { lastValueFrom } from 'rxjs';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { AuthStateRequestHandler } from './auth-state-request.handler';
 
 describe('AuthStateRequestHandler', () => {
@@ -8,12 +8,12 @@ describe('AuthStateRequestHandler', () => {
   let handler: AuthStateRequestHandler;
   let context: HttpHandlerContext;
 
-  let store: InMemoryStore<string, boolean>;
+  let store: MemoryStore<{ [key: string]: boolean }>;
 
   beforeEach(() => {
 
     context = { request: { headers: { }, method: 'GET', url: new URL('http://digita.ai/') } };
-    store = new InMemoryStore<string, boolean>();
+    store = new MemoryStore<{ [key: string]: boolean }>();
 
     handler = new AuthStateRequestHandler(store);
 

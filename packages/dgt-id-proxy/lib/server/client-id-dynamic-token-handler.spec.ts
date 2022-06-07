@@ -1,11 +1,10 @@
 import { HttpHandler, HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import { of, lastValueFrom } from 'rxjs';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { KeyValueStore, MemoryStore } from '@digita-ai/handlersjs-storage';
 import { OidcClientMetadata } from '../util/oidc-client-metadata';
 import { recalculateContentLength } from '../util/recalculate-content-length';
 import { OidcClientRegistrationResponse } from '../util/oidc-client-registration-response';
-import { RegistrationStore } from '../util/process-client-registration-data';
+import { CombinedRegistrationData, RegistrationStore } from '../util/process-client-registration-data';
 import { ClientIdDynamicTokenHandler } from './client-id-dynamic-token.handler';
 
 describe('ClientIdDynamicTokenHandler', () => {
@@ -51,7 +50,7 @@ describe('ClientIdDynamicTokenHandler', () => {
 
   let httpHandler: HttpHandler;
 
-  const store: RegistrationStore = new InMemoryStore();
+  const store: RegistrationStore = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
   let handler: ClientIdDynamicTokenHandler;
 
@@ -195,8 +194,8 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     it('should use the redirect_uri as key for the store if a public webid is used and grant_type is authorization_code', async () => {
 
-      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-      = new InMemoryStore();
+      const public_store: KeyValueStore<string, CombinedRegistrationData>
+      = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
       const handler2
       = new ClientIdDynamicTokenHandler(public_store, httpHandler);
@@ -216,8 +215,8 @@ describe('ClientIdDynamicTokenHandler', () => {
 
     it('should get the registration info from the store using the refresh_token when grant_type is refresh_token', async () => {
 
-      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-      = new InMemoryStore();
+      const public_store: KeyValueStore<string, CombinedRegistrationData>
+      = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
       const handler2
       = new ClientIdDynamicTokenHandler(public_store, httpHandler);
@@ -303,8 +302,8 @@ describe('ClientIdDynamicTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(testResponse));
 
-      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-      = new InMemoryStore();
+      const public_store: KeyValueStore<string, CombinedRegistrationData>
+      = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
       const handler2
       = new ClientIdDynamicTokenHandler(public_store, httpHandler);
@@ -333,8 +332,8 @@ describe('ClientIdDynamicTokenHandler', () => {
 
       httpHandler.handle = jest.fn().mockReturnValueOnce(of(testResponse));
 
-      const public_store: KeyValueStore<string, OidcClientMetadata & OidcClientRegistrationResponse>
-      = new InMemoryStore();
+      const public_store: KeyValueStore<string, CombinedRegistrationData>
+      = new MemoryStore<{ [key: string]: CombinedRegistrationData }>();
 
       const handler2
       = new ClientIdDynamicTokenHandler(public_store, httpHandler);

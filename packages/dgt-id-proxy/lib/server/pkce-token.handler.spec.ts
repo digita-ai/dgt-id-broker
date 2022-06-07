@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { lastValueFrom, of } from 'rxjs';
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse, InternalServerError } from '@digita-ai/handlersjs-http';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { Code, ChallengeAndMethod } from '../util/code-challenge-method';
 import { PkceTokenHandler } from './pkce-token.handler';
 
@@ -24,7 +24,7 @@ describe('PkceTokenHandler', () => {
 
   let pkceTokenRequestHandler: PkceTokenHandler;
   let httpHandler: HttpHandler;
-  let store: InMemoryStore<Code, ChallengeAndMethod>;
+  let store: MemoryStore<{ [key: Code]: ChallengeAndMethod }>;
   let context: HttpHandlerContext;
   let response: HttpHandlerResponse;
   let bodyParams: URLSearchParams;
@@ -53,7 +53,7 @@ describe('PkceTokenHandler', () => {
       safeHandle: jest.fn(),
     } as HttpHandler;
 
-    store = new InMemoryStore();
+    store = new MemoryStore();
 
     context = { request: { headers: {}, body: authCodeBody, method: 'POST', url } };
 

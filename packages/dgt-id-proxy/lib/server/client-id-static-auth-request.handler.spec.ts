@@ -1,8 +1,7 @@
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
 import fetchMock from 'jest-fetch-mock';
 import { lastValueFrom } from 'rxjs';
-import { KeyValueStore } from '@digita-ai/handlersjs-storage';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { KeyValueStore, MemoryStore } from '@digita-ai/handlersjs-storage';
 import { ClientIdStaticAuthRequestHandler } from './client-id-static-auth-request.handler';
 
 describe('ClientIdStaticAuthRequestHandler', () => {
@@ -43,7 +42,7 @@ describe('ClientIdStaticAuthRequestHandler', () => {
 
   beforeEach(async () => {
 
-    store = new InMemoryStore();
+    store = new MemoryStore<{ [key: string]: URL }>();
 
     handler  = new ClientIdStaticAuthRequestHandler(
       client_id_constructor,

@@ -13,7 +13,7 @@ import { CombinedRegistrationData, RegistrationStore, retrieveAndValidateClientR
  * - compares the client registration data with the request data
  * - compares the store data with the client registration data
  * - registers if not registered or information is updated
- * - stores the registration in the keyvalue store
+ * - stores the registration in the store
  */
 export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContext, HttpHandlerContext> {
 
@@ -23,7 +23,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * Creates a { ClientIdDynamicAuthRequestHandler }.
    *
    * @param { string } registration_uri - the registration endpoint for the currently used provider.
-   * @param { KeyValueStore } store - the store used to save a clients register data.
+   * @param { RegistrationStore } store - the store used to save a clients register data.
    */
   constructor(
     private registration_uri: string,
@@ -151,7 +151,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
    * Creates a fetch request to the registration endpoint
    * to register the client with the given data
    * and returns a JSON of the response and saves
-   * this response in the KeyValue store with the client id as key.
+   * this response in the store with the client id as key.
    *
    * @param { OidcClientMetadata } data - The clients metadata to register with.
    * @param { string } client_id - E.g. a URI to a web id profile.
@@ -249,7 +249,7 @@ export class ClientIdDynamicAuthRequestHandler extends Handler<HttpHandlerContex
   /**
    * Compares the data in the store with one in the client registration, to check if the registration is not updated.
    * If the in the data is changed the client registers again with the new data.
-   * If registered again it saves the new register data in the KeyValue store.
+   * If registered again it saves the new register data in the store.
    * If nothing changed, there is no new registration and the registerData is straight returned.
    *
    * @param { OidcClientMetadata } clientData - The data retrieved from the webid.

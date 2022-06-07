@@ -1,7 +1,7 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { lastValueFrom, of } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { createErrorResponse } from '../util/error-response-factory';
 import { Auth0PasswordlessApiHandler } from './auth0-passwordless-api.handler';
 
@@ -11,8 +11,8 @@ describe('Auth0PasswordlessApiHandler', () => {
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
 
-  let clientStateToClientRedirectUriStore: InMemoryStore<string, string>;
-  let clientSentStateStore: InMemoryStore<string, boolean>;
+  let clientStateToClientRedirectUriStore: MemoryStore<{ [key: string]: string }>;
+  let clientSentStateStore: MemoryStore<{ [key: string]: boolean }>;
 
   const upstreamUrl = 'http://upstream.com/';
   const proxyRedirectUri = 'http://proxy.com/redirect';
@@ -40,8 +40,8 @@ describe('Auth0PasswordlessApiHandler', () => {
       },
     };
 
-    clientStateToClientRedirectUriStore = new InMemoryStore<string, string>();
-    clientSentStateStore = new InMemoryStore<string, boolean>();
+    clientStateToClientRedirectUriStore = new MemoryStore<{ [key: string]: string }>();
+    clientSentStateStore = new MemoryStore<{ [key: string]: boolean }>();
 
     nestedHandler = {
       handle: jest.fn(),

@@ -1,6 +1,6 @@
 import { HttpHandler, HttpHandlerContext, HttpHandlerResponse } from '@digita-ai/handlersjs-http';
 import { lastValueFrom, of } from 'rxjs';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { Auth0LoginStateHandler } from './auth0-login-state.handler';
 
 describe('Auth0LoginStateHandler', () => {
@@ -9,16 +9,16 @@ describe('Auth0LoginStateHandler', () => {
   let nestedHandler: HttpHandler;
   let context: HttpHandlerContext;
 
-  let clientStateToClientRedirectUriStore: InMemoryStore<string, string>;
-  let upstreamStateToClientStateStore: InMemoryStore<string, string>;
+  let clientStateToClientRedirectUriStore: MemoryStore<{ [key: string]: string }>;
+  let upstreamStateToClientStateStore: MemoryStore<{ [key: string]: string }>;
 
   let upstreamResponse: HttpHandlerResponse;
 
   beforeEach(() => {
 
     context = { request: { headers: { }, method: 'GET', url: new URL('http://proxy.com/?state=clientState&redirect_uri=https%3A%2F%2Fclient-redirect-uri.com%2Fredirect') } };
-    clientStateToClientRedirectUriStore = new InMemoryStore<string, string>();
-    upstreamStateToClientStateStore = new InMemoryStore<string, string>();
+    clientStateToClientRedirectUriStore = new MemoryStore<{ [key: string]: string }>();
+    upstreamStateToClientStateStore = new MemoryStore<{ [key: string]: string }>();
 
     upstreamResponse = {
       headers: { location: 'https://upstream.com/endpoint?state=upstreamState' },

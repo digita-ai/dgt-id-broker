@@ -1,11 +1,11 @@
 import { lastValueFrom, of } from 'rxjs';
 import { HttpHandlerContext } from '@digita-ai/handlersjs-http';
-import { InMemoryStore } from '../storage/in-memory-store';
+import { MemoryStore } from '@digita-ai/handlersjs-storage';
 import { SafariCookieSaveHandler } from './safari-cookie-save.handler';
 
 describe('SafariCookieSaveHandler', () => {
 
-  const store = new InMemoryStore() as InMemoryStore<string, string>;
+  const store = new MemoryStore() as MemoryStore<{ [key: string]: string }>;
   const state = 'hKFo2SBHdzJBMFFwLUxIcmp3Um';
   const cookies = 'did=s%3Av0%3Af9a07f70-b419-11ec-a357-91ddac1a39df.rSBdlgwAjdvMukpYnLu0z1o41xGKujmwsT2Wpdtcy%2BE; Max-Age=31557600; Path=/; Expires=Tue, 04 Apr 2023 19:20:19 GMT; HttpOnly; Secure; SameSite=None';
 
