@@ -35,5 +35,3 @@ export * from './webid/url-claim-webid-factory';
 export * from './webid/webid-factory';
 export * from './webid/webid-profile.handler';
 export * from './webid/webid-response.handler';
-export * from './util/http-sequence-handler';
-
