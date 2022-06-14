@@ -327,7 +327,7 @@
               "redirectUri": "http://localhost:3003/redirect"
             },
             "successHandler": {
-              "@type": "PipeThroughHandler",
+              "@type": "SequenceHandler",
               "handlers": [
                 {
                   "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
@@ -395,7 +395,7 @@
               "redirectUri": "http://localhost:3003/redirect"
             },
             "successHandler": {
-              "@type": "PipeThroughHandler",
+              "@type": "SequenceHandler",
               "handlers": [
                 {
                   "@id": "urn:dgt-id-proxy:default:ClientIdStaticAuthResponseHandler"
