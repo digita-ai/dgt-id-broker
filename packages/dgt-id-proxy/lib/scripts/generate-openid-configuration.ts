@@ -41,6 +41,9 @@ if (args.length < 2) {
 
     data.solid_oidc_supported = 'https://solidproject.org/TR/solid-oidc';
 
+    if (!data.grant_types_supported) data.grant_types_supported = [ 'authorization_code' ];
+    if (!data.grant_types_supported.includes('authorization_code')) data.grant_types_supported.push('authorization_code');
+
     writeFileSync(path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath), JSON.stringify(data));
 
     console.log(`Successfully wrote the config "${path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath)}"`);
