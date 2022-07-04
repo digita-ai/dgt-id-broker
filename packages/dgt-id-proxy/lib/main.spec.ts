@@ -1,8 +1,18 @@
+import path from 'path';
+import { readFileSync } from 'fs';
+import { ComponentsManager } from 'componentsjs';
+import { NodeHttpServer } from '@digita-ai/handlersjs-http';
+import { checkFile, checkUri, createVariables, launch } from './main';
+
 jest.mock('fs', () => ({ readFileSync: jest.fn().mockImplementation((filename) => {
 
   if (filename === 'path') {
 
     throw new Error('mockError');
+
+  } else if (filename.endsWith('allowedWebIds.csv')) {
+
+    return ('https://dev.api.use.id/webid, https://test.api.use.id/webid');
 
   } else {
 
@@ -12,15 +22,9 @@ jest.mock('fs', () => ({ readFileSync: jest.fn().mockImplementation((filename) =
 
 }) }));
 
-import path from 'path';
-import { readFileSync } from 'fs';
-import { ComponentsManager } from 'componentsjs';
-import { NodeHttpServer } from '@digita-ai/handlersjs-http';
-import { checkFile, checkUri, createVariables, launch } from './main';
-
 describe('Main.ts', () => {
 
-  const mainModulePath = path.join(__dirname, '../');
+  const mainModulePath = (__dirname.endsWith('.husky')) ? path.join(__dirname, '../packages/dgt-id-proxy') : path.join(__dirname, '../');
   const configPath = path.join(__dirname, '../config/presets/auth0-config.json');
   const oidcPath = path.join(__dirname, '../assets/other-openid-config.json');
   const jwkPath = path.join(__dirname, '../assets/other-jwks.json');
@@ -44,6 +48,8 @@ describe('Main.ts', () => {
     'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
     'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
     'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
+    'urn:dgt-id-proxy:variables:allowedWebIds': '["https://dev.api.use.id/webid","https://test.api.use.id/webid"]',
+    'urn:dgt-id-proxy:variables:appSecret': 'testsecret',
   } as Record<string, any>;
 
   const handler = {
@@ -144,6 +150,8 @@ describe('Main.ts', () => {
           'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
           'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
           'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
+          'urn:dgt-id-proxy:variables:allowedWebIds': '["https://dev.api.use.id/webid","https://test.api.use.id/webid"]',
+          'urn:dgt-id-proxy:variables:appSecret': 'testsecret',
         });
 
     });
@@ -212,6 +220,24 @@ describe('Main.ts', () => {
       expect(manager.instantiate).toHaveBeenCalledTimes(1);
 
       expect(manager.configRegistry.register).toHaveBeenCalledWith(defaultConfigPath);
+
+    });
+
+    it('should return the variables with a relative allowedWebIdsPath', () => {
+
+      const relativeAllowedWebIdsPath = 'tests/allowedWebIds.csv';
+
+      expect(createVariables([ 'npm run start', '--', '--allowedWebIdsPath', relativeAllowedWebIdsPath ]))
+        .toMatchObject({ 'urn:dgt-id-proxy:variables:allowedWebIds': '["https://dev.api.use.id/webid","https://test.api.use.id/webid"]' });
+
+    });
+
+    it('should return the variables with an absolute allowedWebIdsPath', () => {
+
+      const absoluteAllowedWebIdsPath = path.join(variables['urn:dgt-id-proxy:variables:mainModulePath'], 'tests/allowedWebIds.csv');
+
+      expect(createVariables([ 'npm run start', '--', '--allowedWebIdsPath', absoluteAllowedWebIdsPath ]))
+        .toMatchObject({ 'urn:dgt-id-proxy:variables:allowedWebIds': '["https://dev.api.use.id/webid","https://test.api.use.id/webid"]' });
 
     });
 

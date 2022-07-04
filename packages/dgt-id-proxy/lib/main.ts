@@ -131,6 +131,8 @@ export const createVariables = (args: string[]): Record<string, any> => {
       proxyTokenUrl: { type: 'string', alias: 'P' },
       proxyClientUrl: { type: 'string', alias: 'L' },
       auth0Api: { type: 'string', alias: 'A' },
+      appSecret: { type: 'string' },
+      allowedWebIdsPath: { type: 'string', alias: 'webIds' }, // webids that are allowed to access api
     })
     .help();
 
@@ -143,6 +145,7 @@ export const createVariables = (args: string[]): Record<string, any> => {
   const proxyTokenUrl = params.proxyTokenUrl ?? ((params.proxUri ?? 'http://localhost:3003') + '/oauth/token');
   const proxyClientUrl = params.proxyClientUrl ?? ((params.proxUri ?? 'http://localhost:3003') + '/oauth/client');
   const auth0Api = params.auth0Api;
+  const appSecret = params.appSecret ?? 'testsecret';
 
   const mainModulePath = params.mainModulePath
     ? path.isAbsolute(params.mainModulePath)
@@ -168,6 +171,14 @@ export const createVariables = (args: string[]): Record<string, any> => {
       : path.join(process.cwd(), params.jwksFilePath)
     : path.join(mainModulePath, 'assets/jwks.json');
 
+  const allowedWebIdsPath = params.allowedWebIdsPath
+    ? path.isAbsolute(params.allowedWebIdsPath)
+      ? params.allowedWebIdsPath
+      : path.join(mainModulePath, params.allowedWebIdsPath)
+    : path.join(mainModulePath, 'allowedWebIds.csv');
+
+  const allowedWebIds = JSON.stringify(readFileSync(allowedWebIdsPath, 'utf8').split(',').map((webId) => webId.trim()));
+
   checkFile(openidConfigurationFilePath);
   checkFile(jwksFilePath);
 
@@ -190,6 +201,8 @@ export const createVariables = (args: string[]): Record<string, any> => {
     'urn:dgt-id-proxy:variables:proxyTokenUrl': proxyTokenUrl,
     'urn:dgt-id-proxy:variables:proxyClientUrl': proxyClientUrl,
     'urn:dgt-id-proxy:variables:auth0Api': auth0Api,
+    'urn:dgt-id-proxy:variables:allowedWebIds': allowedWebIds,
+    'urn:dgt-id-proxy:variables:appSecret': appSecret,
   };
 
 };
