@@ -1,2 +1,5 @@
 https://dev.api.use.id/webid,
-https://test.api.use.id/webid
+https://test.api.use.id/webid,
+https://api.use.id/webid,
+https://app.use.id/client-id.jsonld,
+https://sandbox.api.use.id/webid
