@@ -1,17 +1,32 @@
 #!/usr/bin/env node
 
-const commander = require('commander'); 
-
 const { createVariables, launch } = require('../dist/main.js');
 
-commander
-.requiredOption('-u, --proxyUri <uri>', 'URL of the proxy')
-.requiredOption('-U, --upstreamUri <uri>', 'URL of the upstream server')
-.requiredOption('-o, --openidConfigurationFilePath <path>', 'relative path to the OIDC configuration')
-.requiredOption('-j, --jwksFilePath <path>', 'elative path to the JWKs')
-.parse(process.argv); 
-
-console.log('Options: ', commander.opts());
+require('yargs/yargs')(process.argv.slice(2))
+  .options({
+    'proxyUri': {
+      alias: 'u',
+      describe: 'URL of the proxy',
+      demandOption: true
+    },
+    'upstreamUri': {
+      alias: 'U',
+      describe: 'URL of the upstream server',
+      demandOption: true
+    },
+    'openidConfigurationFilePath': {
+        alias: 'o',
+        describe: 'relative path to the OIDC configuration',
+        demandOption: true
+    },
+    'jwksFilePath': {
+        alias: 'j',
+        describe: 'relative path to the JWKs',
+        demandOption: true
+    }
+  })
+  .help()
+  .argv
 
 const vars = createVariables(process.argv);
 
