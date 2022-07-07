@@ -122,39 +122,6 @@ describe('Main.ts', () => {
 
   describe('createVariables', () => {
 
-    it('should return the correct variables of the given arguments', () => {
-
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath, '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to', '-A', 'https:​//useid.eu.auth0.com/api/v2/' ]))
-        .toEqual({
-          'urn:dgt-id-proxy:variables:customConfigPath': configPath,
-          'urn:dgt-id-proxy:variables:mainModulePath': mainModulePath,
-          'urn:dgt-id-proxy:variables:proxyUri': 'http://localhost:3003/',
-          'urn:dgt-id-proxy:variables:proxyHost': 'localhost',
-          'urn:dgt-id-proxy:variables:proxyPort': '3003',
-          'urn:dgt-id-proxy:variables:upstreamUri': 'http://localhost:3000/',
-          'urn:dgt-id-proxy:variables:upstreamHost': 'localhost',
-          'urn:dgt-id-proxy:variables:upstreamPort': '3000',
-          'urn:dgt-id-proxy:variables:upstreamScheme': 'http:',
-          'urn:dgt-id-proxy:variables:openidConfigurationFilePath': oidcPath,
-          'urn:dgt-id-proxy:variables:jwksFilePath': jwkPath,
-          'urn:dgt-id-proxy:variables:urlWebIdFactoryClaim': 'http://localhost:3003/webid',
-          'urn:dgt-id-proxy:variables:redirectUri': 'http://localhost:3003/redirect',
-          'urn:dgt-id-proxy:variables:clientId': 'fx0Ujpt78FfdsFdgfs8fssAW3QWF',
-          'urn:dgt-id-proxy:variables:clientSecret': 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to',
-          'urn:dgt-id-proxy:variables:proxyTokenUrl': 'http://localhost:3003/oauth/token',
-          'urn:dgt-id-proxy:variables:proxyClientUrl': 'http://localhost:3003/oauth/client',
-          'urn:dgt-id-proxy:variables:auth0Api': 'https:​//useid.eu.auth0.com/api/v2/',
-        });
-
-    });
-
-    it('should return the default openidConfigurationFilePath & jwksFilePath if none was given', () => {
-
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-U', 'https://digita-ai.eu.auth0.com/', '-i',  'fx0Ujpt78FfdsFdgfs8fssAW3QWF', '-s', 'SdfvZh7egyafNcwnj33KFy1xdsffFD8fdSW8xcDF8to', '-A', 'https:​//useid.eu.auth0.com/api/v2/' ]))
-        .toEqual(variables);
-
-    });
-
     it('should return the variables with the given proxyUri & upstreamUri with added trailing slash', () => {
 
       expect(createVariables([ 'npm run start', '--', '-c', configPath, '-u', 'http://digita-ai.proxy.com', '-U', 'https://digita-ai.eu.auth0.com/', '-o', oidcPath, '-j', jwkPath ]))
@@ -170,14 +137,9 @@ describe('Main.ts', () => {
 
     });
 
-    it('should return 3003 as proxyPort and 3000 as upstreamPort if none were provided', () => {
+    it('should error when missing required arguments', () => {
 
-      expect(createVariables([ 'npm run start', '--', '-c', configPath, '-o', oidcPath, '-j', jwkPath ]))
-        .toMatchObject({
-          'urn:dgt-id-proxy:variables:proxyPort': '3003',
-          'urn:dgt-id-proxy:variables:upstreamPort': '3000',
-
-        });
+      expect(() => createVariables([ 'npm run start' ])).toThrowError(TypeError);
 
     });
 
