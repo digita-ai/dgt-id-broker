@@ -176,7 +176,7 @@ export class ClientIdDynamicTokenHandler extends HttpHandler {
 
           this.logger.error('Response has errored', isError.error);
 
-          return of(createErrorResponse(isError.error_description, isError.error, response.headers));
+          return of(createErrorResponse(400, isError.error_description, isError.error, response.headers));
 
         } else {
 

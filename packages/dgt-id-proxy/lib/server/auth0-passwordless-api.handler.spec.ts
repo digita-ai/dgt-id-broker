@@ -116,9 +116,9 @@ describe('Auth0PasswordlessApiHandler', () => {
     it('should return an error response when no "content-type" header is provided or when the "content-type" header is not application/json', async () => {
 
       context.request.headers = {};
-      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse('invalid request', 'the request must include a "content-type" header containing "application/json"'));
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse(400, 'invalid request', 'the request must include a "content-type" header containing "application/json"'));
       context.request.headers = { 'Content-Type': 'this-is-wrong' };
-      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse('invalid request', 'the request must include a "content-type" header containing "application/json"'));
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse(400, 'invalid request', 'the request must include a "content-type" header containing "application/json"'));
 
     });
 
@@ -134,9 +134,9 @@ describe('Auth0PasswordlessApiHandler', () => {
     it('should return an error response when no "authParams" is found in the body, or no "redirect_uri" is found in the "authParams"', async () => {
 
       context.request.body = {};
-      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse('invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse(400, 'invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
       context.request.body = { authParams: {} };
-      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse('invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
+      await expect(lastValueFrom(handler.handle(context))).resolves.toEqual(createErrorResponse(400, 'invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
 
     });
 

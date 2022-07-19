@@ -58,6 +58,7 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
       this.logger.verbose('Response is an error', response);
 
       return of(createErrorResponse(
+        400,
         checkError(response).error_description,
         checkError(response).error,
         response.headers
