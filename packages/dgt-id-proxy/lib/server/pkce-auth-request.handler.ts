@@ -79,7 +79,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
 
       this.logger.verbose('No code challenge was provided', context.request.url.searchParams);
 
-      return of(createErrorResponse('A code challenge must be provided.', 'invalid_request'));
+      return of(createErrorResponse(400, 'A code challenge must be provided.', 'invalid_request'));
 
     }
 
@@ -87,7 +87,7 @@ export class PkceAuthRequestHandler extends HttpHandler {
 
       this.logger.verbose('No code challenge method was provided', context.request.url.searchParams);
 
-      return of(createErrorResponse('A code challenge method must be provided', 'invalid_request'));
+      return of(createErrorResponse(400, 'A code challenge method must be provided', 'invalid_request'));
 
     }
 
