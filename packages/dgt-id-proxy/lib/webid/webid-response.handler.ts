@@ -52,8 +52,9 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
       this.logger.verbose('Response contains an error', response);
 
       return of(createErrorResponse(
-        checkError(response).error_description,
+        400,
         checkError(response).error,
+        checkError(response).error_description,
         response.headers
       ));
 

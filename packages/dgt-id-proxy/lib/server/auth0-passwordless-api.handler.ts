@@ -97,7 +97,7 @@ export class Auth0PasswordlessApiHandler extends HttpHandler {
 
     if(headers['content-type'] !== 'application/json') {
 
-      return of(createErrorResponse('invalid request', 'the request must include a "content-type" header containing "application/json"'));
+      return of(createErrorResponse(400, 'invalid request', 'the request must include a "content-type" header containing "application/json"'));
 
     }
 
@@ -111,7 +111,7 @@ export class Auth0PasswordlessApiHandler extends HttpHandler {
 
     if (!body.authParams || !body.authParams.redirect_uri) {
 
-      return of(createErrorResponse('invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
+      return of(createErrorResponse(400, 'invalid request', 'the request must include a "authParams" parameter with a "redirect_uri" parameter'));
 
     }
 

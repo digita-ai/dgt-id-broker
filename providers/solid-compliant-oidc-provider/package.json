@@ -1,6 +1,6 @@
 {
   "name": "@digita-ai/solid-oidc-provider",
-  "version": "0.19.4",
+  "version": "0.19.6",
   "description": "oidc-demo-app",
   "main": "index.js",
   "scripts": {

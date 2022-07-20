@@ -13,13 +13,14 @@ const logger = getLogger();
  * @returns The error response object based upon the given parameters with a 400 status code.
  */
 export const createErrorResponse = (
-  msg: string,
+  status: number,
   error: string,
+  msg?: string,
   headers?: { [key: string]: string } | undefined,
 ): HttpHandlerResponse => ({
-  body: JSON.stringify({ error, error_description: msg }),
+  body: msg ? JSON.stringify({ error, error_description: msg }) : JSON.stringify({ error }),
   headers: headers ? headers : {},
-  status: 400,
+  status,
 });
 
 /**
