@@ -14,8 +14,8 @@ const logger = getLogger();
  */
 export const createErrorResponse = (
   status: number,
-  msg: string,
   error: string,
+  msg?: string,
   headers?: { [key: string]: string } | undefined,
 ): HttpHandlerResponse => ({
   body: JSON.stringify({ error, error_description: msg }),

@@ -59,8 +59,8 @@ export class JwtDecodeResponseHandler extends Handler<HttpHandlerResponse, HttpH
 
       return of(createErrorResponse(
         400,
-        checkError(response).error_description,
         checkError(response).error,
+        checkError(response).error_description,
         response.headers
       ));
 
