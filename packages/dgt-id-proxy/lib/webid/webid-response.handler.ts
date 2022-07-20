@@ -53,8 +53,8 @@ export class WebIdResponseHandler extends Handler<HttpHandlerResponse, HttpHandl
 
       return of(createErrorResponse(
         400,
-        checkError(response).error_description,
         checkError(response).error,
+        checkError(response).error_description,
         response.headers
       ));
 

@@ -87,7 +87,7 @@ export class PkceTokenHandler extends HttpHandler {
 
       this.logger.warn('No code verifier was provided', params);
 
-      return of(createErrorResponse(400, 'Code verifier is required.', 'invalid_request'));
+      return of(createErrorResponse(400, 'invalid_request', 'Code verifier is required.'));
 
     }
 
@@ -97,7 +97,7 @@ export class PkceTokenHandler extends HttpHandler {
 
       this.logger.warn('No code was provided', params);
 
-      return of(createErrorResponse(400, 'An authorization code is required.', 'invalid_request'));
+      return of(createErrorResponse(400, 'invalid_request', 'An authorization code is required.',));
 
     }
 
@@ -107,7 +107,7 @@ export class PkceTokenHandler extends HttpHandler {
 
       this.logger.warn('Code verifier is not of the correct length', code_verifier.length);
 
-      return of(createErrorResponse(400, 'Code verifier must be between 43 and 128 characters.', 'invalid_request'));
+      return of(createErrorResponse(400, 'invalid_request', 'Code verifier must be between 43 and 128 characters.'));
 
     }
 
@@ -137,7 +137,7 @@ export class PkceTokenHandler extends HttpHandler {
         }),
         switchMap(([ codeChallengeAndMethod, challenge ]) => challenge === codeChallengeAndMethod.challenge
           ? this.httpHandler.handle(context)
-          : of(createErrorResponse(400, 'Code challenges do not match.', 'invalid_grant'))),
+          : of(createErrorResponse(400, 'invalid_grant', 'Code challenges do not match.'))),
         catchError((error) => error?.status && error?.headers ? of(error) : throwError(() => error)),
       );
 
@@ -182,7 +182,7 @@ export class PkceTokenHandler extends HttpHandler {
 
       this.logger.info('Algorithm not supported', method);
 
-      return throwError(() => createErrorResponse(400, 'Transform algorithm not supported.', 'invalid_request'));
+      return throwError(() => createErrorResponse(400, 'invalid_request', 'Transform algorithm not supported.'));
 
     }
 
